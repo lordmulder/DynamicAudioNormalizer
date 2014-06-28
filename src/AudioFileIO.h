@@ -38,8 +38,8 @@ public:
 	bool close(void);
 
 	//Read and Write
-	int64_t read(double **buffer, const size_t count);
-	int64_t write(double *const *buffer, const size_t count);
+	int64_t read(double **buffer, const int64_t count);
+	int64_t write(double *const *buffer, const int64_t count);
 
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length);

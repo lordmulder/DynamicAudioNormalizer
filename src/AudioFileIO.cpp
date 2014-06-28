@@ -45,8 +45,8 @@ public:
 	bool close(void);
 
 	//Read and Write
-	int64_t read(double **buffer, const size_t count);
-	int64_t write(double *const *buffer, const size_t count);
+	int64_t read(double **buffer, const int64_t count);
+	int64_t write(double *const *buffer, const int64_t count);
 
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length);
@@ -68,7 +68,7 @@ private:
 
 	//(De)Interleaving
 	double *tempBuff;
-	size_t tempSize;
+	int64_t tempSize;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -120,12 +120,12 @@ bool AudioFileIO::close(void)
 	p->close();
 }
 
-int64_t AudioFileIO::read(double **buffer, const size_t count)
+int64_t AudioFileIO::read(double **buffer, const int64_t count)
 {
 	p->read(buffer, count);
 }
 
-int64_t AudioFileIO::write(double *const *buffer, const size_t count)
+int64_t AudioFileIO::write(double *const *buffer, const int64_t count)
 {
 	p->write(buffer, count);
 }
@@ -273,7 +273,7 @@ bool AudioFileIO_Private::close(void)
 	return result;
 }
 
-int64_t AudioFileIO_Private::read(double **buffer, const size_t count)
+int64_t AudioFileIO_Private::read(double **buffer, const int64_t count)
 {
 	if(!handle)
 	{
@@ -288,7 +288,15 @@ int64_t AudioFileIO_Private::read(double **buffer, const size_t count)
 	if((!tempBuff) || (tempSize < (count * info.channels)))
 	{
 		MY_DELETE_ARRAY(tempBuff);
-		tempBuff = new double[count * info.channels];
+		if(count * int64_t(info.channels) < int64_t(SIZE_MAX))
+		{
+			tempBuff = new double[static_cast<size_t>(count * int64_t(info.channels))];
+			tempSize = count * int64_t(info.channels);
+		}
+		else
+		{
+			MY_THROW("Requested read size exceeds maximum allowable size!");
+		}
 	}
 
 	//Read data
@@ -315,7 +323,7 @@ int64_t AudioFileIO_Private::read(double **buffer, const size_t count)
 	return result;
 }
 
-int64_t AudioFileIO_Private::write(double *const *buffer, const size_t count)
+int64_t AudioFileIO_Private::write(double *const *buffer, const int64_t count)
 {
 	if(!handle)
 	{
@@ -330,7 +338,15 @@ int64_t AudioFileIO_Private::write(double *const *buffer, const size_t count)
 	if((!tempBuff) || (tempSize < (count * info.channels)))
 	{
 		MY_DELETE_ARRAY(tempBuff);
-		tempBuff = new double[count * info.channels];
+		if(count * int64_t(info.channels) < int64_t(SIZE_MAX))
+		{
+			tempBuff = new double[static_cast<size_t>(count * int64_t(info.channels))];
+			tempSize = count * int64_t(info.channels);
+		}
+		else
+		{
+			MY_THROW("Requested write size exceeds maximum allowable size!");
+		}
 	}
 
 	//Interleave data
@@ -405,4 +421,3 @@ sf_count_t AudioFileIO_Private::vio_tell(void *user_data)
 {
 	return FTELL64((FILE*)user_data);
 }
-
