@@ -40,6 +40,7 @@ void SYSTEM_INIT(void);
 
 #ifdef _WIN32
 
+#include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -90,9 +91,19 @@ inline static int64_t FTELL64(FILE *const file)
 	return _ftelli64(file);
 }
 
+inline static int ACCESS(const wchar_t *const fileName, const int mode)
+{
+	return _waccess(fileName, mode);
+}
+
 inline static int STRCASECMP(const wchar_t *const s1, const wchar_t *const s2)
 {
 	return _wcsicmp(s1, s2);
+}
+
+inline static const CHR *STRCHR(const CHR *const str, const CHR c)
+{
+	return wcschr(str, c);
 }
 
 #endif //_WIN32

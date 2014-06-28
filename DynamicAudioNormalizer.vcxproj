@@ -13,12 +13,14 @@
   <ItemGroup>
     <ClCompile Include="src\AudioFileIO.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Parameters.cpp" />
     <ClCompile Include="src\Platform_Win32.cpp" />
     <ClCompile Include="src\Version.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AudioFileIO.h" />
     <ClInclude Include="src\Common.h" />
+    <ClInclude Include="src\Parameters.h" />
     <ClInclude Include="src\Platform.h" />
     <ClInclude Include="src\Version.h" />
   </ItemGroup>

@@ -21,11 +21,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "Common.h"
+#include "Parameters.h"
 #include "Version.h"
+
+static const CHR *appName(const CHR* argv0)
+{
+	const CHR *appName  = argv0;
+	while(const CHR *temp = STRCHR(appName, TXT('/' ))) appName = &temp[1];
+	while(const CHR *temp = STRCHR(appName, TXT('\\'))) appName = &temp[1];
+	return appName;
+}
 
 int dynamicNormalizerMain(int argc, CHR* argv[])
 {
-	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u\n"), DYAUNO_VERSION_MAJOR, DYAUNO_VERSION_MINOR, DYAUNO_VERSION_PATCH);
+	PRINT(TXT("\nDynamic Audio Normalizer, Version %u.%02u-%u\n"), DYAUNO_VERSION_MAJOR, DYAUNO_VERSION_MINOR, DYAUNO_VERSION_PATCH);
 	PRINT(TXT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
 	PRINT(TXT("Built on %s at %s with %s for Win-%s.\n\n"), DYAUNO_BUILD_DATE, DYAUNO_BUILD_TIME, DYAUNO_COMPILER, DYAUNO_ARCH);
 
@@ -33,7 +42,12 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));
 	PRINT(TXT("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n\n"));
 
-	MY_THROW("Test");
+	Parameters parameters;
+	if(!parameters.parseArgs(argc, argv))
+	{
+		LOG_ERR(TXT("Invalid or incomplete command-line arguments. Type \"%s --help\" for details!"), appName(argv[0]));
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }

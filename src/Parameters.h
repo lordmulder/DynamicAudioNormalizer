@@ -22,32 +22,24 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "Common.h"
 
-#include <stdexcept>
+class Parameters
+{
+public:
+	Parameters(void);
+	~Parameters(void);
+	
+	bool parseArgs(const int argc, CHR* argv[]);
 
-#define MY_DELETE(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
+	inline const CHR* sourceFile(void) const { return m_sourceFile; }
+	inline const CHR* outputFile(void) const { return m_outputFile; }
 
-#define MY_DELETE_ARRAY(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete [] (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
+protected:
+	void setDefaults(void);
+	bool validateParameters(void);
 
-#define LOG_DBG(X, ...) PRINT(TXT("DEBUG: ")   X TXT("\n\n"), __VA_ARGS__)
-#define LOG_WRN(X, ...) PRINT(TXT("WARNING: ") X TXT("\n\n"), __VA_ARGS__)
-#define LOG_ERR(X, ...) PRINT(TXT("ERROR: ")   X TXT("\n\n"), __VA_ARGS__)
-
-#define MY_THROW(X) throw std::runtime_error((X))
+private:
+	const CHR* m_sourceFile;
+	const CHR* m_outputFile;
+};

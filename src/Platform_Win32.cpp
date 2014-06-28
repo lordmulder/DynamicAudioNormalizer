@@ -83,7 +83,9 @@ void SYSTEM_INIT(void)
 		signal(signal_num[i], my_signal_handler);
 	}
 
+	_setmode(_fileno(stdin ), _O_BINARY);
 	_setmode(_fileno(stderr), _O_U8TEXT);
+	_setmode(_fileno(stdout), _O_U8TEXT);
 }
 
 #endif //_WIN32
