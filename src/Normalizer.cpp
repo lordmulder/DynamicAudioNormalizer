@@ -264,7 +264,7 @@ void Normalizer::updateAmplificationFactors(void)
 			const double peakMagnitude = findPeakMagnitude(channel);
 			const double currentAmplificationFactor = std::min(m_peakValue / peakMagnitude, MAX_AMPLIFICATION);
 
-			if(currentAmplificationFactor > m_amplificationFactor[0])
+			if(currentAmplificationFactor > m_amplificationFactor[channel])
 			{
 				m_amplificationFactor[channel] = UPDATE_VALUE(currentAmplificationFactor, m_amplificationFactor[channel], m_aggressiveness);
 			}
