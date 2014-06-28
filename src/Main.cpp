@@ -23,6 +23,7 @@
 #include "Common.h"
 #include "Parameters.h"
 #include "AudioFileIO.h"
+#include "Normalizer.h"
 #include "Version.h"
 
 #include <algorithm>
@@ -103,12 +104,20 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		buffer[channel] = new double[FRAME_SIZE];
 	}
 
+	Normalizer *normalizer = new Normalizer(channels, sampleRate);
+
 	bool error = false;
 	int64_t remaining = length;
 	short indicator = 0;
 
 	while(remaining > 0)
 	{
+		if(++indicator > 512)
+		{
+			PRINT(progressStr, 100.0 * (double(length - remaining) / double(length)));
+			indicator = 0;
+		}
+
 		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
 		const int64_t samplesRead = sourceFile->read(buffer, readSize);
 
@@ -120,16 +129,16 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 			break; /*read error must have ocurred*/
 		}
 
-		if(outputFile->write(buffer, samplesRead) != samplesRead)
-		{
-			error = true;
-			break; /*write error must have ocurred*/
-		}
+		int64_t outputSize;
+		normalizer->processInplace(buffer, samplesRead, outputSize);
 
-		if(++indicator > 512)
+		if(outputSize > 0)
 		{
-			PRINT(progressStr, 100.0 * (double(length - remaining) / double(length)));
-			indicator = 0;
+			if(outputFile->write(buffer, outputSize) != outputSize)
+			{
+				error = true;
+				break; /*write error must have ocurred*/
+			}
 		}
 	}
 
@@ -148,8 +157,8 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	{
 		MY_DELETE_ARRAY(buffer[channel]);
 	}
-	MY_DELETE_ARRAY(buffer);
 
+	MY_DELETE_ARRAY(buffer);
 	return EXIT_SUCCESS;
 }
 
