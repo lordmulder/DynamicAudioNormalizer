@@ -153,7 +153,7 @@ bool AudioFileIO_Private::openRd(const wchar_t *const fileName)
 {
 	if(handle)
 	{
-		LOG_ERR("AudioFileIO: Sound file is already open!");
+		LOG_ERR(TXT("AudioFileIO: Sound file is already open!"));
 		return false;
 	}
 
@@ -186,7 +186,7 @@ bool AudioFileIO_Private::openRd(const wchar_t *const fileName)
 
 	if(!handle)
 	{
-		LOG_ERR("AudioFileIO: File open error: %s", sf_strerror(NULL));
+		LOG_ERR(TXT("AudioFileIO: File open error: ") FMT_CHAR, sf_strerror(NULL));
 		fclose(file);
 		return false;
 	}
@@ -199,7 +199,7 @@ bool AudioFileIO_Private::openWr(const wchar_t *const fileName, const uint32_t c
 {
 	if(handle)
 	{
-		LOG_ERR("AudioFileIO: Sound file is already open!");
+		LOG_ERR(TXT("AudioFileIO: Sound file is already open!"));
 		return false;
 	}
 
@@ -234,7 +234,7 @@ bool AudioFileIO_Private::openWr(const wchar_t *const fileName, const uint32_t c
 
 	if(!handle)
 	{
-		LOG_ERR("AudioFileIO: File open error: %s", sf_strerror(NULL));
+		LOG_ERR(TXT("AudioFileIO: File open error: ") FMT_CHAR, sf_strerror(NULL));
 		fclose(file);
 		return false;
 	}

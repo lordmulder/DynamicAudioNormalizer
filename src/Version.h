@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "Common.h"
+
 //=============================================================================
 // Version
 //=============================================================================
@@ -32,12 +34,12 @@ extern const unsigned int DYAUNO_VERSION_MINOR;
 extern const unsigned int DYAUNO_VERSION_PATCH;
 
 //Build date/time
-extern const char* DYAUNO_BUILD_DATE;
-extern const char* DYAUNO_BUILD_TIME;
+extern const CHR* DYAUNO_BUILD_DATE;
+extern const CHR* DYAUNO_BUILD_TIME;
 
 //Compiler info
-extern const char* DYAUNO_COMPILER;
-extern const char* DYAUNO_ARCH;
+extern const CHR* DYAUNO_COMPILER;
+extern const CHR* DYAUNO_ARCH;
 
 //Check for debug build
 #if defined(_DEBUG) && !defined(NDEBUG)

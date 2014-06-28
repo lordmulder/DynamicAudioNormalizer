@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="src\AudioFileIO.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Platform_Win32.cpp" />
     <ClCompile Include="src\Version.cpp" />
   </ItemGroup>
   <ItemGroup>

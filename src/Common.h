@@ -46,10 +46,8 @@ while(0)
 } \
 while(0)
 
-#define PRINT(X, ...) fprintf(stderr, X, __VA_ARGS__)
-
-#define LOG_DBG(X, ...) PRINT("[DBG] " X "\n", __VA_ARGS__)
-#define LOG_WRN(X, ...) PRINT("[WRN] " X "\n", __VA_ARGS__)
-#define LOG_ERR(X, ...) PRINT("[ERR] " X "\n", __VA_ARGS__)
+#define LOG_DBG(X, ...) PRINT(TXT("[DBG] ") X TXT("\n"), __VA_ARGS__)
+#define LOG_WRN(X, ...) PRINT(TXT("[WRN] ") X TXT("\n"), __VA_ARGS__)
+#define LOG_ERR(X, ...) PRINT(TXT("[ERR] ") X TXT("\n"), __VA_ARGS__)
 
 #define MY_THROW(X) throw std::runtime_error((X))

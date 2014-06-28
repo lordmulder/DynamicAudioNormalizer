@@ -22,10 +22,17 @@
 
 #pragma once
 
+//============================================================================
+// COMMON
+//============================================================================
+
 #include <cstdlib>
 #include <stdint.h>
 #include <cstdio>
 #include <cstring>
+#include <cstdarg>
+
+void SYSTEM_INIT(void);
 
 //============================================================================
 // WINDOWS
@@ -36,8 +43,22 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define TXT(X) L##X
+#define _TXT(X) L##X
+#define TXT(X) _TXT(X)
+#define MAIN wmain
+#define FMT_CHAR L"%S"
+
+typedef wchar_t CHR;
 typedef struct _stat64 STAT64;
+
+inline static int PRINT(const wchar_t *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = vwprintf_s(format, ap);
+	va_end(ap);
+	return result;
+}
 
 inline static FILE *FOPEN(const wchar_t *const fileName, const wchar_t *const mode)
 {
