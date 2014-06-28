@@ -20,18 +20,30 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "Common.h"
-#include "Version.h"
+#pragma once
 
-int wmain(int argc, wchar_t* argv[])
-{
-	PRINT("Dynamic Audio Normalizer, Version %u.%02u-%u\n", DYAUNO_VERSION_MAJOR, DYAUNO_VERSION_MINOR, DYAUNO_VERSION_PATCH);
-	PRINT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
-	PRINT("Built on %s at %s with %s for Win-%s.\n\n", DYAUNO_BUILD_DATE, DYAUNO_BUILD_TIME, DYAUNO_COMPILER, DYAUNO_ARCH);
+//=============================================================================
+// Version
+//=============================================================================
 
-	PRINT("This program is free software: you can redistribute it and/or modify\n");
-	PRINT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n");
-	PRINT("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n\n");
+//Version info
+extern const unsigned int DYAUNO_VERSION_MAJOR;
+extern const unsigned int DYAUNO_VERSION_MINOR;
+extern const unsigned int DYAUNO_VERSION_PATCH;
 
-	return 0;
-}
+//Build date/time
+extern const char* DYAUNO_BUILD_DATE;
+extern const char* DYAUNO_BUILD_TIME;
+
+//Compiler info
+extern const char* DYAUNO_COMPILER;
+extern const char* DYAUNO_ARCH;
+
+//Check for debug build
+#if defined(_DEBUG) && !defined(NDEBUG)
+	#define DYAUNO_DEBUG (1)
+#elif defined(NDEBUG) &&  !defined(_DEBUG)
+	#define DYAUNO_DEBUG (0)
+#else
+	#error Inconsistent debug defines detected!
+#endif
