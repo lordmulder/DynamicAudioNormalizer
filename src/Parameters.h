@@ -34,6 +34,13 @@ public:
 
 	inline const CHR* sourceFile(void) const { return m_sourceFile; }
 	inline const CHR* outputFile(void) const { return m_outputFile; }
+	inline const CHR* dbgLogFile(void) const { return m_dbgLogFile; }
+	
+	inline const uint32_t &frameLenMsec(void)       const { return m_frameLenMsec;       }
+	inline const bool     &channelsCoupled(void)    const { return m_channelsCoupled;    }
+	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
+	inline const double   &peakValue(void)          const { return m_peakValue;          }
+	inline const double   &aggressiveness(void)     const { return m_aggressiveness;     }
 
 protected:
 	void setDefaults(void);
@@ -42,4 +49,13 @@ protected:
 private:
 	const CHR* m_sourceFile;
 	const CHR* m_outputFile;
+	const CHR* m_dbgLogFile;
+
+	uint32_t m_frameLenMsec;
+	
+	bool m_channelsCoupled;
+	bool m_enableDCCorrection;
+	
+	double m_peakValue;
+	double m_aggressiveness;
 };

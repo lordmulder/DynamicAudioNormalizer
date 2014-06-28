@@ -28,7 +28,7 @@
 class Normalizer
 {
 public:
-	Normalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec = 200, const bool channelsCoupled = true, const double aggressiveness = 0.1);
+	Normalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, FILE *const logFile = NULL);
 	~Normalizer(void);
 	
 	void processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
@@ -37,6 +37,9 @@ protected:
 	void processNextFrame(void);
 	double findPeakMagnitude(const uint32_t channel = UINT32_MAX);
 	void updateAmplificationFactors(void);
+	void perfromDCCorrection(void);
+
+	void writeToLogFile(void);
 
 private:
 	const uint32_t m_channels;
@@ -44,9 +47,14 @@ private:
 	const uint32_t m_frameLen;
 
 	const bool m_channelsCoupled;
+	const bool m_enableDCCorrection;
+	const double m_peakValue;
 	const double m_aggressiveness;
 
+	FILE *const m_logFile;
+
 	double *m_amplificationFactor;
+	double *m_channelAverageValue;
 
 	RingBuffer **m_bufferSrc;
 	RingBuffer **m_bufferOut;

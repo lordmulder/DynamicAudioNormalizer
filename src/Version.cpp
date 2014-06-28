@@ -25,7 +25,7 @@
 //Version info
 const unsigned int DYAUNO_VERSION_MAJOR = 1;
 const unsigned int DYAUNO_VERSION_MINOR = 0;
-const unsigned int DYAUNO_VERSION_PATCH = 1;
+const unsigned int DYAUNO_VERSION_PATCH = 2;
 
 //Build date/time
 const CHR* DYAUNO_BUILD_DATE = TXT(__DATE__);
@@ -94,9 +94,9 @@ const CHR* DYAUNO_BUILD_TIME = TXT(__TIME__);
 	// Note: /arch:SSE and /arch:SSE2 are only available for the x86 platform
 	#if !defined(_M_X64) && defined(_M_IX86_FP)
 		#if (_M_IX86_FP == 1)
-			#error SSE instruction set is enabled!
+			#pragma message("SSE instruction set is enabled!")
 		#elif (_M_IX86_FP == 2)
-			#error SSE2 (or higher) instruction set is enabled!
+			#pragma message("SSE2 (or higher) instruction set is enabled!")
 		#endif
 	#endif
 #else

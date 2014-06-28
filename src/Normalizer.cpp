@@ -26,15 +26,24 @@
 #include <algorithm>
 #include <cassert>
 
-#define UPDATE_VALUE(NEW,OLD) ((m_aggressiveness * (NEW)) + ((1.0 - m_aggressiveness) * (OLD)))
+static const double MAX_AMPLIFICATION = 10.0;
 
-Normalizer::Normalizer(const uint32_t channels, const uint32_t sampleRate, uint32_t frameLenMsec, const bool channelsCoupled, const double aggressiveness)
+static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const double &aggressiveness)
+{
+	assert((aggressiveness >= 0.0) && (aggressiveness <= 1.0));
+	return (aggressiveness * NEW) + ((1.0 - aggressiveness) * OLD);
+}
+
+Normalizer::Normalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, FILE *const logFile)
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
 	m_frameLen(static_cast<uint32_t>(round(double(sampleRate) * (double(frameLenMsec) / 1000.0)))),
 	m_channelsCoupled(channelsCoupled),
-	m_aggressiveness(aggressiveness)
+	m_enableDCCorrection(enableDCCorrection),
+	m_peakValue(peakValue),
+	m_aggressiveness(aggressiveness),
+	m_logFile(logFile)
 {
 	if((m_channels < 1) || (m_channels > 8))
 	{
@@ -69,17 +78,28 @@ Normalizer::Normalizer(const uint32_t channels, const uint32_t sampleRate, uint3
 	}
 
 	m_amplificationFactor = new double[channels];
+	m_channelAverageValue = new double[channels];
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
 		m_amplificationFactor[channel] = 1.0;
+		m_channelAverageValue[channel] = 0.0;
 	}
 
-	LOG_DBG(TXT("Frame size is: %u"), m_frameLen);
+	LOG_DBG(TXT("---------Parameters---------"));
+	LOG_DBG(TXT("Frame size     : %u"),   m_frameLen);
+	LOG_DBG(TXT("Channels       : %u"),   m_channels);
+	LOG_DBG(TXT("Sampling rate  : %u"),   m_sampleRate);
+	LOG_DBG(TXT("Chan. coupling : %s"),   m_channelsCoupled    ? TXT("YES") : TXT("NO"));
+	LOG_DBG(TXT("DC correction  : %s"),   m_enableDCCorrection ? TXT("YES") : TXT("NO"));
+	LOG_DBG(TXT("Peak Value     : %.4f"), m_peakValue);
+	LOG_DBG(TXT("Aggressiveness : %.4f"), m_aggressiveness);
+	LOG_DBG(TXT("---------Parameters---------\n"));
 }
 
 Normalizer::~Normalizer(void)
 {
 	MY_DELETE_ARRAY(m_amplificationFactor);
+	MY_DELETE_ARRAY(m_channelAverageValue);
 
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
@@ -163,8 +183,14 @@ void Normalizer::processInplace(double **samples, int64_t inputSize, int64_t &ou
 
 void Normalizer::processNextFrame(void)
 {
-	//Update amplification factor
-
+	//DC correction
+	if(m_enableDCCorrection)
+	{
+		perfromDCCorrection();
+	}
+	
+	//Update factors
+	updateAmplificationFactors();
 
 	//Amplify samples
 	for(uint32_t channel = 0; channel < m_channels; channel++)
@@ -173,6 +199,12 @@ void Normalizer::processNextFrame(void)
 		{
 			m_frameBuffer[channel][i] *= m_amplificationFactor[channel];
 		}
+	}
+
+	//Append to the logfile
+	if(m_logFile)
+	{
+		writeToLogFile();
 	}
 }
 
@@ -206,11 +238,11 @@ void Normalizer::updateAmplificationFactors(void)
 	if(m_channelsCoupled)
 	{
 		const double peakMagnitude = findPeakMagnitude();
-		const double currentAmplificationFactor = 1.0 / peakMagnitude;
+		const double currentAmplificationFactor = std::min(m_peakValue / peakMagnitude, MAX_AMPLIFICATION);
 
 		if(currentAmplificationFactor > m_amplificationFactor[0])
 		{
-			m_amplificationFactor[0] = UPDATE_VALUE(currentAmplificationFactor, m_amplificationFactor[0]);
+			m_amplificationFactor[0] = UPDATE_VALUE(currentAmplificationFactor, m_amplificationFactor[0], m_aggressiveness);
 			for(uint32_t channel = 1; channel < m_channels; channel++)
 			{
 				m_amplificationFactor[channel] = m_amplificationFactor[channel - 1];
@@ -218,6 +250,7 @@ void Normalizer::updateAmplificationFactors(void)
 		}
 		else
 		{
+			/*clipping protection*/
 			for(uint32_t channel = 0; channel < m_channels; channel++)
 			{
 				m_amplificationFactor[channel] = currentAmplificationFactor;
@@ -229,9 +262,57 @@ void Normalizer::updateAmplificationFactors(void)
 		for(uint32_t channel = 0; channel < m_channels; channel++)
 		{
 			const double peakMagnitude = findPeakMagnitude(channel);
-			const double currentAmplificationFactor = 1.0 / peakMagnitude;
+			const double currentAmplificationFactor = std::min(m_peakValue / peakMagnitude, MAX_AMPLIFICATION);
 
-			m_amplificationFactor[channel] = UPDATE_VALUE(currentAmplificationFactor, m_amplificationFactor[channel]);
+			if(currentAmplificationFactor > m_amplificationFactor[0])
+			{
+				m_amplificationFactor[channel] = UPDATE_VALUE(currentAmplificationFactor, m_amplificationFactor[channel], m_aggressiveness);
+			}
+			else
+			{
+				/*clipping protection*/
+				m_amplificationFactor[channel] = currentAmplificationFactor;
+			}
 		}
 	}
+}
+
+void Normalizer::perfromDCCorrection(void)
+{
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		const double diff = 1.0 / double(m_frameLen);
+		double currentAverageValue = 0.0;
+
+		for(uint32_t i = 0; i < m_frameLen; i++)
+		{
+			currentAverageValue += (m_frameBuffer[channel][i] * diff);
+		}
+
+		m_channelAverageValue[channel] = UPDATE_VALUE(currentAverageValue, m_channelAverageValue[channel], m_aggressiveness);
+
+		for(uint32_t i = 0; i < m_frameLen; i++)
+		{
+			currentAverageValue -= m_channelAverageValue[channel];
+		}
+	}
+}
+
+void Normalizer::writeToLogFile(void)
+{
+	assert(m_logFile != NULL);
+
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		fprintf(m_logFile, channel ? "\t%.4f" : "%.4f", m_amplificationFactor[channel]);
+	}
+
+	fprintf(m_logFile, "\t|\t");
+
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		fprintf(m_logFile, channel ? "\t%.4f" : "%.4f", m_channelAverageValue[channel]);
+	}
+
+	fprintf(m_logFile, "\n");
 }

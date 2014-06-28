@@ -106,6 +106,15 @@ inline static const CHR *STRCHR(const CHR *const str, const CHR c)
 	return wcschr(str, c);
 }
 
+inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = vswscanf(str, format, ap);
+	va_end(ap);
+	return result;
+}
+
 #endif //_WIN32
 
 //============================================================================

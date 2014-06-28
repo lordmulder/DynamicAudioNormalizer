@@ -40,10 +40,13 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 {
 	bool okay = true;
 
+	PRINT(TXT("Source file: %s\n"),   parameters.sourceFile());
+	PRINT(TXT("Output file: %s\n\n"), parameters.outputFile());
+
 	*sourceFile = new AudioFileIO();
 	if(!(*sourceFile)->openRd(parameters.sourceFile()))
 	{
-		LOG_WRN(TXT("Failed to open input file for reading!"));
+		LOG_WRN(TXT("Failed to open input file for reading!\n"));
 		okay = false;
 	}
 	
@@ -56,13 +59,13 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 			*outputFile = new AudioFileIO();
 			if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate))
 			{
-				LOG_WRN(TXT("Failed to open output file for writing!"));
+				LOG_WRN(TXT("Failed to open output file for writing!\n"));
 				okay = false;
 			}
 		}
 		else
 		{
-			LOG_WRN(TXT("Failed to determine source file properties!"));
+			LOG_WRN(TXT("Failed to determine source file properties!\n"));
 			okay = false;
 		}
 	}
@@ -85,7 +88,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	return true;
 }
 
-static int processFiles(const Parameters &parameters, AudioFileIO *const sourceFile, AudioFileIO *const outputFile)
+static int processFiles(const Parameters &parameters, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, FILE *const logFile)
 {
 	static const size_t FRAME_SIZE = 4096;
 	static const CHR *progressStr = TXT("\rNormalization in progress: %.1f%%");
@@ -94,7 +97,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	int64_t length;
 	if(!sourceFile->queryInfo(channels, sampleRate, length))
 	{
-		LOG_WRN(TXT("Failed to determine source file properties!"));
+		LOG_WRN(TXT("Failed to determine source file properties!\n"));
 		return EXIT_FAILURE;
 	}
 
@@ -104,7 +107,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		buffer[channel] = new double[FRAME_SIZE];
 	}
 
-	Normalizer *normalizer = new Normalizer(channels, sampleRate);
+	Normalizer *normalizer = new Normalizer(channels, sampleRate, parameters.frameLenMsec(), parameters.channelsCoupled(), parameters.enableDCCorrection(), parameters.peakValue(), parameters.aggressiveness(), logFile);
 
 	bool error = false;
 	int64_t remaining = length;
@@ -150,7 +153,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	else
 	{
 		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("I/O error encountered -> stopping!"));
+		LOG_ERR(TXT("I/O error encountered -> stopping!\n"));
 	}
 
 	for(uint32_t channel = 0; channel < channels; channel++)
@@ -175,18 +178,27 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	Parameters parameters;
 	if(!parameters.parseArgs(argc, argv))
 	{
-		LOG_ERR(TXT("Invalid or incomplete command-line arguments. Type \"%s --help\" for details!"), appName(argv[0]));
+		LOG_ERR(TXT("Invalid or incomplete command-line arguments. Type \"%s --help\" for details!\n"), appName(argv[0]));
 		return EXIT_FAILURE;
 	}
 
 	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
 	if(!openFiles(parameters, &sourceFile, &outputFile))
 	{
-		LOG_ERR(TXT("Failed to open input and/or output file!"));
+		LOG_ERR(TXT("Failed to open input and/or output file!\n"));
 		return EXIT_FAILURE;
 	}
 
-	const int result = processFiles(parameters, sourceFile, outputFile);
+	FILE *logFile = NULL;
+	if(parameters.dbgLogFile())
+	{
+		if(!(logFile = FOPEN(parameters.dbgLogFile(), TXT("w"))))
+		{
+			LOG_WRN(TXT("Failed to open log file \"%s\""), parameters.dbgLogFile());
+		}
+	}
+
+	const int result = processFiles(parameters, sourceFile, outputFile, logFile);
 
 	sourceFile->close();
 	outputFile->close();

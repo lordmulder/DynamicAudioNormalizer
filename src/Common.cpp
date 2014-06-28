@@ -20,37 +20,14 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "Common.h"
 
-#include "Platform.h"
+#include <algorithm>
 
-#include <stdexcept>
+static uint8_t DYAUNO_LOGLVL_VALUE = 1;
+const uint8_t *const DYAUNO_LOGLVL = &DYAUNO_LOGLVL_VALUE;
 
-#define MY_DELETE(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
-
-#define MY_DELETE_ARRAY(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete [] (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
-
-extern const uint8_t *const DYAUNO_LOGLVL;
-void setLoggingLevel(const uint8_t &value);
-
-#define LOG_DBG(X, ...) do { if((*DYAUNO_LOGLVL) >= 2) PRINT(TXT("DEBUG: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-#define LOG_WRN(X, ...) do { if((*DYAUNO_LOGLVL) >= 1) PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
-#define LOG_ERR(X, ...) do { if((*DYAUNO_LOGLVL) >= 0) PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-
-#define MY_THROW(X) throw std::runtime_error((X))
+void setLoggingLevel(const uint8_t &value)
+{
+	DYAUNO_LOGLVL_VALUE = std::min(value, uint8_t(2));
+}
