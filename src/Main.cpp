@@ -112,12 +112,13 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	bool error = false;
 	int64_t remaining = length;
 	short indicator = 0;
+	int64_t delayedSamples = 0;
 
 	while(remaining > 0)
 	{
 		if(++indicator > 512)
 		{
-			PRINT(progressStr, 100.0 * (double(length - remaining) / double(length)));
+			PRINT(progressStr, 99.9 * (double(length - remaining) / double(length)));
 			indicator = 0;
 		}
 
@@ -135,6 +136,11 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		int64_t outputSize;
 		normalizer->processInplace(buffer, samplesRead, outputSize);
 
+		if(outputSize < samplesRead)
+		{
+			delayedSamples += (samplesRead - outputSize);
+		}
+
 		if(outputSize > 0)
 		{
 			if(outputFile->write(buffer, outputSize) != outputSize)
@@ -142,6 +148,32 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 				error = true;
 				break; /*write error must have ocurred*/
 			}
+		}
+	}
+
+	while(delayedSamples > 0)
+	{
+		for(uint32_t channel = 0; channel < channels; channel++)
+		{
+			memset(buffer[channel], 0, sizeof(double) * FRAME_SIZE);
+		}
+
+		int64_t outputSize;
+		normalizer->processInplace(buffer, int64_t(FRAME_SIZE), outputSize);
+
+		if(outputSize > 0)
+		{
+			const int64_t writeCount = std::min(outputSize, delayedSamples);
+			if(outputFile->write(buffer, writeCount) != writeCount)
+			{
+				error = true;
+				break; /*write error must have ocurred*/
+			}
+			delayedSamples -= writeCount;
+		}
+		else
+		{
+			break; /*failed to flush pending samples*/
 		}
 	}
 

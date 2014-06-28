@@ -293,7 +293,7 @@ void Normalizer::perfromDCCorrection(void)
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			currentAverageValue -= m_channelAverageValue[channel];
+			m_frameBuffer[channel][i] -= m_channelAverageValue[channel];
 		}
 	}
 }
