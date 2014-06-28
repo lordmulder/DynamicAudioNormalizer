@@ -107,32 +107,32 @@ AudioFileIO_Private::~AudioFileIO_Private(void)
 
 bool AudioFileIO::openRd(const wchar_t *const fileName)
 {
-	p->openRd(fileName);
+	return p->openRd(fileName);
 }
 
 bool AudioFileIO::openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate)
 {
-	p->openWr(fileName, channels, sampleRate);
+	return p->openWr(fileName, channels, sampleRate);
 }
 
 bool AudioFileIO::close(void)
 {
-	p->close();
+	return p->close();
 }
 
 int64_t AudioFileIO::read(double **buffer, const int64_t count)
 {
-	p->read(buffer, count);
+	return p->read(buffer, count);
 }
 
 int64_t AudioFileIO::write(double *const *buffer, const int64_t count)
 {
-	p->write(buffer, count);
+	return p->write(buffer, count);
 }
 
 bool AudioFileIO::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length)
 {
-	p->queryInfo(channels, sampleRate, length);
+	return p->queryInfo(channels, sampleRate, length);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

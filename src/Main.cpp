@@ -22,7 +22,10 @@
 
 #include "Common.h"
 #include "Parameters.h"
+#include "AudioFileIO.h"
 #include "Version.h"
+
+#include <algorithm>
 
 static const CHR *appName(const CHR* argv0)
 {
@@ -30,6 +33,124 @@ static const CHR *appName(const CHR* argv0)
 	while(const CHR *temp = STRCHR(appName, TXT('/' ))) appName = &temp[1];
 	while(const CHR *temp = STRCHR(appName, TXT('\\'))) appName = &temp[1];
 	return appName;
+}
+
+static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, AudioFileIO **outputFile)
+{
+	bool okay = true;
+
+	*sourceFile = new AudioFileIO();
+	if(!(*sourceFile)->openRd(parameters.sourceFile()))
+	{
+		LOG_WRN(TXT("Failed to open input file for reading!"));
+		okay = false;
+	}
+	
+	if(okay)
+	{
+		uint32_t channels, sampleRate;
+		int64_t length;
+		if((*sourceFile)->queryInfo(channels, sampleRate, length))
+		{
+			*outputFile = new AudioFileIO();
+			if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate))
+			{
+				LOG_WRN(TXT("Failed to open output file for writing!"));
+				okay = false;
+			}
+		}
+		else
+		{
+			LOG_WRN(TXT("Failed to determine source file properties!"));
+			okay = false;
+		}
+	}
+
+	if(!okay)
+	{
+		if(*sourceFile)
+		{
+			(*sourceFile)->close();
+			MY_DELETE(*sourceFile);
+		}
+		if(*outputFile)
+		{
+			(*outputFile)->close();
+			MY_DELETE(*outputFile);
+		}
+		return false;
+	}
+
+	return true;
+}
+
+static int processFiles(const Parameters &parameters, AudioFileIO *const sourceFile, AudioFileIO *const outputFile)
+{
+	static const size_t FRAME_SIZE = 4096;
+	static const CHR *progressStr = TXT("\rNormalization in progress: %.1f%%");
+
+	uint32_t channels, sampleRate;
+	int64_t length;
+	if(!sourceFile->queryInfo(channels, sampleRate, length))
+	{
+		LOG_WRN(TXT("Failed to determine source file properties!"));
+		return EXIT_FAILURE;
+	}
+
+	double **buffer = new double*[channels];
+	for(uint32_t channel = 0; channel < channels; channel++)
+	{
+		buffer[channel] = new double[FRAME_SIZE];
+	}
+
+	bool error = false;
+	int64_t remaining = length;
+	short indicator = 0;
+
+	while(remaining > 0)
+	{
+		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
+		const int64_t samplesRead = sourceFile->read(buffer, readSize);
+
+		remaining -= samplesRead;
+
+		if(samplesRead != readSize)
+		{
+			error = true;
+			break; /*read error must have ocurred*/
+		}
+
+		if(outputFile->write(buffer, samplesRead) != samplesRead)
+		{
+			error = true;
+			break; /*write error must have ocurred*/
+		}
+
+		if(++indicator > 512)
+		{
+			PRINT(progressStr, 100.0 * (double(length - remaining) / double(length)));
+			indicator = 0;
+		}
+	}
+
+	if(!error)
+	{
+		PRINT(progressStr, 100.0);
+		PRINT(TXT("\nCompleted.\n\n"));
+	}
+	else
+	{
+		PRINT(TXT("\n\n"));
+		LOG_ERR(TXT("I/O error encountered -> stopping!"));
+	}
+
+	for(uint32_t channel = 0; channel < channels; channel++)
+	{
+		MY_DELETE_ARRAY(buffer[channel]);
+	}
+	MY_DELETE_ARRAY(buffer);
+
+	return EXIT_SUCCESS;
 }
 
 int dynamicNormalizerMain(int argc, CHR* argv[])
@@ -49,7 +170,22 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_FAILURE;
 	}
 
-	return EXIT_SUCCESS;
+	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
+	if(!openFiles(parameters, &sourceFile, &outputFile))
+	{
+		LOG_ERR(TXT("Failed to open input and/or output file!"));
+		return EXIT_FAILURE;
+	}
+
+	const int result = processFiles(parameters, sourceFile, outputFile);
+
+	sourceFile->close();
+	outputFile->close();
+
+	MY_DELETE(sourceFile);
+	MY_DELETE(outputFile);
+
+	return result;
 }
 
 int mainEx(int argc, CHR* argv[])
