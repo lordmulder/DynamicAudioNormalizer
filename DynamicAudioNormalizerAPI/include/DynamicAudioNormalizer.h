@@ -61,7 +61,7 @@ public:
 
 	//Static functions
 	static void getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch);
-	static void getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch);
+	static void getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug);
 
 private:
 	DynamicAudioNormalizer_PrivateData *const p;

@@ -138,8 +138,8 @@ DynamicAudioNormalizer_PrivateData::~DynamicAudioNormalizer_PrivateData(void)
 
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		if(m_bufferSrc)    MY_DELETE_ARRAY(m_bufferSrc[channel]);
-		if(m_bufferOut)    MY_DELETE_ARRAY(m_bufferOut[channel]);
+		if(m_bufferSrc)    MY_DELETE(m_bufferSrc[channel]);
+		if(m_bufferOut)    MY_DELETE(m_bufferOut[channel]);
 		if(m_frameBuffer)  MY_DELETE_ARRAY(m_frameBuffer[channel]);
 		if(m_frameHistory) MY_DELETE(m_frameHistory[channel]);
 	}
@@ -394,15 +394,16 @@ void DynamicAudioNormalizer::getVersionInfo(uint32_t &major, uint32_t &minor,uin
 {
 	major = DYAUNO_VERSION_MAJOR;
 	minor = DYAUNO_VERSION_MINOR;
-	minor = DYAUNO_VERSION_PATCH;
+	patch = DYAUNO_VERSION_PATCH;
 }
 
-void DynamicAudioNormalizer::getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch)
+void DynamicAudioNormalizer::getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug)
 {
 	*date     = DYAUNO_BUILD_DATE;
 	*time     = DYAUNO_BUILD_TIME;
 	*compiler = DYAUNO_COMPILER;
 	*arch     = DYAUNO_ARCH;
+	debug     = bool(DYAUNO_DEBUG);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -28,6 +28,9 @@
 //DynamicAudioNormalizer API
 #include "DynamicAudioNormalizer.h"
 
+//VLD
+#include <vld.h>
+
 //C++
 #include <ctime>
 #include <algorithm>
@@ -295,8 +298,8 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	uint32_t versionMajor, versionMinor, versionPatch;
 	DynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
 
-	const char *buildDate, *buildTime, *buildCompiler, *buildArch;
-	DynamicAudioNormalizer::getBuildInfo(&buildDate, &buildTime, &buildCompiler, &buildArch);
+	const char *buildDate, *buildTime, *buildCompiler, *buildArch; bool buildDebug;
+	DynamicAudioNormalizer::getBuildInfo(&buildDate, &buildTime, &buildCompiler, &buildArch, buildDebug);
 
 	PRINT(TXT("\nDynamic Audio Normalizer, Version %u.%02u-%u\n"), versionMajor, versionMinor, versionPatch);
 	PRINT(TXT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
@@ -306,7 +309,18 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));
 	PRINT(TXT("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n\n"));
 
+	if(DYAUNO_DEBUG)
+	{
+		PRINT(TXT("!!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!!\n\n"));
+	}
+
 	PRINT(TXT("---------------------------------------------------------------------------\n\n"));
+
+	if((DYAUNO_DEBUG) != buildDebug)
+	{
+		LOG_ERR(TXT("Trying to use DEBUG library with RELEASE binary or vice versa!\n"));
+		return EXIT_FAILURE;
+	}
 
 	Parameters parameters;
 	if(!parameters.parseArgs(argc, argv))
