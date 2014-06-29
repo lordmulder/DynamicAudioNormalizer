@@ -22,39 +22,21 @@
 
 #pragma once
 
-#include "Platform.h"
-#include <stdexcept>
+#include "Common.h"
 
-#if defined(_DEBUG) && !defined(NDEBUG)
-	#define DYAUNO_DEBUG (1)
-#elif defined(NDEBUG) &&  !defined(_DEBUG)
-	#define DYAUNO_DEBUG (0)
-#else
-	#error Inconsistent debug defines detected!
-#endif
+//=============================================================================
+// Version
+//=============================================================================
 
-#define MY_DELETE(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
+//Version info
+extern const unsigned int DYAUNO_VERSION_MAJOR;
+extern const unsigned int DYAUNO_VERSION_MINOR;
+extern const unsigned int DYAUNO_VERSION_PATCH;
 
-#define MY_DELETE_ARRAY(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete [] (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
+//Build date/time
+extern const char* DYAUNO_BUILD_DATE;
+extern const char* DYAUNO_BUILD_TIME;
 
-#define LOG_DBG(X, ...) do { PRINT(TXT("DEBUG: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-#define LOG_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
-#define LOG_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-
-#define MY_THROW(X) throw std::runtime_error((X))
+//Compiler info
+extern const char* DYAUNO_COMPILER;
+extern const char* DYAUNO_ARCH;

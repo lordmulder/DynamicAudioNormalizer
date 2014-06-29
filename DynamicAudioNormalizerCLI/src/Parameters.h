@@ -42,6 +42,7 @@ public:
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
+	inline const bool     &verboseMode(void)        const { return m_verboseMode;        }
 
 protected:
 	void setDefaults(void);
@@ -57,6 +58,7 @@ private:
 	
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
+	bool m_verboseMode;
 	
 	double m_peakValue;
 	double m_maxAmplification;

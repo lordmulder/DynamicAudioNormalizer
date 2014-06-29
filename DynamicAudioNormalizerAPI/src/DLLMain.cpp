@@ -20,32 +20,18 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 
-#include "Common.h"
-
-//=============================================================================
-// Version
-//=============================================================================
-
-//Version info
-extern const unsigned int DYAUNO_VERSION_MAJOR;
-extern const unsigned int DYAUNO_VERSION_MINOR;
-extern const unsigned int DYAUNO_VERSION_PATCH;
-
-//Build date/time
-extern const CHR* DYAUNO_BUILD_DATE;
-extern const CHR* DYAUNO_BUILD_TIME;
-
-//Compiler info
-extern const CHR* DYAUNO_COMPILER;
-extern const CHR* DYAUNO_ARCH;
-
-//Check for debug build
-#if defined(_DEBUG) && !defined(NDEBUG)
-	#define DYAUNO_DEBUG (1)
-#elif defined(NDEBUG) &&  !defined(_DEBUG)
-	#define DYAUNO_DEBUG (0)
-#else
-	#error Inconsistent debug defines detected!
-#endif
+BOOL APIENTRY DllMain(HMODULE hModule,DWORD  ul_reason_for_call, LPVOID lpReserved)
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+	return TRUE;
+}

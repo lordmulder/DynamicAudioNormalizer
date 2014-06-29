@@ -106,7 +106,8 @@ void Parameters::setDefaults(void)
 	m_filterSize = 31;
 	
 	m_channelsCoupled = true;
-	m_enableDCCorrection = true;
+	m_enableDCCorrection = false;
+	m_verboseMode = false;
 	
 	m_peakValue = 0.95;
 	m_maxAmplification = 10.0;
@@ -165,14 +166,14 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			m_channelsCoupled = false;
 			continue;
 		}
-		if(IS_ARG_LONG("no-correct"))
+		if(IS_ARG_LONG("correct-dc"))
 		{
-			m_enableDCCorrection = false;
+			m_enableDCCorrection = true;
 			continue;
 		}
 		if(IS_ARG_LONG("verbose"))
 		{
-			//setLoggingLevel(2);
+			m_verboseMode = true;
 			continue;
 		}
 

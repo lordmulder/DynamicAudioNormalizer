@@ -11,37 +11,35 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\DynamicAudioNormalizerShared\src\Platform_Win32.cpp" />
-    <ClCompile Include="src\AudioFileIO.cpp" />
-    <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\Parameters.cpp" />
+    <ClCompile Include="src\DLLMain.cpp" />
+    <ClCompile Include="src\DynamicAudioNormalizer.cpp" />
+    <ClCompile Include="src\GaussianFilter.cpp" />
+    <ClCompile Include="src\MinimumFilter.cpp" />
+    <ClCompile Include="src\RingBuffer.cpp" />
+    <ClCompile Include="src\Version.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\DynamicAudioNormalizerShared\include\Common.h" />
-    <ClInclude Include="..\DynamicAudioNormalizerShared\include\Platform.h" />
-    <ClInclude Include="src\AudioFileIO.h" />
-    <ClInclude Include="src\Parameters.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI.vcxproj">
-      <Project>{376386ee-8268-47e3-a335-7663716e4c60}</Project>
-    </ProjectReference>
+    <ClInclude Include="include\DynamicAudioNormalizer.h" />
+    <ClInclude Include="src\GaussianFilter.h" />
+    <ClInclude Include="src\MinimumFilter.h" />
+    <ClInclude Include="src\RingBuffer.h" />
+    <ClInclude Include="src\Version.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{5B755CC3-EC17-490F-AE82-CBC16E2EB143}</ProjectGuid>
+    <ProjectGuid>{376386EE-8268-47E3-A335-7663716E4C60}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>DynamicAudioNormalizerCLI</RootNamespace>
-    <ProjectName>DynamicAudioNormalizerCLI</ProjectName>
+    <RootNamespace>DynamicAudioNormalizerAPI</RootNamespace>
+    <ProjectName>DynamicAudioNormalizerAPI</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -59,55 +57,48 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\etc\sndfile\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;DYNAMICAUDIONORMALIZER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\sndfile\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libsndfile-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\etc\sndfile\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;DYNAMICAUDIONORMALIZER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\sndfile\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libsndfile-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

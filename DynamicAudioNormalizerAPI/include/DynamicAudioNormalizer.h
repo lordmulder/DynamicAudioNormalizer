@@ -25,24 +25,43 @@
 #include <stdint.h>
 #include <cstdio>
 
+//DLL Export Definitions
+#ifdef _MSC_VER
+#  ifdef DYNAMICAUDIONORMALIZER_EXPORTS
+#    define DYNAMICAUDIONORMALIZER_DLL __declspec(dllexport)
+#  else
+#    define DYNAMICAUDIONORMALIZER_DLL __declspec(dllimport)
+#  endif
+#else
+#  ifdef __GNUG__
+#    define DYNAMICAUDIONORMALIZER_DLL __attribute__ ((visibility ("default")))
+#  else
+#    define DYNAMICAUDIONORMALIZER_DLL
+#  endif
+#endif
+
 //Opaque Data Class
-class DynamicNormalizer_PrivateData;
+class DynamicAudioNormalizer_PrivateData;
 
 //Dynamic Normalizer Class
-class DynamicNormalizer
+class DYNAMICAUDIONORMALIZER_DLL DynamicAudioNormalizer
 {
 public:
 	//Constant
 	enum { PASS_1ST = 0, PASS_2ND = 1 } pass_t;
 
 	//Constructor & Destructor
-	DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile = NULL);
-	virtual ~DynamicNormalizer(void);
+	DynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose = false, FILE *const logFile = NULL);
+	virtual ~DynamicAudioNormalizer(void);
 	
 	//Public API
 	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
 	bool setPass(const int pass);
 
+	//Static functions
+	static void getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch);
+	static void getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch);
+
 private:
-	DynamicNormalizer_PrivateData *const p;
+	DynamicAudioNormalizer_PrivateData *const p;
 };

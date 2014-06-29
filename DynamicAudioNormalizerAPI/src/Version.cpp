@@ -28,64 +28,64 @@ const unsigned int DYAUNO_VERSION_MINOR = 1;
 const unsigned int DYAUNO_VERSION_PATCH = 3;
 
 //Build date/time
-const CHR* DYAUNO_BUILD_DATE = TXT(__DATE__);
-const CHR* DYAUNO_BUILD_TIME = TXT(__TIME__);
+const char* DYAUNO_BUILD_DATE = __DATE__;
+const char* DYAUNO_BUILD_TIME = __TIME__;
 
 //Compiler detection
 #if defined(__INTEL_COMPILER)
 	#if (__INTEL_COMPILER >= 1300)
-		static CHR *DYAUNO_COMPILER = TXT("ICL 13.x");
+		static char *DYAUNO_COMPILER = "ICL 13.x";
 	#elif (__INTEL_COMPILER >= 1200)
-		static CHR *DYAUNO_COMPILER = TXT("ICL 12x.");
+		static char *DYAUNO_COMPILER = "ICL 12x.";
 	#elif (__INTEL_COMPILER >= 1100)
-		static CHR *DYAUNO_COMPILER = TXT("ICL 11.x");
+		static char *DYAUNO_COMPILER = "ICL 11.x";
 	#elif (__INTEL_COMPILER >= 1000)
-		static CHR *DYAUNO_COMPILER = TXT("ICL 10.x");
+		static char *DYAUNO_COMPILER = "ICL 10.x";
 	#else
 		#error Compiler is not supported!
 	#endif
 #elif defined(_MSC_VER)
 	#if (_MSC_VER == 1800)
 		#if (_MSC_FULL_VER < 180021005)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2013-Beta");
+			const char *DYAUNO_COMPILER = "MSVC 2013-Beta";
 		#elif (_MSC_FULL_VER < 180030501)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2013");
+			const char *DYAUNO_COMPILER = "MSVC 2013";
 		#elif (_MSC_FULL_VER == 180030501)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2013.2");
+			const char *DYAUNO_COMPILER = "MSVC 2013.2";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1700)
 		#if (_MSC_FULL_VER < 170050727)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2012-Beta");
+			const char *DYAUNO_COMPILER = "MSVC 2012-Beta";
 		#elif (_MSC_FULL_VER < 170051020)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2012");
+			const char *DYAUNO_COMPILER = "MSVC 2012");
 		#elif (_MSC_FULL_VER < 170051106)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2012.1-CTP");
+			const char *DYAUNO_COMPILER = "MSVC 2012.1-CTP";
 		#elif (_MSC_FULL_VER < 170060315)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2012.1");
+			const char *DYAUNO_COMPILER = "MSVC 2012.1";
 		#elif (_MSC_FULL_VER < 170060610)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2012.2");
+			const char *DYAUNO_COMPILER = "MSVC 2012.2";
 		#elif (_MSC_FULL_VER < 170061030)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2012.3");
+			const char *DYAUNO_COMPILER = "MSVC 2012.3";
 		#elif (_MSC_FULL_VER == 170061030)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2012.4");
+			const char *DYAUNO_COMPILER = "MSVC 2012.4";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1600)
 		#if (_MSC_FULL_VER < 160040219)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2010");
+			const char *DYAUNO_COMPILER = "MSVC 2010";
 		#elif (_MSC_FULL_VER == 160040219)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2010-SP1");
+			const char *DYAUNO_COMPILER = "MSVC 2010-SP1";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1500)
 		#if (_MSC_FULL_VER >= 150030729)
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2008-SP1");
+			const char *DYAUNO_COMPILER = "MSVC 2008-SP1";
 		#else
-			const CHR *DYAUNO_COMPILER = TXT("MSVC 2008");
+			const char *DYAUNO_COMPILER = "MSVC 2008";
 		#endif
 	#else
 		#error Compiler is not supported!
@@ -105,9 +105,9 @@ const CHR* DYAUNO_BUILD_TIME = TXT(__TIME__);
 
 //Architecture detection
 #if defined(_M_X64)
-	const CHR *DYAUNO_ARCH = TXT("x64");
+	const char *DYAUNO_ARCH = "x64";
 #elif defined(_M_IX86)
-	const CHR *DYAUNO_ARCH = TXT("x86");
+	const char *DYAUNO_ARCH = "x86";
 #else
 	#error Architecture is not supported!
 #endif

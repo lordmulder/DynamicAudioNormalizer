@@ -20,12 +20,15 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
+//Internal
 #include "Common.h"
 #include "Parameters.h"
 #include "AudioFileIO.h"
-#include "DynamicNormalizer.h"
-#include "Version.h"
 
+//DynamicAudioNormalizer API
+#include "DynamicAudioNormalizer.h"
+
+//C++
 #include <ctime>
 #include <algorithm>
 
@@ -91,7 +94,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	return true;
 }
 
-static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
+static int runPass(DynamicAudioNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
 {
 	static const CHR spinner[4] = { TXT('-'), TXT('\\'), TXT('|'), TXT('/') };
 	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %.1f%% [%c]");
@@ -100,7 +103,7 @@ static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile,
 	PRINT(progressStr, (is2ndPass ? 2 : 1), 0.0, spinner[0]);
 
 	//Set encoding pass
-	if(!normalizer->setPass(is2ndPass ? DynamicNormalizer::PASS_2ND : DynamicNormalizer::PASS_1ST))
+	if(!normalizer->setPass(is2ndPass ? DynamicAudioNormalizer::PASS_2ND : DynamicAudioNormalizer::PASS_1ST))
 	{
 		PRINT(TXT("\n\n"));
 		LOG_ERR(TXT("Failed to setup the pass!"));
@@ -221,7 +224,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	}
 
 	//Init normalizer
-	DynamicNormalizer *normalizer = new DynamicNormalizer
+	DynamicAudioNormalizer *normalizer = new DynamicAudioNormalizer
 	(
 		channels,
 		sampleRate,
@@ -231,6 +234,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		parameters.peakValue(),
 		parameters.maxAmplification(),
 		parameters.filterSize(),
+		parameters.verboseMode(),
 		logFile
 	);
 	
@@ -255,9 +259,15 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 
 int dynamicNormalizerMain(int argc, CHR* argv[])
 {
-	PRINT(TXT("\nDynamic Audio Normalizer, Version %u.%02u-%u\n"), DYAUNO_VERSION_MAJOR, DYAUNO_VERSION_MINOR, DYAUNO_VERSION_PATCH);
+	uint32_t versionMajor, versionMinor, versionPatch;
+	DynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
+
+	const char *buildDate, *buildTime, *buildCompiler, *buildArch;
+	DynamicAudioNormalizer::getBuildInfo(&buildDate, &buildTime, &buildCompiler, &buildArch);
+
+	PRINT(TXT("\nDynamic Audio Normalizer, Version %u.%02u-%u\n"), versionMajor, versionMinor, versionPatch);
 	PRINT(TXT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
-	PRINT(TXT("Built on %s at %s with %s for Win-%s.\n\n"), DYAUNO_BUILD_DATE, DYAUNO_BUILD_TIME, DYAUNO_COMPILER, DYAUNO_ARCH);
+	PRINT(TXT("Built on ") FMT_CHAR TXT(" at ") FMT_CHAR TXT(" with ") FMT_CHAR TXT(" for Win-") FMT_CHAR TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
 
 	PRINT(TXT("This program is free software: you can redistribute it and/or modify\n"));
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));
