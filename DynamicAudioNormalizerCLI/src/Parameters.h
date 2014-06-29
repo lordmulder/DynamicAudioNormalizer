@@ -42,6 +42,7 @@ public:
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
+	inline const bool     &showHelp(void)           const { return m_showHelp;           }
 	inline const bool     &verboseMode(void)        const { return m_verboseMode;        }
 
 protected:
@@ -56,6 +57,7 @@ private:
 	uint32_t m_frameLenMsec;
 	uint32_t m_filterSize;
 	
+	bool m_showHelp;
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
 	bool m_verboseMode;

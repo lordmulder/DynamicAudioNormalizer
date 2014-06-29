@@ -103,11 +103,12 @@ void Parameters::setDefaults(void)
 	m_dbgLogFile = NULL;
 
 	m_frameLenMsec = 500;
-	m_filterSize = 31;
+	m_filterSize   = 31;
 	
-	m_channelsCoupled = true;
+	m_showHelp           = false;
+	m_channelsCoupled    = true;
 	m_enableDCCorrection = false;
-	m_verboseMode = false;
+	m_verboseMode        = false;
 	
 	m_peakValue = 0.95;
 	m_maxAmplification = 10.0;
@@ -119,6 +120,11 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 
 	while(++pos < argc)
 	{
+		if(IS_ARG_SHRT("h", "help"))
+		{
+			m_showHelp = true;
+			break;
+		}
 		if(IS_ARG_SHRT("i", "input"))
 		{
 			ENSURE_NEXT_ARG();
@@ -181,13 +187,13 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		return false;
 	}
 
-	if(pos < argc)
+	if((!m_showHelp) && (pos < argc))
 	{
 		LOG_WRN(TXT("Excess command-line argument \"%s\"\n"), argv[pos]);
 		return false;
 	}
 
-	return validateParameters();
+	return m_showHelp || validateParameters();
 }
 
 bool Parameters::validateParameters(void)

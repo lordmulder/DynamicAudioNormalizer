@@ -269,6 +269,27 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	return exitCode;
 }
 
+static void printHelpScreen(int argc, CHR* argv[])
+{
+	Parameters defaults;
+
+	PRINT(TXT("Usage:\n"));
+	PRINT(TXT("  %s [options] -i <input,wav> -o <output,wav>\n"), appName(argv[0]));
+	PRINT(TXT("\n"));
+	PRINT(TXT("Options:\n"));
+	PRINT(TXT("  -i --input <file>        Input audio file\n"));
+	PRINT(TXT("  -o --output <file>       Output audio file\n"));
+	PRINT(TXT("  -l --logfile <file>      Create log file\n"));
+	PRINT(TXT("  -p --peak <value>        Target peak magnitude [%.2f]\n"), defaults.peakValue());
+	PRINT(TXT("  -m --max-amp <value>     Maximum amplification factor [%.2f]\n"), defaults.maxAmplification());
+	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [%u]\n"), defaults.frameLenMsec());
+	PRINT(TXT("  -g --gauss-size <value>  Gauss filter window size, in frames [%u]\n"), defaults.filterSize());
+	PRINT(TXT("     --no-coupling         Disable channel coupling [on by default]\n"));
+	PRINT(TXT("     --correct-dc          Perform DC correction [off by default]\n"));
+	PRINT(TXT("     --verbose             Enable verbose console output\n"));
+	PRINT(TXT("\n"));
+}
+
 int dynamicNormalizerMain(int argc, CHR* argv[])
 {
 	uint32_t versionMajor, versionMinor, versionPatch;
@@ -292,6 +313,12 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	{
 		LOG_ERR(TXT("Invalid or incomplete command-line arguments. Type \"%s --help\" for details!\n"), appName(argv[0]));
 		return EXIT_FAILURE;
+	}
+
+	if(parameters.showHelp())
+	{
+		printHelpScreen(argc, argv);
+		return EXIT_SUCCESS;
 	}
 
 	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
