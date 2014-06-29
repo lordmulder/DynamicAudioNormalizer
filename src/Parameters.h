@@ -41,6 +41,7 @@ public:
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &aggressiveness(void)     const { return m_aggressiveness;     }
+	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
 
 protected:
 	void setDefaults(void);
@@ -57,5 +58,6 @@ private:
 	bool m_enableDCCorrection;
 	
 	double m_peakValue;
+	double m_maxAmplification;
 	double m_aggressiveness;
 };

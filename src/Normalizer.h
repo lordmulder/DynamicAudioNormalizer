@@ -28,7 +28,7 @@
 class Normalizer
 {
 public:
-	Normalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, FILE *const logFile = NULL);
+	Normalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, const double maxAmplification, FILE *const logFile = NULL);
 	~Normalizer(void);
 	
 	void processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
@@ -50,6 +50,7 @@ private:
 	const bool m_enableDCCorrection;
 	const double m_peakValue;
 	const double m_aggressiveness;
+	const double m_maxAmplification;
 
 	FILE *const m_logFile;
 

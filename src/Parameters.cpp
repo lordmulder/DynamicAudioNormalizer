@@ -104,6 +104,7 @@ void Parameters::setDefaults(void)
 	m_enableDCCorrection = true;
 	
 	m_peakValue = 0.95;
+	m_maxAmplification = 10.0;
 	m_aggressiveness = 0.05;
 }
 
@@ -131,7 +132,7 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			m_dbgLogFile = argv[pos];
 			continue;
 		}
-		if(IS_ARG_SHRT("a", "aggressiveness"))
+		if(IS_ARG_SHRT("a", "aggro"))
 		{
 			ENSURE_NEXT_ARG();
 			PARSE_VALUE_FLT(m_aggressiveness);
@@ -143,18 +144,24 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			PARSE_VALUE_FLT(m_peakValue);
 			continue;
 		}
-		if(IS_ARG_SHRT("f", "frame-length"))
+		if(IS_ARG_SHRT("m", "max-amp"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_FLT(m_maxAmplification);
+			continue;
+		}
+		if(IS_ARG_SHRT("f", "frame-len"))
 		{
 			ENSURE_NEXT_ARG();
 			PARSE_VALUE_UINT(m_frameLenMsec);
 			continue;
 		}
-		if(IS_ARG_LONG("no-channel-coupling"))
+		if(IS_ARG_LONG("no-coupling"))
 		{
 			m_channelsCoupled = false;
 			continue;
 		}
-		if(IS_ARG_LONG("no-dc-correction"))
+		if(IS_ARG_LONG("no-correct"))
 		{
 			m_enableDCCorrection = false;
 			continue;
@@ -226,6 +233,12 @@ bool Parameters::validateParameters(void)
 		return false;
 	}
 
+	if((m_maxAmplification < 1.0) || (m_maxAmplification > 100.0))
+	{
+		LOG_WRN(TXT("Maximum amplification %.2f is out of range. Must be in the 1.00 to 100.00 range!\n"), m_maxAmplification);
+		return false;
+	}
+	
 	if((m_frameLenMsec < 10) || (m_frameLenMsec > 8000))
 	{
 		LOG_WRN(TXT("Frame length %u is out of range. Must be in the 10 to 8000 range!\n"), m_frameLenMsec);

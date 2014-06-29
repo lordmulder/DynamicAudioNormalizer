@@ -93,6 +93,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	static const size_t FRAME_SIZE = 4096;
 	static const CHR *progressStr = TXT("\rNormalization in progress: %.1f%%");
 
+	//Get source info
 	uint32_t channels, sampleRate;
 	int64_t length;
 	if(!sourceFile->queryInfo(channels, sampleRate, length))
@@ -101,19 +102,34 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		return EXIT_FAILURE;
 	}
 
+	//Allocate buffers
 	double **buffer = new double*[channels];
 	for(uint32_t channel = 0; channel < channels; channel++)
 	{
 		buffer[channel] = new double[FRAME_SIZE];
 	}
 
-	Normalizer *normalizer = new Normalizer(channels, sampleRate, parameters.frameLenMsec(), parameters.channelsCoupled(), parameters.enableDCCorrection(), parameters.peakValue(), parameters.aggressiveness(), logFile);
+	//Init normalizer
+	Normalizer *normalizer = new Normalizer
+	(
+		channels,
+		sampleRate,
+		parameters.frameLenMsec(),
+		parameters.channelsCoupled(),
+		parameters.enableDCCorrection(),
+		parameters.peakValue(),
+		parameters.aggressiveness(),
+		parameters.maxAmplification(),
+		logFile
+	);
 
+	//Init status variables
 	bool error = false;
 	int64_t remaining = length;
 	short indicator = 0;
 	int64_t delayedSamples = 0;
 
+	//Main audio processing loop
 	while(remaining > 0)
 	{
 		if(++indicator > 512)
@@ -151,6 +167,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		}
 	}
 
+	//Flush all the delayed samples
 	while(delayedSamples > 0)
 	{
 		for(uint32_t channel = 0; channel < channels; channel++)
@@ -177,6 +194,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		}
 	}
 
+	//Error checking
 	if(!error)
 	{
 		PRINT(progressStr, 100.0);
@@ -188,13 +206,15 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		LOG_ERR(TXT("I/O error encountered -> stopping!\n"));
 	}
 
+	//Memory clean-up
 	for(uint32_t channel = 0; channel < channels; channel++)
 	{
 		MY_DELETE_ARRAY(buffer[channel]);
 	}
-
 	MY_DELETE_ARRAY(buffer);
-	return EXIT_SUCCESS;
+
+	//Return result
+	return error ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 int dynamicNormalizerMain(int argc, CHR* argv[])
