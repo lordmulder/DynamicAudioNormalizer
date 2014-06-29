@@ -218,14 +218,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		return EXIT_FAILURE;
 	}
 
-	//Allocate buffers
-	double **buffer = new double*[channels];
-	for(uint32_t channel = 0; channel < channels; channel++)
-	{
-		buffer[channel] = new double[FRAME_SIZE];
-	}
-
-	//Init normalizer
+	//Create the normalizer
 	DynamicAudioNormalizer *normalizer = new DynamicAudioNormalizer
 	(
 		channels,
@@ -240,6 +233,21 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		logFile
 	);
 	
+	//Initialze normalizer
+	if(!normalizer->initialize())
+	{
+		LOG_ERR(TXT("Failed to initialize the normalizer instance!\n"));
+		MY_DELETE(normalizer);
+		return EXIT_FAILURE;
+	}
+
+	//Allocate buffers
+	double **buffer = new double*[channels];
+	for(uint32_t channel = 0; channel < channels; channel++)
+	{
+		buffer[channel] = new double[FRAME_SIZE];
+	}
+	
 	//Run 1st and 2nd pass
 	for(int pass = 0; pass < 2; pass++)
 	{
@@ -247,7 +255,8 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		if(exitCode != EXIT_SUCCESS) break;
 	}
 
-	PRINT(TXT("PING!"));
+	//Destroy the normalizer
+	MY_DELETE(normalizer);
 
 	//Memory clean-up
 	for(uint32_t channel = 0; channel < channels; channel++)
@@ -255,7 +264,6 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		MY_DELETE_ARRAY(buffer[channel]);
 	}
 	MY_DELETE_ARRAY(buffer);
-	MY_DELETE(normalizer);
 
 	//Return result
 	return exitCode;

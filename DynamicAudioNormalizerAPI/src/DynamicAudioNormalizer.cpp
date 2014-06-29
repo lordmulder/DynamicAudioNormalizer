@@ -138,10 +138,10 @@ DynamicAudioNormalizer_PrivateData::~DynamicAudioNormalizer_PrivateData(void)
 
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		MY_DELETE_ARRAY(m_bufferSrc[channel]);
-		MY_DELETE_ARRAY(m_bufferOut[channel]);
-		MY_DELETE_ARRAY(m_frameBuffer[channel]);
-		MY_DELETE(m_frameHistory[channel]);
+		if(m_bufferSrc)    MY_DELETE_ARRAY(m_bufferSrc[channel]);
+		if(m_bufferOut)    MY_DELETE_ARRAY(m_bufferOut[channel]);
+		if(m_frameBuffer)  MY_DELETE_ARRAY(m_frameBuffer[channel]);
+		if(m_frameHistory) MY_DELETE(m_frameHistory[channel]);
 	}
 
 	MY_DELETE_ARRAY(m_bufferSrc);
@@ -219,7 +219,7 @@ bool DynamicAudioNormalizer_PrivateData::initialize(void)
 
 	if(m_verbose)
 	{
-		LOG_DBG(TXT("[Parameters]"));
+		LOG_DBG(TXT("[PARAMETERS]"));
 		LOG_DBG(TXT("Frame size     : %u"),     m_frameLen);
 		LOG_DBG(TXT("Channels       : %u"),     m_channels);
 		LOG_DBG(TXT("Sampling rate  : %u"),     m_sampleRate);
@@ -227,7 +227,6 @@ bool DynamicAudioNormalizer_PrivateData::initialize(void)
 		LOG_DBG(TXT("DC correction  : %s"),     m_enableDCCorrection ? TXT("YES") : TXT("NO"));
 		LOG_DBG(TXT("Peak value     : %.4f"),   m_peakValue);
 		LOG_DBG(TXT("Max amp factor : %.4f\n"), m_maxAmplification);
-		LOG_DBG(TXT(""));
 	}
 
 	m_initialized = true;
