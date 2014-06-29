@@ -61,6 +61,11 @@ inline static int PRINT(const wchar_t *const format, ...)
 	return result;
 }
 
+inline static void FLUSH(void)
+{
+	fflush(stderr);
+}
+
 inline static FILE *FOPEN(const wchar_t *const fileName, const wchar_t *const mode)
 {
 	FILE *temp;

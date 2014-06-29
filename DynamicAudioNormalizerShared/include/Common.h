@@ -23,7 +23,6 @@
 #pragma once
 
 #include "Platform.h"
-#include <stdexcept>
 
 #if defined(_DEBUG) && !defined(NDEBUG)
 	#define DYAUNO_DEBUG (1)
@@ -56,5 +55,3 @@ while(0)
 #define LOG_DBG(X, ...) do { PRINT(TXT("DEBUG: ")   X TXT("\n"), __VA_ARGS__); } while(0)
 #define LOG_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
 #define LOG_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-
-#define MY_THROW(X) throw std::runtime_error((X))

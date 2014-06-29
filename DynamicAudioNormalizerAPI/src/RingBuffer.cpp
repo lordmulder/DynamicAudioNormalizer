@@ -25,6 +25,7 @@
 #include "Common.h"
 
 #include <cstring>
+#include <stdexcept>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +63,7 @@ void RingBuffer::read(double *data, const uint32_t count)
 {
 	if(m_usedCount < count)
 	{
-		MY_THROW("Ring buffer cannot read that much -> out of data!");
+		throw std::runtime_error("Ring buffer cannot read that much -> out of data!");
 	}
 
 #ifdef FAST_RING_COPY
@@ -95,7 +96,7 @@ void RingBuffer::append(const double *data, const uint32_t count)
 {
 	if(m_freeCount < count)
 	{
-		MY_THROW("Ring buffer cannot append that much -> out of memory!");
+		throw std::runtime_error("Ring buffer cannot append that much -> out of memory!");
 	}
 
 #ifdef FAST_RING_COPY

@@ -101,12 +101,13 @@ static int runPass(DynamicAudioNormalizer *normalizer, AudioFileIO *const source
 
 	//Print progress
 	PRINT(progressStr, (is2ndPass ? 2 : 1), 0.0, spinner[0]);
+	FLUSH();
 
 	//Set encoding pass
 	if(!normalizer->setPass(is2ndPass ? DynamicAudioNormalizer::PASS_2ND : DynamicAudioNormalizer::PASS_1ST))
 	{
 		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("Failed to setup the pass!"));
+		LOG_ERR(TXT("Failed to setup the processing pass!"));
 		return EXIT_FAILURE;
 	}
 
@@ -129,7 +130,7 @@ static int runPass(DynamicAudioNormalizer *normalizer, AudioFileIO *const source
 		if(++indicator > 512)
 		{
 			PRINT(progressStr, (is2ndPass ? 2 : 1), 99.9 * (double(length - remaining) / double(length)), spinner[spinnerPos++]);
-			indicator = 0; spinnerPos %= 4;
+			FLUSH(); indicator = 0; spinnerPos %= 4;
 		}
 
 		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
@@ -192,6 +193,7 @@ static int runPass(DynamicAudioNormalizer *normalizer, AudioFileIO *const source
 	if(!error)
 	{
 		PRINT(progressStr, (is2ndPass ? 2 : 1), 100.0, TXT('*'));
+		FLUSH();
 		PRINT(TXT("\nCompleted.\n\n"));
 	}
 	else
@@ -244,6 +246,8 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		exitCode = runPass(normalizer, sourceFile, outputFile, buffer, channels, length, (pass > 0));
 		if(exitCode != EXIT_SUCCESS) break;
 	}
+
+	PRINT(TXT("PING!"));
 
 	//Memory clean-up
 	for(uint32_t channel = 0; channel < channels; channel++)

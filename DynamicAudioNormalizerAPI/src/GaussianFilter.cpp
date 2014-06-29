@@ -50,7 +50,7 @@ GaussianFilter::GaussianFilter(const uint32_t &filterSize, const double &sigma)
 {
 	if((filterSize < 1) || ((filterSize % 2) != 1))
 	{
-		MY_THROW("Filter size must be a positive and odd value!");
+		throw std::runtime_error("Filter size must be a positive and odd value!");
 	}
 	
 	//Init temp buffer;

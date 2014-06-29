@@ -55,6 +55,7 @@ public:
 	virtual ~DynamicAudioNormalizer(void);
 	
 	//Public API
+	bool initialize(void);
 	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
 	bool setPass(const int pass);
 

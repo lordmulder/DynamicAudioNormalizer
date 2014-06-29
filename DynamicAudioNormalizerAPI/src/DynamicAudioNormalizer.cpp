@@ -49,6 +49,7 @@ public:
 	DynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile);
 	~DynamicAudioNormalizer_PrivateData(void);
 
+	bool initialize(void);
 	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
 	bool setPass(const int pass);
 
@@ -68,6 +69,8 @@ private:
 	FILE *const m_logFile;
 
 	int m_currentPass;
+	bool m_initialized;
+
 	std::deque<double> **m_frameHistory;
 	double **m_frameBuffer;
 
@@ -113,59 +116,14 @@ DynamicAudioNormalizer_PrivateData::DynamicAudioNormalizer_PrivateData(const uin
 	m_verbose(verbose),
 	m_logFile(logFile)
 {
+	m_initialized = false;
 	m_currentPass = -1;
-
-	if((m_channels < 1) || (m_channels > 8))
-	{
-		MY_THROW("Invalid or unsupported channel count. Should be in the 1 to 8 range!");
-	}
-	if((m_sampleRate < 11025) || (m_channels > 192000))
-	{
-		MY_THROW("Invalid or unsupported sampling rate. Should be in the 11025 to 192000 range!");
-	}
-	if((m_frameLen < 32) || (m_frameLen > 2097152))
-	{
-		MY_THROW("Invalid or unsupported frame size. Should be in the 32 to 2097152 range!");
-	}
-
-	m_bufferSrc = new RingBuffer*[channels];
-	m_bufferOut = new RingBuffer*[channels];
-	for(uint32_t channel = 0; channel < m_channels; channel++)
-	{
-		m_bufferSrc[channel] = new RingBuffer(m_frameLen);
-		m_bufferOut[channel] = new RingBuffer(m_frameLen);
-	}
-
-	m_frameBuffer = new double*[channels];
-	for(uint32_t channel = 0; channel < m_channels; channel++)
-	{
-		m_frameBuffer[channel] = new double[m_frameLen];
-	}
-
-	m_frameHistory = new std::deque<double>*[channels];
-	for(uint32_t channel = 0; channel < m_channels; channel++)
-	{
-		m_frameHistory[channel] = new std::deque<double>();
-	}
-
-	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
-	m_gaussFilter = new GaussianFilter(m_filterSize, sigma);
-
-	const uint32_t minFilterSize = (m_filterSize * 2) / 3;
-	m_minimumFilter = new MinimumFilter(minFilterSize + ((minFilterSize + 1) % 2));
-
-	if(m_verbose)
-	{
-		LOG_DBG(TXT("[Parameters]"));
-		LOG_DBG(TXT("Frame size     : %u"),     m_frameLen);
-		LOG_DBG(TXT("Channels       : %u"),     m_channels);
-		LOG_DBG(TXT("Sampling rate  : %u"),     m_sampleRate);
-		LOG_DBG(TXT("Chan. coupling : %s"),     m_channelsCoupled    ? TXT("YES") : TXT("NO"));
-		LOG_DBG(TXT("DC correction  : %s"),     m_enableDCCorrection ? TXT("YES") : TXT("NO"));
-		LOG_DBG(TXT("Peak value     : %.4f"),   m_peakValue);
-		LOG_DBG(TXT("Max amp factor : %.4f\n"), m_maxAmplification);
-		LOG_DBG(TXT(""));
-	}
+	m_frameHistory = NULL;
+	m_frameBuffer = NULL;
+	m_bufferSrc = NULL;
+	m_bufferOut = NULL;
+	m_minimumFilter = NULL;
+	m_gaussFilter = NULL;
 }
 
 DynamicAudioNormalizer::~DynamicAudioNormalizer(void)
@@ -196,20 +154,114 @@ DynamicAudioNormalizer_PrivateData::~DynamicAudioNormalizer_PrivateData(void)
 // Public API
 ///////////////////////////////////////////////////////////////////////////////
 
+bool DynamicAudioNormalizer::initialize(void)
+{
+	try
+	{
+		return p->initialize();
+	}
+	catch(std::exception &e)
+	{
+		LOG_ERR(FMT_CHAR, e.what());
+		return false;
+	}
+}
+
+bool DynamicAudioNormalizer_PrivateData::initialize(void)
+{
+	if(m_initialized)
+	{
+		LOG_WRN(TXT("Already initialized -> ignoring!"));
+		return true;
+	}
+
+	if((m_channels < 1) || (m_channels > 8))
+	{
+		LOG_ERR(TXT("Invalid or unsupported channel count. Should be in the 1 to 8 range!"));
+		return false;
+	}
+	if((m_sampleRate < 11025) || (m_channels > 192000))
+	{
+		LOG_ERR(TXT("Invalid or unsupported sampling rate. Should be in the 11025 to 192000 range!"));
+		return false;
+	}
+	if((m_frameLen < 32) || (m_frameLen > 2097152))
+	{
+		LOG_ERR(TXT("Invalid or unsupported frame size. Should be in the 32 to 2097152 range!"));
+		return false;
+	}
+
+	m_bufferSrc = new RingBuffer*[m_channels];
+	m_bufferOut = new RingBuffer*[m_channels];
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		m_bufferSrc[channel] = new RingBuffer(m_frameLen);
+		m_bufferOut[channel] = new RingBuffer(m_frameLen);
+	}
+
+	m_frameBuffer = new double*[m_channels];
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		m_frameBuffer[channel] = new double[m_frameLen];
+	}
+
+	m_frameHistory = new std::deque<double>*[m_channels];
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		m_frameHistory[channel] = new std::deque<double>();
+	}
+
+	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
+	m_gaussFilter = new GaussianFilter(m_filterSize, sigma);
+
+	const uint32_t minFilterSize = (m_filterSize * 2) / 3;
+	m_minimumFilter = new MinimumFilter(minFilterSize + ((minFilterSize + 1) % 2));
+
+	if(m_verbose)
+	{
+		LOG_DBG(TXT("[Parameters]"));
+		LOG_DBG(TXT("Frame size     : %u"),     m_frameLen);
+		LOG_DBG(TXT("Channels       : %u"),     m_channels);
+		LOG_DBG(TXT("Sampling rate  : %u"),     m_sampleRate);
+		LOG_DBG(TXT("Chan. coupling : %s"),     m_channelsCoupled    ? TXT("YES") : TXT("NO"));
+		LOG_DBG(TXT("DC correction  : %s"),     m_enableDCCorrection ? TXT("YES") : TXT("NO"));
+		LOG_DBG(TXT("Peak value     : %.4f"),   m_peakValue);
+		LOG_DBG(TXT("Max amp factor : %.4f\n"), m_maxAmplification);
+		LOG_DBG(TXT(""));
+	}
+
+	m_initialized = true;
+	return true;
+}
+
 bool DynamicAudioNormalizer::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
 {
-	return p->processInplace(samples, inputSize, outputSize);
+	try
+	{
+		return p->processInplace(samples, inputSize, outputSize);
+	}
+	catch(std::exception &e)
+	{
+		LOG_ERR(FMT_CHAR, e.what());
+		return false;
+	}
 }
 
 bool DynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
 {
-	if((m_currentPass != DynamicAudioNormalizer::PASS_1ST) && (m_currentPass != DynamicAudioNormalizer::PASS_2ND))
+	outputSize = 0;
+
+	//Check audio normalizer status
+	if(!m_initialized)
 	{
-		LOG_ERR(TXT("Processing pass has not been set yet!"));
+		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
 		return false;
 	}
-
-	outputSize = 0;
+	if((m_currentPass != DynamicAudioNormalizer::PASS_1ST) && (m_currentPass != DynamicAudioNormalizer::PASS_2ND))
+	{
+		LOG_ERR(TXT("Pass has not been set yet. Must call setPass() first!"));
+		return false;
+	}
 
 	uint32_t inputPos = 0;
 	uint32_t inputSamplesLeft = static_cast<uint32_t>(std::min(std::max(inputSize, 0i64), int64_t(UINT32_MAX)));
@@ -279,11 +331,25 @@ bool DynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64_
 
 bool DynamicAudioNormalizer::setPass(const int pass)
 {
-	return p->setPass(pass);
+	try
+	{
+		return p->setPass(pass);
+	}
+	catch(std::exception &e)
+	{
+		LOG_ERR(FMT_CHAR, e.what());
+		return false;
+	}
 }
 
 bool DynamicAudioNormalizer_PrivateData::setPass(const int pass)
 {
+	//Check audio normalizer status
+	if(!m_initialized)
+	{
+		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
+		return false;
+	}
 	if((pass != DynamicAudioNormalizer::PASS_1ST) && (pass != DynamicAudioNormalizer::PASS_2ND))
 	{
 		LOG_ERR(TXT("Invalid pass value %d specified -> ignoring!"), pass);
@@ -361,7 +427,7 @@ void DynamicAudioNormalizer_PrivateData::processNextFrame(void)
 		amplifyCurrentFrame();
 		break;
 	default:
-		MY_THROW("Invalid pass value detected!");
+		throw std::runtime_error("Invalid pass value detected!");
 	}
 }
 
