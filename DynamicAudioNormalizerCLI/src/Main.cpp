@@ -26,6 +26,7 @@
 #include "DynamicNormalizer.h"
 #include "Version.h"
 
+#include <ctime>
 #include <algorithm>
 
 static const size_t FRAME_SIZE = 4096;
@@ -92,10 +93,11 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 
 static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
 {
-	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %.1f%%");
+	static const CHR spinner[4] = { TXT('-'), TXT('\\'), TXT('|'), TXT('/') };
+	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %.1f%% [%c]");
 
 	//Print progress
-	PRINT(progressStr, (is2ndPass ? 2 : 1), 0.0);
+	PRINT(progressStr, (is2ndPass ? 2 : 1), 0.0, spinner[0]);
 
 	//Set encoding pass
 	if(!normalizer->setPass(is2ndPass ? DynamicNormalizer::PASS_2ND : DynamicNormalizer::PASS_1ST))
@@ -114,18 +116,17 @@ static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile,
 	}
 
 	//Init status variables
+	short indicator = 0, spinnerPos = 1;
+	int64_t remaining = length, delayedSamples = 0;
 	bool error = false;
-	int64_t remaining = length;
-	short indicator = 0;
-	int64_t delayedSamples = 0;
 
 	//Main audio processing loop
 	while(remaining > 0)
 	{
 		if(++indicator > 512)
 		{
-			PRINT(progressStr, (is2ndPass ? 2 : 1), 99.9 * (double(length - remaining) / double(length)));
-			indicator = 0;
+			PRINT(progressStr, (is2ndPass ? 2 : 1), 99.9 * (double(length - remaining) / double(length)), spinner[spinnerPos++]);
+			indicator = 0; spinnerPos %= 4;
 		}
 
 		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
@@ -187,7 +188,7 @@ static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile,
 	//Error checking
 	if(!error)
 	{
-		PRINT(progressStr, (is2ndPass ? 2 : 1), 100.0);
+		PRINT(progressStr, (is2ndPass ? 2 : 1), 100.0, TXT('*'));
 		PRINT(TXT("\nCompleted.\n\n"));
 	}
 	else
@@ -262,6 +263,8 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));
 	PRINT(TXT("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n\n"));
 
+	PRINT(TXT("---------------------------------------------------------------------------\n\n"));
+
 	Parameters parameters;
 	if(!parameters.parseArgs(argc, argv))
 	{
@@ -285,13 +288,18 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		}
 	}
 
+	const clock_t clockStart = clock();
 	const int result = processFiles(parameters, sourceFile, outputFile, logFile);
+	const double elapsed = double(clock() - clockStart) / double(CLOCKS_PER_SEC);
 
 	sourceFile->close();
 	outputFile->close();
 
 	MY_DELETE(sourceFile);
 	MY_DELETE(outputFile);
+
+	PRINT(TXT("---------------------------------------------------------------------------\n\n"));
+	PRINT(TXT("%s\n\nOperation took %.1f seconds.\n\n"), ((result != EXIT_SUCCESS) ? TXT("Sorry, something went wrong :-(") : TXT("Everything completed successfully :-)")), elapsed);
 
 	return result;
 }

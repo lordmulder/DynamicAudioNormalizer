@@ -86,6 +86,7 @@ GaussianFilter::GaussianFilter(const uint32_t &filterSize, const double &sigma)
 GaussianFilter::~GaussianFilter(void)
 {
 	MY_DELETE_ARRAY(m_weights);
+	MY_DELETE_ARRAY(m_temp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

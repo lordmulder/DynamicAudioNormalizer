@@ -24,16 +24,10 @@
     <ClCompile Include="src\Version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform_Win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Parameters.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\RingBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\DynamicNormalizer.cpp">
@@ -42,15 +36,15 @@
     <ClCompile Include="src\GaussianFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MinimumFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DynamicAudioNormalizerShared\src\Platform_Win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AudioFileIO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Version.h">
@@ -66,6 +60,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\GaussianFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MinimumFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DynamicAudioNormalizerShared\include\Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DynamicAudioNormalizerShared\include\Platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -22,35 +22,23 @@
 
 #pragma once
 
-#include "Platform.h"
+#include <stdint.h>
+#include <deque>
 
-#include <stdexcept>
+class MinimumFilter
+{
+public:
+	MinimumFilter(const uint32_t &filterSize);
+	virtual ~MinimumFilter(void);
 
-#define MY_DELETE(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
+	void apply(double *values, const uint32_t &length, const size_t &passes = 1);
+	void apply(std::deque<double> *values, const size_t &passes = 1);
 
-#define MY_DELETE_ARRAY(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete [] (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
-
-extern const uint8_t *const DYAUNO_LOGLVL;
-void setLoggingLevel(const uint8_t &value);
-
-#define LOG_DBG(X, ...) do { if((*DYAUNO_LOGLVL) >= 2) PRINT(TXT("DEBUG: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-#define LOG_WRN(X, ...) do { if((*DYAUNO_LOGLVL) >= 1) PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
-#define LOG_ERR(X, ...) do { if((*DYAUNO_LOGLVL) >= 0) PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-
-#define MY_THROW(X) throw std::runtime_error((X))
+private:
+	const uint32_t m_filterSize;
+	
+	double *m_temp;
+	uint32_t m_tempSize;
+	
+	MinimumFilter &operator=(const MinimumFilter &) { throw 666; }
+};

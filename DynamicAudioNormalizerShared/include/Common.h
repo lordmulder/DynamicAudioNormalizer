@@ -20,14 +20,34 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "Common.h"
+#pragma once
 
-#include <algorithm>
+#include "Platform.h"
 
-static uint8_t DYAUNO_LOGLVL_VALUE = 1;
-const uint8_t *const DYAUNO_LOGLVL = &DYAUNO_LOGLVL_VALUE;
+#include <stdexcept>
 
-void setLoggingLevel(const uint8_t &value)
-{
-	DYAUNO_LOGLVL_VALUE = std::min(value, uint8_t(2));
-}
+#define MY_DELETE(X) do \
+{ \
+	if((X)) \
+	{ \
+		delete (X); \
+		(X) = NULL; \
+	} \
+} \
+while(0)
+
+#define MY_DELETE_ARRAY(X) do \
+{ \
+	if((X)) \
+	{ \
+		delete [] (X); \
+		(X) = NULL; \
+	} \
+} \
+while(0)
+
+#define LOG_DBG(X, ...) do { PRINT(TXT("DEBUG: ")   X TXT("\n"), __VA_ARGS__); } while(0)
+#define LOG_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
+#define LOG_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
+
+#define MY_THROW(X) throw std::runtime_error((X))

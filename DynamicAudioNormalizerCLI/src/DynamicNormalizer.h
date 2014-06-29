@@ -22,47 +22,27 @@
 
 #pragma once
 
-#include "Common.h"
-#include "RingBuffer.h"
+#include <stdint.h>
+#include <cstdio>
 
+//Opaque Data Class
+class DynamicNormalizer_PrivateData;
+
+//Dynamic Normalizer Class
 class DynamicNormalizer
 {
 public:
-	DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile = NULL);
-	~DynamicNormalizer(void);
-	
-	enum
-	{
-		PASS_1ST = 0,
-		PASS_2ND = 1
-	}
-	pass_t;
+	//Constant
+	enum { PASS_1ST = 0, PASS_2ND = 1 } pass_t;
 
+	//Constructor & Destructor
+	DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile = NULL);
+	virtual ~DynamicNormalizer(void);
+	
+	//Public API
 	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
 	bool setPass(const int pass);
 
-protected:
-	void processNextFrame(void);
-	void analyzeCurrentFrame(void);
-	void amplifyCurrentFrame(void);
-	
-	void initializeSecondPass(void);
-	double findPeakMagnitude(const uint32_t channel = UINT32_MAX);
-	void writeToLogFile(void);
-
 private:
-	class PrivateData;
-	PrivateData *const p;
-
-	const uint32_t m_channels;
-	const uint32_t m_sampleRate;
-	const uint32_t m_frameLen;
-	const uint32_t m_filterSize;
-
-	const bool m_channelsCoupled;
-	const bool m_enableDCCorrection;
-	const double m_peakValue;
-	const double m_maxAmplification;
-
-	FILE *const m_logFile;
+	DynamicNormalizer_PrivateData *const p;
 };

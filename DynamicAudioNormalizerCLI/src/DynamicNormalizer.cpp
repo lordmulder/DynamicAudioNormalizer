@@ -22,6 +22,9 @@
 
 #include "DynamicNormalizer.h"
 
+#include "Common.h"
+#include "RingBuffer.h"
+#include "MinimumFilter.h"
 #include "GaussianFilter.h"
 
 #include <cmath>
@@ -36,33 +39,50 @@ static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const do
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// DynamicNormalizer_Private
+// DynamicNormalizer_PrivateData
 ///////////////////////////////////////////////////////////////////////////////
 
-class DynamicNormalizer::PrivateData
+class DynamicNormalizer_PrivateData
 {
 public:
-	PrivateData(void);
+	DynamicNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile);
+	~DynamicNormalizer_PrivateData(void);
 
-	int currentPass;
-	std::deque<double> **maxAmplification;
-	double **frameBuffer;
+	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
+	bool setPass(const int pass);
 
-	RingBuffer **bufferSrc;
-	RingBuffer **bufferOut;
+private:
+	const uint32_t m_channels;
+	const uint32_t m_sampleRate;
+	const uint32_t m_frameLen;
+	const uint32_t m_filterSize;
 
-	GaussianFilter *gaussFilter;
+	const bool m_channelsCoupled;
+	const bool m_enableDCCorrection;
+	const double m_peakValue;
+	const double m_maxAmplification;
+
+	FILE *const m_logFile;
+
+	int m_currentPass;
+	std::deque<double> **m_frameHistory;
+	double **m_frameBuffer;
+
+	RingBuffer **m_bufferSrc;
+	RingBuffer **m_bufferOut;
+
+	MinimumFilter *m_minimumFilter;
+	GaussianFilter *m_gaussFilter;
+
+protected:
+	void processNextFrame(void);
+	void analyzeCurrentFrame(void);
+	void amplifyCurrentFrame(void);
+	
+	void initializeSecondPass(void);
+	double findPeakMagnitude(const uint32_t channel = UINT32_MAX);
+	void writeToLogFile(const char* info);
 };
-
-DynamicNormalizer::PrivateData::PrivateData(void)
-{
-	currentPass = DynamicNormalizer::PASS_1ST;
-	frameBuffer = NULL;
-	bufferSrc = NULL;
-	bufferOut = NULL;
-	maxAmplification = NULL;
-	gaussFilter = NULL;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor & Destructor
@@ -70,7 +90,14 @@ DynamicNormalizer::PrivateData::PrivateData(void)
 
 DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
 :
-	p(new DynamicNormalizer::PrivateData),
+	p(new DynamicNormalizer_PrivateData(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize, logFile))
+
+{
+	/*nothing to do here*/
+}
+
+DynamicNormalizer_PrivateData::DynamicNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
+:
 	m_channels(channels),
 	m_sampleRate(sampleRate),
 	m_frameLen(static_cast<uint32_t>(round(double(sampleRate) * (double(frameLenMsec) / 1000.0)))),
@@ -81,7 +108,7 @@ DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sam
 	m_filterSize(filterSize),
 	m_logFile(logFile)
 {
-	p->currentPass = PASS_1ST;
+	m_currentPass = -1;
 
 	if((m_channels < 1) || (m_channels > 8))
 	{
@@ -96,28 +123,31 @@ DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sam
 		MY_THROW("Invalid or unsupported frame size. Should be in the 32 to 2097152 range!");
 	}
 
-	p->bufferSrc = new RingBuffer*[channels];
-	p->bufferOut = new RingBuffer*[channels];
+	m_bufferSrc = new RingBuffer*[channels];
+	m_bufferOut = new RingBuffer*[channels];
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		p->bufferSrc[channel] = new RingBuffer(m_frameLen);
-		p->bufferOut[channel] = new RingBuffer(m_frameLen);
+		m_bufferSrc[channel] = new RingBuffer(m_frameLen);
+		m_bufferOut[channel] = new RingBuffer(m_frameLen);
 	}
 
-	p->frameBuffer = new double*[channels];
+	m_frameBuffer = new double*[channels];
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		p->frameBuffer[channel] = new double[m_frameLen];
+		m_frameBuffer[channel] = new double[m_frameLen];
 	}
 
-	p->maxAmplification = new std::deque<double>*[channels];
+	m_frameHistory = new std::deque<double>*[channels];
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		p->maxAmplification[channel] = new std::deque<double>();
+		m_frameHistory[channel] = new std::deque<double>();
 	}
 
 	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
-	p->gaussFilter = new GaussianFilter(m_filterSize, sigma);
+	m_gaussFilter = new GaussianFilter(m_filterSize, sigma);
+
+	const uint32_t minFilterSize = (m_filterSize * 2) / 3;
+	m_minimumFilter = new MinimumFilter(minFilterSize + ((minFilterSize + 1) % 2));
 
 	LOG_DBG(TXT("---------Parameters---------"));
 	LOG_DBG(TXT("Frame size     : %u"),   m_frameLen);
@@ -132,18 +162,26 @@ DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sam
 
 DynamicNormalizer::~DynamicNormalizer(void)
 {
+	delete p;
+}
+
+DynamicNormalizer_PrivateData::~DynamicNormalizer_PrivateData(void)
+{
+	MY_DELETE(m_gaussFilter);
+	MY_DELETE(m_minimumFilter);
+
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		MY_DELETE_ARRAY(p->bufferSrc[channel]);
-		MY_DELETE_ARRAY(p->bufferOut[channel]);
-		MY_DELETE_ARRAY(p->frameBuffer[channel]);
-		MY_DELETE(p->maxAmplification[channel]);
+		MY_DELETE_ARRAY(m_bufferSrc[channel]);
+		MY_DELETE_ARRAY(m_bufferOut[channel]);
+		MY_DELETE_ARRAY(m_frameBuffer[channel]);
+		MY_DELETE(m_frameHistory[channel]);
 	}
 
-	MY_DELETE_ARRAY(p->bufferSrc);
-	MY_DELETE_ARRAY(p->bufferOut);
-	MY_DELETE_ARRAY(p->frameBuffer);
-	MY_DELETE_ARRAY(p->maxAmplification);
+	MY_DELETE_ARRAY(m_bufferSrc);
+	MY_DELETE_ARRAY(m_bufferOut);
+	MY_DELETE_ARRAY(m_frameBuffer);
+	MY_DELETE_ARRAY(m_frameHistory);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -152,6 +190,17 @@ DynamicNormalizer::~DynamicNormalizer(void)
 
 bool DynamicNormalizer::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
 {
+	return p->processInplace(samples, inputSize, outputSize);
+}
+
+bool DynamicNormalizer_PrivateData::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
+{
+	if((m_currentPass != DynamicNormalizer::PASS_1ST) && (m_currentPass != DynamicNormalizer::PASS_2ND))
+	{
+		LOG_ERR(TXT("Processing pass has not been set yet!"));
+		return false;
+	}
+
 	outputSize = 0;
 
 	uint32_t inputPos = 0;
@@ -167,12 +216,12 @@ bool DynamicNormalizer::processInplace(double **samples, int64_t inputSize, int6
 		bStop = true;
 
 		//Read input samples
-		while((inputSamplesLeft > 0) && (p->bufferSrc[0]->getFree() > 0))
+		while((inputSamplesLeft > 0) && (m_bufferSrc[0]->getFree() > 0))
 		{
-			const uint32_t copyLen = std::min(inputSamplesLeft, p->bufferSrc[0]->getFree());
+			const uint32_t copyLen = std::min(inputSamplesLeft, m_bufferSrc[0]->getFree());
 			for(uint32_t channel = 0; channel < m_channels; channel++)
 			{
-				p->bufferSrc[channel]->append(&samples[channel][inputPos], copyLen);
+				m_bufferSrc[channel]->append(&samples[channel][inputPos], copyLen);
 			}
 			inputPos += copyLen;
 			inputSamplesLeft -= copyLen;
@@ -181,27 +230,27 @@ bool DynamicNormalizer::processInplace(double **samples, int64_t inputSize, int6
 		}
 
 		//Process frames
-		while((p->bufferSrc[0]->getUsed() >= m_frameLen) && (p->bufferOut[0]->getFree() >= m_frameLen))
+		while((m_bufferSrc[0]->getUsed() >= m_frameLen) && (m_bufferOut[0]->getFree() >= m_frameLen))
 		{
 			for(uint32_t channel = 0; channel < m_channels; channel++)
 			{
-				p->bufferSrc[channel]->read(p->frameBuffer[channel], m_frameLen);
+				m_bufferSrc[channel]->read(m_frameBuffer[channel], m_frameLen);
 			}
 			processNextFrame();
 			for(uint32_t channel = 0; channel < m_channels; channel++)
 			{
-				p->bufferOut[channel]->append(p->frameBuffer[channel], m_frameLen);
+				m_bufferOut[channel]->append(m_frameBuffer[channel], m_frameLen);
 			}
 			bStop = false;
 		}
 
 		//Write output samples
-		while((outputBufferLeft > 0) && (p->bufferOut[0]->getUsed() > 0))
+		while((outputBufferLeft > 0) && (m_bufferOut[0]->getUsed() > 0))
 		{
-			const uint32_t copyLen = std::min(outputBufferLeft, p->bufferOut[0]->getUsed());
+			const uint32_t copyLen = std::min(outputBufferLeft, m_bufferOut[0]->getUsed());
 			for(uint32_t channel = 0; channel < m_channels; channel++)
 			{
-				p->bufferOut[channel]->read(&samples[channel][outputPos], copyLen);
+				m_bufferOut[channel]->read(&samples[channel][outputPos], copyLen);
 			}
 			outputPos += copyLen;
 			outputBufferLeft -= copyLen;
@@ -222,7 +271,12 @@ bool DynamicNormalizer::processInplace(double **samples, int64_t inputSize, int6
 
 bool DynamicNormalizer::setPass(const int pass)
 {
-	if((pass != PASS_1ST) && (pass != PASS_2ND))
+	return p->setPass(pass);
+}
+
+bool DynamicNormalizer_PrivateData::setPass(const int pass)
+{
+	if((pass != DynamicNormalizer::PASS_1ST) && (pass != DynamicNormalizer::PASS_2ND))
 	{
 		LOG_ERR(TXT("Invalid pass value %d specified -> ignoring!"), pass);
 		return false;
@@ -231,21 +285,21 @@ bool DynamicNormalizer::setPass(const int pass)
 	//Clear ring buffers
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		p->bufferSrc[channel]->clear();
-		p->bufferOut[channel]->clear();
+		m_bufferSrc[channel]->clear();
+		m_bufferOut[channel]->clear();
 	}
 
 	//Setup the new processing pass
-	if(pass == PASS_1ST)
+	if(pass == DynamicNormalizer::PASS_1ST)
 	{
 		for(uint32_t channel = 0; channel < m_channels; channel++)
 		{
-			p->maxAmplification[channel]->clear();
+			m_frameHistory[channel]->clear();
 		}
 	}
 	else
 	{
-		if(p->maxAmplification[0]->size() < 1)
+		if(m_frameHistory[0]->size() < 1)
 		{
 			LOG_WRN(TXT("No information from 1st pass stored yet!"));
 		}
@@ -255,7 +309,7 @@ bool DynamicNormalizer::setPass(const int pass)
 		}
 	}
 
-	p->currentPass = pass;
+	m_currentPass = pass;
 	return true;
 }
 
@@ -263,7 +317,7 @@ bool DynamicNormalizer::setPass(const int pass)
 // Procesing Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-void DynamicNormalizer::processNextFrame(void)
+void DynamicNormalizer_PrivateData::processNextFrame(void)
 {
 	//DC correction
 	//if(m_enableDCCorrection)
@@ -271,12 +325,12 @@ void DynamicNormalizer::processNextFrame(void)
 	//	perfromDCCorrection();
 	//}
 	
-	switch(p->currentPass)
+	switch(m_currentPass)
 	{
-	case PASS_1ST:
+	case DynamicNormalizer::PASS_1ST:
 		analyzeCurrentFrame();
 		break;
-	case PASS_2ND:
+	case DynamicNormalizer::PASS_2ND:
 		amplifyCurrentFrame();
 		break;
 	default:
@@ -284,7 +338,7 @@ void DynamicNormalizer::processNextFrame(void)
 	}
 }
 
-void DynamicNormalizer::analyzeCurrentFrame(void)
+void DynamicNormalizer_PrivateData::analyzeCurrentFrame(void)
 {
 	if(m_channelsCoupled)
 	{
@@ -293,7 +347,7 @@ void DynamicNormalizer::analyzeCurrentFrame(void)
 		
 		for(uint32_t channel = 0; channel < m_channels; channel++)
 		{
-			p->maxAmplification[channel]->push_back(currentAmplificationFactor);
+			m_frameHistory[channel]->push_back(currentAmplificationFactor);
 		}
 	}
 	else
@@ -302,30 +356,30 @@ void DynamicNormalizer::analyzeCurrentFrame(void)
 		{
 			const double peakMagnitude = findPeakMagnitude(channel);
 			const double currentAmplificationFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
-			p->maxAmplification[channel]->push_back(currentAmplificationFactor);
+			m_frameHistory[channel]->push_back(currentAmplificationFactor);
 		}
 	}
 }
 
-void DynamicNormalizer::amplifyCurrentFrame(void)
+void DynamicNormalizer_PrivateData::amplifyCurrentFrame(void)
 {
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		if(p->maxAmplification[channel]->empty())
+		if(m_frameHistory[channel]->empty())
 		{
 			LOG_WRN(TXT("Second pass has more frames than the firts one -> passing trough unmodified!"));
 			break;
 		}
 
-		const double currentAmplificationFactor = p->maxAmplification[channel]->front();
-		p->maxAmplification[channel]->pop_front();
+		const double currentAmplificationFactor = m_frameHistory[channel]->front();
+		m_frameHistory[channel]->pop_front();
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			p->frameBuffer[channel][i] *= currentAmplificationFactor;
-			if(p->frameBuffer[channel][i] > m_peakValue)
+			m_frameBuffer[channel][i] *= currentAmplificationFactor;
+			if(abs(m_frameBuffer[channel][i]) > m_peakValue)
 			{
-				p->frameBuffer[channel][i] = m_peakValue; /*fix clipping*/
+				m_frameBuffer[channel][i] = std::copysign(m_peakValue, m_frameBuffer[channel][i]); /*fix clipping*/
 			}
 		}
 	}
@@ -335,7 +389,7 @@ void DynamicNormalizer::amplifyCurrentFrame(void)
 // Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-double DynamicNormalizer::findPeakMagnitude(const uint32_t channel)
+double DynamicNormalizer_PrivateData::findPeakMagnitude(const uint32_t channel)
 {
 	double dMax = -1.0;
 
@@ -345,7 +399,7 @@ double DynamicNormalizer::findPeakMagnitude(const uint32_t channel)
 		{
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
-				dMax = std::max(dMax, abs(p->frameBuffer[c][i]));
+				dMax = std::max(dMax, abs(m_frameBuffer[c][i]));
 			}
 		}
 	}
@@ -353,43 +407,48 @@ double DynamicNormalizer::findPeakMagnitude(const uint32_t channel)
 	{
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			dMax = std::max(dMax, abs(p->frameBuffer[channel][i]));
+			dMax = std::max(dMax, abs(m_frameBuffer[channel][i]));
 		}
 	}
 
 	return dMax;
 }
 
-void DynamicNormalizer::initializeSecondPass(void)
+void DynamicNormalizer_PrivateData::initializeSecondPass(void)
 {
-	//Write to log file
-	if(m_logFile)
-	{
-		writeToLogFile();
-	}
+	writeToLogFile("ORIGINAL VALUES:");
 	
+	//Apply minimum filter
+	for(uint32_t c = 0; c < m_channels; c++)
+	{
+		m_minimumFilter->apply(m_frameHistory[c]);
+	}
+
+	writeToLogFile("MINIMUM FILTERED:");
+
 	//Apply Gaussian smooth filter
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
-		p->gaussFilter->apply(p->maxAmplification[c], 1.0);
+		m_gaussFilter->apply(m_frameHistory[c], 1.0);
 	}
 
-	//Write to log file
-	if(m_logFile)
-	{
-		writeToLogFile();
-	}
+	writeToLogFile("GAUSS FILTERED:");
 }
 
-void DynamicNormalizer::writeToLogFile(void)
+void DynamicNormalizer_PrivateData::writeToLogFile(const char* info)
 {
-	assert(m_logFile != NULL);
+	if(!m_logFile)
+	{
+		return; /*no logile specified*/
+	}
 
-	for(size_t i = 0; i < p->maxAmplification[0]->size(); i++)
+	fprintf(m_logFile, "\n%s\n\n", info);
+
+	for(size_t i = 0; i < m_frameHistory[0]->size(); i++)
 	{
 		for(uint32_t channel = 0; channel < m_channels; channel++)
 		{
-			fprintf(m_logFile, channel ? "\t%.4f" : "%.4f", p->maxAmplification[channel]->at(i));
+			fprintf(m_logFile, channel ? "\t%.4f" : "%.4f", m_frameHistory[channel]->at(i));
 		}
 		fprintf(m_logFile, "\n");
 	}
@@ -398,7 +457,7 @@ void DynamicNormalizer::writeToLogFile(void)
 }
 
 /*
-void DynamicNormalizer::perfromDCCorrection(void)
+void DynamicNormalizer_PrivateData::perfromDCCorrection(void)
 {
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{

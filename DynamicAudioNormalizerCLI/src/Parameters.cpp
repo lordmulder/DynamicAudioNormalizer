@@ -172,7 +172,7 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		}
 		if(IS_ARG_LONG("verbose"))
 		{
-			setLoggingLevel(2);
+			//setLoggingLevel(2);
 			continue;
 		}
 
