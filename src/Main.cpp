@@ -23,7 +23,7 @@
 #include "Common.h"
 #include "Parameters.h"
 #include "AudioFileIO.h"
-#include "Normalizer.h"
+#include "DynamicNormalizer.h"
 #include "Version.h"
 
 #include <algorithm>
@@ -110,7 +110,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	}
 
 	//Init normalizer
-	Normalizer *normalizer = new Normalizer
+	DynamicNormalizer *normalizer = new DynamicNormalizer
 	(
 		channels,
 		sampleRate,

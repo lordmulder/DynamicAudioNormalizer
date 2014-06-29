@@ -25,11 +25,11 @@
 #include "Common.h"
 #include "RingBuffer.h"
 
-class Normalizer
+class DynamicNormalizer
 {
 public:
-	Normalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, const double maxAmplification, FILE *const logFile = NULL);
-	~Normalizer(void);
+	DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, const double maxAmplification, FILE *const logFile = NULL);
+	~DynamicNormalizer(void);
 	
 	void processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
 

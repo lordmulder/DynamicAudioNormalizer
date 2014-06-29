@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "Normalizer.h"
+#include "DynamicNormalizer.h"
 
 #include <cmath>
 #include <algorithm>
@@ -32,7 +32,7 @@ static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const do
 	return (aggressiveness * NEW) + ((1.0 - aggressiveness) * OLD);
 }
 
-Normalizer::Normalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, const double maxAmplification, FILE *const logFile)
+DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, const double maxAmplification, FILE *const logFile)
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
@@ -96,7 +96,7 @@ Normalizer::Normalizer(const uint32_t channels, const uint32_t sampleRate, const
 	LOG_DBG(TXT("---------Parameters---------\n"));
 }
 
-Normalizer::~Normalizer(void)
+DynamicNormalizer::~DynamicNormalizer(void)
 {
 	MY_DELETE_ARRAY(m_amplificationFactor);
 	MY_DELETE_ARRAY(m_channelAverageValue);
@@ -120,16 +120,17 @@ Normalizer::~Normalizer(void)
 	MY_DELETE_ARRAY(m_bufferOut);
 }
 
-void Normalizer::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
+void DynamicNormalizer::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
 {
 	outputSize = 0;
-	bool bStop = false;
 
 	uint32_t inputPos = 0;
 	uint32_t inputSamplesLeft = static_cast<uint32_t>(std::min(std::max(inputSize, 0i64), int64_t(UINT32_MAX)));
 	
 	uint32_t outputPos = 0;
 	uint32_t outputBufferLeft = 0;
+
+	bool bStop = (inputSamplesLeft < 1);
 
 	while(!bStop)
 	{
@@ -186,7 +187,7 @@ void Normalizer::processInplace(double **samples, int64_t inputSize, int64_t &ou
 	outputSize = int64_t(outputPos);
 }
 
-void Normalizer::processNextFrame(void)
+void DynamicNormalizer::processNextFrame(void)
 {
 	//DC correction
 	if(m_enableDCCorrection)
@@ -213,7 +214,7 @@ void Normalizer::processNextFrame(void)
 	}
 }
 
-double Normalizer::findPeakMagnitude(const uint32_t channel)
+double DynamicNormalizer::findPeakMagnitude(const uint32_t channel)
 {
 	double dMax = -1.0;
 
@@ -238,7 +239,7 @@ double Normalizer::findPeakMagnitude(const uint32_t channel)
 	return dMax;
 }
 
-void Normalizer::updateAmplificationFactors(void)
+void DynamicNormalizer::updateAmplificationFactors(void)
 {
 	if(m_channelsCoupled)
 	{
@@ -282,7 +283,7 @@ void Normalizer::updateAmplificationFactors(void)
 	}
 }
 
-void Normalizer::perfromDCCorrection(void)
+void DynamicNormalizer::perfromDCCorrection(void)
 {
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
@@ -303,7 +304,7 @@ void Normalizer::perfromDCCorrection(void)
 	}
 }
 
-void Normalizer::writeToLogFile(void)
+void DynamicNormalizer::writeToLogFile(void)
 {
 	assert(m_logFile != NULL);
 

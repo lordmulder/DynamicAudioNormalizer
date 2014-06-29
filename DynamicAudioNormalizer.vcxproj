@@ -14,7 +14,7 @@
     <ClCompile Include="src\AudioFileIO.cpp" />
     <ClCompile Include="src\Common.cpp" />
     <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\Normalizer.cpp" />
+    <ClCompile Include="src\DynamicNormalizer.cpp" />
     <ClCompile Include="src\Parameters.cpp" />
     <ClCompile Include="src\Platform_Win32.cpp" />
     <ClCompile Include="src\RingBuffer.cpp" />
@@ -23,7 +23,7 @@
   <ItemGroup>
     <ClInclude Include="src\AudioFileIO.h" />
     <ClInclude Include="src\Common.h" />
-    <ClInclude Include="src\Normalizer.h" />
+    <ClInclude Include="src\DynamicNormalizer.h" />
     <ClInclude Include="src\Parameters.h" />
     <ClInclude Include="src\Platform.h" />
     <ClInclude Include="src\RingBuffer.h" />
