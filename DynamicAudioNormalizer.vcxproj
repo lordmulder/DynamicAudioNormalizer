@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="src\AudioFileIO.cpp" />
     <ClCompile Include="src\Common.cpp" />
+    <ClCompile Include="src\GaussianFilter.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\DynamicNormalizer.cpp" />
     <ClCompile Include="src\Parameters.cpp" />
@@ -24,6 +25,7 @@
     <ClInclude Include="src\AudioFileIO.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\DynamicNormalizer.h" />
+    <ClInclude Include="src\GaussianFilter.h" />
     <ClInclude Include="src\Parameters.h" />
     <ClInclude Include="src\Platform.h" />
     <ClInclude Include="src\RingBuffer.h" />

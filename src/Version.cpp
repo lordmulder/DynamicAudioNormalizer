@@ -25,7 +25,7 @@
 //Version info
 const unsigned int DYAUNO_VERSION_MAJOR = 1;
 const unsigned int DYAUNO_VERSION_MINOR = 1;
-const unsigned int DYAUNO_VERSION_PATCH = 0;
+const unsigned int DYAUNO_VERSION_PATCH = 1;
 
 //Build date/time
 const CHR* DYAUNO_BUILD_DATE = TXT(__DATE__);

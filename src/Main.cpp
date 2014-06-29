@@ -94,9 +94,13 @@ static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile,
 {
 	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %.1f%%");
 
+	//Print progress
+	PRINT(progressStr, (is2ndPass ? 2 : 1), 0.0);
+
 	//Set encoding pass
 	if(!normalizer->setPass(is2ndPass ? DynamicNormalizer::PASS_2ND : DynamicNormalizer::PASS_1ST))
 	{
+		PRINT(TXT("\n\n"));
 		LOG_ERR(TXT("Failed to setup the pass!"));
 		return EXIT_FAILURE;
 	}
@@ -104,6 +108,7 @@ static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile,
 	//Rewind input
 	if(!sourceFile->rewind())
 	{
+		PRINT(TXT("\n\n"));
 		LOG_ERR(TXT("Failed to rewind the input file!"));
 		return EXIT_FAILURE;
 	}
@@ -182,7 +187,7 @@ static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile,
 	//Error checking
 	if(!error)
 	{
-		PRINT(progressStr, (is2ndPass ? 2 : 1),100.0);
+		PRINT(progressStr, (is2ndPass ? 2 : 1), 100.0);
 		PRINT(TXT("\nCompleted.\n\n"));
 	}
 	else
@@ -224,6 +229,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		parameters.enableDCCorrection(),
 		parameters.peakValue(),
 		parameters.maxAmplification(),
+		parameters.filterSize(),
 		logFile
 	);
 	

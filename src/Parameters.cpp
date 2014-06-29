@@ -103,13 +103,13 @@ void Parameters::setDefaults(void)
 	m_dbgLogFile = NULL;
 
 	m_frameLenMsec = 500;
+	m_filterSize = 31;
 	
 	m_channelsCoupled = true;
 	m_enableDCCorrection = true;
 	
 	m_peakValue = 0.95;
 	m_maxAmplification = 10.0;
-	m_aggressiveness = 0.01;
 }
 
 bool Parameters::parseArgs(const int argc, CHR* argv[])
@@ -136,12 +136,6 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			m_dbgLogFile = argv[pos];
 			continue;
 		}
-		if(IS_ARG_SHRT("a", "aggro"))
-		{
-			ENSURE_NEXT_ARG();
-			PARSE_VALUE_FLT(m_aggressiveness);
-			continue;
-		}
 		if(IS_ARG_SHRT("p", "peak"))
 		{
 			ENSURE_NEXT_ARG();
@@ -158,6 +152,12 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		{
 			ENSURE_NEXT_ARG();
 			PARSE_VALUE_UINT(m_frameLenMsec);
+			continue;
+		}
+		if(IS_ARG_SHRT("g", "gauss-size"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_UINT(m_filterSize);
 			continue;
 		}
 		if(IS_ARG_LONG("no-coupling"))
@@ -225,9 +225,14 @@ bool Parameters::validateParameters(void)
 		}
 	}
 
-	if((m_aggressiveness < 0.0) || (m_aggressiveness > 1.0))
+	if((m_filterSize < 3) || (m_filterSize > 301))
 	{
-		LOG_WRN(TXT("Aggressiveness value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_aggressiveness);
+		LOG_WRN(TXT("Filter size %u is out of range. Must be in the 3 to 301 range!\n"), m_filterSize);
+		return false;
+	}
+	if((m_filterSize % 2) != 1)
+	{
+		LOG_WRN(TXT("Filter size %u is invalid. Must be an odd value! (i.e. `filter_size mod 2 == 1´)\n"), m_filterSize);
 		return false;
 	}
 

@@ -22,6 +22,8 @@
 
 #include "DynamicNormalizer.h"
 
+#include "GaussianFilter.h"
+
 #include <cmath>
 #include <algorithm>
 #include <cassert>
@@ -48,6 +50,8 @@ public:
 
 	RingBuffer **bufferSrc;
 	RingBuffer **bufferOut;
+
+	GaussianFilter *gaussFilter;
 };
 
 DynamicNormalizer::PrivateData::PrivateData(void)
@@ -57,13 +61,14 @@ DynamicNormalizer::PrivateData::PrivateData(void)
 	bufferSrc = NULL;
 	bufferOut = NULL;
 	maxAmplification = NULL;
+	gaussFilter = NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, FILE *const logFile)
+DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
 :
 	p(new DynamicNormalizer::PrivateData),
 	m_channels(channels),
@@ -73,6 +78,7 @@ DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sam
 	m_enableDCCorrection(enableDCCorrection),
 	m_peakValue(peakValue),
 	m_maxAmplification(maxAmplification),
+	m_filterSize(filterSize),
 	m_logFile(logFile)
 {
 	p->currentPass = PASS_1ST;
@@ -109,6 +115,9 @@ DynamicNormalizer::DynamicNormalizer(const uint32_t channels, const uint32_t sam
 	{
 		p->maxAmplification[channel] = new std::deque<double>();
 	}
+
+	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
+	p->gaussFilter = new GaussianFilter(m_filterSize, sigma);
 
 	LOG_DBG(TXT("---------Parameters---------"));
 	LOG_DBG(TXT("Frame size     : %u"),   m_frameLen);
@@ -242,14 +251,8 @@ bool DynamicNormalizer::setPass(const int pass)
 		}
 		else
 		{
-			//initializeSecondPass();
+			initializeSecondPass();
 		}
-	}
-
-	//Write to log file
-	if(m_logFile)
-	{
-		writeToLogFile();
 	}
 
 	p->currentPass = pass;
@@ -355,6 +358,27 @@ double DynamicNormalizer::findPeakMagnitude(const uint32_t channel)
 	}
 
 	return dMax;
+}
+
+void DynamicNormalizer::initializeSecondPass(void)
+{
+	//Write to log file
+	if(m_logFile)
+	{
+		writeToLogFile();
+	}
+	
+	//Apply Gaussian smooth filter
+	for(uint32_t c = 0; c < m_channels; c++)
+	{
+		p->gaussFilter->apply(p->maxAmplification[c], 1.0);
+	}
+
+	//Write to log file
+	if(m_logFile)
+	{
+		writeToLogFile();
+	}
 }
 
 void DynamicNormalizer::writeToLogFile(void)

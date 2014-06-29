@@ -37,10 +37,10 @@ public:
 	inline const CHR* dbgLogFile(void) const { return m_dbgLogFile; }
 	
 	inline const uint32_t &frameLenMsec(void)       const { return m_frameLenMsec;       }
+	inline const uint32_t &filterSize(void)         const { return m_filterSize;         }
 	inline const bool     &channelsCoupled(void)    const { return m_channelsCoupled;    }
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
-	inline const double   &aggressiveness(void)     const { return m_aggressiveness;     }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
 
 protected:
@@ -53,11 +53,11 @@ private:
 	const CHR* m_dbgLogFile;
 
 	uint32_t m_frameLenMsec;
+	uint32_t m_filterSize;
 	
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
 	
 	double m_peakValue;
 	double m_maxAmplification;
-	double m_aggressiveness;
 };
