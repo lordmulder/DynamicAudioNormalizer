@@ -28,20 +28,31 @@
 class DynamicNormalizer
 {
 public:
-	DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double aggressiveness, const double maxAmplification, FILE *const logFile = NULL);
+	DynamicNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, FILE *const logFile = NULL);
 	~DynamicNormalizer(void);
 	
-	void processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
+	enum
+	{
+		PASS_1ST = 0,
+		PASS_2ND = 1
+	}
+	pass_t;
+
+	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
+	bool setPass(const int pass);
 
 protected:
 	void processNextFrame(void);
+	void analyzeCurrentFrame(void);
+	void amplifyCurrentFrame(void);
+	
 	double findPeakMagnitude(const uint32_t channel = UINT32_MAX);
-	void updateAmplificationFactors(void);
-	void perfromDCCorrection(void);
-
 	void writeToLogFile(void);
 
 private:
+	class PrivateData;
+	PrivateData *const p;
+
 	const uint32_t m_channels;
 	const uint32_t m_sampleRate;
 	const uint32_t m_frameLen;
@@ -49,16 +60,7 @@ private:
 	const bool m_channelsCoupled;
 	const bool m_enableDCCorrection;
 	const double m_peakValue;
-	const double m_aggressiveness;
 	const double m_maxAmplification;
 
 	FILE *const m_logFile;
-
-	double *m_amplificationFactor;
-	double *m_channelAverageValue;
-
-	RingBuffer **m_bufferSrc;
-	RingBuffer **m_bufferOut;
-
-	double **m_frameBuffer;
 };

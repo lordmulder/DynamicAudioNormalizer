@@ -28,6 +28,8 @@
 
 #include <algorithm>
 
+static const size_t FRAME_SIZE = 4096;
+
 static const CHR *appName(const CHR* argv0)
 {
 	const CHR *appName  = argv0;
@@ -88,10 +90,113 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	return true;
 }
 
+static int runPass(DynamicNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
+{
+	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %.1f%%");
+
+	//Set encoding pass
+	if(!normalizer->setPass(is2ndPass ? DynamicNormalizer::PASS_2ND : DynamicNormalizer::PASS_1ST))
+	{
+		LOG_ERR(TXT("Failed to setup the pass!"));
+		return EXIT_FAILURE;
+	}
+
+	//Rewind input
+	if(!sourceFile->rewind())
+	{
+		LOG_ERR(TXT("Failed to rewind the input file!"));
+		return EXIT_FAILURE;
+	}
+
+	//Init status variables
+	bool error = false;
+	int64_t remaining = length;
+	short indicator = 0;
+	int64_t delayedSamples = 0;
+
+	//Main audio processing loop
+	while(remaining > 0)
+	{
+		if(++indicator > 512)
+		{
+			PRINT(progressStr, (is2ndPass ? 2 : 1), 99.9 * (double(length - remaining) / double(length)));
+			indicator = 0;
+		}
+
+		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
+		const int64_t samplesRead = sourceFile->read(buffer, readSize);
+
+		remaining -= samplesRead;
+
+		if(samplesRead != readSize)
+		{
+			error = true;
+			break; /*read error must have ocurred*/
+		}
+
+		int64_t outputSize;
+		normalizer->processInplace(buffer, samplesRead, outputSize);
+
+		if(outputSize < samplesRead)
+		{
+			delayedSamples += (samplesRead - outputSize);
+		}
+
+		if(is2ndPass && (outputSize > 0))
+		{
+			if(outputFile->write(buffer, outputSize) != outputSize)
+			{
+				error = true;
+				break; /*write error must have ocurred*/
+			}
+		}
+	}
+
+	//Flush all the delayed samples
+	while(delayedSamples > 0)
+	{
+		for(uint32_t channel = 0; channel < channels; channel++)
+		{
+			memset(buffer[channel], 0, sizeof(double) * FRAME_SIZE);
+		}
+
+		int64_t outputSize;
+		normalizer->processInplace(buffer, int64_t(FRAME_SIZE), outputSize);
+
+		if(outputSize > 0)
+		{
+			const int64_t writeCount = std::min(outputSize, delayedSamples);
+			if(is2ndPass && (outputFile->write(buffer, writeCount) != writeCount))
+			{
+				error = true;
+				break; /*write error must have ocurred*/
+			}
+			delayedSamples -= writeCount;
+		}
+		else
+		{
+			break; /*failed to flush pending samples*/
+		}
+	}
+
+	//Error checking
+	if(!error)
+	{
+		PRINT(progressStr, (is2ndPass ? 2 : 1),100.0);
+		PRINT(TXT("\nCompleted.\n\n"));
+	}
+	else
+	{
+		PRINT(TXT("\n\n"));
+		LOG_ERR(TXT("I/O error encountered -> stopping!\n"));
+	}
+
+	return error ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
 static int processFiles(const Parameters &parameters, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, FILE *const logFile)
 {
-	static const size_t FRAME_SIZE = 4096;
-	static const CHR *progressStr = TXT("\rNormalization in progress: %.1f%%");
+	int exitCode = EXIT_SUCCESS;
 
 	//Get source info
 	uint32_t channels, sampleRate;
@@ -118,92 +223,15 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		parameters.channelsCoupled(),
 		parameters.enableDCCorrection(),
 		parameters.peakValue(),
-		parameters.aggressiveness(),
 		parameters.maxAmplification(),
 		logFile
 	);
-
-	//Init status variables
-	bool error = false;
-	int64_t remaining = length;
-	short indicator = 0;
-	int64_t delayedSamples = 0;
-
-	//Main audio processing loop
-	while(remaining > 0)
+	
+	//Run 1st and 2nd pass
+	for(int pass = 0; pass < 2; pass++)
 	{
-		if(++indicator > 512)
-		{
-			PRINT(progressStr, 99.9 * (double(length - remaining) / double(length)));
-			indicator = 0;
-		}
-
-		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
-		const int64_t samplesRead = sourceFile->read(buffer, readSize);
-
-		remaining -= samplesRead;
-
-		if(samplesRead != readSize)
-		{
-			error = true;
-			break; /*read error must have ocurred*/
-		}
-
-		int64_t outputSize;
-		normalizer->processInplace(buffer, samplesRead, outputSize);
-
-		if(outputSize < samplesRead)
-		{
-			delayedSamples += (samplesRead - outputSize);
-		}
-
-		if(outputSize > 0)
-		{
-			if(outputFile->write(buffer, outputSize) != outputSize)
-			{
-				error = true;
-				break; /*write error must have ocurred*/
-			}
-		}
-	}
-
-	//Flush all the delayed samples
-	while(delayedSamples > 0)
-	{
-		for(uint32_t channel = 0; channel < channels; channel++)
-		{
-			memset(buffer[channel], 0, sizeof(double) * FRAME_SIZE);
-		}
-
-		int64_t outputSize;
-		normalizer->processInplace(buffer, int64_t(FRAME_SIZE), outputSize);
-
-		if(outputSize > 0)
-		{
-			const int64_t writeCount = std::min(outputSize, delayedSamples);
-			if(outputFile->write(buffer, writeCount) != writeCount)
-			{
-				error = true;
-				break; /*write error must have ocurred*/
-			}
-			delayedSamples -= writeCount;
-		}
-		else
-		{
-			break; /*failed to flush pending samples*/
-		}
-	}
-
-	//Error checking
-	if(!error)
-	{
-		PRINT(progressStr, 100.0);
-		PRINT(TXT("\nCompleted.\n\n"));
-	}
-	else
-	{
-		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("I/O error encountered -> stopping!\n"));
+		exitCode = runPass(normalizer, sourceFile, outputFile, buffer, channels, length, (pass > 0));
+		if(exitCode != EXIT_SUCCESS) break;
 	}
 
 	//Memory clean-up
@@ -212,9 +240,10 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		MY_DELETE_ARRAY(buffer[channel]);
 	}
 	MY_DELETE_ARRAY(buffer);
+	MY_DELETE(normalizer);
 
 	//Return result
-	return error ? EXIT_FAILURE : EXIT_SUCCESS;
+	return exitCode;
 }
 
 int dynamicNormalizerMain(int argc, CHR* argv[])

@@ -41,6 +41,9 @@ public:
 	int64_t read(double **buffer, const int64_t count);
 	int64_t write(double *const *buffer, const int64_t count);
 
+	//Rewind
+	bool rewind(void);
+
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length);
 	

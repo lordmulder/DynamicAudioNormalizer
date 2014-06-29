@@ -21,10 +21,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "Parameters.h"
-
 #include <cerrno>
 
 ///////////////////////////////////////////////////////////////////////////////
+// Helper functions
+///////////////////////////////////////////////////////////////////////////////
+
 
 #define IS_ARG_LONG(ARG_LONG)           (STRCASECMP(argv[pos], TXT("--")TXT(ARG_LONG)) == 0)
 #define IS_ARG_SHRT(ARG_SHRT, ARG_LONG) ((STRCASECMP(argv[pos], TXT("-")TXT(ARG_SHRT)) == 0) || (STRCASECMP(argv[pos], TXT("--")TXT(ARG_LONG)) == 0))
@@ -82,6 +84,8 @@ while(0)
 while(0)
 
 ///////////////////////////////////////////////////////////////////////////////
+// Parameters Class
+///////////////////////////////////////////////////////////////////////////////
 
 Parameters::Parameters(void)
 {
@@ -105,7 +109,7 @@ void Parameters::setDefaults(void)
 	
 	m_peakValue = 0.95;
 	m_maxAmplification = 10.0;
-	m_aggressiveness = 0.05;
+	m_aggressiveness = 0.01;
 }
 
 bool Parameters::parseArgs(const int argc, CHR* argv[])

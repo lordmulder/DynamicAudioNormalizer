@@ -48,6 +48,9 @@ public:
 	int64_t read(double **buffer, const int64_t count);
 	int64_t write(double *const *buffer, const int64_t count);
 
+	//Rewind
+	bool rewind(void);
+
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length);
 
@@ -128,6 +131,11 @@ int64_t AudioFileIO::read(double **buffer, const int64_t count)
 int64_t AudioFileIO::write(double *const *buffer, const int64_t count)
 {
 	return p->write(buffer, count);
+}
+
+bool AudioFileIO::rewind(void)
+{
+	return p->rewind();
 }
 
 bool AudioFileIO::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length)
@@ -360,6 +368,20 @@ int64_t AudioFileIO_Private::write(double *const *buffer, const int64_t count)
 
 	//Write data
 	return sf_writef_double(handle, tempBuff, count);
+}
+
+bool AudioFileIO_Private::rewind(void)
+{
+	if(!handle)
+	{
+		MY_THROW("Audio file not currently open!");
+	}
+	if(access != SFM_READ)
+	{
+		MY_THROW("Audio file not open in READ mode!");
+	}
+
+	return (sf_seek(handle, 0, SEEK_SET) == 0);
 }
 
 bool AudioFileIO_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length)
