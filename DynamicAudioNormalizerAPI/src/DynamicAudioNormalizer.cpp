@@ -39,6 +39,11 @@ static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const do
 	return (aggressiveness * NEW) + ((1.0 - aggressiveness) * OLD);
 }
 
+static inline double FADE(const double &valStart, const double &valEnd, const uint32_t &pos, const double *const fadeFactors[2])
+{
+	return (fadeFactors[0][pos] * valEnd) + (fadeFactors[1][pos] * valStart);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // DynamicAudioNormalizer_PrivateData
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,12 +78,15 @@ private:
 
 	std::deque<double> **m_frameHistory;
 	double **m_frameBuffer;
+	double *m_prevAmplificationFactor;
 
 	RingBuffer **m_bufferSrc;
 	RingBuffer **m_bufferOut;
 
 	MinimumFilter *m_minimumFilter;
 	GaussianFilter *m_gaussFilter;
+
+	double *m_fadeFactors[2];
 
 protected:
 	void processNextFrame(void);
@@ -120,10 +128,13 @@ DynamicAudioNormalizer_PrivateData::DynamicAudioNormalizer_PrivateData(const uin
 	m_currentPass = -1;
 	m_frameHistory = NULL;
 	m_frameBuffer = NULL;
+	m_prevAmplificationFactor = NULL;
 	m_bufferSrc = NULL;
 	m_bufferOut = NULL;
 	m_minimumFilter = NULL;
 	m_gaussFilter = NULL;
+	m_fadeFactors[0] = NULL;
+	m_fadeFactors[1] = NULL;
 }
 
 DynamicAudioNormalizer::~DynamicAudioNormalizer(void)
@@ -146,8 +157,11 @@ DynamicAudioNormalizer_PrivateData::~DynamicAudioNormalizer_PrivateData(void)
 
 	MY_DELETE_ARRAY(m_bufferSrc);
 	MY_DELETE_ARRAY(m_bufferOut);
+	MY_DELETE_ARRAY(m_prevAmplificationFactor);
 	MY_DELETE_ARRAY(m_frameBuffer);
 	MY_DELETE_ARRAY(m_frameHistory);
+	MY_DELETE_ARRAY(m_fadeFactors[0]);
+	MY_DELETE_ARRAY(m_fadeFactors[1]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -211,11 +225,24 @@ bool DynamicAudioNormalizer_PrivateData::initialize(void)
 		m_frameHistory[channel] = new std::deque<double>();
 	}
 
-	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
-	m_gaussFilter = new GaussianFilter(m_filterSize, sigma);
+	m_prevAmplificationFactor = new double[m_channels];
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		m_prevAmplificationFactor[channel] = 1.0;
+	}
 
-	const uint32_t minFilterSize = (m_filterSize * 2) / 3;
-	m_minimumFilter = new MinimumFilter(minFilterSize + ((minFilterSize + 1) % 2));
+	m_fadeFactors[0] = new double[m_frameLen];
+	m_fadeFactors[1] = new double[m_frameLen];
+	for(uint32_t pos = 0; pos < m_frameLen; pos++)
+	{
+		const double frameStep = 1.0 / double(m_frameLen-1);
+		m_fadeFactors[0][pos] = frameStep * double(pos);
+		m_fadeFactors[1][pos] = 1.0 - m_fadeFactors[0][pos];
+	}
+
+	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
+	m_minimumFilter = new MinimumFilter(m_filterSize);
+	m_gaussFilter = new GaussianFilter(m_filterSize, sigma);
 
 	if(m_verbose)
 	{
@@ -464,17 +491,19 @@ void DynamicAudioNormalizer_PrivateData::amplifyCurrentFrame(void)
 			break;
 		}
 
-		const double currentAmplificationFactor = m_frameHistory[channel]->front();
+		const double nextAmplificationFactor = m_frameHistory[channel]->front();
 		m_frameHistory[channel]->pop_front();
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			m_frameBuffer[channel][i] *= currentAmplificationFactor;
+			m_frameBuffer[channel][i] *= FADE(m_prevAmplificationFactor[channel], nextAmplificationFactor, i, m_fadeFactors);
 			if(abs(m_frameBuffer[channel][i]) > m_peakValue)
 			{
 				m_frameBuffer[channel][i] = std::copysign(m_peakValue, m_frameBuffer[channel][i]); /*fix clipping*/
 			}
 		}
+
+		m_prevAmplificationFactor[channel] = nextAmplificationFactor;
 	}
 }
 
