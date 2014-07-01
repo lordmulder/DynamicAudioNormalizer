@@ -39,17 +39,23 @@
 
 #undef LOG_AMPFACTORS
 #ifdef LOG_AMPFACTORS
-static void LOG_VALUE(const double &value, const uint32_t &channel, const uint32_t &pos)
+static void LOG_VALUE(const double &value, const double &prev, const double &curr, const double &next, const uint32_t &channel, const uint32_t &pos)
 {
 	static FILE *g_myLogfile = FOPEN(TXT("ampFactors.log"), TXT("w"));
 	if(g_myLogfile && (channel == 0) && (pos % 10 == 0))
 	{
-		fprintf(g_myLogfile, "%.8f\n", value);
+		fprintf(g_myLogfile, "%.8f\t%.8f %.8f %.8f\n", value, prev, curr, next);
 	}
 }
 #else
 #define LOG_VALUE(...) ((void)0)
 #endif
+
+static inline uint32_t FRAME_SIZE(const uint32_t &sampleRate, const uint32_t &frameLenMsec)
+{
+	const uint32_t frameSize = static_cast<uint32_t>(round(double(sampleRate) * (double(frameLenMsec) / 1000.0)));
+	return frameSize + (frameSize % 2);
+}
 
 static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const double &aggressiveness)
 {
@@ -57,9 +63,9 @@ static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const do
 	return (aggressiveness * NEW) + ((1.0 - aggressiveness) * OLD);
 }
 
-static inline double FADE(const double &valStart, const double &valEnd, const uint32_t &pos, const double *const fadeFactors[2])
+static inline double FADE(const double &prev, const double &curr, const double &next, const uint32_t &pos, const double *const fadeFactors[3])
 {
-	return (fadeFactors[0][pos] * valEnd) + (fadeFactors[1][pos] * valStart);
+	return (fadeFactors[0][pos] * prev) + (fadeFactors[1][pos] * curr) + (fadeFactors[2][pos] * next);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -104,7 +110,7 @@ private:
 	MinimumFilter *m_minimumFilter;
 	GaussianFilter *m_gaussFilter;
 
-	double *m_fadeFactors[2];
+	double *m_fadeFactors[3];
 
 protected:
 	void processNextFrame(void);
@@ -114,6 +120,7 @@ protected:
 	void initializeSecondPass(void);
 	double findPeakMagnitude(const uint32_t channel = UINT32_MAX);
 	void perfromDCCorrection(void);
+	void precalculateFadeFactors(double *fadeFactors[3]);
 	void writeToLogFile(const char* info);
 };
 
@@ -133,7 +140,7 @@ DynamicAudioNormalizer_PrivateData::DynamicAudioNormalizer_PrivateData(const uin
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
-	m_frameLen(static_cast<uint32_t>(round(double(sampleRate) * (double(frameLenMsec) / 1000.0)))),
+	m_frameLen(FRAME_SIZE(sampleRate, frameLenMsec)),
 	m_channelsCoupled(channelsCoupled),
 	m_enableDCCorrection(enableDCCorrection),
 	m_peakValue(peakValue),
@@ -153,6 +160,7 @@ DynamicAudioNormalizer_PrivateData::DynamicAudioNormalizer_PrivateData(const uin
 	m_gaussFilter = NULL;
 	m_fadeFactors[0] = NULL;
 	m_fadeFactors[1] = NULL;
+	m_fadeFactors[2] = NULL;
 }
 
 DynamicAudioNormalizer::~DynamicAudioNormalizer(void)
@@ -180,6 +188,7 @@ DynamicAudioNormalizer_PrivateData::~DynamicAudioNormalizer_PrivateData(void)
 	MY_DELETE_ARRAY(m_frameHistory);
 	MY_DELETE_ARRAY(m_fadeFactors[0]);
 	MY_DELETE_ARRAY(m_fadeFactors[1]);
+	MY_DELETE_ARRAY(m_fadeFactors[2]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -251,13 +260,9 @@ bool DynamicAudioNormalizer_PrivateData::initialize(void)
 
 	m_fadeFactors[0] = new double[m_frameLen];
 	m_fadeFactors[1] = new double[m_frameLen];
-	const double frameFadeStep = 1.0 / double(m_frameLen-1);
-	for(uint32_t pos = 0; pos < m_frameLen; pos++)
-	{
-		m_fadeFactors[0][pos] = frameFadeStep * double(pos);
-		m_fadeFactors[1][pos] = 1.0 - m_fadeFactors[0][pos];
-		//if(pos % 5 == 0) PRINT(TXT("%.8f %.8f\n"), m_fadeFactors[0][pos], m_fadeFactors[1][pos]);
-	}
+	m_fadeFactors[2] = new double[m_frameLen];
+	
+	precalculateFadeFactors(m_fadeFactors);
 
 	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
 	m_minimumFilter = new MinimumFilter(m_filterSize);
@@ -510,21 +515,22 @@ void DynamicAudioNormalizer_PrivateData::amplifyCurrentFrame(void)
 			break;
 		}
 
-		const double nextAmplificationFactor = m_frameHistory[channel]->front();
+		const double currAmplificationFactor = m_frameHistory[channel]->front();
 		m_frameHistory[channel]->pop_front();
+		const double nextAmplificationFactor = m_frameHistory[channel]->empty() ? currAmplificationFactor : m_frameHistory[channel]->front();
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			const double currentAmplificationFactor = FADE(m_prevAmplificationFactor[channel], nextAmplificationFactor, i, m_fadeFactors);
-			LOG_VALUE(currentAmplificationFactor, channel, i);
-			m_frameBuffer[channel][i] *= currentAmplificationFactor;
+			const double amplificationFactor = FADE(m_prevAmplificationFactor[channel], currAmplificationFactor, nextAmplificationFactor, i, m_fadeFactors);
+			m_frameBuffer[channel][i] *= amplificationFactor;
+			LOG_VALUE(amplificationFactor, m_prevAmplificationFactor[channel], currAmplificationFactor, nextAmplificationFactor, channel, i);
 			if(abs(m_frameBuffer[channel][i]) > m_peakValue)
 			{
 				m_frameBuffer[channel][i] = std::copysign(m_peakValue, m_frameBuffer[channel][i]); /*fix rare clipping*/
 			}
 		}
 
-		m_prevAmplificationFactor[channel] = nextAmplificationFactor;
+		m_prevAmplificationFactor[channel] = currAmplificationFactor;
 	}
 }
 
@@ -622,4 +628,31 @@ void DynamicAudioNormalizer_PrivateData::perfromDCCorrection(void)
 			m_frameBuffer[channel][i] -= currentAverageValue;
 		}
 	}
+}
+
+void DynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3])
+{
+	assert((m_filterSize % 2) == 0);
+
+	const uint32_t frameFadeDiv2 = m_frameLen / 2U;
+	const double frameFadeStep = 0.5 / double(frameFadeDiv2);
+
+	for(uint32_t pos = 0; pos < frameFadeDiv2; pos++)
+	{
+		fadeFactors[0][pos] = 0.5 - (frameFadeStep * double(pos));
+		fadeFactors[2][pos] = 0.0;
+		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
+	}
+
+	for(uint32_t pos = frameFadeDiv2; pos < m_frameLen; pos++)
+	{
+		fadeFactors[2][pos] = frameFadeStep * double(pos % frameFadeDiv2);
+		fadeFactors[0][pos] = 0.0;
+		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
+	}
+
+	//for(uint32_t pos = 0; pos < m_frameLen; pos++)
+	//{
+	//	LOG_DBG(TXT("%.8f %.8f %.8f"), fadeFactors[0][pos], fadeFactors[1][pos], fadeFactors[2][pos]);
+	//}
 }
