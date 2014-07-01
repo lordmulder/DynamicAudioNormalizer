@@ -26,6 +26,13 @@ The following example shows the results form a "real world" audio recording that
 <small>Waveform before (upper view) and after (lower view) processing.</small>
 
 -------------------------------------------------------------------------------
+Configuration
+-------------------------------------------------------------------------------
+
+![FilterSize](http://i.imgur.com/YmoX0Ov.png "Dynamic Audio Normalizer - Filter Size Effects")  
+<small>The effect of different "window sizes" of the Gaussian smoothing filter.</small>
+
+-------------------------------------------------------------------------------
 License Terms
 -------------------------------------------------------------------------------
 
