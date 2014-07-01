@@ -33,6 +33,24 @@
 #include <cassert>
 #include <deque>
 
+///////////////////////////////////////////////////////////////////////////////
+// Utility Functions
+///////////////////////////////////////////////////////////////////////////////
+
+#undef LOG_AMPFACTORS
+#ifdef LOG_AMPFACTORS
+static void LOG_VALUE(const double &value, const uint32_t &channel, const uint32_t &pos)
+{
+	static FILE *g_myLogfile = FOPEN(TXT("ampFactors.log"), TXT("w"));
+	if(g_myLogfile && (channel == 0) && (pos % 10 == 0))
+	{
+		fprintf(g_myLogfile, "%.8f\n", value);
+	}
+}
+#else
+#define LOG_VALUE(...) ((void)0)
+#endif
+
 static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const double &aggressiveness)
 {
 	assert((aggressiveness >= 0.0) && (aggressiveness <= 1.0));
@@ -233,11 +251,12 @@ bool DynamicAudioNormalizer_PrivateData::initialize(void)
 
 	m_fadeFactors[0] = new double[m_frameLen];
 	m_fadeFactors[1] = new double[m_frameLen];
+	const double frameFadeStep = 1.0 / double(m_frameLen-1);
 	for(uint32_t pos = 0; pos < m_frameLen; pos++)
 	{
-		const double frameStep = 1.0 / double(m_frameLen-1);
-		m_fadeFactors[0][pos] = frameStep * double(pos);
+		m_fadeFactors[0][pos] = frameFadeStep * double(pos);
 		m_fadeFactors[1][pos] = 1.0 - m_fadeFactors[0][pos];
+		//if(pos % 5 == 0) PRINT(TXT("%.8f %.8f\n"), m_fadeFactors[0][pos], m_fadeFactors[1][pos]);
 	}
 
 	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
@@ -496,10 +515,12 @@ void DynamicAudioNormalizer_PrivateData::amplifyCurrentFrame(void)
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			m_frameBuffer[channel][i] *= FADE(m_prevAmplificationFactor[channel], nextAmplificationFactor, i, m_fadeFactors);
+			const double currentAmplificationFactor = FADE(m_prevAmplificationFactor[channel], nextAmplificationFactor, i, m_fadeFactors);
+			LOG_VALUE(currentAmplificationFactor, channel, i);
+			m_frameBuffer[channel][i] *= currentAmplificationFactor;
 			if(abs(m_frameBuffer[channel][i]) > m_peakValue)
 			{
-				m_frameBuffer[channel][i] = std::copysign(m_peakValue, m_frameBuffer[channel][i]); /*fix clipping*/
+				m_frameBuffer[channel][i] = std::copysign(m_peakValue, m_frameBuffer[channel][i]); /*fix rare clipping*/
 			}
 		}
 
@@ -552,6 +573,12 @@ void DynamicAudioNormalizer_PrivateData::initializeSecondPass(void)
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
 		m_gaussFilter->apply(m_frameHistory[c], 1.0);
+	}
+
+	//Set initial factors
+	for(uint32_t c = 0; c < m_channels; c++)
+	{
+		m_prevAmplificationFactor[c] = m_frameHistory[c]->front();
 	}
 
 	writeToLogFile("GAUSS FILTERED:");
