@@ -172,7 +172,7 @@ This is the main processing function. It usually is called in a loop by the appl
 
 The function works "in place": It *reads* the original input samples from the specified buffer and then *writes* the normalized output samples, if any, back into the *same* buffer. The content of <tt>samplesInOut</tt> will **not** be preserved!
 
-It's possible that a specific call to this function returns *fewer* output samples than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent function call. This also means that the *i*-th output sample doesn't necessarily match *i*-th input sample. However, the samples are always returned in a strict FIFO (first-in, first-out) order. At the end of a pass, when all input smaples have been read, the application may feed this function with "dummy" (null) samples in order to *flush* all pending output samples.
+It's possible that a specific call to this function returns *fewer* output samples than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent function call. This also means that the *i*-th output sample doesn't necessarily match *i*-th input sample. However, the samples are always returned in a strict FIFO (first-in, first-out) order. At the end of a pass, when all input samples have been read, the application may feed this function with "dummy" (null) samples in order to *flush* all pending output samples.
 
 **Parameters:**
 * *samplesInOut*: The buffer that contains the original input samples and that will receive the normalized output samples. The *i*-th input sample for the *c*-th channel is assumed to be stored at <tt>samplesInOut[c][i]</tt>, as a double-precision floating point number in the **-1.00** to **1.00** range. All indices are zero-based. The output samples, if any, will be stored at the corresponding locations, thus *overwriting* the input data. Consequently, the *i*-th output sample for the *c*-th channel will be stored at <tt>samplesInOut[c][i]</tt> and is guaranteed to be inside the **-1.00** to **1.00** range.
@@ -180,7 +180,7 @@ It's possible that a specific call to this function returns *fewer* output sampl
 * *outputSize*: Receives the number of *output* samples that have been stored in the <tt>samplesInOut</tt> buffer. Please note that this value can be *smaller* than <tt>inputSize</tt> size. It can even be *zero*!
 
 **Return value:**
-* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
+* Returns <tt>true</tt> if everything was successful or <tt>false</tt> if something went wrong.
 
 ### MDynamicAudioNormalizer::getVersionInfo() ###
 ```
