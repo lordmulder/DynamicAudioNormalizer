@@ -25,7 +25,7 @@
 #include "Parameters.h"
 #include "AudioFileIO.h"
 
-//DynamicAudioNormalizer API
+//MDynamicAudioNormalizer API
 #include "DynamicAudioNormalizer.h"
 
 //VLD
@@ -97,7 +97,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	return true;
 }
 
-static int runPass(DynamicAudioNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
+static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
 {
 	static const CHR spinner[4] = { TXT('-'), TXT('\\'), TXT('|'), TXT('/') };
 	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %.1f%% [%c]");
@@ -107,7 +107,7 @@ static int runPass(DynamicAudioNormalizer *normalizer, AudioFileIO *const source
 	FLUSH();
 
 	//Set encoding pass
-	if(!normalizer->setPass(is2ndPass ? DynamicAudioNormalizer::PASS_2ND : DynamicAudioNormalizer::PASS_1ST))
+	if(!normalizer->setPass(is2ndPass ? MDynamicAudioNormalizer::PASS_2ND : MDynamicAudioNormalizer::PASS_1ST))
 	{
 		PRINT(TXT("\n\n"));
 		LOG_ERR(TXT("Failed to setup the processing pass!"));
@@ -222,7 +222,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	}
 
 	//Create the normalizer
-	DynamicAudioNormalizer *normalizer = new DynamicAudioNormalizer
+	MDynamicAudioNormalizer *normalizer = new MDynamicAudioNormalizer
 	(
 		channels,
 		sampleRate,
@@ -296,10 +296,10 @@ static void printHelpScreen(int argc, CHR* argv[])
 int dynamicNormalizerMain(int argc, CHR* argv[])
 {
 	uint32_t versionMajor, versionMinor, versionPatch;
-	DynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
+	MDynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
 
 	const char *buildDate, *buildTime, *buildCompiler, *buildArch; bool buildDebug;
-	DynamicAudioNormalizer::getBuildInfo(&buildDate, &buildTime, &buildCompiler, &buildArch, buildDebug);
+	MDynamicAudioNormalizer::getBuildInfo(&buildDate, &buildTime, &buildCompiler, &buildArch, buildDebug);
 
 	PRINT(TXT("\nDynamic Audio Normalizer, Version %u.%02u-%u\n"), versionMajor, versionMinor, versionPatch);
 	PRINT(TXT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));

@@ -22,37 +22,48 @@
 
 #pragma once
 
+//Standard C++ includes
 #include <stdint.h>
 #include <cstdio>
 
 //DLL Export Definitions
 #ifdef _MSC_VER
-#  ifdef DYNAMICAUDIONORMALIZER_EXPORTS
-#    define DYNAMICAUDIONORMALIZER_DLL __declspec(dllexport)
+#  ifdef MDYNAMICAUDIONORMALIZER_EXPORTS
+#    pragma message("MDynamicAudioNormalizer DLL: Export")
+#    define MDYNAMICAUDIONORMALIZER_DLL __declspec(dllexport)
 #  else
-#    define DYNAMICAUDIONORMALIZER_DLL __declspec(dllimport)
+#    pragma message("MDynamicAudioNormalizer DLL: Import")
+#    define MDYNAMICAUDIONORMALIZER_DLL __declspec(dllimport)
 #  endif
 #else
 #  ifdef __GNUG__
-#    define DYNAMICAUDIONORMALIZER_DLL __attribute__ ((visibility ("default")))
+#    define MDYNAMICAUDIONORMALIZER_DLL __attribute__ ((visibility ("default")))
 #  else
-#    define DYNAMICAUDIONORMALIZER_DLL
+#    define MDYNAMICAUDIONORMALIZER_DLL
 #  endif
 #endif
 
+//Utility macros
+#define MDYNAMICAUDIONORMALIZER_GLUE1(X,Y) X##Y
+#define MDYNAMICAUDIONORMALIZER_GLUE2(X,Y) MDYNAMICAUDIONORMALIZER_GLUE1(X,Y)
+
+//Interface version
+#define MDYNAMICAUDIONORMALIZER_CORE 1
+#define MDynamicAudioNormalizer MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_r,MDYNAMICAUDIONORMALIZER_CORE)
+
 //Opaque Data Class
-class DynamicAudioNormalizer_PrivateData;
+class MDynamicAudioNormalizer_PrivateData;
 
 //Dynamic Normalizer Class
-class DYNAMICAUDIONORMALIZER_DLL DynamicAudioNormalizer
+class MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer
 {
 public:
 	//Constant
 	enum { PASS_1ST = 0, PASS_2ND = 1 } pass_t;
 
 	//Constructor & Destructor
-	DynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose = false, FILE *const logFile = NULL);
-	virtual ~DynamicAudioNormalizer(void);
+	MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose = false, FILE *const logFile = NULL);
+	virtual ~MDynamicAudioNormalizer(void);
 	
 	//Public API
 	bool initialize(void);
@@ -64,5 +75,5 @@ public:
 	static void getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug);
 
 private:
-	DynamicAudioNormalizer_PrivateData *const p;
+	MDynamicAudioNormalizer_PrivateData *const p;
 };

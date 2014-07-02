@@ -69,14 +69,14 @@ static inline double FADE(const double &prev, const double &curr, const double &
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// DynamicAudioNormalizer_PrivateData
+// MDynamicAudioNormalizer_PrivateData
 ///////////////////////////////////////////////////////////////////////////////
 
-class DynamicAudioNormalizer_PrivateData
+class MDynamicAudioNormalizer_PrivateData
 {
 public:
-	DynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile);
-	~DynamicAudioNormalizer_PrivateData(void);
+	MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile);
+	~MDynamicAudioNormalizer_PrivateData(void);
 
 	bool initialize(void);
 	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
@@ -98,11 +98,14 @@ private:
 	FILE *const m_logFile;
 
 	int m_currentPass;
+	
 	bool m_initialized;
+	bool m_firstFrameFlag;
 
-	std::deque<double> **m_frameHistory;
+	std::deque<double> **m_framePeakHistory;
 	double **m_frameBuffer;
 	double *m_prevAmplificationFactor;
+	double *m_dcCorrectionValue;
 
 	RingBuffer **m_bufferSrc;
 	RingBuffer **m_bufferOut;
@@ -119,7 +122,7 @@ protected:
 	
 	void initializeSecondPass(void);
 	double findPeakMagnitude(const uint32_t channel = UINT32_MAX);
-	void perfromDCCorrection(void);
+	void perfromDCCorrection(const bool &isFirstFrame);
 	void precalculateFadeFactors(double *fadeFactors[3]);
 	void writeToLogFile(const char* info);
 };
@@ -128,15 +131,15 @@ protected:
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-DynamicAudioNormalizer::DynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile)
+MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile)
 :
-	p(new DynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize, verbose, logFile))
+	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize, verbose, logFile))
 
 {
 	/*nothing to do here*/
 }
 
-DynamicAudioNormalizer_PrivateData::DynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile)
+MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile)
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
@@ -150,10 +153,12 @@ DynamicAudioNormalizer_PrivateData::DynamicAudioNormalizer_PrivateData(const uin
 	m_logFile(logFile)
 {
 	m_initialized = false;
+	m_firstFrameFlag = true;
 	m_currentPass = -1;
-	m_frameHistory = NULL;
+	m_framePeakHistory = NULL;
 	m_frameBuffer = NULL;
 	m_prevAmplificationFactor = NULL;
+	m_dcCorrectionValue = NULL;
 	m_bufferSrc = NULL;
 	m_bufferOut = NULL;
 	m_minimumFilter = NULL;
@@ -163,29 +168,30 @@ DynamicAudioNormalizer_PrivateData::DynamicAudioNormalizer_PrivateData(const uin
 	m_fadeFactors[2] = NULL;
 }
 
-DynamicAudioNormalizer::~DynamicAudioNormalizer(void)
+MDynamicAudioNormalizer::~MDynamicAudioNormalizer(void)
 {
 	delete p;
 }
 
-DynamicAudioNormalizer_PrivateData::~DynamicAudioNormalizer_PrivateData(void)
+MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 {
 	MY_DELETE(m_gaussFilter);
 	MY_DELETE(m_minimumFilter);
 
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		if(m_bufferSrc)    MY_DELETE(m_bufferSrc[channel]);
-		if(m_bufferOut)    MY_DELETE(m_bufferOut[channel]);
-		if(m_frameBuffer)  MY_DELETE_ARRAY(m_frameBuffer[channel]);
-		if(m_frameHistory) MY_DELETE(m_frameHistory[channel]);
+		if(m_bufferSrc)        MY_DELETE(m_bufferSrc[channel]);
+		if(m_bufferOut)        MY_DELETE(m_bufferOut[channel]);
+		if(m_frameBuffer)      MY_DELETE_ARRAY(m_frameBuffer[channel]);
+		if(m_framePeakHistory) MY_DELETE(m_framePeakHistory[channel]);
 	}
 
 	MY_DELETE_ARRAY(m_bufferSrc);
 	MY_DELETE_ARRAY(m_bufferOut);
 	MY_DELETE_ARRAY(m_prevAmplificationFactor);
+	MY_DELETE_ARRAY(m_dcCorrectionValue);
 	MY_DELETE_ARRAY(m_frameBuffer);
-	MY_DELETE_ARRAY(m_frameHistory);
+	MY_DELETE_ARRAY(m_framePeakHistory);
 	MY_DELETE_ARRAY(m_fadeFactors[0]);
 	MY_DELETE_ARRAY(m_fadeFactors[1]);
 	MY_DELETE_ARRAY(m_fadeFactors[2]);
@@ -195,7 +201,7 @@ DynamicAudioNormalizer_PrivateData::~DynamicAudioNormalizer_PrivateData(void)
 // Public API
 ///////////////////////////////////////////////////////////////////////////////
 
-bool DynamicAudioNormalizer::initialize(void)
+bool MDynamicAudioNormalizer::initialize(void)
 {
 	try
 	{
@@ -208,7 +214,7 @@ bool DynamicAudioNormalizer::initialize(void)
 	}
 }
 
-bool DynamicAudioNormalizer_PrivateData::initialize(void)
+bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 {
 	if(m_initialized)
 	{
@@ -246,16 +252,22 @@ bool DynamicAudioNormalizer_PrivateData::initialize(void)
 		m_frameBuffer[channel] = new double[m_frameLen];
 	}
 
-	m_frameHistory = new std::deque<double>*[m_channels];
+	m_framePeakHistory = new std::deque<double>*[m_channels];
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		m_frameHistory[channel] = new std::deque<double>();
+		m_framePeakHistory[channel] = new std::deque<double>();
 	}
 
 	m_prevAmplificationFactor = new double[m_channels];
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
 		m_prevAmplificationFactor[channel] = 1.0;
+	}
+
+	m_dcCorrectionValue = new double[m_channels];
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		m_dcCorrectionValue[channel] = 0.0;
 	}
 
 	m_fadeFactors[0] = new double[m_frameLen];
@@ -284,7 +296,7 @@ bool DynamicAudioNormalizer_PrivateData::initialize(void)
 	return true;
 }
 
-bool DynamicAudioNormalizer::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
 {
 	try
 	{
@@ -297,7 +309,7 @@ bool DynamicAudioNormalizer::processInplace(double **samples, int64_t inputSize,
 	}
 }
 
-bool DynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
 {
 	outputSize = 0;
 
@@ -307,7 +319,7 @@ bool DynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64_
 		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
 		return false;
 	}
-	if((m_currentPass != DynamicAudioNormalizer::PASS_1ST) && (m_currentPass != DynamicAudioNormalizer::PASS_2ND))
+	if((m_currentPass != MDynamicAudioNormalizer::PASS_1ST) && (m_currentPass != MDynamicAudioNormalizer::PASS_2ND))
 	{
 		LOG_ERR(TXT("Pass has not been set yet. Must call setPass() first!"));
 		return false;
@@ -379,7 +391,7 @@ bool DynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64_
 	return true;
 }
 
-bool DynamicAudioNormalizer::setPass(const int pass)
+bool MDynamicAudioNormalizer::setPass(const int pass)
 {
 	try
 	{
@@ -392,7 +404,7 @@ bool DynamicAudioNormalizer::setPass(const int pass)
 	}
 }
 
-bool DynamicAudioNormalizer_PrivateData::setPass(const int pass)
+bool MDynamicAudioNormalizer_PrivateData::setPass(const int pass)
 {
 	//Check audio normalizer status
 	if(!m_initialized)
@@ -400,11 +412,14 @@ bool DynamicAudioNormalizer_PrivateData::setPass(const int pass)
 		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
 		return false;
 	}
-	if((pass != DynamicAudioNormalizer::PASS_1ST) && (pass != DynamicAudioNormalizer::PASS_2ND))
+	if((pass != MDynamicAudioNormalizer::PASS_1ST) && (pass != MDynamicAudioNormalizer::PASS_2ND))
 	{
 		LOG_ERR(TXT("Invalid pass value %d specified -> ignoring!"), pass);
 		return false;
 	}
+
+	//Reset flag
+	m_firstFrameFlag = true;
 
 	//Clear ring buffers
 	for(uint32_t channel = 0; channel < m_channels; channel++)
@@ -413,17 +428,23 @@ bool DynamicAudioNormalizer_PrivateData::setPass(const int pass)
 		m_bufferOut[channel]->clear();
 	}
 
+	//Reset DC correction
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		m_dcCorrectionValue[channel] = 0.0;
+	}
+
 	//Setup the new processing pass
-	if(pass == DynamicAudioNormalizer::PASS_1ST)
+	if(pass == MDynamicAudioNormalizer::PASS_1ST)
 	{
 		for(uint32_t channel = 0; channel < m_channels; channel++)
 		{
-			m_frameHistory[channel]->clear();
+			m_framePeakHistory[channel]->clear();
 		}
 	}
 	else
 	{
-		if(m_frameHistory[0]->size() < 1)
+		if(m_framePeakHistory[0]->size() < 1)
 		{
 			LOG_WRN(TXT("No information from 1st pass stored yet!"));
 		}
@@ -441,14 +462,14 @@ bool DynamicAudioNormalizer_PrivateData::setPass(const int pass)
 // Static Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-void DynamicAudioNormalizer::getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch)
+void MDynamicAudioNormalizer::getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch)
 {
 	major = DYAUNO_VERSION_MAJOR;
 	minor = DYAUNO_VERSION_MINOR;
 	patch = DYAUNO_VERSION_PATCH;
 }
 
-void DynamicAudioNormalizer::getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug)
+void MDynamicAudioNormalizer::getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug)
 {
 	*date     = DYAUNO_BUILD_DATE;
 	*time     = DYAUNO_BUILD_TIME;
@@ -461,28 +482,32 @@ void DynamicAudioNormalizer::getBuildInfo(const char **date, const char **time, 
 // Procesing Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-void DynamicAudioNormalizer_PrivateData::processNextFrame(void)
+void MDynamicAudioNormalizer_PrivateData::processNextFrame(void)
 {
 	//Run DC correction
 	if(m_enableDCCorrection)
 	{
-		perfromDCCorrection();
+		perfromDCCorrection(m_firstFrameFlag);
 	}
 	
+	//Perfrom action for current pass
 	switch(m_currentPass)
 	{
-	case DynamicAudioNormalizer::PASS_1ST:
+	case MDynamicAudioNormalizer::PASS_1ST:
 		analyzeCurrentFrame();
 		break;
-	case DynamicAudioNormalizer::PASS_2ND:
+	case MDynamicAudioNormalizer::PASS_2ND:
 		amplifyCurrentFrame();
 		break;
 	default:
 		throw std::runtime_error("Invalid pass value detected!");
 	}
+
+	//Clear flag
+	m_firstFrameFlag = false;
 }
 
-void DynamicAudioNormalizer_PrivateData::analyzeCurrentFrame(void)
+void MDynamicAudioNormalizer_PrivateData::analyzeCurrentFrame(void)
 {
 	if(m_channelsCoupled)
 	{
@@ -491,7 +516,7 @@ void DynamicAudioNormalizer_PrivateData::analyzeCurrentFrame(void)
 		
 		for(uint32_t channel = 0; channel < m_channels; channel++)
 		{
-			m_frameHistory[channel]->push_back(currentAmplificationFactor);
+			m_framePeakHistory[channel]->push_back(currentAmplificationFactor);
 		}
 	}
 	else
@@ -500,24 +525,24 @@ void DynamicAudioNormalizer_PrivateData::analyzeCurrentFrame(void)
 		{
 			const double peakMagnitude = findPeakMagnitude(channel);
 			const double currentAmplificationFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
-			m_frameHistory[channel]->push_back(currentAmplificationFactor);
+			m_framePeakHistory[channel]->push_back(currentAmplificationFactor);
 		}
 	}
 }
 
-void DynamicAudioNormalizer_PrivateData::amplifyCurrentFrame(void)
+void MDynamicAudioNormalizer_PrivateData::amplifyCurrentFrame(void)
 {
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
-		if(m_frameHistory[channel]->empty())
+		if(m_framePeakHistory[channel]->empty())
 		{
 			LOG_WRN(TXT("Second pass has more frames than the firts one -> passing trough unmodified!"));
 			break;
 		}
 
-		const double currAmplificationFactor = m_frameHistory[channel]->front();
-		m_frameHistory[channel]->pop_front();
-		const double nextAmplificationFactor = m_frameHistory[channel]->empty() ? currAmplificationFactor : m_frameHistory[channel]->front();
+		const double currAmplificationFactor = m_framePeakHistory[channel]->front();
+		m_framePeakHistory[channel]->pop_front();
+		const double nextAmplificationFactor = m_framePeakHistory[channel]->empty() ? currAmplificationFactor : m_framePeakHistory[channel]->front();
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
@@ -538,7 +563,7 @@ void DynamicAudioNormalizer_PrivateData::amplifyCurrentFrame(void)
 // Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-double DynamicAudioNormalizer_PrivateData::findPeakMagnitude(const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(const uint32_t channel)
 {
 	double dMax = -1.0;
 
@@ -563,14 +588,14 @@ double DynamicAudioNormalizer_PrivateData::findPeakMagnitude(const uint32_t chan
 	return dMax;
 }
 
-void DynamicAudioNormalizer_PrivateData::initializeSecondPass(void)
+void MDynamicAudioNormalizer_PrivateData::initializeSecondPass(void)
 {
 	writeToLogFile("ORIGINAL VALUES:");
 	
 	//Apply minimum filter
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
-		m_minimumFilter->apply(m_frameHistory[c]);
+		m_minimumFilter->apply(m_framePeakHistory[c]);
 	}
 
 	writeToLogFile("MINIMUM FILTERED:");
@@ -578,19 +603,19 @@ void DynamicAudioNormalizer_PrivateData::initializeSecondPass(void)
 	//Apply Gaussian smooth filter
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
-		m_gaussFilter->apply(m_frameHistory[c], 1.0);
+		m_gaussFilter->apply(m_framePeakHistory[c], 1.0);
 	}
 
 	//Set initial factors
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
-		m_prevAmplificationFactor[c] = m_frameHistory[c]->front();
+		m_prevAmplificationFactor[c] = m_framePeakHistory[c]->front();
 	}
 
 	writeToLogFile("GAUSS FILTERED:");
 }
 
-void DynamicAudioNormalizer_PrivateData::writeToLogFile(const char* info)
+void MDynamicAudioNormalizer_PrivateData::writeToLogFile(const char* info)
 {
 	if(!m_logFile)
 	{
@@ -599,11 +624,11 @@ void DynamicAudioNormalizer_PrivateData::writeToLogFile(const char* info)
 
 	fprintf(m_logFile, "\n%s\n\n", info);
 
-	for(size_t i = 0; i < m_frameHistory[0]->size(); i++)
+	for(size_t i = 0; i < m_framePeakHistory[0]->size(); i++)
 	{
 		for(uint32_t channel = 0; channel < m_channels; channel++)
 		{
-			fprintf(m_logFile, channel ? "\t%.4f" : "%.4f", m_frameHistory[channel]->at(i));
+			fprintf(m_logFile, channel ? "\t%.4f" : "%.4f", m_framePeakHistory[channel]->at(i));
 		}
 		fprintf(m_logFile, "\n");
 	}
@@ -611,7 +636,7 @@ void DynamicAudioNormalizer_PrivateData::writeToLogFile(const char* info)
 	fprintf(m_logFile, "\n------\n\n");
 }
 
-void DynamicAudioNormalizer_PrivateData::perfromDCCorrection(void)
+void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(const bool &isFirstFrame)
 {
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
@@ -623,14 +648,17 @@ void DynamicAudioNormalizer_PrivateData::perfromDCCorrection(void)
 			currentAverageValue += (m_frameBuffer[channel][i] * diff);
 		}
 
+		const double prevCorrectionValue = m_dcCorrectionValue[channel];
+		m_dcCorrectionValue[channel] = isFirstFrame ? currentAverageValue : UPDATE_VALUE(currentAverageValue, m_dcCorrectionValue[channel], 0.1);
+
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			m_frameBuffer[channel][i] -= currentAverageValue;
+			m_frameBuffer[channel][i] -= FADE(prevCorrectionValue, m_dcCorrectionValue[channel], m_dcCorrectionValue[channel], i, m_fadeFactors);
 		}
 	}
 }
 
-void DynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3])
+void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3])
 {
 	assert((m_filterSize % 2) == 0);
 
