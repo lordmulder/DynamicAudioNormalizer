@@ -63,6 +63,7 @@ echo BEGIN PACKAGING
 echo ---------------------------------------------------------------------
 set "PACK_PATH=%TMP%\~%RANDOM%%RANDOM%.tmp"
 mkdir "%PACK_PATH%"
+mkdir "%PACK_PATH%\doc"
 
 REM Copy program files
 copy "%~dp0\bin\Win32\Release\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%"
@@ -73,8 +74,9 @@ copy "%~dp0\etc\sndfile\lib\Win32\libsndfile-1.dll"            "%PACK_PATH%"
 copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll" "%PACK_PATH%"
 
 REM Generate docs
-"%PDOC_PATH%\pandoc.exe" --from markdown_github --to html --standalone "%~dp0\README.md" --output "%PACK_PATH%\Readme.html"
-copy "%~dp0\*.html" "%PACK_PATH%"
+copy "%~dp0\LICENSE.html" "%PACK_PATH%"
+"%PDOC_PATH%\pandoc.exe" --from markdown_github --to html --standalone "%~dp0\README.md" --output "%PACK_PATH%\README.html"
+copy "%~dp0\doc\*.png" "%PACK_PATH%\doc"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress
