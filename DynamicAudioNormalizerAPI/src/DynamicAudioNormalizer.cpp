@@ -79,7 +79,7 @@ public:
 	~MDynamicAudioNormalizer_PrivateData(void);
 
 	bool initialize(void);
-	bool processInplace(double **samplesIn, int64_t inputSize, int64_t &outputSize);
+	bool processInplace(double **samplesInOut, int64_t inputSize, int64_t &outputSize);
 	bool setPass(const int pass);
 
 private:
@@ -296,11 +296,11 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	return true;
 }
 
-bool MDynamicAudioNormalizer::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer::processInplace(double **samplesInOut, int64_t inputSize, int64_t &outputSize)
 {
 	try
 	{
-		return p->processInplace(samples, inputSize, outputSize);
+		return p->processInplace(samplesInOut, inputSize, outputSize);
 	}
 	catch(std::exception &e)
 	{
@@ -309,7 +309,7 @@ bool MDynamicAudioNormalizer::processInplace(double **samples, int64_t inputSize
 	}
 }
 
-bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64_t inputSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, int64_t inputSize, int64_t &outputSize)
 {
 	outputSize = 0;
 
@@ -343,7 +343,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64
 			const uint32_t copyLen = std::min(inputSamplesLeft, m_bufferSrc[0]->getFree());
 			for(uint32_t channel = 0; channel < m_channels; channel++)
 			{
-				m_bufferSrc[channel]->append(&samples[channel][inputPos], copyLen);
+				m_bufferSrc[channel]->append(&samplesInOut[channel][inputPos], copyLen);
 			}
 			inputPos += copyLen;
 			inputSamplesLeft -= copyLen;
@@ -372,7 +372,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samples, int64
 			const uint32_t copyLen = std::min(outputBufferLeft, m_bufferOut[0]->getUsed());
 			for(uint32_t channel = 0; channel < m_channels; channel++)
 			{
-				m_bufferOut[channel]->read(&samples[channel][outputPos], copyLen);
+				m_bufferOut[channel]->read(&samplesInOut[channel][outputPos], copyLen);
 			}
 			outputPos += copyLen;
 			outputBufferLeft -= copyLen;

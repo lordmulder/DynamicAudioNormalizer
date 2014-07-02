@@ -19,27 +19,162 @@ One more detail to consider is that applying the Gaussian smoothing kernel alone
 
 The following example shows the results form a "real world" audio recording that has been processed by the Dynamic Audio Normalizer. The chart shows the maximum local gain factors for each individual frame (blue) as well as the minimum filtered gain factors (green) and the final smoothend gain factors (orange). Note how smooth the progression of the final gain factors is, while approaching the maximum local gain factors as closely as possible. Also note how the smoothend gain factors *never* exceed the maximum local gain factor in order to avoid distortions.
 
-![Chart](doc/Chart.png "Dynamic Audio Normalizer – Example")  
+![Chart](img/Chart.png "Dynamic Audio Normalizer – Example")  
 <small>**Figure 1:** Progression of the gain factors for each audio frame.</small>  
 <br>
 
 So far it has been discussed how the optimal gain factor for each frame is determined. However, since each frame contains a large number of samples – at a typical sampling rate of 44,100 Hz and a standard frame size of 500 milliseconds we have 22,050 samples per frame – it is also required to infer the gain factor for each individual sample in the frame. The most simple approach, of course, is applying the *same* gain factor to *all* samples in the certain frame. But this would lead to abrupt changes of the gain factor at each frame boundary, while the gain factor remains constant within the frames. A better approach, as implemented in the Dynamic Audio Normalizer, is interpolating the per-sample gain factors. In particular, the Dynamic Audio Normalizer applies a *linear interpolation* in order to compute the gain factors for the samples inside the <tt>n</tt>-th frame from the gain factors <tt>G'[n-1]</tt>, <tt>G'[n]</tt> and <tt>G'[n+1]</tt>, where <tt>G'[k]</tt> denotes the final *filtered* gain factor for the <tt>k</tt>-th frame. The following graph shows how the per-sample gain factors (orange) are interpolated from the gain factors of the preceding (green), current (blue) and subsequent (purple) frame.
 
-![Interpolation](doc/Interpolation.png "Dynamic Audio Normalizer – Interpolation")  
+![Interpolation](img/Interpolation.png "Dynamic Audio Normalizer – Interpolation")  
 <small>**Figure 2:** Linear interpolation of the per-sample gain factors.</small>  
 <br>
 
 Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper view shows the unprocessed original recording while the lower view shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified to a great extent, while retaining the dynamics of the input and avoiding clipping or distortion.
 
-![Waveform](doc/Waveform.png "Dynamic Audio Normalizer – Example")  
+![Waveform](img/Waveform.png "Dynamic Audio Normalizer – Example")  
 <small>**Figure 3:** Waveform before and after processing.</small>
 
 -------------------------------------------------------------------------------
 Configuration
 -------------------------------------------------------------------------------
 
-![FilterSize](doc/FilterSize.png "Dynamic Audio Normalizer – Filter Size Effects")  
+![FilterSize](img/FilterSize.png "Dynamic Audio Normalizer – Filter Size Effects")  
 <small>**Figure 4:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
+
+-------------------------------------------------------------------------------
+API Documentation
+-------------------------------------------------------------------------------
+
+### MDynamicAudioNormalizer::MDynamicAudioNormalizer() ###
+```
+MDynamicAudioNormalizer(
+	const uint32_t channels,
+	const uint32_t sampleRate,
+	const uint32_t frameLenMsec,
+	const bool channelsCoupled,
+	const bool enableDCCorrection,
+	const double peakValue,
+	const double maxAmplification,
+	const uint32_t filterSize,
+	const bool verbose = false,
+	FILE *const logFile = NULL
+);
+```
+
+Constructor. Creates a new MDynamicAudioNormalizer instance and sets up the normalization parameters.
+
+**Parameters:**
+* *channels*: The number of channels in the input/output audio stream (e.g. **2** for Stereo).
+* *sampleRate*: The sampling rate of the input/output audio stream, in Hertz (e.g. **44100** for "CD Quality").
+* *frameLenMsec*: The frame length, in milliseconds. A typical value is **500** milliseconds.
+* *channelsCoupled*: Set to **true** in order to enable channel coupling, set to **false** otherwise (default: **true**).
+* *enableDCCorrection*: Set to **true** in order to enable DC correction, set to **false** otherwise (default: **false**).
+* *peakValue*: Specifies the peak magnitude for normalized audio. Should be in the **0.0** to **1.0** range (default: **0.95**).
+* *maxAmplification*: Specifies the maximum amplification factor. Should be greater than **1.0** (default: **10.0**).
+* *filterSize*: The "window size" of the Gaussian Smoothing filter, in frames. Must be an *odd* number. (default: **31**).
+* *verbose*: Set to **true** in order to enable additional diagnostic logging, set to **false** otherwise (default: **false**).
+* *logFile*: An open **FILE*** handle with *write* access that receives the logging info, or **NULL** to disable logging.
+
+<br>
+### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() ###
+```
+virtual ~MDynamicAudioNormalizer(void);
+```
+
+Destructor. Destroys the MDynamicAudioNormalizer instance and releases all memory that it occupied.
+
+<br>
+### MDynamicAudioNormalizer::initialize() ###
+```
+bool initialize(void);
+```
+
+Initializes the MDynamicAudioNormalizer instance. Validates the parameters and allocates/initializes the required memory buffers.
+
+This function *must* be called once for each new MDynamicAudioNormalizer instance. It *must* be called before <tt>processInplace()</tt> or <tt>setPass()</tt> are called.
+
+**Return value:**
+* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
+
+<br>
+### MDynamicAudioNormalizer::setPass() ###
+```
+bool setPass(const int pass);
+```
+
+Starts a new processing pass and *must* be called before <tt>processInplace()</tt> can be called. The previous pass is ended *implicitly* when a new one is started.
+
+The application is supposed to start the *first* pass, then process all input samples (by calling <tt>processInplace()</tt> in a loop), then start the *second* pass and finally process all input samples again (by calling <tt>processInplace()</tt> in a loop).
+
+During the *first* pass, output samples are returned but these samples will **not** be normalized. The application will usually *discard* the output of the *first* pass and only retain the output of the *second* pass.
+
+**Parameters:**
+* *pass*: This value can be either <tt>MDynamicAudioNormalizer::PASS_1ST</tt> or <tt>MDynamicAudioNormalizer::PASS_2ND</tt> in order to start the *first* or *second* pass, respectively.
+
+**Return value:**
+* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
+
+<br>
+### MDynamicAudioNormalizer::processInplace() ###
+```
+bool processInplace(
+	double **samplesInOut,
+	int64_t inputSize,
+	int64_t &outputSize
+);
+```
+
+This is the main processing function. It usually is called in a loop by the application until all audio samples (for the *current* pass) have been processed. It is very important that all input samples are **identical** for the *first* and the *second* pass and that the total sample count does **not** change!
+
+The function works "in place": It *reads* the original input samples from the specified buffer and then *writes* the normalized output samples, if any, back into the *same* buffer. The content of <tt>samplesInOut</tt> will **not** be preserved!
+
+It's possible that a specific call to this function returns *fewer* output samples than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent function call. This also means that the *i*-th output sample doesn't necessarily match *i*-th input sample. However, the samples are always returned in a strict FIFO (first-in, first-out) order. At the end of a pass, when all input smaples have been read, the application may feed this function with "dummy" (null) samples in order to *flush* all pending output samples.
+
+**Parameters:**
+* *samplesInOut*: The buffer that contains the original input samples and that will receive the normalized output samples. The *i*-th input sample for the *c*-th channel is assumed to be stored at <tt>samplesInOut[c][i]</tt>, as a double-precision floating point number in the **-1.00** to **1.00** range. All indices are zero-based. The output samples, if any, will be stored at the corresponding locations, thus *overwriting* the input data. Consequently, the *i*-th output sample for the *c*-th channel will be stored at <tt>samplesInOut[c][i]</tt> and is guaranteed to be inside the **-1.00** to **1.00** range.
+* *inputSize*: The number of *input* samples that are available in the <tt>samplesInOut</tt> buffer. This also specifies the *maximum* number of output samples to be stored in the buffer.
+* *outputSize*: Receives the number of *output* samples that have been stored in the <tt>samplesInOut</tt> buffer. Please note that this value can be *smaller* than <tt>inputSize</tt> size. It can even be *zero*!
+
+**Return value:**
+* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
+
+<br>
+### MDynamicAudioNormalizer::getVersionInfo() ###
+```
+static void getVersionInfo(
+	uint32_t &major,
+	uint32_t &minor,
+	uint32_t &patch
+);
+```
+
+This *static* function can be called to determine the Dynamic Audio Normalizer library version.
+
+**Parameters:**
+* *major*: Receives the major version number. Value will currently be **1**.
+* *minor*: Receives the minor version number. Value will be in the **0** to **99** range.
+* *patch*: Receives the patch level. Value will be in the **0** to **9** range.
+
+<br>
+### MDynamicAudioNormalizer::getBuildInfo() ###
+```
+static void getBuildInfo(
+	const char **date,
+	const char **time,
+	const char **compiler,
+	const char **arch,
+	bool &debug
+);
+```
+
+This *static* function can be called to determine more detailed information about the specific Dynamic Audio Normalizer build.
+
+**Parameters:**
+* *date*: Receives a pointer to a *read-only* string buffer containing the build date. Uses standard <tt>__DATE__</tt> format.
+* *time*: Receives a pointer to a *read-only* string buffer containing the build time. Uses standard <tt>__TIME__</tt> format.
+* *compiler*: Receives a pointer to a *read-only* string buffer containing the compiler identifier (e.g. "MSVC 2013.2").
+* *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. "x86" for IA32/x86 or "x64" for AMD64/EM64T).
+* *debug*: Will be set to <tt>true</tt> if this is a *debug* build or to <tt>false</tt> otherwise. Don't use the *debug* version production!
 
 -------------------------------------------------------------------------------
 License Terms
