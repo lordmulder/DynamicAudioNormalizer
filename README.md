@@ -5,7 +5,7 @@ Dynamic Audio Normalizer
 
 **Dynamic Audio Normalizer** is a library and a command-line tool for [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization). It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" parts of the audio while avoiding distortions or clipping the "loud" parts. In other words, the volume of the "quiet" and the "loud" parts will be harmonized.
 
--------------------------------------------------------------------------------
+
 How it works
 -------------------------------------------------------------------------------
 
@@ -34,23 +34,23 @@ Finally, the following waveform view illustrates how the volume of a "real world
 ![Waveform](img/Waveform.png "Dynamic Audio Normalizer – Example")  
 <small>**Figure 3:** Waveform before and after processing.</small>
 
--------------------------------------------------------------------------------
+
 Command-Line Usage
 -------------------------------------------------------------------------------
 
 Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface), e.g. manually from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or automatically by a script file. The basic syntax is extremely simple:
-* <tt>DynamicAudioNormalizerCLI.exe -i *input_file* -o *output_file* [options]</tt>
+* ```DynamicAudioNormalizerCLI.exe -i <input_file> -o <output_file> [options]```
 
 Note that the *input* and *output* files always need to be specified, while the rest is optional. Existing output files will be *overwritten*!
 
 Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output, so it can deal with a wide range of file formats (WAV, W64, AIFF, AU, etc) and various sample types (8-Bit/16-Bit/24-Bit Integer, 32-Bit/64-Bit Float, ADPCM, etc).
 
 **Example:**
-* <tt>DynamicAudioNormalizerCLI.exe -i "c:\users\john doe\my music\original.wav" -o "c:\users\john doe\my music\normalized.wav"</tt>
+* ```DynamicAudioNormalizerCLI.exe -i "c:\users\john doe\my music\original.wav" -o "c:\users\john doe\my music\normalized.wav"```
 
-For a list of available options, please run '<tt>DynamicAudioNormalizerCLI.exe --help</tt>' or see the following chapter…
+For a list of available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> or see the following chapter…
 
--------------------------------------------------------------------------------
+
 Configuration
 -------------------------------------------------------------------------------
 
@@ -58,46 +58,39 @@ This chapter describes the configuration options that can be used to tweak the b
 
 While the default parameter of the Dynamic Audio Normalizer have been chosen to give satisfying results with a wide range of audio sources, it can be advantageous to adapt the parameters to the individual audio file as well as to your personal preferences. 
 
-<br>
 ### Gaussian Filter Window Size ###
 
-The most important parameter of the Dynamic Audio Normalizer is the "window size" of the Gaussian smoothing filter. It can be controlled with the **'<tt>--gauss-size</tt>'** option. The filter's window size is specified in *frames*, centered around the current frame. For the sake of simplicity, this must be an odd number. Consequently, the default value of **31** takes into account the current frame, as well as the *15* preceding frames and the *15* subsequent frames. Using a *larger* window results in a *stronger* smoothing effect and thus in *less* gain variation, i.e. slower gain adaptation. Conversely, Using a *smaller* window results in a *weaker* smoothing effect and thus in *more* gain variation, i.e. faster gain adaptation. The following graph illustrates the effect of different filter sizes – *11* (orange), *31* (green), and *61* (purple) frames – on the progression of the final filtered gain factor.
+The most important parameter of the Dynamic Audio Normalizer is the "window size" of the Gaussian smoothing filter. It can be controlled with the **<tt>--gauss-size</tt>** option. The filter's window size is specified in *frames*, centered around the current frame. For the sake of simplicity, this must be an odd number. Consequently, the default value of **31** takes into account the current frame, as well as the *15* preceding frames and the *15* subsequent frames. Using a *larger* window results in a *stronger* smoothing effect and thus in *less* gain variation, i.e. slower gain adaptation. Conversely, Using a *smaller* window results in a *weaker* smoothing effect and thus in *more* gain variation, i.e. faster gain adaptation. The following graph illustrates the effect of different filter sizes – *11* (orange), *31* (green), and *61* (purple) frames – on the progression of the final filtered gain factor.
 
 ![FilterSize](img/FilterSize.png "Dynamic Audio Normalizer – Filter Size Effects")  
 <small>**Figure 4:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
 
-<br>
 ### Target Peak Magnitude ###
 
-The target peak magnitude specifies the highest permissible magnitude level for the *normalized* audio file. It is controlled by the **'<tt>--peak</tt>'** option. Since the Dynamic Audio Normalizer represents audio samples as floating point values in the *-1.0* to *1.0* range – regardless of the input and output audio format – this value must be in the *0.0* to *1.0* range. Consequently, the value *1.0* is equal to [0 dBFS](http://en.wikipedia.org/wiki/DBFS), i.e. the maximum possible digital signal level (± 32767 in a 16-Bit file). The Dynamic Audio Normalizer will try to approach the target peak magnitude as closely as possible, but at the same time it also makes sure that the normalized signal will *never* exceed the peak magnitude. A frame's maximum local gain factor is imposed directly by the target peak magnitude. The default value is **0.95** and thus leaves a [headroom](http://en.wikipedia.org/wiki/Headroom_%28audio_signal_processing%29) of *5%*. It is **not** recommended to go *above* this value!
+The target peak magnitude specifies the highest permissible magnitude level for the *normalized* audio file. It is controlled by the **<tt>--peak</tt>** option. Since the Dynamic Audio Normalizer represents audio samples as floating point values in the *-1.0* to *1.0* range – regardless of the input and output audio format – this value must be in the *0.0* to *1.0* range. Consequently, the value *1.0* is equal to [0 dBFS](http://en.wikipedia.org/wiki/DBFS), i.e. the maximum possible digital signal level (± 32767 in a 16-Bit file). The Dynamic Audio Normalizer will try to approach the target peak magnitude as closely as possible, but at the same time it also makes sure that the normalized signal will *never* exceed the peak magnitude. A frame's maximum local gain factor is imposed directly by the target peak magnitude. The default value is **0.95** and thus leaves a [headroom](http://en.wikipedia.org/wiki/Headroom_%28audio_signal_processing%29) of *5%*. It is **not** recommended to go *above* this value!
 
-<br>
 ### Channel Coupling ###
 
 By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels and thus the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the <tt>n</tt>-th frame is defined as <tt>S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])</tt>, where <tt>s_max[n][k]</tt> denotes the highest magnitude sample in the <tt>k</tt>-th channel and <tt>C</tt> is the number of channels. The gain factor for *all* channels is then derived from <tt>S_max[n]</tt>. This is referred to as *channel coupling* and for most audio files it should give the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is uneven, e.g. one channel may be "quieter" than the other one(s). In this case, the **<tt>--no-coupling</tt>** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel <tt>k</tt>, depending only on the channel's highest magnitude sample <tt>s_max[n][k]</tt>. This allows for harmonizing the volume of the different channels.
 
-<br>
 ### DC Bias Correction ###
 
 <tt>--correct-dc</tt>
  
-<br>
 ### Maximum Gain Factor ###
 
 <tt>--max-gain</tt>
 
-<br>
 ### Frame Length ###
 
 <tt>--frame-len</tt>
 
--------------------------------------------------------------------------------
+
 API Documentation
 -------------------------------------------------------------------------------
 
 This chapter describes the **MDynamicAudioNormalizer** class, as defined in the <tt>DynamicAudioNormalizer.h</tt> header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
 
-<br>
 ### MDynamicAudioNormalizer::MDynamicAudioNormalizer() ###
 ```
 MDynamicAudioNormalizer(
@@ -128,7 +121,6 @@ Constructor. Creates a new MDynamicAudioNormalizer instance and sets up the norm
 * *verbose*: Set to **true** in order to enable additional diagnostic logging, or to **false** otherwise (default: **false**).
 * *logFile*: An open **FILE*** handle with *write* access that receives the logging info, or **NULL** to disable logging.
 
-<br>
 ### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() ###
 ```
 virtual ~MDynamicAudioNormalizer(void);
@@ -136,7 +128,6 @@ virtual ~MDynamicAudioNormalizer(void);
 
 Destructor. Destroys the MDynamicAudioNormalizer instance and releases all memory that it occupied.
 
-<br>
 ### MDynamicAudioNormalizer::initialize() ###
 ```
 bool initialize(void);
@@ -149,7 +140,6 @@ This function *must* be called once for each new MDynamicAudioNormalizer instanc
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-<br>
 ### MDynamicAudioNormalizer::setPass() ###
 ```
 bool setPass(
@@ -169,7 +159,6 @@ During the *first* pass, output samples are returned but these samples will **no
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-<br>
 ### MDynamicAudioNormalizer::processInplace() ###
 ```
 bool processInplace(
@@ -193,7 +182,6 @@ It's possible that a specific call to this function returns *fewer* output sampl
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-<br>
 ### MDynamicAudioNormalizer::getVersionInfo() ###
 ```
 static void getVersionInfo(
@@ -210,7 +198,6 @@ This *static* function can be called to determine the Dynamic Audio Normalizer l
 * *minor*: Receives the minor version number. Value will be in the **0** to **99** range.
 * *patch*: Receives the patch level. Value will be in the **0** to **9** range.
 
-<br>
 ### MDynamicAudioNormalizer::getBuildInfo() ###
 ```
 static void getBuildInfo(
@@ -225,13 +212,13 @@ static void getBuildInfo(
 This *static* function can be called to determine more detailed information about the specific Dynamic Audio Normalizer build.
 
 **Parameters:**
-* *date*: Receives a pointer to a *read-only* string buffer containing the build date. Uses standard <tt>__DATE__</tt> format.
-* *time*: Receives a pointer to a *read-only* string buffer containing the build time. Uses standard <tt>__TIME__</tt> format.
+* *date*: Receives a pointer to a *read-only* string buffer containing the build date, standard ```__DATE__``` format.
+* *time*: Receives a pointer to a *read-only* string buffer containing the build time, standard ```__TIME__``` format.
 * *compiler*: Receives a pointer to a *read-only* string buffer containing the compiler identifier (e.g. "MSVC 2013.2").
 * *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. "x86" for IA32/x86 or "x64" for AMD64/EM64T).
 * *debug*: Will be set to <tt>true</tt> if this is a *debug* build or to <tt>false</tt> otherwise. Don't use the *debug* version production!
 
--------------------------------------------------------------------------------
+
 License Terms
 -------------------------------------------------------------------------------
 
@@ -256,6 +243,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 http://www.gnu.org/licenses/gpl-2.0.html
 
--------------------------------------------------------------------------------
+
+<br>  
 
 e.o.f.

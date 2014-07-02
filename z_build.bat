@@ -76,6 +76,7 @@ copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll" "%PACK_PATH%"
 REM Generate docs
 copy "%~dp0\LICENSE.html" "%PACK_PATH%"
 copy "%~dp0\img\*.png" "%PACK_PATH%\img"
+copy "%~dp0\img\*.css" "%PACK_PATH%\img"
 "%PDOC_PATH%\pandoc.exe" --from markdown_github --to html --standalone "%~dp0\README.md" --output "%PACK_PATH%\README.html"
 
 REM ///////////////////////////////////////////////////////////////////////////
