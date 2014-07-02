@@ -35,10 +35,26 @@ Finally, the following waveform view illustrates how the volume of a "real world
 <small>**Figure 3:** Waveform before and after processing.</small>
 
 -------------------------------------------------------------------------------
+Command-Line Usage
+-------------------------------------------------------------------------------
+
+Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface), e.g. manually from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or automatically by a script file. The basic syntax is extremely simple:
+* <tt>DynamicAudioNormalizerCLI.exe -i *input_file* -o *output_file* [options]</tt>
+
+Note that the *input* and *output* files always need to be specified, while the rest is optional. Existing output files will be *overwritten*!
+
+Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output, so it can deal with a wide range of file formats (WAV, W64, AIFF, AU, etc) and various sample types (8-Bit/16-Bit/24-Bit Integer, 32-Bit/64-Bit Float, ADPCM, etc).
+
+**Example:**
+* <tt>DynamicAudioNormalizerCLI.exe -i "c:\users\john doe\my music\original.wav" -o "c:\users\john doe\my music\normalized.wav"</tt>
+
+For a list of available options, please run '<tt>DynamicAudioNormalizerCLI.exe --help</tt>' or see the following chapter…
+
+-------------------------------------------------------------------------------
 Configuration
 -------------------------------------------------------------------------------
 
-This chapter describes the configuration options that can be used to tweak the behavior of the Dynamic Audio Normalizer.
+This chapter describes the configuration options that can be used to tweak the behaviour of the Dynamic Audio Normalizer.
 
 While the default parameter of the Dynamic Audio Normalizer have been chosen to give satisfying results with a wide range of audio sources, it can be advantageous to adapt the parameters to the individual audio file as well as to your personal preferences. 
 
