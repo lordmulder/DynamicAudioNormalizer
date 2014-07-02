@@ -46,6 +46,9 @@ public:
 
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length);
+
+	//Static functions
+	static const char *libraryVersion(void);
 	
 private:
 	AudioFileIO &operator=(const AudioFileIO &) { throw 666; }

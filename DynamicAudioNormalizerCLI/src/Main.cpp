@@ -293,7 +293,7 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("\n"));
 }
 
-int dynamicNormalizerMain(int argc, CHR* argv[])
+static void printLogo(void)
 {
 	uint32_t versionMajor, versionMinor, versionPatch;
 	MDynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
@@ -301,13 +301,15 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	const char *buildDate, *buildTime, *buildCompiler, *buildArch; bool buildDebug;
 	MDynamicAudioNormalizer::getBuildInfo(&buildDate, &buildTime, &buildCompiler, &buildArch, buildDebug);
 
-	PRINT(TXT("\nDynamic Audio Normalizer, Version %u.%02u-%u\n"), versionMajor, versionMinor, versionPatch);
+	PRINT(TXT("---------------------------------------------------------------------------\n"));
+
+	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u\n"), versionMajor, versionMinor, versionPatch);
 	PRINT(TXT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
 	PRINT(TXT("Built on ") FMT_CHAR TXT(" at ") FMT_CHAR TXT(" with ") FMT_CHAR TXT(" for Win-") FMT_CHAR TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
 
 	PRINT(TXT("This program is free software: you can redistribute it and/or modify\n"));
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));
-	PRINT(TXT("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n\n"));
+	PRINT(TXT("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n"));
 
 	if(DYAUNO_DEBUG)
 	{
@@ -319,8 +321,15 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	if((DYAUNO_DEBUG) != buildDebug)
 	{
 		LOG_ERR(TXT("Trying to use DEBUG library with RELEASE binary or vice versa!\n"));
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
+
+	PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioFileIO::libraryVersion());
+}
+
+int dynamicNormalizerMain(int argc, CHR* argv[])
+{
+	printLogo();
 
 	Parameters parameters;
 	if(!parameters.parseArgs(argc, argv))

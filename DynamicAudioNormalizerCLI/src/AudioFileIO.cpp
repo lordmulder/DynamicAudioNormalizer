@@ -63,6 +63,9 @@ public:
 	static sf_count_t vio_write(const void *ptr, sf_count_t count, void *user_data);
 	static sf_count_t vio_tell(void *user_data);
 
+	//Library info
+	static const char *libraryVersion(void);
+
 private:
 	//libsndfile
 	FILE *file;
@@ -74,6 +77,9 @@ private:
 	//(De)Interleaving
 	double *tempBuff;
 	int64_t tempSize;
+
+	//Library info
+	static char versionBuffer[128];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -143,6 +149,11 @@ bool AudioFileIO::rewind(void)
 bool AudioFileIO::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length)
 {
 	return p->queryInfo(channels, sampleRate, length);
+}
+
+const char *AudioFileIO::libraryVersion(void)
+{
+	return AudioFileIO_Private::libraryVersion();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -444,4 +455,19 @@ sf_count_t AudioFileIO_Private::vio_write(const void *ptr, sf_count_t count, voi
 sf_count_t AudioFileIO_Private::vio_tell(void *user_data)
 {
 	return FTELL64((FILE*)user_data);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Static Functions
+///////////////////////////////////////////////////////////////////////////////
+
+char AudioFileIO_Private::versionBuffer[128] = { '\0' };
+
+const char *AudioFileIO_Private::libraryVersion(void)
+{
+	if(!versionBuffer[0])
+	{
+		sf_command (NULL, SFC_GET_LIB_VERSION, versionBuffer, sizeof(versionBuffer));
+	}
+	return versionBuffer;
 }
