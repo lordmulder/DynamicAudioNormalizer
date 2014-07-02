@@ -20,26 +20,26 @@ Once more detail to consider is that applying the Gaussian smoothing kernel alon
 The following example shows the results form a "real world" audio recording that has been processed by the Dynamic Audio Normalizer. The chart shows the maximum local gain factors for each individual frame (blue) as well as the minimum filtered gain factors (green) and the final smoothend gain factors (orange). Note how smooth the progression of the final gain factors is, while approaching the maximum local gain factors as closely as possible. Also note how the smoothend gain factors *never* exceed the maximum local gain factor in order to avoid distortions.
 
 ![Chart](doc/Chart.png "Dynamic Audio Normalizer - Example")  
-<small>Progression of the gain factors: Original (local maximum), after minimum filtering and after application of the Gaussian smoothing kernel.</small>  
+<small>**Figure 1:** Progression of the gain factors for each audio frame.</small>  
 <br>
 
-So far it has been discussed how the optimal gain factor for each frame is determined. However, since each frame contains a large number of samples - at a typical sampling rate of 44,100 and a standard frame size of 500 milliseconds we have 22,050 samples per frame - it is also required to infer the gain factor for each individual sample in the frame. The most simple approach, of course, is applying the *same* gain factor to *all* samples in the certain frame. But this would lead to abrupt changes of the gain factor at each frame boundary, while the gain factor remains constant within the frames. A better approach, as implemented in the Dynamic Audio Normalizer, is interpolating the per-sample gain factors. In particular, the Dynamic Audio Normalizer applies a *linear interpolation* in order to compute the gain factors for the samples inside the <tt>n</tt>-th frame from the gain factors <tt>G'[n-1]</tt>, <tt>G'[n]</tt> and <tt>G'[n+1]</tt>, where <tt>G'[k]</tt> denotes the final *filtered* gain factor for the <tt>k</tt>-th frame. The following graph shows how the per-sample gain factors (orange) are interpolated from the gain factors of the preceding (green), current (blue) and subsequent (purple) frame.
+So far it has been discussed how the optimal gain factor for each frame is determined. However, since each frame contains a large number of samples - at a typical sampling rate of 44,100 Hz and a standard frame size of 500 milliseconds we have 22,050 samples per frame – it is also required to infer the gain factor for each individual sample in the frame. The most simple approach, of course, is applying the *same* gain factor to *all* samples in the certain frame. But this would lead to abrupt changes of the gain factor at each frame boundary, while the gain factor remains constant within the frames. A better approach, as implemented in the Dynamic Audio Normalizer, is interpolating the per-sample gain factors. In particular, the Dynamic Audio Normalizer applies a *linear interpolation* in order to compute the gain factors for the samples inside the <tt>n</tt>-th frame from the gain factors <tt>G'[n-1]</tt>, <tt>G'[n]</tt> and <tt>G'[n+1]</tt>, where <tt>G'[k]</tt> denotes the final *filtered* gain factor for the <tt>k</tt>-th frame. The following graph shows how the per-sample gain factors (orange) are interpolated from the gain factors of the preceding (green), current (blue) and subsequent (purple) frame.
 
 ![Interpolation](doc/Interpolation.png "Dynamic Audio Normalizer - Interpolation")  
-<small>Linear interpolation of the per-sample gain factors.</small>  
+<small>**Figure 2:** Linear interpolation of the per-sample gain factors.</small>  
 <br>
 
-Furthermore, the waveform view illustrates how the volume of the input audio has been harmonized.
+Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper view shows the unprocessed original recording while the lower view shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified to a great extent, while retaining the dynamics of the input and avoiding clipping or distortion.
 
 ![Waveform](doc/Waveform.png "Dynamic Audio Normalizer - Example")  
-<small>Waveform before (upper view) and after (lower view) processing.</small>
+<small>**Figure 3:** Waveform before and after processing.</small>
 
 -------------------------------------------------------------------------------
 Configuration
 -------------------------------------------------------------------------------
 
 ![FilterSize](doc/FilterSize.png "Dynamic Audio Normalizer - Filter Size Effects")  
-<small>The effect of different "window sizes" of the Gaussian smoothing filter.</small>
+<small>**Figure 4:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
 
 -------------------------------------------------------------------------------
 License Terms
