@@ -67,12 +67,12 @@ Constructor. Creates a new MDynamicAudioNormalizer instance and sets up the norm
 * *channels*: The number of channels in the input/output audio stream (e.g. **2** for Stereo).
 * *sampleRate*: The sampling rate of the input/output audio stream, in Hertz (e.g. **44100** for "CD Quality").
 * *frameLenMsec*: The frame length, in milliseconds. A typical value is **500** milliseconds.
-* *channelsCoupled*: Set to **true** in order to enable channel coupling, set to **false** otherwise (default: **true**).
-* *enableDCCorrection*: Set to **true** in order to enable DC correction, set to **false** otherwise (default: **false**).
-* *peakValue*: Specifies the peak magnitude for normalized audio. Should be in the **0.0** to **1.0** range (default: **0.95**).
-* *maxAmplification*: Specifies the maximum amplification factor. Should be greater than **1.0** (default: **10.0**).
-* *filterSize*: The "window size" of the Gaussian Smoothing filter, in frames. Must be an *odd* number. (default: **31**).
-* *verbose*: Set to **true** in order to enable additional diagnostic logging, set to **false** otherwise (default: **false**).
+* *channelsCoupled*: Set to **true** in order to enable channel coupling, or to **false** otherwise (default: **true**).
+* *enableDCCorrection*: Set to **true** in order to enable DC correction, or to **false** otherwise (default: **false**).
+* *peakValue*: Specifies the peak magnitude for normalized audio, in the **0.0** to **1.0** range (default: **0.95**).
+* *maxAmplification*: Specifies the maximum amplification factor. Must be greater than **1.0** (default: **10.0**).
+* *filterSize*: The "window size" of the Gaussian filter, in frames. Must be an *odd* number. (default: **31**).
+* *verbose*: Set to **true** in order to enable additional diagnostic logging, or to **false** otherwise (default: **false**).
 * *logFile*: An open **FILE*** handle with *write* access that receives the logging info, or **NULL** to disable logging.
 
 <br>
