@@ -149,7 +149,7 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			PARSE_VALUE_FLT(m_peakValue);
 			continue;
 		}
-		if(IS_ARG_SHRT("m", "max-amp"))
+		if(IS_ARG_SHRT("m", "max-gain"))
 		{
 			ENSURE_NEXT_ARG();
 			PARSE_VALUE_FLT(m_maxAmplification);
@@ -167,17 +167,17 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			PARSE_VALUE_UINT(m_filterSize);
 			continue;
 		}
-		if(IS_ARG_LONG("no-coupling"))
+		if(IS_ARG_SHRT("n", "no-coupling"))
 		{
 			m_channelsCoupled = false;
 			continue;
 		}
-		if(IS_ARG_LONG("correct-dc"))
+		if(IS_ARG_SHRT("c", "correct-dc"))
 		{
 			m_enableDCCorrection = true;
 			continue;
 		}
-		if(IS_ARG_LONG("verbose"))
+		if(IS_ARG_SHRT("v", "verbose"))
 		{
 			m_verboseMode = true;
 			continue;
@@ -243,9 +243,9 @@ bool Parameters::validateParameters(void)
 		return false;
 	}
 
-	if((m_peakValue < 0.0) || (m_peakValue > 1.0))
+	if((m_peakValue < 0.1) || (m_peakValue > 1.0))
 	{
-		LOG_WRN(TXT("Peak value value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_peakValue);
+		LOG_WRN(TXT("Peak value value %.2f is out of range. Must be in the 0.10 to 1.00 range!\n"), m_peakValue);
 		return false;
 	}
 
