@@ -5,8 +5,14 @@ Dynamic Audio Normalizer
 
 **Dynamic Audio Normalizer** is a library and a command-line tool for [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization). It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" parts of the audio while avoiding distortions or clipping the "loud" parts. In other words, the volume of the "quiet" and the "loud" parts will be harmonized.
 
+### Contents: ###
+0. [How It Works](#chap_how)
+0. [Command-Line Usage](#chap_cli)
+0. [Configuration](#chap_cfg)
+0. [API Documentation](#chap_api)
+0. [License Terms](#chap_lic)
 
-How it works
+How It Works {#chap_how}
 -------------------------------------------------------------------------------
 
 The "standard" audio normalization algorithm applies the same *constant* amount of gain to *all* samples in the file. Consequently, the gain factor must be chosen in a way that won't cause clipping/distortion – even for the input sample that has the highest magnitude. So if <tt>S_max</tt> denotes the highest magnitude sample in the input audio and <tt>Peak</tt> is the desired peak magnitude, then the gain factor will be chosen as <tt>G=Peak/abs(S_max)</tt>. This works fine, as long as the volume of the input audio remains constant, more or less, all the time. If, however, the volume of the input audio varies significantly over time – as is the case with many "real world" recordings – the standard normalization algorithm will *not* give satisfying result. That's because the "loud" parts can *not* be amplified any further (without distortions) and thus the "quiet" parts will remain quiet too.
@@ -35,7 +41,7 @@ Finally, the following waveform view illustrates how the volume of a "real world
 <small>**Figure 3:** Waveform before and after processing.</small>
 
 
-Command-Line Usage
+Command-Line Usage {#chap_cli}
 -------------------------------------------------------------------------------
 
 Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface), e.g. manually from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or automatically by a script file. The basic syntax is extremely simple:
@@ -51,7 +57,7 @@ Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www
 For a list of available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> or see the following chapter…
 
 
-Configuration
+Configuration {#chap_cfg}
 -------------------------------------------------------------------------------
 
 This chapter describes the configuration options that can be used to tweak the behaviour of the Dynamic Audio Normalizer.
@@ -86,7 +92,7 @@ By default, the Dynamic Audio Normalizer will amplify all channels by the same a
 <tt>--frame-len</tt>
 
 
-API Documentation
+API Documentation {#chap_api}
 -------------------------------------------------------------------------------
 
 This chapter describes the **MDynamicAudioNormalizer** class, as defined in the <tt>DynamicAudioNormalizer.h</tt> header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
@@ -219,7 +225,7 @@ This *static* function can be called to determine more detailed information abou
 * *debug*: Will be set to <tt>true</tt> if this is a *debug* build or to <tt>false</tt> otherwise. Don't use the *debug* version production!
 
 
-License Terms
+License Terms {#chap_lic}
 -------------------------------------------------------------------------------
 
 ```
