@@ -44,7 +44,7 @@ Finally, the following waveform view illustrates how the volume of a "real world
 Command-Line Usage <a name="chap_cli"></a>
 -------------------------------------------------------------------------------
 
-Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface), e.g. manually from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or automatically by a script file. The basic syntax is extremely simple:
+Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface), e.g. manually from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or automatically by a script file. The basic CLI syntax is extremely simple:
 * ```DynamicAudioNormalizerCLI.exe -i <input_file> -o <output_file> [options]```
 
 Note that the *input* and *output* files always need to be specified, while the rest is optional. Existing output files will be *overwritten*!
@@ -52,7 +52,7 @@ Note that the *input* and *output* files always need to be specified, while the 
 Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output, so it can deal with a wide range of file formats (WAV, W64, AIFF, AU, etc) and various sample types (8-Bit/16-Bit/24-Bit Integer, 32-Bit/64-Bit Float, ADPCM, etc).
 
 **Example:**
-* ```DynamicAudioNormalizerCLI.exe -i "c:\users\john doe\my music\original.wav" -o "c:\users\john doe\my music\normalized.wav"```
+* ```DynamicAudioNormalizerCLI.exe -i "c:\my music\in_original.wav" -o "c:\my music\out_normalized.wav"```
 
 For a list of available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> or see the following chapter…
 
@@ -66,7 +66,7 @@ While the default parameter of the Dynamic Audio Normalizer have been chosen to 
 
 ### Gaussian Filter Window Size ###
 
-The most important parameter of the Dynamic Audio Normalizer is the "window size" of the Gaussian smoothing filter. It can be controlled with the **<tt>--gauss-size</tt>** option. The filter's window size is specified in *frames*, centered around the current frame. For the sake of simplicity, this must be an odd number. Consequently, the default value of **31** takes into account the current frame, as well as the *15* preceding frames and the *15* subsequent frames. Using a *larger* window results in a *stronger* smoothing effect and thus in *less* gain variation, i.e. slower gain adaptation. Conversely, Using a *smaller* window results in a *weaker* smoothing effect and thus in *more* gain variation, i.e. faster gain adaptation. The following graph illustrates the effect of different filter sizes – *11* (orange), *31* (green), and *61* (purple) frames – on the progression of the final filtered gain factor.
+The most important parameter of the Dynamic Audio Normalizer is the "window size" of the Gaussian smoothing filter. It can be controlled with the **<tt>--gauss-size</tt>** option. The filter's window size is specified in *frames*, centered around the current frame. For the sake of simplicity, this must be an odd number. Consequently, the default value of **31** takes into account the current frame, as well as the *15* preceding frames and the *15* subsequent frames. Using a *larger* window results in a *stronger* smoothing effect and thus in *less* gain variation, i.e. slower gain adaptation. Conversely, using a *smaller* window results in a *weaker* smoothing effect and thus in *more* gain variation, i.e. faster gain adaptation. The following graph illustrates the effect of different filter sizes – *11* (orange), *31* (green), and *61* (purple) frames – on the progression of the final filtered gain factor.
 
 ![FilterSize](img/FilterSize.png "Dynamic Audio Normalizer – Filter Size Effects")  
 <small>**Figure 4:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
@@ -77,7 +77,10 @@ The target peak magnitude specifies the highest permissible magnitude level for 
 
 ### Channel Coupling ###
 
-By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the <tt>n</tt>-th frame is defined as <tt>S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])</tt>, where <tt>s_max[n][k]</tt> denotes the highest magnitude sample in the <tt>k</tt>-th channel and <tt>C</tt> is the channel count. The gain factor for *all* channels is then derived from <tt>S_max[n]</tt>. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **<tt>--no-coupling</tt>** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel <tt>k</tt>, depending only on the channel's highest magnitude sample <tt>s_max[n][k]</tt> – which will harmonize the volume of the different channels.
+By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the <tt>n</tt>-th frame is defined as <tt>S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])</tt>, where <tt>s_max[n][k]</tt> denotes the highest magnitude sample in the <tt>k</tt>-th channel and <tt>C</tt> is the channel count. The gain factor for *all* channels is then derived from <tt>S_max[n]</tt>. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **<tt>--no-coupling</tt>** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel <tt>k</tt>, depending only on the individual channel's highest magnitude sample <tt>s_max[n][k]</tt>. This allows for harmonizing the volume of the different channels.
+
+![FilterSize](img/Coupling.png "Dynamic Audio Normalizer – Coupling Effects")  
+<small>**Figure 5:** The effect of *channel coupling*.</small>
 
 ### DC Bias Correction ###
 
@@ -125,7 +128,7 @@ Constructor. Creates a new MDynamicAudioNormalizer instance and sets up the norm
 * *maxAmplification*: Specifies the maximum amplification factor. Must be greater than **1.0** (default: **10.0**).
 * *filterSize*: The "window size" of the Gaussian filter, in frames. Must be an *odd* number. (default: **31**).
 * *verbose*: Set to **true** in order to enable additional diagnostic logging, or to **false** otherwise (default: **false**).
-* *logFile*: An open **FILE*** handle with *write* access that receives the logging info, or **NULL** to disable logging.
+* *logFile*: An open **FILE*** handle with *write* access to be used for logging, or **NULL** to disable logging.
 
 ### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() ###
 ```

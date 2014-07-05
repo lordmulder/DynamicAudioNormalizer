@@ -76,10 +76,9 @@ copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll" "%PACK_PATH%"
 REM Copy documents
 copy "%~dp0\LICENSE.html" "%PACK_PATH%"
 copy "%~dp0\img\*.png" "%PACK_PATH%\img"
-copy "%~dp0\img\*.css" "%PACK_PATH%\img"
 
 REM Generate docs
-"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html --standalone -c "img/Style.css" "%~dp0\README.md" --output "%PACK_PATH%\README.html"
+"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html --standalone -H "img/Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\README.html"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress
