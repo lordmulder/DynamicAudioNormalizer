@@ -54,7 +54,7 @@ Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www
 **Example:**
 * ```DynamicAudioNormalizerCLI.exe -i "c:\my music\in_original.wav" -o "c:\my music\out_normalized.wav"```
 
-For a list of available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> or see the following chapter…
+For a list of available options, run <tt>DynamicAudioNormalizerCLI.exe -h</tt> or see the following chapter…
 
 
 Configuration <a name="chap_cfg"></a>
@@ -111,7 +111,16 @@ API Documentation <a name="chap_api"></a>
 
 This chapter describes the **MDynamicAudioNormalizer** class, as defined in the <tt>DynamicAudioNormalizer.h</tt> header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
 
-### MDynamicAudioNormalizer::MDynamicAudioNormalizer() ###
+#### Functions: ####
+* [MDynamicAudioNormalizer – Constructor](#chap_api.constructor)
+* [MDynamicAudioNormalizer – Destructor](#chap_api.destructor)
+* [MDynamicAudioNormalizer::initialize()](#chap_api.initialize)
+* [MDynamicAudioNormalizer::setPass()](#chap_api.setPass)
+* [MDynamicAudioNormalizer::processInplace()](#chap_api.processInplace)
+* [MDynamicAudioNormalizer::getVersionInfo()](#chap_api.getVersionInfo)
+* [MDynamicAudioNormalizer::getBuildInfo()](#chap_api.getBuildInfo)
+
+### MDynamicAudioNormalizer::MDynamicAudioNormalizer() <a name="chap_api.constructor"></a> ###
 ```
 MDynamicAudioNormalizer(
 	const uint32_t channels,
@@ -141,14 +150,14 @@ Constructor. Creates a new MDynamicAudioNormalizer instance and sets up the norm
 * *verbose*: Set to **true** in order to enable additional diagnostic logging, or to **false** otherwise (default: **false**).
 * *logFile*: An open **FILE*** handle with *write* access to be used for logging, or **NULL** to disable logging.
 
-### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() ###
+### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() <a name="chap_api.destructor"></a> ###
 ```
 virtual ~MDynamicAudioNormalizer(void);
 ```
 
 Destructor. Destroys the MDynamicAudioNormalizer instance and releases all memory that it occupied.
 
-### MDynamicAudioNormalizer::initialize() ###
+### MDynamicAudioNormalizer::initialize() <a name="chap_api.initialize"></a> ###
 ```
 bool initialize(void);
 ```
@@ -160,7 +169,7 @@ This function *must* be called once for each new MDynamicAudioNormalizer instanc
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::setPass() ###
+### MDynamicAudioNormalizer::setPass() <a name="chap_api.setPass"></a> ###
 ```
 bool setPass(
 	const int pass
@@ -179,7 +188,7 @@ During the *first* pass, output samples are returned but these samples will **no
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::processInplace() ###
+### MDynamicAudioNormalizer::processInplace() <a name="chap_api.processInplace"></a> ###
 ```
 bool processInplace(
 	double **samplesInOut,
@@ -202,7 +211,7 @@ It's possible that a specific call to this function returns *fewer* output sampl
 **Return value:**
 * Returns <tt>true</tt> if everything was successful or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::getVersionInfo() ###
+### MDynamicAudioNormalizer::getVersionInfo() <a name="chap_api.getVersionInfo"></a> ###
 ```
 static void getVersionInfo(
 	uint32_t &major,
@@ -218,7 +227,7 @@ This *static* function can be called to determine the Dynamic Audio Normalizer l
 * *minor*: Receives the minor version number. Value will be in the **0** to **99** range.
 * *patch*: Receives the patch level. Value will be in the **0** to **9** range.
 
-### MDynamicAudioNormalizer::getBuildInfo() ###
+### MDynamicAudioNormalizer::getBuildInfo() <a name="chap_api.getBuildInfo"></a> ###
 ```
 static void getBuildInfo(
 	const char **date,
