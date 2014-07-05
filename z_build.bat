@@ -78,7 +78,7 @@ copy "%~dp0\LICENSE.html" "%PACK_PATH%"
 copy "%~dp0\img\*.png" "%PACK_PATH%\img"
 
 REM Generate docs
-"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html --standalone -H "img/Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\README.html"
+"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html --standalone -H "%~dp0\img\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\README.html"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress

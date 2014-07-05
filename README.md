@@ -6,11 +6,11 @@ Dynamic Audio Normalizer
 **Dynamic Audio Normalizer** is a library and a command-line tool for [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization). It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" parts of the audio while avoiding distortions or clipping the "loud" parts. In other words, the volume of the "quiet" and the "loud" parts will be harmonized.
 
 ### Contents: ###
-0. [How It Works](#chap_how)
-0. [Command-Line Usage](#chap_cli)
-0. [Configuration](#chap_cfg)
-0. [API Documentation](#chap_api)
-0. [License Terms](#chap_lic)
+1. [How It Works](#chap_how)
+2. [Command-Line Usage](#chap_cli)
+3. [Configuration](#chap_cfg)
+4. [API Documentation](#chap_api)
+5. [License Terms](#chap_lic)
 
 How It Works<a name="chap_how"></a>
 -------------------------------------------------------------------------------
@@ -64,33 +64,44 @@ This chapter describes the configuration options that can be used to tweak the b
 
 While the default parameter of the Dynamic Audio Normalizer have been chosen to give satisfying results with a wide range of audio sources, it can be advantageous to adapt the parameters to the individual audio file as well as to your personal preferences. 
 
-### Gaussian Filter Window Size ###
+#### Options: ####
+* [Gaussian Filter Window Size](#chap_cfg.g)
+* [Target Peak Magnitude](#chap_cfg.p)
+* [Channel Coupling](#chap_cfg.n)
+* [DC Bias Correction](#chap_cfg.c)
+* [Maximum Gain Factor](#chap_cfg.m)
+* [Frame Length](#chap_cfg.f)
+
+### Gaussian Filter Window Size <a name="chap_cfg.g"></a> ###
 
 The most important parameter of the Dynamic Audio Normalizer is the "window size" of the Gaussian smoothing filter. It can be controlled with the **<tt>--gauss-size</tt>** option. The filter's window size is specified in *frames*, centered around the current frame. For the sake of simplicity, this must be an odd number. Consequently, the default value of **31** takes into account the current frame, as well as the *15* preceding frames and the *15* subsequent frames. Using a *larger* window results in a *stronger* smoothing effect and thus in *less* gain variation, i.e. slower gain adaptation. Conversely, using a *smaller* window results in a *weaker* smoothing effect and thus in *more* gain variation, i.e. faster gain adaptation. The following graph illustrates the effect of different filter sizes – *11* (orange), *31* (green), and *61* (purple) frames – on the progression of the final filtered gain factor.
 
 ![FilterSize](img/FilterSize.png "Dynamic Audio Normalizer – Filter Size Effects")  
 <small>**Figure 4:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
 
-### Target Peak Magnitude ###
+### Target Peak Magnitude <a name="chap_cfg.p"></a> ###
 
 The target peak magnitude specifies the highest permissible magnitude level for the *normalized* audio file. It is controlled by the **<tt>--peak</tt>** option. Since the Dynamic Audio Normalizer represents audio samples as floating point values in the *-1.0* to *1.0* range – regardless of the input and output audio format – this value must be in the *0.0* to *1.0* range. Consequently, the value *1.0* is equal to [0 dBFS](http://en.wikipedia.org/wiki/DBFS), i.e. the maximum possible digital signal level (± 32767 in a 16-Bit file). The Dynamic Audio Normalizer will try to approach the target peak magnitude as closely as possible, but at the same time it also makes sure that the normalized signal will *never* exceed the peak magnitude. A frame's maximum local gain factor is imposed directly by the target peak magnitude. The default value is **0.95** and thus leaves a [headroom](http://en.wikipedia.org/wiki/Headroom_%28audio_signal_processing%29) of *5%*. It is **not** recommended to go *above* this value!
 
-### Channel Coupling ###
+### Channel Coupling <a name="chap_cfg.n"></a> ###
 
-By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the <tt>n</tt>-th frame is defined as <tt>S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])</tt>, where <tt>s_max[n][k]</tt> denotes the highest magnitude sample in the <tt>k</tt>-th channel and <tt>C</tt> is the channel count. The gain factor for *all* channels is then derived from <tt>S_max[n]</tt>. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **<tt>--no-coupling</tt>** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel <tt>k</tt>, depending only on the individual channel's highest magnitude sample <tt>s_max[n][k]</tt>. This allows for harmonizing the volume of the different channels.
+By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the <tt>n</tt>-th frame is defined as <tt>S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])</tt>, where <tt>s_max[n][k]</tt> denotes the highest magnitude sample in the <tt>k</tt>-th channel and <tt>C</tt> is the channel count. The gain factor for *all* channels is then derived from <tt>S_max[n]</tt>. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **<tt>--no-coupling</tt>** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel <tt>k</tt>, depending only on the individual channel's highest magnitude sample <tt>s_max[n][k]</tt>. This allows for harmonizing the volume of the different channels. The following wave view illustrates the effect of channel coupling: It shows an input file with *uneven* channel volumes (left), the same file after normalization with channel coupling *enabled* (center) and again after normalization with channel coupling *disabled* (right).
 
-![FilterSize](img/Coupling.png "Dynamic Audio Normalizer – Coupling Effects")  
+![Coupling](img/Coupling.png "Dynamic Audio Normalizer – Coupling Effects")  
 <small>**Figure 5:** The effect of *channel coupling*.</small>
 
-### DC Bias Correction ###
+### DC Bias Correction <a name="chap_cfg.c"></a> ###
 
-<tt>--correct-dc</tt>
+An audio signal (in the time domain) is a sequence of sample values. In the Dynamic Audio Normalizer these sample values are represented in the *-1.0* to *1.0* range, regardless of the original input format. Normally, the audio signal, or "waveform", should be centered around the *zero point*. That means if we calculate the *mean* value of all samples in a file, or in a single frame, the then the result should be *0.0* or at least very close to that value. If, however, there is a significant deviation of the mean value from *0.0*, in either positive or negative direction, this is referred to as a [*DC bias*](http://en.wikipedia.org/wiki/DC_bias) or *DC offset*. Since a DC bias is clearly undesirable, the Dynamic Audio Normalizer provides optional *DC bias correction*, which can be enabled using the **<tt>--correct-dc</tt>** switch. With DC bias correction *enabled*, the Dynamic Audio Normalizer will determine the mean value, or "DC correction" offset, of each input frame and *subtract* that value from all of the frame's sample values – which ensures those samples are centered around *0.0* again. Also, in order to avoid "gaps" at the frame boundaries, the DC correction offset values will be interpolated smoothly between neighbouring frames. The following wave view illustrates the effect of DC bias correction: It shows an input file with positive DC bias (left), the same file after normalization with DC bias correction *disabled* (center) and again after normalization with DC bias correction *enabled* (right).
+
+![DCCorrection](img/DCCorrection.png "Dynamic Audio Normalizer – DC Correction")  
+<small>**Figure 6:** The effect of *DC Bias Correction*.</small>
  
-### Maximum Gain Factor ###
+### Maximum Gain Factor <a name="chap_cfg.m"></a> ###
 
 <tt>--max-gain</tt>
 
-### Frame Length ###
+### Frame Length <a name="chap_cfg.f"></a> ###
 
 <tt>--frame-len</tt>
 
