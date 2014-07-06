@@ -22,7 +22,7 @@
 
 #pragma once
 
-//Standard C++ includes
+//Standard Library includes
 #include <stdint.h>
 #include <cstdio>
 
@@ -49,7 +49,14 @@
 
 //Interface version
 #define MDYNAMICAUDIONORMALIZER_CORE 1
+#define MDYNAMICAUDIONORMALIZER_FUNCTION(X) MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_##X##_r, MDYNAMICAUDIONORMALIZER_CORE)
 #define MDynamicAudioNormalizer MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_r,MDYNAMICAUDIONORMALIZER_CORE)
+
+///////////////////////////////////////////////////////////////////////////////
+// C++ API
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus /*C++ compiler!*/
 
 //Opaque Data Class
 class MDynamicAudioNormalizer_PrivateData;
@@ -77,3 +84,28 @@ public:
 private:
 	MDynamicAudioNormalizer_PrivateData *const p;
 };
+
+#endif //__cplusplus
+
+///////////////////////////////////////////////////////////////////////////////
+// C API
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
+//Opaque handle
+typedef struct MDynamicAudioNormalizer_Handle MDynamicAudioNormalizer_Handle;
+
+//Global Functions
+MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose = false, FILE *const logFile = NULL);
+MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(MDynamicAudioNormalizer_Handle **handle);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(MDynamicAudioNormalizer_Handle *handle, double **samplesInOut, int64_t inputSize, int64_t *outputSize);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(setPass)(MDynamicAudioNormalizer_Handle *handle, const int pass);
+MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(uint32_t *major, uint32_t *minor,uint32_t *patch);
+MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(const char **date, const char **time, const char **compiler, const char **arch, bool *debug);
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus

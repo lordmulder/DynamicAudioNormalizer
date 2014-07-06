@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="src\DLLMain.cpp" />
     <ClCompile Include="src\DynamicAudioNormalizer.cpp" />
+    <ClCompile Include="src\DynamicAudioNormalizer_C.cpp" />
     <ClCompile Include="src\GaussianFilter.cpp" />
     <ClCompile Include="src\MinimumFilter.cpp" />
     <ClCompile Include="src\RingBuffer.cpp" />
