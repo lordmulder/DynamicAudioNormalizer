@@ -10,8 +10,9 @@ Dynamic Audio Normalizer
 2. [Command-Line Usage](#chap_cli)
 3. [Configuration](#chap_cfg)
 4. [API Documentation](#chap_api)
-5. [Changelog](#chap_log)
-6. [License Terms](#chap_lic)
+5. [Source Code](#chap_src)
+6. [Changelog](#chap_log)
+7. [License Terms](#chap_lic)
 
 How It Works<a name="chap_how"></a>
 -------------------------------------------------------------------------------
@@ -251,6 +252,17 @@ This *static* function can be called to determine more detailed information abou
 * *compiler*: Receives a pointer to a *read-only* string buffer containing the compiler identifier (e.g. "MSVC 2013.2").
 * *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. "x86" for IA32/x86 or "x64" for AMD64/EM64T).
 * *debug*: Will be set to <tt>true</tt> if this is a *debug* build or to <tt>false</tt> otherwise. Don't use the *debug* version production!
+
+
+Source Code <a name="chap_src"></a>
+-------------------------------------------------------------------------------
+
+The source code of the Dynamic Audio Normalizer is available from the official [Git](http://git-scm.com/) repository at:
+* <tt>git clone https://github.com/lordmulder/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
+* <tt>git clone https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
+* <tt>git clone https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
+
+Currently project/solution files are provided for Microsoft Visual Studio 2013. It can be built using *Visual Studio Express 2013 for Windows Desktop*, which is available as a free download [here](http://www.visualstudio.com/downloads/download-visual-studio-vs).
 
 
 Changelog <a name="chap_log"></a>
