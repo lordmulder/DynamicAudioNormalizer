@@ -258,11 +258,11 @@ Source Code <a name="chap_src"></a>
 -------------------------------------------------------------------------------
 
 The source code of the Dynamic Audio Normalizer is available from the official [Git](http://git-scm.com/) repository at:
-* <tt>git clone https://github.com/lordmulder/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
-* <tt>git clone https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
-* <tt>git clone https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
+* <tt>https://github.com/lordmulder/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
+* <tt>https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
+* <tt>https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
 
-Currently project/solution files are provided for Microsoft Visual Studio 2013. It can be built using *Visual Studio Express 2013 for Windows Desktop*, which is available as a free download [here](http://www.visualstudio.com/downloads/download-visual-studio-vs).
+Currently project/solution files are provided for Microsoft Visual Studio 2013. The code can be built using, e.g, *Visual Studio Express 2013 for Windows Desktop*, which is available as a free download [here](http://www.visualstudio.com/downloads/download-visual-studio-vs).
 
 
 Changelog <a name="chap_log"></a>
