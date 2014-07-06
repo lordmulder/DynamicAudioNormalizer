@@ -256,7 +256,7 @@ This *static* function can be called to determine more detailed information abou
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
-### Version 1.01 (2014-07-06) ###
+### Version 1.02 (2014-07-06) ###
 * First public release of the Dynamic Audio Normalizer.
 
 License Terms <a name="chap_lic"></a>
