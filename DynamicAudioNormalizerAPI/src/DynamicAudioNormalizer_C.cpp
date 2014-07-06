@@ -24,11 +24,11 @@
 
 extern "C"
 {
-	MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance) (const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile)
+	MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance) (const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const int channelsCoupled, const int enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const int verbose, FILE *const logFile)
 	{
 		try
 		{
-			MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize,verbose, logFile);
+			MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, (channelsCoupled != 0), (enableDCCorrection != 0), peakValue, maxAmplification, filterSize, (verbose != 0), logFile);
 			if(instance->initialize())
 			{
 				return reinterpret_cast<MDynamicAudioNormalizer_Handle*>(instance);
@@ -99,8 +99,10 @@ extern "C"
 		MDynamicAudioNormalizer::getVersionInfo((*major), (*minor), (*patch));
 	}
 
-	void MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(const char **date, const char **time, const char **compiler, const char **arch, bool *debug)
+	void MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(const char **date, const char **time, const char **compiler, const char **arch, int *debug)
 	{
-		MDynamicAudioNormalizer::getBuildInfo(date, time, compiler, arch, (*debug));
+		bool isDebug;
+		MDynamicAudioNormalizer::getBuildInfo(date, time, compiler, arch, isDebug);
+		*debug = isDebug ? 1 : 0;
 	}
 }
