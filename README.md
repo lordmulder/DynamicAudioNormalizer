@@ -10,7 +10,8 @@ Dynamic Audio Normalizer
 2. [Command-Line Usage](#chap_cli)
 3. [Configuration](#chap_cfg)
 4. [API Documentation](#chap_api)
-5. [License Terms](#chap_lic)
+5. [Changelog](#chap_log)
+6. [License Terms](#chap_lic)
 
 How It Works<a name="chap_how"></a>
 -------------------------------------------------------------------------------
@@ -99,11 +100,11 @@ An audio signal (in the time domain) is a sequence of sample values. In the Dyna
  
 ### Maximum Gain Factor <a name="chap_cfg.m"></a> ###
 
-<tt>--max-gain</tt>
+The Dynamic Audio Normalizer determines the maximum possible (local) gain factor for each input frame, i.e. the maximum gain factor that does *not* result in clipping or distortion. The maximum gain factor is determined by the frame's highest magnitude sample. However, the Dynamic Audio Normalizer *additionally* bounds the frame's maximum gain factor by a predetermined (global) *maximum gain factor*. This is done in order to avoid excessive gain factors in "silent" or almost silent frames. By default, the *maximum gain factor* is **10.0**, but it can be adjusted using the **<tt>--max-gain</tt>** switch. For most input files the default value should be sufficient and it usually is **not** recommended to increase this value. Though, for input files with an extremely low overall volume level, it may be necessary to allow even higher gain factors.
 
 ### Frame Length <a name="chap_cfg.f"></a> ###
 
-<tt>--frame-len</tt>
+The Dynamic Audio Normalizer processes the input audio in small chunks, referred to as *frames*. This is required, because a *peak magnitude* has no meaning for just a single sample value. Instead, we need to determine the peak magnitude for a contiguous sequence of sample values. While a "standard" normalizer would simply use the peak magnitude of the *complete* file, the Dynamic Audio Normalizer determines the peak magnitude *individually* for each frame. The length of a frame is specified in milliseconds. By default, the Dynamic Audio Normalizer uses a frame length of **500** milliseconds, which has been found to give good results with most files, but it can be adjusted using the **<tt>--frame-len</tt>** switch. Note that the exact frame length, in numer of samples, will be determined automatically, based on the sampling rate of the individual input audio file.
 
 
 API Documentation <a name="chap_api"></a>
@@ -247,6 +248,12 @@ This *static* function can be called to determine more detailed information abou
 * *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. "x86" for IA32/x86 or "x64" for AMD64/EM64T).
 * *debug*: Will be set to <tt>true</tt> if this is a *debug* build or to <tt>false</tt> otherwise. Don't use the *debug* version production!
 
+
+Changelog <a name="chap_log"></a>
+-------------------------------------------------------------------------------
+
+### Version 1.01 (2014-07-06) ###
+* First public release of the Dynamic Audio Normalizer.
 
 License Terms <a name="chap_lic"></a>
 -------------------------------------------------------------------------------
