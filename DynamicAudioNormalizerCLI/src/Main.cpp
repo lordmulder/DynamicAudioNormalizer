@@ -62,12 +62,12 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	
 	if(okay)
 	{
-		uint32_t channels, sampleRate;
+		uint32_t channels, sampleRate, bitDepth;
 		int64_t length;
-		if((*sourceFile)->queryInfo(channels, sampleRate, length))
+		if((*sourceFile)->queryInfo(channels, sampleRate, length, bitDepth))
 		{
 			*outputFile = new AudioFileIO();
-			if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate))
+			if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
 			{
 				LOG_WRN(TXT("Failed to open output file for writing!\n"));
 				okay = false;
@@ -214,9 +214,9 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	int exitCode = EXIT_SUCCESS;
 
 	//Get source info
-	uint32_t channels, sampleRate;
+	uint32_t channels, sampleRate, bitDepth;
 	int64_t length;
-	if(!sourceFile->queryInfo(channels, sampleRate, length))
+	if(!sourceFile->queryInfo(channels, sampleRate, length, bitDepth))
 	{
 		LOG_WRN(TXT("Failed to determine source file properties!\n"));
 		return EXIT_FAILURE;

@@ -43,7 +43,7 @@ public:
 
 	//Open and Close
 	bool openRd(const wchar_t *const fileName);
-	bool openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate);
+	bool openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	bool close(void);
 
 	//Read and Write
@@ -54,7 +54,7 @@ public:
 	bool rewind(void);
 
 	//Query info
-	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length);
+	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth);
 
 	//Virtual I/O
 	static sf_count_t vio_get_len(void *user_data);
@@ -80,6 +80,10 @@ private:
 
 	//Library info
 	static char versionBuffer[128];
+
+	//Helper functions
+	static int formatToBitDepth(const int &format);
+	static int formatFromExtension(const CHR *const fileName, const int &bitDepth);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -121,9 +125,9 @@ bool AudioFileIO::openRd(const wchar_t *const fileName)
 	return p->openRd(fileName);
 }
 
-bool AudioFileIO::openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate)
+bool AudioFileIO::openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
-	return p->openWr(fileName, channels, sampleRate);
+	return p->openWr(fileName, channels, sampleRate, bitDepth);
 }
 
 bool AudioFileIO::close(void)
@@ -146,9 +150,9 @@ bool AudioFileIO::rewind(void)
 	return p->rewind();
 }
 
-bool AudioFileIO::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length)
+bool AudioFileIO::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
 {
-	return p->queryInfo(channels, sampleRate, length);
+	return p->queryInfo(channels, sampleRate, length, bitDepth);
 }
 
 const char *AudioFileIO::libraryVersion(void)
@@ -216,7 +220,7 @@ bool AudioFileIO_Private::openRd(const wchar_t *const fileName)
 	return true;
 }
 
-bool AudioFileIO_Private::openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate)
+bool AudioFileIO_Private::openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
 	if(handle)
 	{
@@ -246,7 +250,7 @@ bool AudioFileIO_Private::openWr(const wchar_t *const fileName, const uint32_t c
 	SETUP_VIO(vio);
 
 	//Setup output format
-	info.format = (STRCASECMP(fileName, TXT("-")) ? SF_FORMAT_WAV : SF_FORMAT_RAW) |SF_FORMAT_PCM_16;
+	info.format = STRCASECMP(fileName, TXT("-")) ? formatFromExtension(fileName, bitDepth) : formatFromExtension(TXT("raw"), bitDepth);
 	info.channels = channels;
 	info.samplerate = sampleRate;
 
@@ -397,7 +401,7 @@ bool AudioFileIO_Private::rewind(void)
 	return (sf_seek(handle, 0, SEEK_SET) == 0);
 }
 
-bool AudioFileIO_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length)
+bool AudioFileIO_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
 {
 	if(!handle)
 	{
@@ -407,6 +411,7 @@ bool AudioFileIO_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, in
 	channels = info.channels;
 	sampleRate = info.samplerate;
 	length = info.frames;
+	bitDepth = formatToBitDepth(info.format);
 
 	return true;
 }
@@ -470,4 +475,86 @@ const char *AudioFileIO_Private::libraryVersion(void)
 		sf_command (NULL, SFC_GET_LIB_VERSION, versionBuffer, sizeof(versionBuffer));
 	}
 	return versionBuffer;
+}
+
+int AudioFileIO_Private::formatToBitDepth(const int &format)
+{
+	switch(format & SF_FORMAT_SUBMASK)
+	{
+	case SF_FORMAT_PCM_S8:
+	case SF_FORMAT_PCM_U8:
+		return 8;
+	case SF_FORMAT_PCM_16:
+		return 16;
+	case SF_FORMAT_PCM_24:
+		return 24;
+	case SF_FORMAT_PCM_32:
+	case SF_FORMAT_FLOAT:
+		return 32;
+	case SF_FORMAT_DOUBLE:
+		return 64;
+	default:
+		return 16;
+	}
+}
+
+int AudioFileIO_Private::formatFromExtension(const CHR *const fileName, const int &bitDepth)
+{
+	int format;
+	const CHR *ext = fileName;
+
+	if(const CHR *tmp = STRRCHR(ext, TXT('/' ))) ext = ++tmp;
+	if(const CHR *tmp = STRRCHR(ext, TXT('\\'))) ext = ++tmp;
+	if(const CHR *tmp = STRRCHR(ext, TXT('.' ))) ext = ++tmp;
+
+	/*major format*/
+	if(STRCASECMP(ext, TXT("wav")) == 0)
+	{
+		format = SF_FORMAT_WAV;
+	}
+	else if(STRCASECMP(ext, TXT("w64")) == 0)
+	{
+		format = SF_FORMAT_W64;
+	}
+	else if(STRCASECMP(ext, TXT("au")) == 0)
+	{
+		format = SF_FORMAT_AU;
+	}
+	else if(STRCASECMP(ext, TXT("aiff")) == 0)
+	{
+		format = SF_FORMAT_AIFF;
+	}
+	else if((STRCASECMP(ext, TXT("raw")) == 0) || (STRCASECMP(ext, TXT("pcm")) == 0))
+	{
+		format = SF_FORMAT_RAW;
+	}
+	else
+	{
+		format = SF_FORMAT_WAV;
+	}
+
+	/*sub-format*/
+	switch(bitDepth)
+	{
+	case 8:
+		format |= SF_FORMAT_PCM_S8;
+		break;
+	case 16:
+		format |= SF_FORMAT_PCM_16;
+		break;
+	case 24:
+		format |= SF_FORMAT_PCM_24;
+		break;
+	case 32:
+		format |= SF_FORMAT_FLOAT;
+		break;
+	case 64:
+		format |= SF_FORMAT_DOUBLE;
+		break;
+	default:
+		format |= SF_FORMAT_PCM_16;
+		break;
+	}
+
+	return format;
 }

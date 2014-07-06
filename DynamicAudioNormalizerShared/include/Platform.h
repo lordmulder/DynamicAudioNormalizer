@@ -111,6 +111,11 @@ inline static const CHR *STRCHR(const CHR *const str, const CHR c)
 	return wcschr(str, c);
 }
 
+inline static const CHR *STRRCHR(const CHR *const str, const CHR c)
+{
+	return wcsrchr(str, c);
+}
+
 inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 {
 	va_list ap;

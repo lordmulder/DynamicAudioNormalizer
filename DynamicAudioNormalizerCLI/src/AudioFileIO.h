@@ -34,7 +34,7 @@ public:
 
 	//Open and Close
 	bool openRd(const wchar_t *const fileName);
-	bool openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate);
+	bool openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	bool close(void);
 
 	//Read and Write
@@ -45,7 +45,7 @@ public:
 	bool rewind(void);
 
 	//Query info
-	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length);
+	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth);
 
 	//Static functions
 	static const char *libraryVersion(void);
