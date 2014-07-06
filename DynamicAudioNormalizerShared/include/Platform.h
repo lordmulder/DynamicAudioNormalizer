@@ -96,7 +96,7 @@ inline static int64_t FTELL64(FILE *const file)
 	return _ftelli64(file);
 }
 
-inline static int ACCESS(const wchar_t *const fileName, const int mode)
+inline static int ACCESS(const CHR *const fileName, const int mode)
 {
 	return _waccess(fileName, mode);
 }
@@ -114,6 +114,15 @@ inline static const CHR *STRCHR(const CHR *const str, const CHR c)
 inline static const CHR *STRRCHR(const CHR *const str, const CHR c)
 {
 	return wcsrchr(str, c);
+}
+
+inline static int SNPRINTF(CHR *const buffer, size_t buffSize, const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = _vsnwprintf_s(buffer, buffSize, _TRUNCATE, format, ap);
+	va_end(ap);
+	return result;
 }
 
 inline static int SSCANF(const CHR *const str, const CHR *const format, ...)

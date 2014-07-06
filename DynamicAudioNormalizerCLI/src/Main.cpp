@@ -46,12 +46,26 @@ static const CHR *appName(const CHR* argv0)
 	return appName;
 }
 
+static const CHR *timeToString(CHR *timeBuffer, const size_t buffSize, const int64_t &length, const uint32_t &sampleRate)
+{
+	double durationInt;
+	double durationFrc = modf(double(length) / double(sampleRate), &durationInt);
+
+	const uint32_t msc = uint32_t(durationFrc * 1000.0);
+	const uint32_t sec = uint32_t(durationInt) % 60;
+	const uint32_t min = (uint32_t(durationInt) / 60) % 60;
+	const uint32_t hrs = uint32_t(durationInt) / 3600;
+
+	SNPRINTF(timeBuffer, buffSize, TXT("%u:%02u:%02u.%03u"), hrs, min, sec, msc);
+	return timeBuffer;
+}
+
 static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, AudioFileIO **outputFile)
 {
 	bool okay = true;
 
-	PRINT(TXT("Source file: %s\n"),   parameters.sourceFile());
-	PRINT(TXT("Output file: %s\n\n"), parameters.outputFile());
+	PRINT(TXT("SourceFile: %s\n"), parameters.sourceFile());
+	PRINT(TXT("OutputFile: %s\n"), parameters.outputFile());
 
 	*sourceFile = new AudioFileIO();
 	if(!(*sourceFile)->openRd(parameters.sourceFile()))
@@ -72,6 +86,9 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 				LOG_WRN(TXT("Failed to open output file for writing!\n"));
 				okay = false;
 			}
+
+			CHR timeBuffer[32];
+			PRINT(TXT("Properties: %u channels, %u Hz, %u bit/sample (Duration: %s)\n\n"), channels, sampleRate, bitDepth, timeToString(timeBuffer, 32, length, sampleRate));
 		}
 		else
 		{

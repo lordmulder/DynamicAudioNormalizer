@@ -23,7 +23,15 @@ if "%VCINSTALLDIR%"=="" (
 	goto BuildError
 )
 if not exist "%VCINSTALLDIR%\bin\cl.exe" (
-	echo C++ compiler not found. Please check your MSVC_PATH var!
+	echo C++ compiler binary not found. Please check your MSVC_PATH var!
+	goto BuildError
+)
+if not exist "%UPX3_PATH%\upx.exe" (
+	echo UPX binary could not be found. Please check your UPX3_PATH var!
+	goto BuildError
+)
+if not exist "%PDOC_PATH%\pandoc.exe" (
+	echo Pandoc binary could not be found. Please check your PDOC_PATH var!
 	goto BuildError
 )
 

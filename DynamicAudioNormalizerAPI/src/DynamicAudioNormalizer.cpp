@@ -660,7 +660,7 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(const bool &isFirs
 
 void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3])
 {
-	assert((m_filterSize % 2) == 0);
+	assert((m_frameLen % 2) == 0);
 
 	const uint32_t frameFadeDiv2 = m_frameLen / 2U;
 	const double frameFadeStep = 0.5 / double(frameFadeDiv2);
