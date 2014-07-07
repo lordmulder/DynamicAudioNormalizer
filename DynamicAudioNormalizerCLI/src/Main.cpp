@@ -35,6 +35,14 @@
 #include <ctime>
 #include <algorithm>
 
+//Linkage
+#ifdef MDYNAMICAUDIONORMALIZER_STATIC
+	static const CHR *LINKAGE = TXT("Static");
+#else
+	static const CHR *LINKAGE = TXT("Shared");
+#endif
+
+//Utility macros
 #define BOOLIFY(X) ((X) ? TXT("on") : TXT("off"))
 static const size_t FRAME_SIZE = 4096;
 
@@ -118,7 +126,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
 {
 	static const CHR spinner[4] = { TXT('-'), TXT('\\'), TXT('|'), TXT('/') };
-	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %.1f%% [%c]");
+	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %5.1f%% [%c]");
 
 	//Print progress
 	PRINT(progressStr, (is2ndPass ? 2 : 1), 0.0, spinner[0]);
@@ -322,7 +330,7 @@ static void printLogo(void)
 
 	PRINT(TXT("---------------------------------------------------------------------------\n"));
 
-	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u\n"), versionMajor, versionMinor, versionPatch);
+	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u, %s\n"), versionMajor, versionMinor, versionPatch, LINKAGE);
 	PRINT(TXT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
 	PRINT(TXT("Built on ") FMT_CHAR TXT(" at ") FMT_CHAR TXT(" with ") FMT_CHAR TXT(" for Win-") FMT_CHAR TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
 

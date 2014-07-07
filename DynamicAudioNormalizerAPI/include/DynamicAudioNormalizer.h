@@ -31,8 +31,12 @@
 #    pragma message("MDynamicAudioNormalizer DLL: Export")
 #    define MDYNAMICAUDIONORMALIZER_DLL __declspec(dllexport)
 #  else
-#    pragma message("MDynamicAudioNormalizer DLL: Import")
-#    define MDYNAMICAUDIONORMALIZER_DLL __declspec(dllimport)
+#    ifndef MDYNAMICAUDIONORMALIZER_STATIC
+#      pragma message("MDynamicAudioNormalizer DLL: Import")
+#      define MDYNAMICAUDIONORMALIZER_DLL __declspec(dllimport)
+#    else
+#      define MDYNAMICAUDIONORMALIZER_DLL
+#    endif
 #  endif
 #else
 #  ifdef __GNUG__
