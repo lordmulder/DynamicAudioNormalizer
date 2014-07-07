@@ -1,4 +1,6 @@
 @echo off
+setlocal enabledelayedexpansion
+
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Set Paths
 REM ///////////////////////////////////////////////////////////////////////////
@@ -53,54 +55,65 @@ if "%ISO_TIME%"=="" goto BuildError
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Build the binaries
 REM ///////////////////////////////////////////////////////////////////////////
-echo ---------------------------------------------------------------------
-echo BEGIN BUILD
-echo ---------------------------------------------------------------------
-MSBuild.exe /property:Configuration=Release /target:clean   "%~dp0\DynamicAudioNormalizer.sln"
-if not "%ERRORLEVEL%"=="0" goto BuildError
-MSBuild.exe /property:Configuration=Release /target:rebuild "%~dp0\DynamicAudioNormalizer.sln"
-if not "%ERRORLEVEL%"=="0" goto BuildError
-MSBuild.exe /property:Configuration=Release /target:build   "%~dp0\DynamicAudioNormalizer.sln"
-if not "%ERRORLEVEL%"=="0" goto BuildError
+for %%c in (DLL, Static) do (
+	echo ---------------------------------------------------------------------
+	echo BEGIN BUILD [Release_%%c]
+	echo ---------------------------------------------------------------------
+
+	MSBuild.exe /property:Configuration=Release_%%c /target:clean   "%~dp0\DynamicAudioNormalizer.sln"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	MSBuild.exe /property:Configuration=Release_%%c /target:rebuild "%~dp0\DynamicAudioNormalizer.sln"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	MSBuild.exe /property:Configuration=Release_%%c /target:build   "%~dp0\DynamicAudioNormalizer.sln"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
-REM // Copy base files
+REM // Copy program files
 REM ///////////////////////////////////////////////////////////////////////////
-echo ---------------------------------------------------------------------
-echo BEGIN PACKAGING
-echo ---------------------------------------------------------------------
 set "PACK_PATH=%TMP%\~%RANDOM%%RANDOM%.tmp"
 mkdir "%PACK_PATH%"
-mkdir "%PACK_PATH%\img"
 
-REM Copy program files
-copy "%~dp0\bin\Win32\Release\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%"
-copy "%~dp0\bin\Win32\Release\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%"
+for %%c in (DLL, Static) do (
+	echo ---------------------------------------------------------------------
+	echo BEGIN PACKAGING [Release_%%c]
+	echo ---------------------------------------------------------------------
+	
+	mkdir "%PACK_PATH%\%%c"
+	mkdir "%PACK_PATH%\%%c\img"
 
-REM Copy dependencies
-copy "%~dp0\etc\sndfile\lib\Win32\libsndfile-1.dll"            "%PACK_PATH%"
-copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll" "%PACK_PATH%"
+	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%\%%c"
 
-REM Copy documents
-copy "%~dp0\LICENSE.html" "%PACK_PATH%"
-copy "%~dp0\img\*.png" "%PACK_PATH%\img"
+	if "%%c"=="DLL" (
+		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c"
+		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
+		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll"   "%PACK_PATH%\%%c"
+	)
 
-REM Generate docs
-"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html --standalone -H "%~dp0\img\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\README.html"
+	copy "%~dp0\LICENSE.html" "%PACK_PATH%\%%c"
+	copy "%~dp0\img\*.png"    "%PACK_PATH%\%%c\img"
+
+	"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html --standalone -H "%~dp0\img\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\%%c\README.html"
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress
 REM ///////////////////////////////////////////////////////////////////////////
-"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\DynamicAudioNormalizerCLI.exe"
-"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\DynamicAudioNormalizerAPI.dll"
-"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\libsndfile-1.dll"
+for %%c in (DLL, Static) do (
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.dll"
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Attributes
 REM ///////////////////////////////////////////////////////////////////////////
-attrib +R "%PACK_PATH%\*.exe"
-attrib +R "%PACK_PATH%\*.html"
-attrib +R "%PACK_PATH%\*.dll"
+for %%c in (DLL, Static) do (
+	attrib +R "%PACK_PATH%\%%c\*.exe"
+	attrib +R "%PACK_PATH%\%%c\*.html"
+	if "%%c"=="DLL" (
+		attrib +R "%PACK_PATH%\%%c\*.dll"
+	)
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Generate outfile name
@@ -108,9 +121,11 @@ REM ///////////////////////////////////////////////////////////////////////////
 mkdir "%~dp0\out" 2> NUL
 set "OUT_NAME=DynamicAudioNormalizer.%ISO_DATE%"
 :CheckOutName
-if exist "%~dp0\out\%OUT_NAME%.zip" (
-	set "OUT_NAME=%OUT_NAME%.new"
-	goto CheckOutName
+for %%c in (DLL, Static) do (
+	if exist "%~dp0\out\%OUT_NAME%.%%c.zip" (
+		set "OUT_NAME=%OUT_NAME%.new"
+		goto CheckOutName
+	)
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
@@ -128,14 +143,16 @@ echo (at your option) any later version. >> "%~dp0\out\%OUT_NAME%.txt"
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Build the package
 REM ///////////////////////////////////////////////////////////////////////////
-pushd "%PACK_PATH%
-"%~dp0\etc\zip.exe" -9 -r -z "%~dp0\out\%OUT_NAME%.zip" "*.*" < "%~dp0\out\%OUT_NAME%.txt"
-popd
-attrib +R "%~dp0\out\%OUT_NAME%.zip"
-del "%~dp0\out\%OUT_NAME%.txt"
+for %%c in (DLL, Static) do (
+	pushd "%PACK_PATH%\%%c"
+	"%~dp0\etc\zip.exe" -9 -r -z "%~dp0\out\%OUT_NAME%.%%c.zip" "*.*" < "%~dp0\out\%OUT_NAME%.txt"
+	popd
+	attrib +R "%~dp0\out\%OUT_NAME%.%%c.zip"
+)
 
 REM Clean up!
 rmdir /Q /S "%PACK_PATH%"
+del "%~dp0\out\%OUT_NAME%.txt"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // COMPLETE
