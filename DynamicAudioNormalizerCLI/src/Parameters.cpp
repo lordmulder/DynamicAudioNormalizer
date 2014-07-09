@@ -200,13 +200,13 @@ bool Parameters::validateParameters(void)
 {
 	if(!m_sourceFile)
 	{
-		LOG_WRN(TXT("Input file not specified!\n"));
+		LOG_WRN(TXT("%s"), TXT("Input file not specified!\n"));
 		return false;
 	}
 
 	if(!m_outputFile)
 	{
-		LOG_WRN(TXT("Output file not specified!\n"));
+		LOG_WRN(TXT("%s"), TXT("Output file not specified!\n"));
 		return false;
 	}
 
@@ -214,11 +214,11 @@ bool Parameters::validateParameters(void)
 	{
 		if(errno != ENOENT)
 		{
-			LOG_WRN(TXT("Selected input file can not be read!\n"));
+			LOG_WRN(TXT("%s"), TXT("Selected input file can not be read!\n"));
 		}
 		else
 		{
-			LOG_WRN(TXT("Selected input file does not exist!\n"));
+			LOG_WRN(TXT("%s"), TXT("Selected input file does not exist!\n"));
 		}
 		return false;
 	}
@@ -227,7 +227,7 @@ bool Parameters::validateParameters(void)
 	{
 		if(errno != ENOENT)
 		{
-			LOG_WRN(TXT("Selected output file is read-only!\n"));
+			LOG_WRN(TXT("%s"), TXT("Selected output file is read-only!\n"));
 			return false;
 		}
 	}

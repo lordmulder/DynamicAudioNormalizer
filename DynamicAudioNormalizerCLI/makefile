@@ -28,7 +28,7 @@ SHELL=/bin/bash
 ##############################################################################
 
 API_VERSION  := 1
-LIBRARY_NAME := libDynamicAudioNormalizerAPI
+PROGRAM_NAME := DynamicAudioNormalizerCLI
 
 ##############################################################################
 # Flags
@@ -44,15 +44,19 @@ else
    CXXFLAGS = -O3 -march=native -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG
 endif
 
-CXXFLAGS += -fPIC
-CXXFLAGS += -fvisibility=hidden
-
 CXXFLAGS += -I./src
 CXXFLAGS += -I./include
+CXXFLAGS += -I../DynamicAudioNormalizerAPI/include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 
+LDXFLAGS += -Wl,-rpath,'$$ORIGIN'
+LDXFLAGS += -L../DynamicAudioNormalizerAPI/lib
 LDXFLAGS += -L../DynamicAudioNormalizerShared/lib
+LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
 LDXFLAGS += -lDynamicAudioNormalizerShared
+
+#Externel libraries
+LDXFLAGS += -lsndfile
 
 ##############################################################################
 # Rules
@@ -61,9 +65,9 @@ LDXFLAGS += -lDynamicAudioNormalizerShared
 SOURCES_CPP = $(wildcard src/*.cpp)
 SOURCES_OBJ = $(patsubst %.cpp,%.o,$(SOURCES_CPP))
 
-LIBRARY_OUT = lib/$(LIBRARY_NAME)-$(API_VERSION)
-LIBRARY_BIN = $(LIBRARY_OUT).so
-LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
+PROGRAM_OUT = bin/$(PROGRAM_NAME)
+PROGRAM_BIN = $(PROGRAM_OUT)
+PROGRAM_DBG = $(PROGRAM_OUT)-DBG
 
 ##############################################################################
 # Rules
@@ -71,21 +75,21 @@ LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
 
 .PHONY: all clean
 
-all: $(LIBRARY_BIN)
+all: $(PROGRAM_BIN)
 
 #-------------------------------------------------------------
 # Link & Strip
 #-------------------------------------------------------------
 
-$(LIBRARY_BIN): $(LIBRARY_DBG)
+$(PROGRAM_BIN): $(PROGRAM_DBG)
 	@$(ECHO) "\e[1;36m[STR] $@\e[0m"
 	@mkdir -p $(dir $@)
 	strip --strip-unneeded -o $@ $<
 
-$(LIBRARY_DBG): $(SOURCES_OBJ)
+$(PROGRAM_DBG): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[LNK] $@\e[0m"
 	@mkdir -p $(dir $@)
-	g++ -shared -o $@ $+ $(LDXFLAGS)
+	g++ -o $@ $+ $(LDXFLAGS)
 
 #-------------------------------------------------------------
 # Compile
@@ -102,6 +106,6 @@ $(LIBRARY_DBG): $(SOURCES_OBJ)
 
 clean:
 	rm -fv $(SOURCES_OBJ)
-	rm -fv $(LIBRARY_BIN)
-	rm -fv $(LIBRARY_DBG)
+	rm -fv $(PROGRAM_BIN)
+	rm -fv $(PROGRAM_DBG)
 

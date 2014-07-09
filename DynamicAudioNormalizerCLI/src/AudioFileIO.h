@@ -23,6 +23,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "Platform.h"
 
 class AudioFileIO_Private;
 
@@ -33,8 +34,8 @@ public:
 	~AudioFileIO(void);
 
 	//Open and Close
-	bool openRd(const wchar_t *const fileName);
-	bool openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
+	bool openRd(const CHR *const fileName);
+	bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	bool close(void);
 
 	//Read and Write

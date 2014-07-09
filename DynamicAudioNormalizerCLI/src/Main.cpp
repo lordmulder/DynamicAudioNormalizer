@@ -29,11 +29,14 @@
 #include "DynamicAudioNormalizer.h"
 
 //VLD
+#ifdef _MSC_VER
 #include <vld.h>
+#endif
 
 //C++
 #include <ctime>
 #include <algorithm>
+#include <cmath>
 
 //Linkage
 #ifdef MDYNAMICAUDIONORMALIZER_STATIC
@@ -78,7 +81,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	*sourceFile = new AudioFileIO();
 	if(!(*sourceFile)->openRd(parameters.sourceFile()))
 	{
-		LOG_WRN(TXT("Failed to open input file for reading!\n"));
+		LOG_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
 		okay = false;
 	}
 	
@@ -91,7 +94,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 			*outputFile = new AudioFileIO();
 			if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
 			{
-				LOG_WRN(TXT("Failed to open output file for writing!\n"));
+				LOG_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
 				okay = false;
 			}
 
@@ -100,7 +103,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 		}
 		else
 		{
-			LOG_WRN(TXT("Failed to determine source file properties!\n"));
+			LOG_WRN(TXT("%s"), TXT("Failed to determine source file properties!\n"));
 			okay = false;
 		}
 	}
@@ -136,7 +139,7 @@ static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourc
 	if(!normalizer->setPass(is2ndPass ? MDynamicAudioNormalizer::PASS_2ND : MDynamicAudioNormalizer::PASS_1ST))
 	{
 		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("Failed to setup the processing pass!"));
+		LOG_ERR(TXT("%s"), TXT("Failed to setup the processing pass!"));
 		return EXIT_FAILURE;
 	}
 
@@ -144,7 +147,7 @@ static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourc
 	if(!sourceFile->rewind())
 	{
 		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("Failed to rewind the input file!"));
+		LOG_ERR(TXT("%s"), TXT("Failed to rewind the input file!"));
 		return EXIT_FAILURE;
 	}
 
@@ -228,7 +231,7 @@ static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourc
 	else
 	{
 		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("I/O error encountered -> stopping!\n"));
+		LOG_ERR(TXT("%s"), TXT("I/O error encountered -> stopping!\n"));
 	}
 
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
@@ -243,7 +246,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	int64_t length;
 	if(!sourceFile->queryInfo(channels, sampleRate, length, bitDepth))
 	{
-		LOG_WRN(TXT("Failed to determine source file properties!\n"));
+		LOG_WRN(TXT("%s"), TXT("Failed to determine source file properties!\n"));
 		return EXIT_FAILURE;
 	}
 
@@ -265,7 +268,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	//Initialze normalizer
 	if(!normalizer->initialize())
 	{
-		LOG_ERR(TXT("Failed to initialize the normalizer instance!\n"));
+		LOG_ERR(TXT("%s"), TXT("Failed to initialize the normalizer instance!\n"));
 		MY_DELETE(normalizer);
 		return EXIT_FAILURE;
 	}
@@ -347,7 +350,7 @@ static void printLogo(void)
 
 	if((DYAUNO_DEBUG) != buildDebug)
 	{
-		LOG_ERR(TXT("Trying to use DEBUG library with RELEASE binary or vice versa!\n"));
+		LOG_ERR(TXT("%s"), TXT("Trying to use DEBUG library with RELEASE binary or vice versa!\n"));
 		exit(EXIT_FAILURE);
 	}
 
@@ -374,7 +377,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
 	if(!openFiles(parameters, &sourceFile, &outputFile))
 	{
-		LOG_ERR(TXT("Failed to open input and/or output file!\n"));
+		LOG_ERR(TXT("%s"), TXT("Failed to open input and/or output file!\n"));
 		return EXIT_FAILURE;
 	}
 
@@ -436,12 +439,12 @@ int MAIN(int argc, CHR* argv[])
 	}
 	else
 	{
-		__try
+		TRY_SEH
 		{
 			SYSTEM_INIT();
 			exitCode =  mainEx(argc, argv);
 		}
-		__except(1)
+		CATCH_SEH
 		{
 			PRINT(TXT("\n\nGURU MEDITATION: Unhandeled structured exception error!\n\n"));
 			exitCode = EXIT_FAILURE;

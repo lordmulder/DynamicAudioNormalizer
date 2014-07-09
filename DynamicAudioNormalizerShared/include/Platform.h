@@ -49,6 +49,8 @@ void SYSTEM_INIT(void);
 #define TXT(X) _TXT(X)
 #define MAIN wmain
 #define FMT_CHAR L"%S"
+#define TRY_SEH __try
+#define CATCH_SEH __except(1)
 
 typedef wchar_t CHR;
 typedef struct _stat64 STAT64;
@@ -57,7 +59,7 @@ inline static int PRINT(const CHR *const format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	const int result = vwprintf_s(format, ap);
+	const int result = vfwprintf_s(stderr, format, ap);
 	va_end(ap);
 	return result;
 }
@@ -149,6 +151,8 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 #define TXT(X) _TXT(X)
 #define MAIN main
 #define FMT_CHAR "%s"
+#define TRY_SEH if(1)
+#define CATCH_SEH if(0)
 
 typedef char CHR;
 typedef struct stat64 STAT64;
@@ -157,7 +161,7 @@ inline static int PRINT(const CHR *const format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	const int result = vprintf(format, ap);
+	const int result = vfprintf(stderr, format, ap);
 	va_end(ap);
 	return result;
 }

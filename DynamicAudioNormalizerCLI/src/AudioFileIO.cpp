@@ -42,8 +42,8 @@ public:
 	~AudioFileIO_Private(void);
 
 	//Open and Close
-	bool openRd(const wchar_t *const fileName);
-	bool openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
+	bool openRd(const CHR *const fileName);
+	bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	bool close(void);
 
 	//Read and Write
@@ -120,12 +120,12 @@ AudioFileIO_Private::~AudioFileIO_Private(void)
 // Public API
 ///////////////////////////////////////////////////////////////////////////////
 
-bool AudioFileIO::openRd(const wchar_t *const fileName)
+bool AudioFileIO::openRd(const CHR *const fileName)
 {
 	return p->openRd(fileName);
 }
 
-bool AudioFileIO::openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+bool AudioFileIO::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
 	return p->openWr(fileName, channels, sampleRate, bitDepth);
 }
@@ -174,11 +174,11 @@ const char *AudioFileIO::libraryVersion(void)
 } \
 while(0)
 
-bool AudioFileIO_Private::openRd(const wchar_t *const fileName)
+bool AudioFileIO_Private::openRd(const CHR *const fileName)
 {
 	if(handle)
 	{
-		LOG_ERR(TXT("AudioFileIO: Sound file is already open!\n"));
+		LOG_ERR(TXT("%s"), TXT("AudioFileIO: Sound file is already open!\n"));
 		return false;
 	}
 
@@ -220,11 +220,11 @@ bool AudioFileIO_Private::openRd(const wchar_t *const fileName)
 	return true;
 }
 
-bool AudioFileIO_Private::openWr(const wchar_t *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+bool AudioFileIO_Private::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
 	if(handle)
 	{
-		LOG_ERR(TXT("AudioFileIO: Sound file is already open!\n"));
+		LOG_ERR(TXT("%s"), TXT("AudioFileIO: Sound file is already open!\n"));
 		return false;
 	}
 
@@ -313,7 +313,7 @@ int64_t AudioFileIO_Private::read(double **buffer, const int64_t count)
 	if((!tempBuff) || (tempSize < (count * info.channels)))
 	{
 		MY_DELETE_ARRAY(tempBuff);
-		if(count * int64_t(info.channels) < int64_t(SIZE_MAX))
+		if(count * int64_t(info.channels) < int64_t(UINT32_MAX))
 		{
 			tempBuff = new double[static_cast<size_t>(count * int64_t(info.channels))];
 			tempSize = count * int64_t(info.channels);
@@ -363,7 +363,7 @@ int64_t AudioFileIO_Private::write(double *const *buffer, const int64_t count)
 	if((!tempBuff) || (tempSize < (count * info.channels)))
 	{
 		MY_DELETE_ARRAY(tempBuff);
-		if(count * int64_t(info.channels) < int64_t(SIZE_MAX))
+		if(count * int64_t(info.channels) < int64_t(UINT32_MAX))
 		{
 			tempBuff = new double[static_cast<size_t>(count * int64_t(info.channels))];
 			tempSize = count * int64_t(info.channels);
@@ -375,7 +375,7 @@ int64_t AudioFileIO_Private::write(double *const *buffer, const int64_t count)
 	}
 
 	//Interleave data
-	for(size_t i = 0; i < count; i++)
+	for(sf_count_t i = 0; i < count; i++)
 	{
 		for(int c = 0; c < info.channels; c++)
 		{
