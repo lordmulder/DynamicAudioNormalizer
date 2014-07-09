@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32 /*Win32 only*/
+#ifndef MDYNAMICAUDIONORMALIZER_STATIC /*only if building DLL*/
 
 //Windows
 #define WIN32_LEAN_AND_MEAN
@@ -42,4 +43,5 @@ BOOL APIENTRY DllMain(HMODULE hModule,DWORD  ul_reason_for_call, LPVOID lpReserv
 	return TRUE;
 }
 
+#endif //MDYNAMICAUDIONORMALIZER_STATIC
 #endif //_WIN32
