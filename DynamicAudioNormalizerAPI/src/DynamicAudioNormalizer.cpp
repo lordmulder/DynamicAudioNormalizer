@@ -210,7 +210,7 @@ bool MDynamicAudioNormalizer::initialize(void)
 	}
 	catch(std::exception &e)
 	{
-		LOG_ERR(FMT_CHAR, e.what());
+		LOG2_ERR(FMT_CHAR, e.what());
 		return false;
 	}
 }
@@ -219,23 +219,23 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 {
 	if(m_initialized)
 	{
-		LOG_WRN(TXT("%s"), TXT("Already initialized -> ignoring!"));
+		LOG_WRN(TXT("Already initialized -> ignoring!"));
 		return true;
 	}
 
 	if((m_channels < 1) || (m_channels > 8))
 	{
-		LOG_ERR(TXT("Invalid or unsupported channel count. Should be in the %d to %d range!"), 1, 8);
+		LOG2_ERR(TXT("Invalid or unsupported channel count. Should be in the %d to %d range!"), 1, 8);
 		return false;
 	}
 	if((m_sampleRate < 11025) || (m_channels > 192000))
 	{
-		LOG_ERR(TXT("Invalid or unsupported sampling rate. Should be in the %d to %d range!"), 11025, 192000);
+		LOG2_ERR(TXT("Invalid or unsupported sampling rate. Should be in the %d to %d range!"), 11025, 192000);
 		return false;
 	}
 	if((m_frameLen < 32) || (m_frameLen > 2097152))
 	{
-		LOG_ERR(TXT("Invalid or unsupported frame size. Should be in the %d to %d range!"), 32, 2097152);
+		LOG2_ERR(TXT("Invalid or unsupported frame size. Should be in the %d to %d range!"), 32, 2097152);
 		return false;
 	}
 
@@ -283,14 +283,14 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 
 	if(m_verbose)
 	{
-		LOG_DBG(TXT("%s"), TXT("[PARAMETERS]"));
-		LOG_DBG(TXT("Frame size     : %u"),     m_frameLen);
-		LOG_DBG(TXT("Channels       : %u"),     m_channels);
-		LOG_DBG(TXT("Sampling rate  : %u"),     m_sampleRate);
-		LOG_DBG(TXT("Chan. coupling : %s"),     m_channelsCoupled    ? TXT("YES") : TXT("NO"));
-		LOG_DBG(TXT("DC correction  : %s"),     m_enableDCCorrection ? TXT("YES") : TXT("NO"));
-		LOG_DBG(TXT("Peak value     : %.4f"),   m_peakValue);
-		LOG_DBG(TXT("Max amp factor : %.4f\n"), m_maxAmplification);
+		LOG_DBG(TXT("[PARAMETERS]"));
+		LOG2_DBG(TXT("Frame size     : %u"),     m_frameLen);
+		LOG2_DBG(TXT("Channels       : %u"),     m_channels);
+		LOG2_DBG(TXT("Sampling rate  : %u"),     m_sampleRate);
+		LOG2_DBG(TXT("Chan. coupling : %s"),     m_channelsCoupled    ? TXT("YES") : TXT("NO"));
+		LOG2_DBG(TXT("DC correction  : %s"),     m_enableDCCorrection ? TXT("YES") : TXT("NO"));
+		LOG2_DBG(TXT("Peak value     : %.4f"),   m_peakValue);
+		LOG2_DBG(TXT("Max amp factor : %.4f\n"), m_maxAmplification);
 	}
 
 	m_initialized = true;
@@ -305,7 +305,7 @@ bool MDynamicAudioNormalizer::processInplace(double **samplesInOut, int64_t inpu
 	}
 	catch(std::exception &e)
 	{
-		LOG_ERR(FMT_CHAR, e.what());
+		LOG2_ERR(FMT_CHAR, e.what());
 		return false;
 	}
 }
@@ -317,12 +317,12 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 	//Check audio normalizer status
 	if(!m_initialized)
 	{
-		LOG_ERR(TXT("%s"), TXT("Not initialized yet. Must call initialize() first!"));
+		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
 		return false;
 	}
 	if((m_currentPass != MDynamicAudioNormalizer::PASS_1ST) && (m_currentPass != MDynamicAudioNormalizer::PASS_2ND))
 	{
-		LOG_ERR(TXT("%s"), TXT("Pass has not been set yet. Must call setPass() first!"));
+		LOG_ERR(TXT("Pass has not been set yet. Must call setPass() first!"));
 		return false;
 	}
 
@@ -385,7 +385,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 
 	if(inputSamplesLeft > 0)
 	{
-		LOG_WRN(TXT("%s"), TXT("No all input samples could be processed -> discarding pending input!"));
+		LOG_WRN(TXT("No all input samples could be processed -> discarding pending input!"));
 		return false;
 	}
 
@@ -400,7 +400,7 @@ bool MDynamicAudioNormalizer::setPass(const int pass)
 	}
 	catch(std::exception &e)
 	{
-		LOG_ERR(FMT_CHAR, e.what());
+		LOG2_ERR(FMT_CHAR, e.what());
 		return false;
 	}
 }
@@ -410,12 +410,12 @@ bool MDynamicAudioNormalizer_PrivateData::setPass(const int pass)
 	//Check audio normalizer status
 	if(!m_initialized)
 	{
-		LOG_ERR(TXT("%s"), TXT("Not initialized yet. Must call initialize() first!"));
+		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
 		return false;
 	}
 	if((pass != MDynamicAudioNormalizer::PASS_1ST) && (pass != MDynamicAudioNormalizer::PASS_2ND))
 	{
-		LOG_ERR(TXT("Invalid pass value %d specified -> ignoring!"), pass);
+		LOG2_ERR(TXT("Invalid pass value %d specified -> ignoring!"), pass);
 		return false;
 	}
 
@@ -447,7 +447,7 @@ bool MDynamicAudioNormalizer_PrivateData::setPass(const int pass)
 	{
 		if(m_framePeakHistory[0]->size() < 1)
 		{
-			LOG_WRN(TXT("%s"), TXT("No information from 1st pass stored yet!"));
+			LOG_WRN(TXT("No information from 1st pass stored yet!"));
 		}
 		else
 		{
@@ -537,7 +537,7 @@ void MDynamicAudioNormalizer_PrivateData::amplifyCurrentFrame(void)
 	{
 		if(m_framePeakHistory[channel]->empty())
 		{
-			LOG_WRN(TXT("%s"), TXT("Second pass has more frames than the firts one -> passing trough unmodified!"));
+			LOG_WRN(TXT("Second pass has more frames than the firts one -> passing trough unmodified!"));
 			break;
 		}
 

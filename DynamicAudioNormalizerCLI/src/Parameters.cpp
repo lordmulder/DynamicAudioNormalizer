@@ -35,7 +35,7 @@
 { \
 	if(++pos >= argc) \
 	{ \
-		LOG_WRN(TXT("Missing argument for option \"%s\"\n"), argv[pos-1]); \
+		LOG2_WRN(TXT("Missing argument for option \"%s\"\n"), argv[pos-1]); \
 		return false; \
 	} \
 } \
@@ -67,7 +67,7 @@ static bool STR_TO_UINT(uint32_t &output, const CHR *str)
 { \
 	if(!STR_TO_FLT((OUT), argv[pos])) \
 	{ \
-		LOG_WRN(TXT("Failed to parse floating point value \"%s\"\n"), argv[pos]); \
+		LOG2_WRN(TXT("Failed to parse floating point value \"%s\"\n"), argv[pos]); \
 		return false; \
 	} \
 } \
@@ -77,7 +77,7 @@ while(0)
 { \
 	if(!STR_TO_UINT((OUT), argv[pos])) \
 	{ \
-		LOG_WRN(TXT("Failed to parse unsigned integral value \"%s\"\n"), argv[pos]); \
+		LOG2_WRN(TXT("Failed to parse unsigned integral value \"%s\"\n"), argv[pos]); \
 		return false; \
 	} \
 } \
@@ -183,13 +183,13 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			continue;
 		}
 
-		LOG_WRN(TXT("Unknown command-line argument \"%s\"\n"), argv[pos]);
+		LOG2_WRN(TXT("Unknown command-line argument \"%s\"\n"), argv[pos]);
 		return false;
 	}
 
 	if((!m_showHelp) && (pos < argc))
 	{
-		LOG_WRN(TXT("Excess command-line argument \"%s\"\n"), argv[pos]);
+		LOG2_WRN(TXT("Excess command-line argument \"%s\"\n"), argv[pos]);
 		return false;
 	}
 
@@ -200,13 +200,13 @@ bool Parameters::validateParameters(void)
 {
 	if(!m_sourceFile)
 	{
-		LOG_WRN(TXT("%s"), TXT("Input file not specified!\n"));
+		LOG_WRN(TXT("Input file not specified!\n"));
 		return false;
 	}
 
 	if(!m_outputFile)
 	{
-		LOG_WRN(TXT("%s"), TXT("Output file not specified!\n"));
+		LOG_WRN(TXT("Output file not specified!\n"));
 		return false;
 	}
 
@@ -214,11 +214,11 @@ bool Parameters::validateParameters(void)
 	{
 		if(errno != ENOENT)
 		{
-			LOG_WRN(TXT("%s"), TXT("Selected input file can not be read!\n"));
+			LOG_WRN(TXT("Selected input file can not be read!\n"));
 		}
 		else
 		{
-			LOG_WRN(TXT("%s"), TXT("Selected input file does not exist!\n"));
+			LOG_WRN(TXT("Selected input file does not exist!\n"));
 		}
 		return false;
 	}
@@ -227,37 +227,37 @@ bool Parameters::validateParameters(void)
 	{
 		if(errno != ENOENT)
 		{
-			LOG_WRN(TXT("%s"), TXT("Selected output file is read-only!\n"));
+			LOG_WRN(TXT("Selected output file is read-only!\n"));
 			return false;
 		}
 	}
 
 	if((m_filterSize < 3) || (m_filterSize > 301))
 	{
-		LOG_WRN(TXT("Filter size %u is out of range. Must be in the 3 to 301 range!\n"), m_filterSize);
+		LOG2_WRN(TXT("Filter size %u is out of range. Must be in the 3 to 301 range!\n"), m_filterSize);
 		return false;
 	}
 	if((m_filterSize % 2) != 1)
 	{
-		LOG_WRN(TXT("Filter size %u is invalid. Must be an odd value! (i.e. `filter_size mod 2 == 1´)\n"), m_filterSize);
+		LOG2_WRN(TXT("Filter size %u is invalid. Must be an odd value! (i.e. `filter_size mod 2 == 1´)\n"), m_filterSize);
 		return false;
 	}
 
 	if((m_peakValue < 0.1) || (m_peakValue > 1.0))
 	{
-		LOG_WRN(TXT("Peak value value %.2f is out of range. Must be in the 0.10 to 1.00 range!\n"), m_peakValue);
+		LOG2_WRN(TXT("Peak value value %.2f is out of range. Must be in the 0.10 to 1.00 range!\n"), m_peakValue);
 		return false;
 	}
 
 	if((m_maxAmplification < 1.0) || (m_maxAmplification > 100.0))
 	{
-		LOG_WRN(TXT("Maximum amplification %.2f is out of range. Must be in the 1.00 to 100.00 range!\n"), m_maxAmplification);
+		LOG2_WRN(TXT("Maximum amplification %.2f is out of range. Must be in the 1.00 to 100.00 range!\n"), m_maxAmplification);
 		return false;
 	}
 	
 	if((m_frameLenMsec < 10) || (m_frameLenMsec > 8000))
 	{
-		LOG_WRN(TXT("Frame length %u is out of range. Must be in the 10 to 8000 range!\n"), m_frameLenMsec);
+		LOG2_WRN(TXT("Frame length %u is out of range. Must be in the 10 to 8000 range!\n"), m_frameLenMsec);
 		return false;
 	}
 
