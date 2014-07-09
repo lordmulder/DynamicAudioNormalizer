@@ -20,7 +20,9 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
-//Win32
+#ifdef _WIN32 /*Win32 only*/
+
+//Windows
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
@@ -39,3 +41,5 @@ BOOL APIENTRY DllMain(HMODULE hModule,DWORD  ul_reason_for_call, LPVOID lpReserv
 	}
 	return TRUE;
 }
+
+#endif //_WIN32
