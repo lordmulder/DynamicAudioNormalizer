@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <cstdlib>
 #include <stdint.h>
 #include <deque>
 
@@ -31,8 +32,8 @@ public:
 	GaussianFilter(const uint32_t &filterSize, const double &sigma);
 	virtual ~GaussianFilter(void);
 
-	void apply(double *values, const uint32_t &length, const double &defVal, const size_t &passes = 1);
-	void apply(std::deque<double> *values, const double &defVal, const size_t &passes = 1);
+	void apply(double *values, const uint32_t &length, const double &defVal, const uint32_t &passes = 1);
+	void apply(std::deque<double> *values, const double &defVal, const uint32_t &passes = 1);
 
 private:
 	const uint32_t m_filterSize;

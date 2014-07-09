@@ -23,9 +23,12 @@
 #include "MinimumFilter.h"
 
 #include "Common.h"
+
 #include <cmath>
 #include <cstring>
 #include <algorithm>
+#include <stdexcept>
+#include <cfloat>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor & Destructor
@@ -54,7 +57,7 @@ MinimumFilter::~MinimumFilter(void)
 // Apply Filter
 ///////////////////////////////////////////////////////////////////////////////
 
-void MinimumFilter::apply(double *values, const uint32_t &length, const size_t &passes)
+void MinimumFilter::apply(double *values, const uint32_t &length, const uint32_t &passes)
 {
 	//Pre-compute constants
 	const uint32_t offset = m_filterSize / 2;
@@ -68,7 +71,7 @@ void MinimumFilter::apply(double *values, const uint32_t &length, const size_t &
 	}
 
 	//Run minimum passes
-	for(size_t pass = 0; pass < passes; pass++)
+	for(uint32_t pass = 0; pass < passes; pass++)
 	{
 		//Apply minimum filter
 		for(uint32_t i = 0; i < length; i++)
@@ -86,10 +89,10 @@ void MinimumFilter::apply(double *values, const uint32_t &length, const size_t &
 	}
 }
 
-void MinimumFilter::apply(std::deque<double> *values, const size_t &passes)
+void MinimumFilter::apply(std::deque<double> *values, const uint32_t &passes)
 {
 	//Pre-compute constants
-	const size_t length = values->size();
+	const uint32_t length = values->size();
 	const uint32_t offset = m_filterSize / 2;
 
 	//Alocate temporary buffer
@@ -101,7 +104,7 @@ void MinimumFilter::apply(std::deque<double> *values, const size_t &passes)
 	}
 
 	//Run minimum passes
-	for(size_t pass = 0; pass < passes; pass++)
+	for(uint32_t pass = 0; pass < passes; pass++)
 	{
 		//Apply minimum filter
 		for(uint32_t i = 0; i < length; i++)

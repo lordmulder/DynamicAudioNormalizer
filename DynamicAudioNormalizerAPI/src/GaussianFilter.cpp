@@ -23,8 +23,10 @@
 #include "GaussianFilter.h"
 
 #include "Common.h"
+
 #include <cmath>
 #include <cstring>
+#include <stdexcept>
 
 static const double s_pi = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
 
@@ -93,7 +95,7 @@ GaussianFilter::~GaussianFilter(void)
 // Apply Filter
 ///////////////////////////////////////////////////////////////////////////////
 
-void GaussianFilter::apply(double *values, const uint32_t &length, const double &defVal, const size_t &passes)
+void GaussianFilter::apply(double *values, const uint32_t &length, const double &defVal, const uint32_t &passes)
 {
 	//Pre-compute constants
 	const uint32_t offset = m_filterSize / 2;
@@ -107,7 +109,7 @@ void GaussianFilter::apply(double *values, const uint32_t &length, const double 
 	}
 
 	//Run smoothing passes
-	for(size_t pass = 0; pass < passes; pass++)
+	for(uint32_t pass = 0; pass < passes; pass++)
 	{
 		//Apply Gaussian filter
 		for(uint32_t i = 0; i < length; i++)
@@ -124,10 +126,10 @@ void GaussianFilter::apply(double *values, const uint32_t &length, const double 
 	}
 }
 
-void GaussianFilter::apply(std::deque<double> *values, const double &defVal, const size_t &passes)
+void GaussianFilter::apply(std::deque<double> *values, const double &defVal, const uint32_t &passes)
 {
 	//Pre-compute constants
-	const size_t length = values->size();
+	const uint32_t length = values->size();
 	const uint32_t offset = m_filterSize / 2;
 
 	//Alocate temporary buffer
@@ -139,7 +141,7 @@ void GaussianFilter::apply(std::deque<double> *values, const double &defVal, con
 	}
 
 	//Run smoothing passes
-	for(size_t pass = 0; pass < passes; pass++)
+	for(uint32_t pass = 0; pass < passes; pass++)
 	{
 		//Apply Gaussian filter
 		for(uint32_t i = 0; i < length; i++)

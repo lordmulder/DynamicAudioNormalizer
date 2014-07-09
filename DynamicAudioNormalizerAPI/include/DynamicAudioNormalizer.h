@@ -39,7 +39,7 @@
 #    endif
 #  endif
 #else
-#  ifdef __GNUG__
+#  ifdef __GNUC__
 #    define MDYNAMICAUDIONORMALIZER_DLL __attribute__ ((visibility ("default")))
 #  else
 #    define MDYNAMICAUDIONORMALIZER_DLL

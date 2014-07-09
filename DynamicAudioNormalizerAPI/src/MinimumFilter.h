@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <cstdlib>
 #include <stdint.h>
 #include <deque>
 
@@ -31,8 +32,8 @@ public:
 	MinimumFilter(const uint32_t &filterSize);
 	virtual ~MinimumFilter(void);
 
-	void apply(double *values, const uint32_t &length, const size_t &passes = 1);
-	void apply(std::deque<double> *values, const size_t &passes = 1);
+	void apply(double *values, const uint32_t &length, const uint32_t &passes = 1);
+	void apply(std::deque<double> *values, const uint32_t &passes = 1);
 
 private:
 	const uint32_t m_filterSize;

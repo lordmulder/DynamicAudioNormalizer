@@ -59,9 +59,9 @@ CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 SOURCES_CPP = $(wildcard src/*.cpp) $(wildcard ../DynamicAudioNormalizerShared/src/*.cpp)
 SOURCES_OBJ = $(patsubst %.cpp,%.o,$(SOURCES_CPP))
 
-LIBRARY_OUT = lib/$(LIBRARY_NAME)-$(SDK_VERSION)
+LIBRARY_OUT = lib/$(LIBRARY_NAME)-$(API_VERSION)
 LIBRARY_BIN = $(LIBRARY_OUT).so
-LIBRARY_DBG = $(LIBRARY_OUT)_g.so
+LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
 
 ##############################################################################
 # Rules
@@ -83,7 +83,7 @@ $(LIBRARY_BIN): $(LIBRARY_DBG)
 $(LIBRARY_DBG): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[LNK] $@\e[0m"
 	@mkdir -p $(dir $@)
-	g++ -o $@ $< $(LDXFLAGS)
+	g++ $(LDXFLAGS) -o $@ $+
 
 #-------------------------------------------------------------
 # Compile
@@ -93,4 +93,13 @@ $(LIBRARY_DBG): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[CXX] $<\e[0m"
 	@mkdir -p $(dir $@)
 	g++ $(CXXFLAGS) -c $< -o $@
+
+#-------------------------------------------------------------
+# Compile
+#-------------------------------------------------------------
+
+clean:
+	rm -fv $(SOURCES_OBJ)
+	rm -fv $(LIBRARY_BIN)
+	rm -fv $(LIBRARY_DBG)
 

@@ -99,14 +99,18 @@ const char* DYAUNO_BUILD_TIME = __TIME__;
 			#pragma message("SSE2 (or higher) instruction set is enabled!")
 		#endif
 	#endif
+#elif defined(__GNUC__)
+	#define GCC_VERSION_GLUE1(X,Y,Z) #X "." #Y "." #Z
+	#define GCC_VERSION_GLUE2(X,Y,Z) GCC_VERSION_GLUE1(X,Y,Z)
+	const char *DYAUNO_COMPILER = GCC_VERSION_GLUE2(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #else
 	#error Compiler is not supported!
 #endif
 
 //Architecture detection
-#if defined(_M_X64)
+#if defined(_M_X64) || defined(__x86_64__)
 	const char *DYAUNO_ARCH = "x64";
-#elif defined(_M_IX86)
+#elif defined(_M_IX86) || defined(__i386__)
 	const char *DYAUNO_ARCH = "x86";
 #else
 	#error Architecture is not supported!
