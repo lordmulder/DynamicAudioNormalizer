@@ -268,6 +268,12 @@ Currently project/solution files are provided for Microsoft Visual Studio 2013. 
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
+### Version 1.03 (2014-07-09) ###
+* Added *static* library configuration to Visual Studio solution
+* Various compatibility fixes for Linux/GCC
+* Added Makefiles for Linux/GCC, tested under Ubuntu 14.04 LTS
+* There are **no** functional changes in this release
+
 ### Version 1.02 (2014-07-06) ###
 * First public release of the Dynamic Audio Normalizer.
 
