@@ -27,8 +27,7 @@ SHELL=/bin/bash
 # Constants
 ##############################################################################
 
-API_VERSION  := 1
-LIBRARY_NAME := libDynamicAudioNormalizer
+LIBRARY_NAME := libDynamicAudioNormalizerShared
 
 ##############################################################################
 # Flags
@@ -46,14 +45,11 @@ endif
 
 CXXFLAGS += -fPIC
 CXXFLAGS += -fvisibility=hidden
+LDXFLAGS += -shared
 
 CXXFLAGS += -I./src
 CXXFLAGS += -I./include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
-
-LDXFLAGS += -shared
-LDXFLAGS += -L../DynamicAudioNormalizerShared/lib
-LDXFLAGS += -lDynamicAudioNormalizerShared
 
 ##############################################################################
 # Rules
@@ -62,9 +58,7 @@ LDXFLAGS += -lDynamicAudioNormalizerShared
 SOURCES_CPP = $(wildcard src/*.cpp)
 SOURCES_OBJ = $(patsubst %.cpp,%.o,$(SOURCES_CPP))
 
-LIBRARY_OUT = lib/$(LIBRARY_NAME)-$(API_VERSION)
-LIBRARY_BIN = $(LIBRARY_OUT).so
-LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
+LIBRARY_OUT = lib/$(LIBRARY_NAME).a
 
 ##############################################################################
 # Rules
@@ -72,21 +66,16 @@ LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
 
 .PHONY: all clean
 
-all: $(LIBRARY_BIN)
+all: $(LIBRARY_OUT)
 
 #-------------------------------------------------------------
-# Link & Strip
+# Create Lib
 #-------------------------------------------------------------
 
-$(LIBRARY_BIN): $(LIBRARY_DBG)
-	@$(ECHO) "\e[1;36m[STR] $@\e[0m"
+$(LIBRARY_OUT): $(SOURCES_OBJ)
+	@$(ECHO) "\e[1;36m[ARC] $@\e[0m"
 	@mkdir -p $(dir $@)
-	strip --strip-unneeded -o $@ $<
-
-$(LIBRARY_DBG): $(SOURCES_OBJ)
-	@$(ECHO) "\e[1;36m[LNK] $@\e[0m"
-	@mkdir -p $(dir $@)
-	g++ $(LDXFLAGS) -o $@ $+
+	ar rcs $@ $+
 
 #-------------------------------------------------------------
 # Compile
@@ -103,6 +92,5 @@ $(LIBRARY_DBG): $(SOURCES_OBJ)
 
 clean:
 	rm -fv $(SOURCES_OBJ)
-	rm -fv $(LIBRARY_BIN)
-	rm -fv $(LIBRARY_DBG)
+	rm -fv $(LIBRARY_OUT)
 

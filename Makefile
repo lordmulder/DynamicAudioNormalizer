@@ -27,7 +27,7 @@ SHELL=/bin/bash
 # Rules
 ##############################################################################
 
-BUILD_PROJECTS = DynamicAudioNormalizerAPI DynamicAudioNormalizerCLI
+BUILD_PROJECTS = DynamicAudioNormalizerShared DynamicAudioNormalizerAPI DynamicAudioNormalizerCLI
 CLEAN_PROJECTS = $(addprefix Clean,$(BUILD_PROJECTS))
 
 .PHONY: all clean distclean $(BUILD_PROJECTS) $(CLEAN_PROJECTS)
@@ -57,3 +57,4 @@ $(BUILD_PROJECTS):
 	@$(ECHO) "\e[1;34mBuild: $@\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
 	make -C ./$@
+

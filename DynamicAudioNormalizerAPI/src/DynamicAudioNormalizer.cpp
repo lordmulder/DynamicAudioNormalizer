@@ -145,11 +145,11 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_channels(channels),
 	m_sampleRate(sampleRate),
 	m_frameLen(FRAME_SIZE(sampleRate, frameLenMsec)),
+	m_filterSize(filterSize),
 	m_channelsCoupled(channelsCoupled),
 	m_enableDCCorrection(enableDCCorrection),
 	m_peakValue(peakValue),
 	m_maxAmplification(maxAmplification),
-	m_filterSize(filterSize),
 	m_verbose(verbose),
 	m_logFile(logFile)
 {
