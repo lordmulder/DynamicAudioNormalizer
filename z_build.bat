@@ -93,7 +93,7 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\LICENSE.html" "%PACK_PATH%\%%c"
 	copy "%~dp0\img\*.png"    "%PACK_PATH%\%%c\img"
 
-	"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html --standalone -H "%~dp0\img\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\%%c\README.html"
+	"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html5 --standalone -H "%~dp0\img\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\%%c\README.html"
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
