@@ -85,7 +85,10 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%\%%c"
 
 	if "%%c"=="DLL" (
+		mkdir "%PACK_PATH%\%%c\sdk"
 		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\sdk"
+		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\sdk"
 		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
 		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll"   "%PACK_PATH%\%%c"
 	)
