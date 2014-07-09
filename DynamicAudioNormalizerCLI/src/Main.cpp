@@ -335,7 +335,7 @@ static void printLogo(void)
 
 	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u, %s\n"), versionMajor, versionMinor, versionPatch, LINKAGE);
 	PRINT(TXT("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
-	PRINT(TXT("Built on ") FMT_CHAR TXT(" at ") FMT_CHAR TXT(" with ") FMT_CHAR TXT(" for Win-") FMT_CHAR TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
+	PRINT(TXT("Built on ") FMT_CHAR TXT(" at ") FMT_CHAR TXT(" with ") FMT_CHAR TXT(" for ") OS_TYPE TXT("-") FMT_CHAR TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
 
 	PRINT(TXT("This program is free software: you can redistribute it and/or modify\n"));
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));

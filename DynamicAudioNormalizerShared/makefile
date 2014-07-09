@@ -92,5 +92,6 @@ $(LIBRARY_OUT): $(SOURCES_OBJ)
 
 clean:
 	rm -fv $(SOURCES_OBJ)
-	rm -fv $(LIBRARY_OUT)
+	rm -rfv ./lib
+
 

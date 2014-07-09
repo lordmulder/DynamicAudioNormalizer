@@ -40,7 +40,11 @@
 #  endif
 #else
 #  ifdef __GNUC__
-#    define MDYNAMICAUDIONORMALIZER_DLL __attribute__ ((visibility ("default")))
+#    ifdef MDYNAMICAUDIONORMALIZER_EXPORTS
+#      define MDYNAMICAUDIONORMALIZER_DLL __attribute__ ((visibility ("default")))
+#    else
+#      define MDYNAMICAUDIONORMALIZER_DLL
+#    endif
 #  else
 #    define MDYNAMICAUDIONORMALIZER_DLL
 #  endif

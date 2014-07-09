@@ -106,6 +106,5 @@ $(PROGRAM_DBG): $(SOURCES_OBJ)
 
 clean:
 	rm -fv $(SOURCES_OBJ)
-	rm -fv $(PROGRAM_BIN)
-	rm -fv $(PROGRAM_DBG)
+	rm -rfv ./bin
 

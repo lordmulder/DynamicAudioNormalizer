@@ -47,8 +47,9 @@ void SYSTEM_INIT(void);
 
 #define _TXT(X) L##X
 #define TXT(X) _TXT(X)
+#define OS_TYPE TXT("Win")
+#define FMT_CHAR TXT("%S")
 #define MAIN wmain
-#define FMT_CHAR L"%S"
 #define TRY_SEH __try
 #define CATCH_SEH __except(1)
 
@@ -149,8 +150,9 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 
 #define _TXT(X) X
 #define TXT(X) _TXT(X)
+#define OS_TYPE TXT("Linux")
+#define FMT_CHAR TXT("%s")
 #define MAIN main
-#define FMT_CHAR "%s"
 #define TRY_SEH if(1)
 #define CATCH_SEH if(0)
 

@@ -100,7 +100,7 @@ const char* DYAUNO_BUILD_TIME = __TIME__;
 		#endif
 	#endif
 #elif defined(__GNUC__)
-	#define GCC_VERSION_GLUE1(X,Y,Z) #X "." #Y "." #Z
+	#define GCC_VERSION_GLUE1(X,Y,Z) "GCC " #X "." #Y "." #Z
 	#define GCC_VERSION_GLUE2(X,Y,Z) GCC_VERSION_GLUE1(X,Y,Z)
 	const char *DYAUNO_COMPILER = GCC_VERSION_GLUE2(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #else

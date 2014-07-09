@@ -46,6 +46,7 @@ endif
 
 CXXFLAGS += -fPIC
 CXXFLAGS += -fvisibility=hidden
+CXXFLAGS += -DMDYNAMICAUDIONORMALIZER_EXPORTS
 
 CXXFLAGS += -I./src
 CXXFLAGS += -I./include
@@ -102,6 +103,5 @@ $(LIBRARY_DBG): $(SOURCES_OBJ)
 
 clean:
 	rm -fv $(SOURCES_OBJ)
-	rm -fv $(LIBRARY_BIN)
-	rm -fv $(LIBRARY_DBG)
+	rm -rfv ./lib
 
