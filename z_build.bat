@@ -131,28 +131,30 @@ for %%c in (DLL, Static) do (
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Create version tag
 REM ///////////////////////////////////////////////////////////////////////////
-echo Dynamic Audio Normalizer > "%~dp0\out\%OUT_NAME%.txt"
-echo Copyright (C) 2014 LoRd_MuldeR ^<MuldeR2@GMX.de^> >> "%~dp0\out\%OUT_NAME%.txt"
-echo Built %ISO_DATE%, %TIME% >> "%~dp0\out\%OUT_NAME%.txt"
-echo. >> "%~dp0\out\%OUT_NAME%.txt"
-echo This program is free software; you can redistribute it and/or modify >> "%~dp0\out\%OUT_NAME%.txt"
-echo it under the terms of the GNU General Public License as published by >> "%~dp0\out\%OUT_NAME%.txt"
-echo the Free Software Foundation; either version 2 of the License, or >> "%~dp0\out\%OUT_NAME%.txt"
-echo (at your option) any later version. >> "%~dp0\out\%OUT_NAME%.txt"
+echo Dynamic Audio Normalizer > "%PACK_PATH%\BUILD_TAG"
+echo Copyright (C) 2014 LoRd_MuldeR ^<MuldeR2@GMX.de^> >> "%PACK_PATH%\BUILD_TAG"
+echo. >> "%PACK_PATH%\BUILD_TAG"
+echo Built on %ISO_DATE%, at %TIME% >> "%PACK_PATH%\BUILD_TAG"
+cl 2>&1 | "%~dp0\etc\head.exe" -n1 | "%~dp0\etc\sed.exe" "s/^/Compiler version: /" >> "%PACK_PATH%\BUILD_TAG"
+echo. >> "%PACK_PATH%\BUILD_TAG"
+echo This program is free software; you can redistribute it and/or modify >> "%PACK_PATH%\BUILD_TAG"
+echo it under the terms of the GNU General Public License as published by >> "%PACK_PATH%\BUILD_TAG"
+echo the Free Software Foundation; either version 2 of the License, or >> "%PACK_PATH%\BUILD_TAG"
+echo (at your option) any later version. >> "%PACK_PATH%\BUILD_TAG"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Build the package
 REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
+	copy "%PACK_PATH%\BUILD_TAG" "%PACK_PATH%\%%c"
 	pushd "%PACK_PATH%\%%c"
-	"%~dp0\etc\zip.exe" -9 -r -z "%~dp0\out\%OUT_NAME%.%%c.zip" "*.*" < "%~dp0\out\%OUT_NAME%.txt"
+	"%~dp0\etc\zip.exe" -9 -r -z "%~dp0\out\%OUT_NAME%.%%c.zip" "*.*" < "%PACK_PATH%\BUILD_TAG"
 	popd
 	attrib +R "%~dp0\out\%OUT_NAME%.%%c.zip"
 )
 
 REM Clean up!
 rmdir /Q /S "%PACK_PATH%"
-del "%~dp0\out\%OUT_NAME%.txt"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // COMPLETE
