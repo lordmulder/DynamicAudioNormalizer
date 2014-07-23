@@ -18,6 +18,7 @@
     <ClCompile Include="src\DLLMain.cpp" />
     <ClCompile Include="src\DynamicAudioNormalizer.cpp" />
     <ClCompile Include="src\DynamicAudioNormalizer_C.cpp" />
+    <ClCompile Include="src\FrameBuffer.cpp" />
     <ClCompile Include="src\GaussianFilter.cpp" />
     <ClCompile Include="src\MinimumFilter.cpp" />
     <ClCompile Include="src\RingBuffer.cpp" />
@@ -25,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\DynamicAudioNormalizer.h" />
+    <ClInclude Include="src\FrameBuffer.h" />
     <ClInclude Include="src\GaussianFilter.h" />
     <ClInclude Include="src\MinimumFilter.h" />
     <ClInclude Include="src\RingBuffer.h" />

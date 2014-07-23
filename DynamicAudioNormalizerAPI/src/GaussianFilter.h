@@ -32,15 +32,11 @@ public:
 	GaussianFilter(const uint32_t &filterSize, const double &sigma);
 	virtual ~GaussianFilter(void);
 
-	void apply(double *values, const uint32_t &length, const double &defVal, const uint32_t &passes = 1);
-	void apply(std::deque<double> *values, const double &defVal, const uint32_t &passes = 1);
+	double apply(const std::deque<double> &values);
 
 private:
 	const uint32_t m_filterSize;
 	double *m_weights;
-	
-	double *m_temp;
-	uint32_t m_tempSize;
-	
+
 	GaussianFilter &operator=(const GaussianFilter &) { throw 666; }
 };

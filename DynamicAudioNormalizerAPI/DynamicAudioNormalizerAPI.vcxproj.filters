@@ -39,6 +39,9 @@
     <ClCompile Include="src\DynamicAudioNormalizer_C.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\FrameBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\GaussianFilter.h">
@@ -55,6 +58,9 @@
     </ClInclude>
     <ClInclude Include="include\DynamicAudioNormalizer.h">
       <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FrameBuffer.h">
+      <Filter>Internal Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

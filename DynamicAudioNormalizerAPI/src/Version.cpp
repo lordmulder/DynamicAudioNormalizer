@@ -23,8 +23,8 @@
 #include "Version.h"
 
 //Version info
-const unsigned int DYAUNO_VERSION_MAJOR = 1;
-const unsigned int DYAUNO_VERSION_MINOR = 3;
+const unsigned int DYAUNO_VERSION_MAJOR = 2;
+const unsigned int DYAUNO_VERSION_MINOR = 0;
 const unsigned int DYAUNO_VERSION_PATCH = 0;
 
 //Build date/time

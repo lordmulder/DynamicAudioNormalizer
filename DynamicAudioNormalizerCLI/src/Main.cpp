@@ -126,22 +126,14 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	return true;
 }
 
-static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length, const bool is2ndPass)
+static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length)
 {
 	static const CHR spinner[4] = { TXT('-'), TXT('\\'), TXT('|'), TXT('/') };
-	static const CHR *progressStr = TXT("\rNormalization pass %d/2 in progress: %5.1f%% [%c]");
+	static const CHR *progressStr = TXT("\rNormalization in progress: %5.1f%% [%c]");
 
 	//Print progress
-	PRINT(progressStr, (is2ndPass ? 2 : 1), 0.0, spinner[0]);
+	PRINT(progressStr, 0.0, spinner[0]);
 	FLUSH();
-
-	//Set encoding pass
-	if(!normalizer->setPass(is2ndPass ? MDynamicAudioNormalizer::PASS_2ND : MDynamicAudioNormalizer::PASS_1ST))
-	{
-		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("Failed to setup the processing pass!"));
-		return EXIT_FAILURE;
-	}
 
 	//Rewind input
 	if(!sourceFile->rewind())
@@ -161,7 +153,7 @@ static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourc
 	{
 		if(++indicator > 512)
 		{
-			PRINT(progressStr, (is2ndPass ? 2 : 1), 99.9 * (double(length - remaining) / double(length)), spinner[spinnerPos++]);
+			PRINT(progressStr, 99.9 * (double(length - remaining) / double(length)), spinner[spinnerPos++]);
 			FLUSH(); indicator = 0; spinnerPos %= 4;
 		}
 
@@ -184,7 +176,7 @@ static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourc
 			delayedSamples += (samplesRead - outputSize);
 		}
 
-		if(is2ndPass && (outputSize > 0))
+		if(outputSize > 0)
 		{
 			if(outputFile->write(buffer, outputSize) != outputSize)
 			{
@@ -208,7 +200,7 @@ static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourc
 		if(outputSize > 0)
 		{
 			const int64_t writeCount = std::min(outputSize, delayedSamples);
-			if(is2ndPass && (outputFile->write(buffer, writeCount) != writeCount))
+			if(outputFile->write(buffer, writeCount) != writeCount)
 			{
 				error = true;
 				break; /*write error must have ocurred*/
@@ -224,7 +216,7 @@ static int runPass(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourc
 	//Error checking
 	if(!error)
 	{
-		PRINT(progressStr, (is2ndPass ? 2 : 1), 100.0, TXT('*'));
+		PRINT(progressStr, 100.0, TXT('*'));
 		FLUSH();
 		PRINT(TXT("\nCompleted.\n\n"));
 	}
@@ -280,12 +272,8 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		buffer[channel] = new double[FRAME_SIZE];
 	}
 	
-	//Run 1st and 2nd pass
-	for(int pass = 0; pass < 2; pass++)
-	{
-		exitCode = runPass(normalizer, sourceFile, outputFile, buffer, channels, length, (pass > 0));
-		if(exitCode != EXIT_SUCCESS) break;
-	}
+	//Run normalizer now!
+	exitCode = processingLoop(normalizer, sourceFile, outputFile, buffer, channels, length);
 
 	//Destroy the normalizer
 	MY_DELETE(normalizer);

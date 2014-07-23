@@ -78,13 +78,13 @@ extern "C"
 		return 0;
 	}
 
-	int MDYNAMICAUDIONORMALIZER_FUNCTION(setPass)(MDynamicAudioNormalizer_Handle *handle, const int pass)
+	int MDYNAMICAUDIONORMALIZER_FUNCTION(reset)(MDynamicAudioNormalizer_Handle *handle)
 	{
 		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
 		{
 			try
 			{
-				return instance->setPass(pass) ? 1 : 0;
+				return instance->reset() ? 1 : 0;
 			}
 			catch(...)
 			{

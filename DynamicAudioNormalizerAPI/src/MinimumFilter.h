@@ -32,14 +32,8 @@ public:
 	MinimumFilter(const uint32_t &filterSize);
 	virtual ~MinimumFilter(void);
 
-	void apply(double *values, const uint32_t &length, const uint32_t &passes = 1);
-	void apply(std::deque<double> *values, const uint32_t &passes = 1);
+	double apply(const std::deque<double> &values);
 
 private:
-	const uint32_t m_filterSize;
-	
-	double *m_temp;
-	uint32_t m_tempSize;
-	
 	MinimumFilter &operator=(const MinimumFilter &) { throw 666; }
 };

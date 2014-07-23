@@ -35,92 +35,25 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 MinimumFilter::MinimumFilter(const uint32_t &filterSize)
-:
-	m_filterSize(filterSize)
 {
-	if((filterSize < 1) || ((filterSize % 2) != 1))
-	{
-		throw std::runtime_error("Filter size must be a positive and odd value!");
-	}
-	
-	//Init temp buffer;
-	m_temp = NULL;
-	m_tempSize = 0;
 }
 
 MinimumFilter::~MinimumFilter(void)
 {
-	MY_DELETE_ARRAY(m_temp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Apply Filter
 ///////////////////////////////////////////////////////////////////////////////
 
-void MinimumFilter::apply(double *values, const uint32_t &length, const uint32_t &passes)
+double MinimumFilter::apply(const std::deque<double> &values)
 {
-	//Pre-compute constants
-	const uint32_t offset = m_filterSize / 2;
-
-	//Alocate temporary buffer
-	if(m_tempSize < length)
+	double minValue = DBL_MAX;
+	
+	for(std::deque<double>::const_iterator iter = values.begin(); iter != values.end(); iter++)
 	{
-		MY_DELETE_ARRAY(m_temp);
-		m_temp = new double[length];
-		m_tempSize = length;
+		minValue = std::min(minValue, (*iter));
 	}
-
-	//Run minimum passes
-	for(uint32_t pass = 0; pass < passes; pass++)
-	{
-		//Apply minimum filter
-		for(uint32_t i = 0; i < length; i++)
-		{
-			double minValue = DBL_MAX;
-			for(uint32_t k = i - std::min(i, offset); k < std::min(i + offset + 1, length); k++)
-			{
-				minValue = std::min(minValue, values[i]);
-			}
-			m_temp[i] = minValue;
-		}
-
-		//Copy result to output
-		memcpy(values, m_temp, sizeof(double) * length);
-	}
-}
-
-void MinimumFilter::apply(std::deque<double> *values, const uint32_t &passes)
-{
-	//Pre-compute constants
-	const uint32_t length = values->size();
-	const uint32_t offset = m_filterSize / 2;
-
-	//Alocate temporary buffer
-	if(m_tempSize < length)
-	{
-		MY_DELETE_ARRAY(m_temp);
-		m_temp = new double[length];
-		m_tempSize = length;
-	}
-
-	//Run minimum passes
-	for(uint32_t pass = 0; pass < passes; pass++)
-	{
-		//Apply minimum filter
-		for(uint32_t i = 0; i < length; i++)
-		{
-			double minValue = DBL_MAX;
-			for(uint32_t k = i - std::min(i, offset); k < std::min(i + offset + 1, length); k++)
-			{
-				minValue = std::min(minValue, (*values)[k]);
-			}
-			m_temp[i] = minValue;
-		}
-
-		//Copy result to output
-		for(uint32_t i = 0; i < length; i++)
-		{
-			(*values)[i] = m_temp[i];
-		}
-	}
+	
+	return minValue;
 }
