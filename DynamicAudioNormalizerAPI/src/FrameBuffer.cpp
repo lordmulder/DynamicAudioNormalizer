@@ -61,6 +61,26 @@ void FrameData::clear(void)
 	}
 }
 
+void FrameData::write(const double *const *const src, const size_t &srcOffset, const size_t &destOffset, const size_t &length)
+{
+	assert(length + destOffset <= m_frameLength);
+
+	for(uint32_t c = 0; c < m_channels; c++)
+	{
+		memcpy(&m_data[c][destOffset], &src[c][srcOffset], length * sizeof(double));
+	}
+}
+
+void FrameData::read(double **dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length)
+{
+	assert(length + srcOffset <= m_frameLength);
+
+	for(uint32_t c = 0; c < m_channels; c++)
+	{
+		memcpy(&dest[c][destOffset], &m_data[c][srcOffset], length * sizeof(double));
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////

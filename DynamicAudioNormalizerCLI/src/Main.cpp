@@ -144,14 +144,14 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 	}
 
 	//Init status variables
+	int64_t remaining = length;
 	short indicator = 0, spinnerPos = 1;
-	int64_t remaining = length, delayedSamples = 0;
 	bool error = false;
 
 	//Main audio processing loop
 	while(remaining > 0)
 	{
-		if(++indicator > 512)
+		if(++indicator > 256)
 		{
 			PRINT(progressStr, 99.9 * (double(length - remaining) / double(length)), spinner[spinnerPos++]);
 			FLUSH(); indicator = 0; spinnerPos %= 4;
@@ -171,11 +171,6 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 		int64_t outputSize;
 		normalizer->processInplace(buffer, samplesRead, outputSize);
 
-		if(outputSize < samplesRead)
-		{
-			delayedSamples += (samplesRead - outputSize);
-		}
-
 		if(outputSize > 0)
 		{
 			if(outputFile->write(buffer, outputSize) != outputSize)
@@ -187,25 +182,18 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 	}
 
 	//Flush all the delayed samples
-	while(delayedSamples > 0)
+	for(;;)
 	{
-		for(uint32_t channel = 0; channel < channels; channel++)
-		{
-			memset(buffer[channel], 0, sizeof(double) * FRAME_SIZE);
-		}
-
 		int64_t outputSize;
-		normalizer->processInplace(buffer, int64_t(FRAME_SIZE), outputSize);
+		normalizer->flushBuffer(buffer, int64_t(FRAME_SIZE), outputSize);
 
 		if(outputSize > 0)
 		{
-			const int64_t writeCount = std::min(outputSize, delayedSamples);
-			if(outputFile->write(buffer, writeCount) != writeCount)
+			if(outputFile->write(buffer, outputSize) != outputSize)
 			{
 				error = true;
 				break; /*write error must have ocurred*/
 			}
-			delayedSamples -= writeCount;
 		}
 		else
 		{

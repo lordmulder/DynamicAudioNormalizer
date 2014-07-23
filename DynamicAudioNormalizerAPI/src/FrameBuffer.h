@@ -45,6 +45,9 @@ public:
 	inline const size_t &channels(void)    { return m_channels;    }
 	inline const size_t &frameLength(void) { return m_frameLength; }
 
+	void write(const double *const *const src, const size_t &srcOffset, const size_t &destOffset, const size_t &length);
+	void read(double **dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length);
+
 	void clear(void);
 	
 private:

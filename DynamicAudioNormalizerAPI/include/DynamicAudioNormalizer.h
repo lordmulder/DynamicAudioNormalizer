@@ -84,7 +84,8 @@ public:
 	
 	//Public API
 	bool initialize(void);
-	bool processInplace(double **samplesInOut, int64_t inputSize, int64_t &outputSize);
+	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize);
+	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
 
 	//Static functions
