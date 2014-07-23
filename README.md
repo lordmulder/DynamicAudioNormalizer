@@ -268,6 +268,14 @@ Currently project/solution files are provided for Microsoft Visual Studio 2013. 
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
+### Version 2.00 (2014-07-2x) ###
+* Implemented a large lookahead buffer, which eliminates the need of 2-Pass processing
+* Dynamic Audio Normalizer now works with a single pass → processing time has been reduced to about 1/2
+* Removed the <tt>setPass()</tt> API, because it is *not* required any more
+* Added new <tt>reset()</tt> API, which can be used to reset the internal state of the Dynamic Audio Normalizer instance
+* Added new <tt>flushBuffer()</tt> API, which provides a cleaner method of flushing the pending frames
+* There should be **no** changes of the normalized audio output in this release
+
 ### Version 1.03 (2014-07-09) ###
 * Added *static* library configuration to Visual Studio solution
 * Various compatibility fixes for Linux/GCC
