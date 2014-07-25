@@ -28,14 +28,14 @@
 // Frame Data
 ///////////////////////////////////////////////////////////////////////////////
 
-FrameData::FrameData(const size_t &channels, const size_t &frameLength)
+FrameData::FrameData(const uint32_t &channels, const uint32_t &frameLength)
 :
 	m_channels(channels),
 	m_frameLength(frameLength)
 {
 	m_data = new double*[m_channels];
 
-	for(size_t c = 0; c < m_channels; c++)
+	for(uint32_t c = 0; c < m_channels; c++)
 	{
 		m_data[c] = new double[m_frameLength];
 	}
@@ -45,7 +45,7 @@ FrameData::FrameData(const size_t &channels, const size_t &frameLength)
 
 FrameData::~FrameData(void)
 {
-	for(size_t c = 0; c < m_channels; c++)
+	for(uint32_t c = 0; c < m_channels; c++)
 	{
 		MY_DELETE_ARRAY(m_data[c]);
 	}
@@ -55,7 +55,7 @@ FrameData::~FrameData(void)
 
 void FrameData::clear(void)
 {
-	for(size_t c = 0; c < m_channels; c++)
+	for(uint32_t c = 0; c < m_channels; c++)
 	{
 		memset(m_data[c], 0, m_frameLength * sizeof(double));
 	}
@@ -65,7 +65,7 @@ void FrameData::clear(void)
 // Frame FIFO
 ///////////////////////////////////////////////////////////////////////////////
 
-FrameFIFO::FrameFIFO(const size_t &channels, const size_t &frameLength)
+FrameFIFO::FrameFIFO(const uint32_t &channels, const uint32_t &frameLength)
 {
 	m_data = new FrameData(channels, frameLength);
 	reset(false);
@@ -87,7 +87,7 @@ void FrameFIFO::reset(const bool &bForceClear)
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-FrameBuffer::FrameBuffer(const size_t &channels, const size_t &frameLength, const size_t &frameCount)
+FrameBuffer::FrameBuffer(const uint32_t &channels, const uint32_t &frameLength, const uint32_t &frameCount)
 :
 	m_channels(channels),
 	m_frameLength(frameLength),
@@ -99,7 +99,7 @@ FrameBuffer::FrameBuffer(const size_t &channels, const size_t &frameLength, cons
 
 	m_frames = new FrameData*[m_frameCount];
 
-	for(size_t i = 0; i < m_frameCount; i++)
+	for(uint32_t i = 0; i < m_frameCount; i++)
 	{
 		m_frames[i] = new FrameData(m_channels, m_frameLength);
 	}
@@ -107,7 +107,7 @@ FrameBuffer::FrameBuffer(const size_t &channels, const size_t &frameLength, cons
 
 FrameBuffer::~FrameBuffer(void)
 {
-	for(size_t i = 0; i < m_frameCount; i++)
+	for(uint32_t i = 0; i < m_frameCount; i++)
 	{
 		MY_DELETE(m_frames[i]);
 	}
@@ -125,7 +125,7 @@ void FrameBuffer::reset(void)
 	m_framesUsed = 0;
 	m_posPut = m_posGet = 0;
 
-	for(size_t i = 0; i < m_frameCount; i++)
+	for(uint32_t i = 0; i < m_frameCount; i++)
 	{
 		m_frames[i]->clear();
 	}

@@ -29,25 +29,25 @@
 class FrameData
 {
 public:
-	FrameData(const size_t &channels, const size_t &frameLength);
+	FrameData(const uint32_t &channels, const uint32_t &frameLength);
 	~FrameData(void);
 	
-	inline double *data(const size_t &channel)
+	inline double *data(const uint32_t &channel)
 	{
 		assert(channel < m_channels);
 		return m_data[channel];
 	}
 	
-	inline const double *data(const size_t &channel) const
+	inline const double *data(const uint32_t &channel) const
 	{
 		assert(channel < m_channels);
 		return m_data[channel];
 	}
 
-	inline const size_t &channels(void)    { return m_channels;    }
-	inline const size_t &frameLength(void) { return m_frameLength; }
+	inline const uint32_t &channels(void)    { return m_channels;    }
+	inline const uint32_t &frameLength(void) { return m_frameLength; }
 
-	inline void write(const double *const *const src, const size_t &srcOffset, const size_t &destOffset, const size_t &length)
+	inline void write(const double *const *const src, const uint32_t &srcOffset, const uint32_t &destOffset, const uint32_t &length)
 	{
 		assert(length + destOffset <= m_frameLength);
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -56,7 +56,7 @@ public:
 		}
 	}
 
-	inline void write(const FrameData *src, const size_t &srcOffset, const size_t &destOffset, const size_t &length)
+	inline void write(const FrameData *src, const uint32_t &srcOffset, const uint32_t &destOffset, const uint32_t &length)
 	{
 		assert(length + destOffset <= m_frameLength);
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -65,7 +65,7 @@ public:
 		}
 	}
 
-	inline void read(double **dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length)
+	inline void read(double **dest, const uint32_t &destOffset, const uint32_t &srcOffset, const uint32_t &length)
 	{
 		assert(length + srcOffset <= m_frameLength);
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -74,7 +74,7 @@ public:
 		}
 	}
 
-	inline void read(FrameData *dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length)
+	inline void read(FrameData *dest, const uint32_t &destOffset, const uint32_t &srcOffset, const uint32_t &length)
 	{
 		assert(length + srcOffset <= m_frameLength);
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -89,8 +89,8 @@ private:
 	FrameData(const FrameData&) : m_channels(0), m_frameLength(0) { throw "unsupported"; }
 	FrameData &operator=(const FrameData&)                        { throw "unsupported"; }
 
-	const size_t m_channels;
-	const size_t m_frameLength;
+	const uint32_t m_channels;
+	const uint32_t m_frameLength;
 	
 	double **m_data;
 };
@@ -98,13 +98,13 @@ private:
 class FrameFIFO
 {
 public:
-	FrameFIFO(const size_t &channels, const size_t &frameLength);
+	FrameFIFO(const uint32_t &channels, const uint32_t &frameLength);
 	~FrameFIFO(void);
 
-	inline size_t samplesLeftPut(void) { return m_leftPut; }
-	inline size_t samplesLeftGet(void) { return m_leftGet; }
+	inline uint32_t samplesLeftPut(void) { return m_leftPut; }
+	inline uint32_t samplesLeftGet(void) { return m_leftGet; }
 
-	inline void putSamples(const double *const *const src, const size_t &srcOffset,const size_t &length)
+	inline void putSamples(const double *const *const src, const uint32_t &srcOffset,const uint32_t &length)
 	{
 		assert(length <= samplesLeftPut());
 		m_data->write(src, srcOffset, m_posPut, length);
@@ -113,7 +113,7 @@ public:
 		m_leftGet += length;
 	}
 
-	inline void putSamples(const FrameData *src, const size_t &srcOffset,const size_t &length)
+	inline void putSamples(const FrameData *src, const uint32_t &srcOffset,const uint32_t &length)
 	{
 		assert(length <= samplesLeftPut());
 		m_data->write(src, srcOffset, m_posPut, length);
@@ -122,7 +122,7 @@ public:
 		m_leftGet += length;
 	}
 
-	inline void getSamples(double **dest, const size_t &destOffset, const size_t &length)
+	inline void getSamples(double **dest, const uint32_t &destOffset, const uint32_t &length)
 	{
 		assert(length <= samplesLeftGet());
 		m_data->read(dest, destOffset, m_posGet, length);
@@ -130,7 +130,7 @@ public:
 		m_leftGet -= length;
 	}
 	
-	inline void getSamples(FrameData *dest, const size_t &destOffset, const size_t &length)
+	inline void getSamples(FrameData *dest, const uint32_t &destOffset, const uint32_t &length)
 	{
 		assert(length <= samplesLeftGet());
 		m_data->read(dest, destOffset, m_posGet, length);
@@ -148,27 +148,27 @@ public:
 private:
 	FrameData *m_data;
 
-	size_t m_posPut;
-	size_t m_posGet;
-	size_t m_leftPut;
-	size_t m_leftGet;
+	uint32_t m_posPut;
+	uint32_t m_posGet;
+	uint32_t m_leftPut;
+	uint32_t m_leftGet;
 };
 
 class FrameBuffer
 {
 public:
-	FrameBuffer(const size_t &channels, const size_t &frameLength, const size_t &frameCount);
+	FrameBuffer(const uint32_t &channels, const uint32_t &frameLength, const uint32_t &frameCount);
 	~FrameBuffer(void);
 
 	bool putFrame(FrameFIFO *src);
 	bool getFrame(FrameFIFO *dest);
 
-	inline const size_t &channels(void)    { return m_channels;    }
-	inline const size_t &frameLength(void) { return m_frameLength; }
-	inline const size_t &frameCount(void)  { return m_frameCount;  }
+	inline const uint32_t &channels(void)    { return m_channels;    }
+	inline const uint32_t &frameLength(void) { return m_frameLength; }
+	inline const uint32_t &frameCount(void)  { return m_frameCount;  }
 
-	inline const size_t &framesFree(void)  { return m_framesFree;  }
-	inline const size_t &framesUsed(void)  { return m_framesUsed;  }
+	inline const uint32_t &framesFree(void)  { return m_framesFree;  }
+	inline const uint32_t &framesUsed(void)  { return m_framesUsed;  }
 
 	void reset(void);
 
@@ -176,15 +176,15 @@ private:
 	FrameBuffer(const FrameBuffer&) : m_channels(0), m_frameLength(0), m_frameCount(0) { throw "unsupported"; }
 	FrameBuffer &operator=(const FrameBuffer&)                                         { throw "unsupported"; }
 
-	const size_t m_channels;
-	const size_t m_frameLength;
-	const size_t m_frameCount;
+	const uint32_t m_channels;
+	const uint32_t m_frameLength;
+	const uint32_t m_frameCount;
 
-	size_t m_framesFree;
-	size_t m_framesUsed;
+	uint32_t m_framesFree;
+	uint32_t m_framesUsed;
 
-	size_t m_posPut;
-	size_t m_posGet;
+	uint32_t m_posPut;
+	uint32_t m_posGet;
 
 	FrameData **m_frames;
 };
