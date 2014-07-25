@@ -255,7 +255,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	m_buffSrc = new FrameData(m_channels, m_frameLen);
 	m_buffOut = new FrameData(m_channels, m_frameLen);
 
-	m_frameBuffer = new FrameBuffer(m_channels, m_frameLen, (2 * m_filterSize));
+	m_frameBuffer = new FrameBuffer(m_channels, m_frameLen, m_filterSize + 1);
 
 	m_gainHistory_original = new std::deque<double>[m_channels];
 	m_gainHistory_minimum  = new std::deque<double>[m_channels];
@@ -396,19 +396,20 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 		{
 			bStop = false;
 			
+			analyzeFrame(m_buffSrc);
+			
 			if(!m_frameBuffer->putFrame(m_buffSrc))
 			{
 				LOG_ERR(TXT("Failed to append current input frame to internal buffer!"));
 				return false;
 			}
-			analyzeFrame(m_buffSrc);
 			
 			m_buffSrc_Pos  = 0;
 			m_buffSrc_Left = m_buffSrc->frameLength();
 		}
 
 		//Amplify next output frame, if we have enough output
-		if((m_buffOut_Left < 1) && (m_frameBuffer->frameUsed() > 0) && (!m_gainHistory_smoothed[0].empty()))
+		if((m_buffOut_Left < 1) && (m_frameBuffer->framesUsed() > 0) && (!m_gainHistory_smoothed[0].empty()))
 		{
 			bStop = false;
 			
@@ -417,6 +418,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 				LOG_ERR(TXT("Failed to retrieve next output frame from internal buffer!"));
 				return false;
 			}
+
 			amplifyFrame(m_buffOut);
 			
 			m_buffOut_Pos  = 0;

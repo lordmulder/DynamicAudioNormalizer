@@ -73,8 +73,8 @@ public:
 	inline const size_t &frameLength(void) { return m_frameLength; }
 	inline const size_t &frameCount(void)  { return m_frameCount;  }
 
-	inline const size_t &frameFree(void)   { return m_framesFree;  }
-	inline const size_t &frameUsed(void)   { return m_framesUsed;  }
+	inline const size_t &framesFree(void)  { return m_framesFree;  }
+	inline const size_t &framesUsed(void)  { return m_framesUsed;  }
 
 	void reset(void);
 
