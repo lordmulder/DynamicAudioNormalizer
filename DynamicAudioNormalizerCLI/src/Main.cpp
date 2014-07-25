@@ -319,7 +319,7 @@ static void printLogo(void)
 
 	if(DYAUNO_DEBUG)
 	{
-		PRINT(TXT("!!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!!\n\n"));
+		PRINT(TXT("\n!!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!!\n\n"));
 	}
 
 	PRINT(TXT("---------------------------------------------------------------------------\n\n"));

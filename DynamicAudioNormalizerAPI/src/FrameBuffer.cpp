@@ -61,24 +61,26 @@ void FrameData::clear(void)
 	}
 }
 
-void FrameData::write(const double *const *const src, const size_t &srcOffset, const size_t &destOffset, const size_t &length)
-{
-	assert(length + destOffset <= m_frameLength);
+///////////////////////////////////////////////////////////////////////////////
+// Frame FIFO
+///////////////////////////////////////////////////////////////////////////////
 
-	for(uint32_t c = 0; c < m_channels; c++)
-	{
-		memcpy(&m_data[c][destOffset], &src[c][srcOffset], length * sizeof(double));
-	}
+FrameFIFO::FrameFIFO(const size_t &channels, const size_t &frameLength)
+{
+	m_data = new FrameData(channels, frameLength);
+	reset(false);
 }
 
-void FrameData::read(double **dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length)
+FrameFIFO::~FrameFIFO(void)
 {
-	assert(length + srcOffset <= m_frameLength);
+	MY_DELETE(m_data);
+}
 
-	for(uint32_t c = 0; c < m_channels; c++)
-	{
-		memcpy(&dest[c][destOffset], &m_data[c][srcOffset], length * sizeof(double));
-	}
+void FrameFIFO::reset(const bool &bForceClear)
+{
+	if(bForceClear) m_data->clear();
+	m_posPut = m_posGet = m_leftGet = 0;
+	m_leftPut = m_data->frameLength();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,18 +135,14 @@ void FrameBuffer::reset(void)
 // Put / Get Frame
 ///////////////////////////////////////////////////////////////////////////////
 
-bool FrameBuffer::putFrame(const FrameData *src)
+bool FrameBuffer::putFrame(FrameFIFO *src)
 {
-	if(m_framesFree < 1)
+	if((m_framesFree < 1) && (src->samplesLeftGet() < m_frameLength))
 	{
 		return false;
 	}
 
-	for(size_t c = 0; c < m_channels; c++)
-	{
-		memcpy(m_frames[m_posPut]->data(c), src->data(c), m_frameLength * sizeof(double));
-	}
-
+	src->getSamples(m_frames[m_posPut], 0, m_frameLength);
 	m_posPut = ((m_posPut + 1) % m_frameCount);
 	
 	m_framesUsed++;
@@ -153,18 +151,14 @@ bool FrameBuffer::putFrame(const FrameData *src)
 	return true;
 }
 
-bool FrameBuffer::getFrame(FrameData *dest)
+bool FrameBuffer::getFrame(FrameFIFO *dest)
 {
-	if(m_framesUsed < 1)
+	if((m_framesUsed < 1) && (dest->samplesLeftPut() < m_frameLength))
 	{
 		return false;
 	}
 
-	for(size_t c = 0; c < m_channels; c++)
-	{
-		memcpy(dest->data(c), m_frames[m_posGet]->data(c), m_frameLength * sizeof(double));
-	}
-
+	dest->putSamples(m_frames[m_posGet], 0, m_frameLength);
 	m_posGet = ((m_posGet + 1) % m_frameCount);
 	
 	m_framesUsed--;

@@ -23,6 +23,8 @@
 #pragma once
 
 #include <cassert>
+#include <cstring>
+#include <stdint.h>
 
 class FrameData
 {
@@ -45,8 +47,41 @@ public:
 	inline const size_t &channels(void)    { return m_channels;    }
 	inline const size_t &frameLength(void) { return m_frameLength; }
 
-	void write(const double *const *const src, const size_t &srcOffset, const size_t &destOffset, const size_t &length);
-	void read(double **dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length);
+	inline void write(const double *const *const src, const size_t &srcOffset, const size_t &destOffset, const size_t &length)
+	{
+		assert(length + destOffset <= m_frameLength);
+		for(uint32_t c = 0; c < m_channels; c++)
+		{
+			memcpy(&m_data[c][destOffset], &src[c][srcOffset], length * sizeof(double));
+		}
+	}
+
+	inline void write(const FrameData *src, const size_t &srcOffset, const size_t &destOffset, const size_t &length)
+	{
+		assert(length + destOffset <= m_frameLength);
+		for(uint32_t c = 0; c < m_channels; c++)
+		{
+			memcpy(&m_data[c][destOffset], &src->data(c)[srcOffset], length * sizeof(double));
+		}
+	}
+
+	inline void read(double **dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length)
+	{
+		assert(length + srcOffset <= m_frameLength);
+		for(uint32_t c = 0; c < m_channels; c++)
+		{
+			memcpy(&dest[c][destOffset], &m_data[c][srcOffset], length * sizeof(double));
+		}
+	}
+
+	inline void read(FrameData *dest, const size_t &destOffset, const size_t &srcOffset, const size_t &length)
+	{
+		assert(length + srcOffset <= m_frameLength);
+		for(uint32_t c = 0; c < m_channels; c++)
+		{
+			memcpy(&dest->data(c)[destOffset], &m_data[c][srcOffset], length * sizeof(double));
+		}
+	}
 
 	void clear(void);
 	
@@ -60,14 +95,73 @@ private:
 	double **m_data;
 };
 
+class FrameFIFO
+{
+public:
+	FrameFIFO(const size_t &channels, const size_t &frameLength);
+	~FrameFIFO(void);
+
+	inline size_t samplesLeftPut(void) { return m_leftPut; }
+	inline size_t samplesLeftGet(void) { return m_leftGet; }
+
+	inline void putSamples(const double *const *const src, const size_t &srcOffset,const size_t &length)
+	{
+		assert(length <= samplesLeftPut());
+		m_data->write(src, srcOffset, m_posPut, length);
+		m_posPut  += length;
+		m_leftPut -= length;
+		m_leftGet += length;
+	}
+
+	inline void putSamples(const FrameData *src, const size_t &srcOffset,const size_t &length)
+	{
+		assert(length <= samplesLeftPut());
+		m_data->write(src, srcOffset, m_posPut, length);
+		m_posPut  += length;
+		m_leftPut -= length;
+		m_leftGet += length;
+	}
+
+	inline void getSamples(double **dest, const size_t &destOffset, const size_t &length)
+	{
+		assert(length <= samplesLeftGet());
+		m_data->read(dest, destOffset, m_posGet, length);
+		m_posGet  += length;
+		m_leftGet -= length;
+	}
+	
+	inline void getSamples(FrameData *dest, const size_t &destOffset, const size_t &length)
+	{
+		assert(length <= samplesLeftGet());
+		m_data->read(dest, destOffset, m_posGet, length);
+		m_posGet  += length;
+		m_leftGet -= length;
+	}
+
+	inline FrameData *data(void)
+	{
+		return m_data;
+	}
+
+	void reset(const bool &bForceClear = true);
+
+private:
+	FrameData *m_data;
+
+	size_t m_posPut;
+	size_t m_posGet;
+	size_t m_leftPut;
+	size_t m_leftGet;
+};
+
 class FrameBuffer
 {
 public:
 	FrameBuffer(const size_t &channels, const size_t &frameLength, const size_t &frameCount);
 	~FrameBuffer(void);
 
-	bool putFrame(const FrameData *src);
-	bool getFrame(FrameData *dest);
+	bool putFrame(FrameFIFO *src);
+	bool getFrame(FrameFIFO *dest);
 
 	inline const size_t &channels(void)    { return m_channels;    }
 	inline const size_t &frameLength(void) { return m_frameLength; }

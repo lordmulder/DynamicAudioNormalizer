@@ -101,11 +101,9 @@ private:
 	
 	bool m_initialized;
 
-	FrameData *m_buffSrc;
-	FrameData *m_buffOut;
-	
-	uint32_t m_buffSrc_Pos, m_buffSrc_Left;
-	uint32_t m_buffOut_Pos, m_buffOut_Left;
+	FrameFIFO *m_buffSrc;
+	FrameFIFO *m_buffOut;
+
 
 	int64_t m_delayedSamples;
 
@@ -164,9 +162,6 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_buffSrc = NULL;
 	m_buffOut = NULL;
 	
-	m_buffSrc_Pos = 0; m_buffSrc_Left = 0;
-	m_buffOut_Pos = 0; m_buffOut_Left = 0;
-
 	m_delayedSamples = 0;
 
 	m_frameBuffer = NULL;
@@ -252,8 +247,8 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 		return false;
 	}
 
-	m_buffSrc = new FrameData(m_channels, m_frameLen);
-	m_buffOut = new FrameData(m_channels, m_frameLen);
+	m_buffSrc = new FrameFIFO(m_channels, m_frameLen);
+	m_buffOut = new FrameFIFO(m_channels, m_frameLen);
 
 	m_frameBuffer = new FrameBuffer(m_channels, m_frameLen, m_filterSize + 1);
 
@@ -320,16 +315,10 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 		return false;
 	}
 
-	m_buffSrc_Pos = 0;
-	m_buffOut_Pos = 0;
-
-	m_buffSrc_Left = m_buffSrc->frameLength();
-	m_buffOut_Left = 0;
-
 	m_delayedSamples = 0;
 
-	m_buffSrc->clear();
-	m_buffSrc->clear();
+	m_buffSrc->reset();
+	m_buffSrc->reset();
 
 	m_frameBuffer->reset();
 
@@ -377,39 +366,35 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 		bStop = true;
 
 		//Read as many input samples as possible
-		while((inputSamplesLeft > 0) && (m_buffSrc_Left > 0))
+		while((inputSamplesLeft > 0) && (m_buffSrc->samplesLeftPut() > 0))
 		{
 			bStop = false;
 			
-			const uint32_t copyLen = std::min(inputSamplesLeft, m_buffSrc_Left);
-			m_buffSrc->write(samplesInOut, inputPos, m_buffSrc_Pos, copyLen);
+			const uint32_t copyLen = std::min(inputSamplesLeft, m_buffSrc->samplesLeftPut());
+			m_buffSrc->putSamples(samplesInOut, inputPos, copyLen);
 
-			m_buffSrc_Pos    += copyLen;
-			m_buffSrc_Left   -= copyLen;
 			inputPos         += copyLen;
 			inputSamplesLeft -= copyLen;
 			outputBufferLeft += copyLen;
 		}
 
 		//Analyze next input frame, if we have enough input
-		if(m_buffSrc_Left < 1)
+		if(m_buffSrc->samplesLeftGet() >= m_frameLen)
 		{
 			bStop = false;
-			
-			analyzeFrame(m_buffSrc);
+			analyzeFrame(m_buffSrc->data());
 			
 			if(!m_frameBuffer->putFrame(m_buffSrc))
 			{
 				LOG_ERR(TXT("Failed to append current input frame to internal buffer!"));
 				return false;
 			}
-			
-			m_buffSrc_Pos  = 0;
-			m_buffSrc_Left = m_buffSrc->frameLength();
+
+			m_buffSrc->reset();
 		}
 
 		//Amplify next output frame, if we have enough output
-		if((m_buffOut_Left < 1) && (m_frameBuffer->framesUsed() > 0) && (!m_gainHistory_smoothed[0].empty()))
+		if((m_buffOut->samplesLeftPut() >= m_frameLen) && (m_frameBuffer->framesUsed() > 0) && (!m_gainHistory_smoothed[0].empty()))
 		{
 			bStop = false;
 			
@@ -419,24 +404,24 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 				return false;
 			}
 
-			amplifyFrame(m_buffOut);
-			
-			m_buffOut_Pos  = 0;
-			m_buffOut_Left = m_buffOut->frameLength();
+			amplifyFrame(m_buffOut->data());
 		}
 
 		//Write as many output samples as possible
-		while((outputBufferLeft > 0) && (m_buffOut_Left > 0))
+		while((outputBufferLeft > 0) && (m_buffOut->samplesLeftGet() > 0))
 		{
 			bStop = false;
 
-			const uint32_t copyLen = std::min(outputBufferLeft, m_buffOut_Left);
-			m_buffOut->read(samplesInOut, outputPos, m_buffOut_Pos, copyLen);
+			const uint32_t copyLen = std::min(outputBufferLeft, m_buffOut->samplesLeftGet());
+			m_buffOut->getSamples(samplesInOut, outputPos, copyLen);
 
-			m_buffOut_Pos    += copyLen;
-			m_buffOut_Left   -= copyLen;
 			outputPos        += copyLen;
 			outputBufferLeft -= copyLen;
+
+			if((m_buffOut->samplesLeftGet() < 1) && (m_buffOut->samplesLeftPut() < 1))
+			{
+				m_buffOut->reset();
+			}
 		}
 	}
 
