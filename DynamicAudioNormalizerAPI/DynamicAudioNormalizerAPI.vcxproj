@@ -21,7 +21,6 @@
     <ClCompile Include="src\FrameBuffer.cpp" />
     <ClCompile Include="src\GaussianFilter.cpp" />
     <ClCompile Include="src\MinimumFilter.cpp" />
-    <ClCompile Include="src\RingBuffer.cpp" />
     <ClCompile Include="src\Version.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -29,7 +28,6 @@
     <ClInclude Include="src\FrameBuffer.h" />
     <ClInclude Include="src\GaussianFilter.h" />
     <ClInclude Include="src\MinimumFilter.h" />
-    <ClInclude Include="src\RingBuffer.h" />
     <ClInclude Include="src\Version.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

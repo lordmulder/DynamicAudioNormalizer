@@ -130,6 +130,7 @@ protected:
 	
 	void precalculateFadeFactors(double *fadeFactors[3]);
 	double findPeakMagnitude(FrameData *frame, const uint32_t channel = UINT32_MAX);
+	void updateGainHistory(const uint32_t &channel, const double &currentGainFactor);
 	void perfromDCCorrection(FrameData *frame, const bool &isFirstFrame);
 };
 
@@ -538,15 +539,11 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 	if(m_channelsCoupled)
 	{
 		const double peakMagnitude = findPeakMagnitude(frame);
-		const double currentAmplificationFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
+		const double currentGainFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
 		
 		for(uint32_t c = 0; c < m_channels; c++)
 		{
-			while(m_gainHistory_original[c].size() < (m_filterSize / 2))
-			{
-				m_gainHistory_original[c].push_back(currentAmplificationFactor);
-			}
-			m_gainHistory_original[c].push_back(currentAmplificationFactor);
+			updateGainHistory(c, currentGainFactor);
 		}
 	}
 	else
@@ -554,40 +551,8 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 		for(uint32_t c = 0; c < m_channels; c++)
 		{
 			const double peakMagnitude = findPeakMagnitude(frame, c);
-			const double currentAmplificationFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
-			while(m_gainHistory_original[c].size() < (m_filterSize / 2))
-			{
-				m_gainHistory_original[c].push_back(currentAmplificationFactor);
-			}
-			m_gainHistory_original[c].push_back(currentAmplificationFactor);
-		}
-	}
-
-	//Apply the minimum filter
-	for(uint32_t c = 0; c < m_channels; c++)
-	{
-		while(m_gainHistory_original[c].size() >= m_filterSize)
-		{
-			assert(m_gainHistory_original[c].size() == m_filterSize);
-			const double minimum = m_minimumFilter->apply(m_gainHistory_original[c]);
-			while(m_gainHistory_minimum[c].size() < (m_filterSize / 2))
-			{
-				m_gainHistory_minimum[c].push_back(minimum);
-			}
-			m_gainHistory_minimum[c].push_back(minimum);
-			m_gainHistory_original[c].pop_front();
-		}
-	}
-
-	//Apply the Gaussian filter
-	for(uint32_t c = 0; c < m_channels; c++)
-	{
-		while(m_gainHistory_minimum[c].size() >= m_filterSize)
-		{
-			assert(m_gainHistory_minimum[c].size() == m_filterSize);
-			const double smoothed = m_gaussianFilter->apply(m_gainHistory_minimum[c]);
-			m_gainHistory_smoothed[c].push_back(smoothed);
-			m_gainHistory_minimum[c].pop_front();
+			const double currentGainFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
+			updateGainHistory(c, currentGainFactor);
 		}
 	}
 }
@@ -662,6 +627,46 @@ double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *frame, 
 	}
 
 	return dMax;
+}
+
+void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &channel, const double &currentGainFactor)
+{
+	const uint32_t preFillSize = m_filterSize / 2;
+
+	//Pre-fill history
+	while(m_gainHistory_original[channel].size() < preFillSize)
+	{
+		m_gainHistory_original[channel].push_back(currentGainFactor);
+	}
+
+	//Insert current gain factor
+	m_gainHistory_original[channel].push_back(currentGainFactor);
+
+	//Apply the minimum filter
+	while(m_gainHistory_original[channel].size() >= m_filterSize)
+	{
+		assert(m_gainHistory_original[channel].size() == m_filterSize);
+		const double minimum = m_minimumFilter->apply(m_gainHistory_original[channel]);
+			
+		//Pre-fill "minimum" history
+		while(m_gainHistory_minimum[channel].size() < preFillSize)
+		{
+			m_gainHistory_minimum[channel].push_back(minimum);
+		}
+
+		m_gainHistory_minimum[channel].push_back(minimum);
+		m_gainHistory_original[channel].pop_front();
+	}
+
+	//Apply the Gaussian filter
+	while(m_gainHistory_minimum[channel].size() >= m_filterSize)
+	{
+		assert(m_gainHistory_minimum[channel].size() == m_filterSize);
+		const double smoothed = m_gaussianFilter->apply(m_gainHistory_minimum[channel]);
+			
+		m_gainHistory_smoothed[channel].push_back(smoothed);
+		m_gainHistory_minimum[channel].pop_front();
+	}
 }
 
 void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, const bool &isFirstFrame)

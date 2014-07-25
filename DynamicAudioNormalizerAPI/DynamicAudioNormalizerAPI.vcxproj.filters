@@ -27,9 +27,6 @@
     <ClCompile Include="src\MinimumFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\RingBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,9 +45,6 @@
       <Filter>Internal Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\MinimumFilter.h">
-      <Filter>Internal Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\RingBuffer.h">
       <Filter>Internal Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Version.h">
