@@ -313,10 +313,10 @@ Currently project/solution files are provided for Microsoft Visual Studio 2013. 
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
-### Version 2.00 (2014-07-2x) ###
+### Version 2.00 (2014-07-26) ###
 * Implemented a large lookahead buffer, which eliminates the need of 2-Pass processing
-* Dynamic Audio Normalizer now works with a *single* pass → processing time was reduced significantly!
-* Removed the <tt>setPass()</tt> API, because it is *not* required any more
+* Dynamic Audio Normalizer now works with a *single* processing pass → results in up to 2× speed-up!
+* Removed the <tt>setPass()</tt> API, because it is *not* applicable any more
 * Added new <tt>flushBuffer()</tt> API, which provides a cleaner method of flushing the pending frames
 * Added new <tt>reset()</tt> API, which can be used to reset the internal state of the normalizer instance
 * Added new <tt>setLogFunction</tt> API, which can be used to set up a custom logging callback function

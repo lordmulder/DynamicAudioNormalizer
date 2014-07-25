@@ -81,7 +81,7 @@ public:
 	~MDynamicAudioNormalizer_PrivateData(void);
 
 	bool initialize(void);
-	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize);
+	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush);
 	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
 
@@ -284,9 +284,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	LOG2_DBG("Max amp factor : %.4f\n", m_maxAmplification);
 
 	m_initialized = true;
-	
 	reset();
-	
 	return true;
 }
 
@@ -313,6 +311,7 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	}
 
 	m_delayedSamples = 0;
+	m_flushBuffer = false;
 
 	m_buffSrc->reset();
 	m_buffSrc->reset();
@@ -323,8 +322,6 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	m_gainHistory_minimum ->clear();
 	m_gainHistory_smoothed->clear();
 
-	m_flushBuffer = false;
-
 	return true;
 }
 
@@ -332,7 +329,7 @@ bool MDynamicAudioNormalizer::processInplace(double **samplesInOut, const int64_
 {
 	try
 	{
-		return p->processInplace(samplesInOut, inputSize, outputSize);
+		return p->processInplace(samplesInOut, inputSize, outputSize, false);
 	}
 	catch(std::exception &e)
 	{
@@ -341,7 +338,7 @@ bool MDynamicAudioNormalizer::processInplace(double **samplesInOut, const int64_
 	}
 }
 
-bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush)
 {
 	outputSize = 0;
 
@@ -351,12 +348,11 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 		LOG_ERR("Not initialized yet. Must call initialize() first!");
 		return false;
 	}
-	if(m_flushBuffer)
+	if(m_flushBuffer && (!bFlush))
 	{
 		LOG_ERR("Must not call processInplace() after flushBuffer(). Call reset() first!");
 		return false;
 	}
-
 
 	bool bStop = false;
 
@@ -482,11 +478,11 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 	{
 		for(uint32_t i = 0; i < pendingSamples; i++)
 		{
-			samplesOut[c][i] = m_peakValue * 0.5;
+			samplesOut[c][i] = m_peakValue;
 		}
 	}
 
-	const bool success = processInplace(samplesOut, pendingSamples, outputSize);
+	const bool success = processInplace(samplesOut, pendingSamples, outputSize, true);
 
 	if(success)
 	{
@@ -602,7 +598,7 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 
 double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *frame, const uint32_t channel)
 {
-	double dMax = -1.0;
+	double dMax = DBL_EPSILON;
 
 	if(channel == UINT32_MAX)
 	{
@@ -629,12 +625,18 @@ double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *frame, 
 
 void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &channel, const double &currentGainFactor)
 {
-	const uint32_t preFillSize = m_filterSize / 2;
-
-	//Pre-fill history
-	while(m_gainHistory_original[channel].size() < preFillSize)
+	//Pre-fill the gain history
+	if(m_gainHistory_original[channel].empty() || m_gainHistory_minimum[channel].empty())
 	{
-		m_gainHistory_original[channel].push_back(currentGainFactor);
+		const uint32_t preFillSize = m_filterSize / 2;
+		while(m_gainHistory_original[channel].size() < preFillSize)
+		{
+			m_gainHistory_original[channel].push_back(currentGainFactor);
+		}
+		while(m_gainHistory_minimum[channel].size() < preFillSize)
+		{
+			m_gainHistory_minimum[channel].push_back(1.0);
+		}
 	}
 
 	//Insert current gain factor
@@ -645,12 +647,6 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	{
 		assert(m_gainHistory_original[channel].size() == m_filterSize);
 		const double minimum = m_minimumFilter->apply(m_gainHistory_original[channel]);
-			
-		//Pre-fill "minimum" history
-		while(m_gainHistory_minimum[channel].size() < preFillSize)
-		{
-			m_gainHistory_minimum[channel].push_back(minimum);
-		}
 
 		m_gainHistory_minimum[channel].push_back(minimum);
 		m_gainHistory_original[channel].pop_front();
