@@ -51,6 +51,6 @@ void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, 
 		va_start (args, message);
 		vsnprintf(g_messageBuffer, 512, message, args);
 		va_end(args);
-		g_loggingCallback(logLevel, message);
+		g_loggingCallback(logLevel, g_messageBuffer);
 	}
 }

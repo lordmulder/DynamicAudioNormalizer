@@ -24,11 +24,11 @@
 
 extern "C"
 {
-	MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance) (const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const int channelsCoupled, const int enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const int verbose, FILE *const logFile)
+	MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance) (const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const int channelsCoupled, const int enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
 	{
 		try
 		{
-			MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, (channelsCoupled != 0), (enableDCCorrection != 0), peakValue, maxAmplification, filterSize, (verbose != 0), logFile);
+			MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, (channelsCoupled != 0), (enableDCCorrection != 0), peakValue, maxAmplification, filterSize, logFile);
 			if(instance->initialize())
 			{
 				return reinterpret_cast<MDynamicAudioNormalizer_Handle*>(instance);
@@ -78,6 +78,22 @@ extern "C"
 		return 0;
 	}
 
+	int  MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(MDynamicAudioNormalizer_Handle *handle, double **samplesOut, const int64_t bufferSize, int64_t *outputSize)
+	{
+		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		{
+			try
+			{
+				return instance->flushBuffer(samplesOut, bufferSize, (*outputSize)) ? 1 : 0;
+			}
+			catch(...)
+			{
+				return 0;
+			}
+		}
+		return 0;
+	}
+
 	int MDYNAMICAUDIONORMALIZER_FUNCTION(reset)(MDynamicAudioNormalizer_Handle *handle)
 	{
 		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
@@ -92,6 +108,11 @@ extern "C"
 			}
 		}
 		return 0;
+	}
+
+	MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) *MDYNAMICAUDIONORMALIZER_FUNCTION(setLogFunction)(MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) *const logFunction)
+	{
+		return MDynamicAudioNormalizer::setLogFunction(logFunction);
 	}
 
 	void MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(uint32_t *major, uint32_t *minor,uint32_t *patch)

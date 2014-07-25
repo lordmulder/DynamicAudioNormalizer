@@ -72,12 +72,25 @@ static const CHR *timeToString(CHR *timeBuffer, const size_t buffSize, const int
 	return timeBuffer;
 }
 
-static void loggingCallback(const int &logLevel, const char *const message)
+static void loggingCallback_default(const int &logLevel, const char *const message)
 {
 	switch(logLevel)
 	{
-	case MDynamicAudioNormalizer::LOG_LEVEL_DBG:
-		PRINT2_DBG(FMT_CHAR, message);
+	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
+		PRINT2_WRN(FMT_CHAR, message);
+		break;
+	case MDynamicAudioNormalizer::LOG_LEVEL_ERR:
+		PRINT2_ERR(FMT_CHAR, message);
+		break;
+	}
+}
+
+static void loggingCallback_verbose(const int &logLevel, const char *const message)
+{
+	switch(logLevel)
+	{
+	case MDynamicAudioNormalizer::LOG_LEVEL_NFO:
+		PRINT2_NFO(FMT_CHAR, message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
 		PRINT2_WRN(FMT_CHAR, message);
@@ -258,7 +271,6 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		parameters.peakValue(),
 		parameters.maxAmplification(),
 		parameters.filterSize(),
-		parameters.verboseMode(),
 		logFile
 	);
 	
@@ -367,7 +379,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
-	MDynamicAudioNormalizer::setLogFunction(loggingCallback);
+	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
 	if(!openFiles(parameters, &sourceFile, &outputFile))

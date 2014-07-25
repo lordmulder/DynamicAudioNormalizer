@@ -35,11 +35,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define PRINT_DBG(X)       do { PRINT(TXT("DEBUG: ")   X TXT("\n"));              } while(0)
+#define PRINT_NFO(X)       do { PRINT(TXT("INFO: ")    X TXT("\n"));              } while(0)
 #define PRINT_WRN(X)       do { PRINT(TXT("WARNING: ") X TXT("\n"));              } while(0)
 #define PRINT_ERR(X)       do { PRINT(TXT("ERROR: ")   X TXT("\n"));              } while(0)
 
-#define PRINT2_DBG(X, ...) do { PRINT(TXT("DEBUG: ")   X TXT("\n"), __VA_ARGS__); } while(0)
+#define PRINT2_NFO(X, ...) do { PRINT(TXT("INFO: ")    X TXT("\n"), __VA_ARGS__); } while(0)
 #define PRINT2_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
 #define PRINT2_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
 

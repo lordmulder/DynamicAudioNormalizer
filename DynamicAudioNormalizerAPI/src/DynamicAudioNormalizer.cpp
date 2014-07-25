@@ -77,7 +77,7 @@ static inline double FADE(const double &prev, const double &curr, const double &
 class MDynamicAudioNormalizer_PrivateData
 {
 public:
-	MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile);
+	MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile);
 	~MDynamicAudioNormalizer_PrivateData(void);
 
 	bool initialize(void);
@@ -97,15 +97,13 @@ private:
 	const double m_peakValue;
 	const double m_maxAmplification;
 
-	const bool m_verbose;
 	FILE *const m_logFile;
 	
 	bool m_initialized;
 
 	FrameFIFO *m_buffSrc;
 	FrameFIFO *m_buffOut;
-
-
+	
 	int64_t m_delayedSamples;
 
 	FrameBuffer *m_frameBuffer;
@@ -137,15 +135,15 @@ protected:
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile)
+MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
 :
-	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize, verbose, logFile))
+	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize, logFile))
 
 {
 	/*nothing to do here*/
 }
 
-MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose, FILE *const logFile)
+MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
@@ -155,7 +153,6 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_enableDCCorrection(enableDCCorrection),
 	m_peakValue(peakValue),
 	m_maxAmplification(maxAmplification),
-	m_verbose(verbose),
 	m_logFile(logFile)
 {
 	m_initialized = false;
@@ -275,17 +272,14 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	
 	precalculateFadeFactors(m_fadeFactors);
 
-	if(m_verbose)
-	{
-		LOG_DBG ("[PARAMETERS]");
-		LOG2_DBG("Frame size     : %u",     m_frameLen);
-		LOG2_DBG("Channels       : %u",     m_channels);
-		LOG2_DBG("Sampling rate  : %u",     m_sampleRate);
-		LOG2_DBG("Chan. coupling : %s",     m_channelsCoupled    ? "YES" : "NO");
-		LOG2_DBG("DC correction  : %s",     m_enableDCCorrection ? "YES" : "NO");
-		LOG2_DBG("Peak value     : %.4f",   m_peakValue);
-		LOG2_DBG("Max amp factor : %.4f\n", m_maxAmplification);
-	}
+	LOG_DBG ("[PARAMETERS]");
+	LOG2_DBG("Frame size     : %u",     m_frameLen);
+	LOG2_DBG("Channels       : %u",     m_channels);
+	LOG2_DBG("Sampling rate  : %u",     m_sampleRate);
+	LOG2_DBG("Chan. coupling : %s",     m_channelsCoupled    ? "YES" : "NO");
+	LOG2_DBG("DC correction  : %s",     m_enableDCCorrection ? "YES" : "NO");
+	LOG2_DBG("Peak value     : %.4f",   m_peakValue);
+	LOG2_DBG("Max amp factor : %.4f\n", m_maxAmplification);
 
 	m_initialized = true;
 	
