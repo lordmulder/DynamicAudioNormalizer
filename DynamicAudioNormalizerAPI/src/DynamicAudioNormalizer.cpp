@@ -100,6 +100,7 @@ private:
 	FILE *const m_logFile;
 	
 	bool m_initialized;
+	bool m_flushBuffer;
 
 	FrameFIFO *m_buffSrc;
 	FrameFIFO *m_buffOut;
@@ -156,6 +157,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_logFile(logFile)
 {
 	m_initialized = false;
+	m_flushBuffer = false;
 	
 	m_buffSrc = NULL;
 	m_buffOut = NULL;
@@ -321,6 +323,8 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	m_gainHistory_minimum ->clear();
 	m_gainHistory_smoothed->clear();
 
+	m_flushBuffer = false;
+
 	return true;
 }
 
@@ -347,6 +351,12 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 		LOG_ERR("Not initialized yet. Must call initialize() first!");
 		return false;
 	}
+	if(m_flushBuffer)
+	{
+		LOG_ERR("Must not call processInplace() after flushBuffer(). Call reset() first!");
+		return false;
+	}
+
 
 	bool bStop = false;
 
@@ -460,6 +470,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 		return false;
 	}
 
+	m_flushBuffer = true;
 	const int64_t pendingSamples = std::min(std::min(std::max(bufferSize, int64_t(0)), m_delayedSamples), int64_t(UINT32_MAX));
 
 	if(pendingSamples < 1)

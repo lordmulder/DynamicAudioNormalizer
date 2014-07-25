@@ -117,14 +117,22 @@ Please note that all methods of the MDynamicAudioNormalizer class are [*reentran
 
 Also note that C++ applications can access the MDynamicAudioNormalizer class directly, while C applications can **not**. For pure C applications, the Dynamic Audio Normalizer library provides wrapper functions around the MDynamicAudioNormalizer class. Those wrapper functions are equivalent to the corresponding methods of the MDynamicAudioNormalizer class, except that you need to pass a "handle" value as an *additional* argument. Each MDynamicAudioNormalizer instance created trough the C API will have its own distinct but *opaque* handle value.
 
+#### Synopsis: ####
+1. Create a new *MDynamicAudioNormalizer* instance.
+2. Call <tt>initialize()</tt> in order to initialize the MDynamicAudioNormalizer instance.
+3. Call <tt>processInplace()</tt> in a loop, until all input samples have been processed.
+4. Call <tt>flushBuffer()</tt> in a loop, until all pending output samples have been flushed.
+5. Destroy the *MDynamicAudioNormalizer* instance.
+
 #### Functions: ####
 * [MDynamicAudioNormalizer – Constructor](#chap_api.constructor)
 * [MDynamicAudioNormalizer – Destructor](#chap_api.destructor)
 * [MDynamicAudioNormalizer::initialize()](#chap_api.initialize)
-* [MDynamicAudioNormalizer::setPass()](#chap_api.setPass)
 * [MDynamicAudioNormalizer::processInplace()](#chap_api.processInplace)
+* [MDynamicAudioNormalizer::flushBuffer()](#chap_api.flushBuffer)
 * [MDynamicAudioNormalizer::getVersionInfo()](#chap_api.getVersionInfo)
 * [MDynamicAudioNormalizer::getBuildInfo()](#chap_api.getBuildInfo)
+* [MDynamicAudioNormalizer::setLogFunction()](#chap_api.setLogFunction)
 
 ### MDynamicAudioNormalizer::MDynamicAudioNormalizer() <a name="chap_api.constructor"></a> ###
 ```
@@ -142,7 +150,7 @@ MDynamicAudioNormalizer(
 );
 ```
 
-Constructor. Creates a new MDynamicAudioNormalizer instance and sets up the normalization parameters.
+Constructor. Creates a new *MDynamicAudioNormalizer* instance and sets up the normalization parameters.
 
 **Parameters:**
 * *channels*: The number of channels in the input/output audio stream (e.g. **2** for Stereo).
@@ -161,7 +169,7 @@ Constructor. Creates a new MDynamicAudioNormalizer instance and sets up the norm
 virtual ~MDynamicAudioNormalizer(void);
 ```
 
-Destructor. Destroys the MDynamicAudioNormalizer instance and releases all memory that it occupied.
+Destructor. Destroys the *MDynamicAudioNormalizer* instance and releases all memory that it occupied.
 
 ### MDynamicAudioNormalizer::initialize() <a name="chap_api.initialize"></a> ###
 ```
@@ -175,25 +183,6 @@ This function *must* be called once for each new MDynamicAudioNormalizer instanc
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::setPass() <a name="chap_api.setPass"></a> ###
-```
-bool setPass(
-	const int pass
-);
-```
-
-Starts a new processing pass and *must* be called before <tt>processInplace()</tt> can be called. The previous pass is ended *implicitly* when a new one is started.
-
-The application is supposed to start the *first* pass, then process all input samples (by calling <tt>processInplace()</tt> in a loop), then start the *second* pass and finally process all input samples again (by calling <tt>processInplace()</tt> in a loop).
-
-During the *first* pass, output samples are returned but these samples will **not** be normalized. The application will usually *discard* the output of the *first* pass and only retain the output of the *second* pass.
-
-**Parameters:**
-* *pass*: This value can be either <tt>MDynamicAudioNormalizer::PASS_1ST</tt> or <tt>MDynamicAudioNormalizer::PASS_2ND</tt> in order to start the *first* or *second* pass, respectively.
-
-**Return value:**
-* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
-
 ### MDynamicAudioNormalizer::processInplace() <a name="chap_api.processInplace"></a> ###
 ```
 bool processInplace(
@@ -203,11 +192,11 @@ bool processInplace(
 );
 ```
 
-This is the main processing function. It usually is called in a loop by the application until all audio samples (for the *current* pass) have been processed. It is very important that all input samples are **identical** for the *first* and the *second* pass and that the total sample count does **not** change!
+This is the main processing function. It usually is called in a loop by the application until all input audio samples have been processed.
 
 The function works "in place": It *reads* the original input samples from the specified buffer and then *writes* the normalized output samples, if any, back into the *same* buffer. The content of <tt>samplesInOut</tt> will **not** be preserved!
 
-It's possible that a specific call to this function returns *fewer* output samples than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent function call. This also means that the *i*-th output sample doesn't necessarily match *i*-th input sample. However, the samples are always returned in a strict FIFO (first-in, first-out) order. At the end of a pass, when all input samples have been read, the application may feed this function with "dummy" (null) samples in order to *flush* all pending output samples.
+It's possible that a specific call to this function returns *fewer* output samples than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent function call. This also means that the *i*-th output sample does **not** necessarily correspond to the *i*-th input sample. However, the samples are always returned in a strict FIFO (first in, first out) order. At the end of the process, when all input samples have been read, to application should call <tt>flushBuffer()</tt> in order to *flush* all pending output samples.
 
 **Parameters:**
 * *samplesInOut*: The buffer that contains the original input samples and that will receive the normalized output samples. The *i*-th input sample for the *c*-th channel is assumed to be stored at <tt>samplesInOut[c][i]</tt>, as a double-precision floating point number in the **-1.00** to **1.00** range. All indices are zero-based. The output samples, if any, will be stored at the corresponding locations, thus *overwriting* the input data. Consequently, the *i*-th output sample for the *c*-th channel will be stored at <tt>samplesInOut[c][i]</tt> and is guaranteed to be inside the **-1.00** to **1.00** range.
@@ -217,7 +206,33 @@ It's possible that a specific call to this function returns *fewer* output sampl
 **Return value:**
 * Returns <tt>true</tt> if everything was successful or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::getVersionInfo() <a name="chap_api.getVersionInfo"></a> ###
+### MDynamicAudioNormalizer::flushBuffer() <a name="chap_api.flushBuffer"></a> ###
+```
+bool flushBuffer(
+	double **samplesOut,
+	const int64_t bufferSize,
+	int64_t &outputSize
+);
+```
+
+This function can be called at the end of the process, after all input samples have been processed, in order to flush the pending samples from the internal buffer. It writes the next pending output samples into the output buffer, in FIFO (first in, first out) order, iff there are any pending output samples left in the internal buffer. Once this function has been called, you must call <tt>reset()</tt> before calling <tt>processInplace()</tt> again! If this function returns fewer output samples than the specified output buffer size, then this indicates that the internal buffer is empty now.
+
+**Parameters:**
+* *samplesOut*: The buffer that will receive the normalized output samples. The *i*-th output sample for the *c*-th channel will be stored at <tt>samplesOut[c][i]</tt> and is guaranteed to be inside the **-1.00** to **1.00** range. All indices are zero-based.
+* *bufferSize*: Specifies the *maximum* number of output samples to be stored in the buffer.
+* *outputSize*: Receives the number of *output* samples that have been stored in the <tt>samplesOut</tt> buffer. Please note that this value can be *smaller* than <tt>bufferSize</tt> size. It can even be *zero*! A value smaller than <tt>bufferSize</tt> indicates that all samples have been flushed already.
+
+**Return value:**
+* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
+
+### MDynamicAudioNormalizer::reset()<a name="chap_api.reset"></a> ###
+```
+void reset(void);
+```
+
+Resets the internal state of the *MDynamicAudioNormalizer* instance. It normally is **not** required to call this function at all! The only exception is when you want to process *multiple* independent audio files with the *same* normalizer instance. In the latter case, call <tt>reset()</tt> *after* all samples of the <tt>n</tt>-th audio file have been processed and *before* processing the first sample of the <tt>(n+1)</tt>-th audio file. Also do *not* forget to flush the pending samples of the <tt>n</tt>-th file from the internal buffer *before* calling <tt>reset()</tt>; those samples would be lost permanently otherwise!
+
+### MDynamicAudioNormalizer::getVersionInfo() [static]<a name="chap_api.getVersionInfo"></a> ###
 ```
 static void getVersionInfo(
 	uint32_t &major,
@@ -233,7 +248,7 @@ This *static* function can be called to determine the Dynamic Audio Normalizer l
 * *minor*: Receives the minor version number. Value will be in the **0** to **99** range.
 * *patch*: Receives the patch level. Value will be in the **0** to **9** range.
 
-### MDynamicAudioNormalizer::getBuildInfo() <a name="chap_api.getBuildInfo"></a> ###
+### MDynamicAudioNormalizer::getBuildInfo() [static]<a name="chap_api.getBuildInfo"></a> ###
 ```
 static void getBuildInfo(
 	const char **date,
@@ -253,6 +268,34 @@ This *static* function can be called to determine more detailed information abou
 * *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. "x86" for IA32/x86 or "x64" for AMD64/EM64T).
 * *debug*: Will be set to <tt>true</tt> if this is a *debug* build or to <tt>false</tt> otherwise. Don't use the *debug* version production!
 
+### MDynamicAudioNormalizer::setLogFunction() [static]<a name="chap_api.setLogFunction"></a> ###
+```
+static LogFunction *setLogFunction(
+	LogFunction *const logFunction
+);
+```
+
+This *static* function can be called to register a *callback* function that will be called by the Dynamic Audio Normalizer in order to provide additional log messages. Note that initially *no* callback function will be registered. This means that until a callback function is registered by the application, all log messages will be *discarded*. Thus it is recommend to register your callback function *before* creating the first *MDynamicAudioNormalizer* instance. Also note that <i>at most</i> one callback function can be registered. This means that registering another callback function will <i>replace</i> the previous one. However, since a pointer to the previous callback function will be returned, multiple callback function can be chained. Finally note that this function is **not** thread-safe! This means that the application must ensure that all calls to this functions are properly serialized. In particular, calling this function while there exists at least one instance of *MDynamicAudioNormalizer* can result in race conditions and has to be avoided! Usually, an application will call this function early in its "main" function in order to register its callback function and then does **not** call it again.
+
+**Parameters:**
+* *logFunction*: A pointer to the new callback function to be registered. This can be <tt>NULL</tt> to disable logging entirely.
+
+**Return value:**
+* Returns a pointer to the *previous* callback function. This can be <tt>NULL</tt>, e.g. if **no** callback function had been registered before.
+
+#### Callback Function: ####
+
+The signature of the callback function must be *exactly* as follows, with standard <tt>cdecl</tt> calling convention:
+```
+void LogFunction(
+	const int &logLevel,
+	const char *const message
+);
+```
+
+**Parameters:**
+* *logLevel*: Specifies the level of the current log message. This can be either <tt>LOG_LEVEL_NFO</tt>, <tt>LOG_LEVEL_WRN</tt> or <tt>LOG_LEVEL_ERR</tt>, which indicates an <i>information</i>, <i>warning</i> or <i>error</i> message, respectively. The application may use this value to filter the log messages according to their importance. Messages of level <tt>LOG_LEVEL_NFO</tt> are for debugging purposes only, messages of level <tt>LOG_LEVEL_WRN</tt> indicate that there might be a problem of some sort and messages of <tt>LOG_LEVEL_ERR</tt> indicate that there is serious malfunction has occurred.
+* *message*: The log message. This is a pointer to a buffer, which contains a NULL-terminated C string. The character encoding of the string is UTF-8. The application should regard this string buffer as *read-only*. Also, this string buffer remains valid *only* until the callback function returns. Therefore, do *not* save a pointer to this buffer! If you need to retain the log message *after* the callback function returns, it must be *copied*, e.g. via <tt>strcpy()</tt> or <tt>strdup()</tt>, into a *separate* buffer which is owned by the application.
 
 Source Code <a name="chap_src"></a>
 -------------------------------------------------------------------------------
@@ -270,10 +313,11 @@ Changelog <a name="chap_log"></a>
 
 ### Version 2.00 (2014-07-2x) ###
 * Implemented a large lookahead buffer, which eliminates the need of 2-Pass processing
-* Dynamic Audio Normalizer now works with a single pass → processing time has been reduced to about ½
+* Dynamic Audio Normalizer now works with a *single* pass → processing time was reduced significantly!
 * Removed the <tt>setPass()</tt> API, because it is *not* required any more
-* Added new <tt>reset()</tt> API, which can be used to reset the internal state of the normalizer instance
 * Added new <tt>flushBuffer()</tt> API, which provides a cleaner method of flushing the pending frames
+* Added new <tt>reset()</tt> API, which can be used to reset the internal state of the normalizer instance
+* Added new <tt>setLogFunction</tt> API, which can be used to set up a custom logging callback function
 * There should be **no** changes of the normalized audio output in this release
 
 ### Version 1.03 (2014-07-09) ###
