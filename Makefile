@@ -40,7 +40,7 @@ OUTPUT_FILE  := $(realpath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).zip)
 # Rules
 ##############################################################################
 
-BUILD_PROJECTS = DynamicAudioNormalizerShared DynamicAudioNormalizerAPI DynamicAudioNormalizerCLI
+BUILD_PROJECTS = DynamicAudioNormalizerAPI DynamicAudioNormalizerCLI
 CLEAN_PROJECTS = $(addprefix Clean,$(BUILD_PROJECTS))
 
 .PHONY: all clean $(BUILD_PROJECTS) $(CLEAN_PROJECTS) DeployBinaries CreateTagFile

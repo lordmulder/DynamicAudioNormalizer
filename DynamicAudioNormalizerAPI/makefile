@@ -52,9 +52,6 @@ CXXFLAGS += -I./src
 CXXFLAGS += -I./include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 
-LDXFLAGS += -L../DynamicAudioNormalizerShared/lib
-LDXFLAGS += -lDynamicAudioNormalizerShared
-
 ##############################################################################
 # Rules
 ##############################################################################

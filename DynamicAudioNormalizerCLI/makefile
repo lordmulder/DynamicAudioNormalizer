@@ -51,9 +51,7 @@ CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 
 LDXFLAGS += -Wl,-rpath,'$$ORIGIN'
 LDXFLAGS += -L../DynamicAudioNormalizerAPI/lib
-LDXFLAGS += -L../DynamicAudioNormalizerShared/lib
 LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
-LDXFLAGS += -lDynamicAudioNormalizerShared
 
 #Externel libraries
 LDXFLAGS += -lsndfile
