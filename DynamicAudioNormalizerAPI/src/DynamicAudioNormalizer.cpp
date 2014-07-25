@@ -34,6 +34,7 @@
 #include <deque>
 #include <cassert>
 #include <stdexcept> 
+#include <cfloat>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
