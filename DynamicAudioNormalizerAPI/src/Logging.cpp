@@ -20,32 +20,37 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "Logging.h"
 
-#if defined(_DEBUG) && !defined(NDEBUG)
-	#define DYNAUDNORM_DEBUG (1)
-#elif defined(NDEBUG) &&  !defined(_DEBUG)
-	#define DYNAUDNORM_DEBUG (0)
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#define THREAD_LOCAL __declspec(thread)
 #else
-	#error Inconsistent debug defines detected!
+#define THREAD_LOCAL __thread 
 #endif
 
-#define MY_DELETE(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
+#include <cstdlib>
+#include <cstdio>
+#include <cstdarg>
 
-#define MY_DELETE_ARRAY(X) do \
-{ \
-	if((X)) \
-	{ \
-		delete [] (X); \
-		(X) = NULL; \
-	} \
-} \
-while(0)
+static DYNAUDNORM_LOG_CALLBACK *g_loggingCallback = NULL;
+static THREAD_LOCAL char g_messageBuffer[512];
+
+DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback)
+{
+	DYNAUDNORM_LOG_CALLBACK *const oldCallback = g_loggingCallback;
+	g_loggingCallback = callback;
+	return oldCallback;
+}
+
+void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...)
+{
+	if(g_loggingCallback)
+	{
+		va_list args;
+		va_start (args, message);
+		vsnprintf(g_messageBuffer, 512, message, args);
+		va_end(args);
+		g_loggingCallback(logLevel, message);
+	}
+}

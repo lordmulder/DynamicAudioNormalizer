@@ -23,69 +23,69 @@
 #include "Version.h"
 
 //Version info
-const unsigned int DYAUNO_VERSION_MAJOR = 2;
-const unsigned int DYAUNO_VERSION_MINOR = 0;
-const unsigned int DYAUNO_VERSION_PATCH = 3;
+const unsigned int DYNAUDNORM_VERSION_MAJOR = 2;
+const unsigned int DYNAUDNORM_VERSION_MINOR = 0;
+const unsigned int DYNAUDNORM_VERSION_PATCH = 3;
 
 //Build date/time
-const char* DYAUNO_BUILD_DATE = __DATE__;
-const char* DYAUNO_BUILD_TIME = __TIME__;
+const char* DYNAUDNORM_BUILD_DATE = __DATE__;
+const char* DYNAUDNORM_BUILD_TIME = __TIME__;
 
 //Compiler detection
 #if defined(__INTEL_COMPILER)
 	#if (__INTEL_COMPILER >= 1300)
-		static char *DYAUNO_COMPILER = "ICL 13.x";
+		static char *DYNAUDNORM_COMPILER = "ICL 13.x";
 	#elif (__INTEL_COMPILER >= 1200)
-		static char *DYAUNO_COMPILER = "ICL 12x.";
+		static char *DYNAUDNORM_COMPILER = "ICL 12x.";
 	#elif (__INTEL_COMPILER >= 1100)
-		static char *DYAUNO_COMPILER = "ICL 11.x";
+		static char *DYNAUDNORM_COMPILER = "ICL 11.x";
 	#elif (__INTEL_COMPILER >= 1000)
-		static char *DYAUNO_COMPILER = "ICL 10.x";
+		static char *DYNAUDNORM_COMPILER = "ICL 10.x";
 	#else
 		#error Compiler is not supported!
 	#endif
 #elif defined(_MSC_VER)
 	#if (_MSC_VER == 1800)
 		#if (_MSC_FULL_VER < 180021005)
-			const char *DYAUNO_COMPILER = "MSVC 2013-Beta";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2013-Beta";
 		#elif (_MSC_FULL_VER < 180030501)
-			const char *DYAUNO_COMPILER = "MSVC 2013";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2013";
 		#elif (_MSC_FULL_VER == 180030501)
-			const char *DYAUNO_COMPILER = "MSVC 2013.2";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2013.2";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1700)
 		#if (_MSC_FULL_VER < 170050727)
-			const char *DYAUNO_COMPILER = "MSVC 2012-Beta";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2012-Beta";
 		#elif (_MSC_FULL_VER < 170051020)
-			const char *DYAUNO_COMPILER = "MSVC 2012");
+			const char *DYNAUDNORM_COMPILER = "MSVC 2012");
 		#elif (_MSC_FULL_VER < 170051106)
-			const char *DYAUNO_COMPILER = "MSVC 2012.1-CTP";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2012.1-CTP";
 		#elif (_MSC_FULL_VER < 170060315)
-			const char *DYAUNO_COMPILER = "MSVC 2012.1";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2012.1";
 		#elif (_MSC_FULL_VER < 170060610)
-			const char *DYAUNO_COMPILER = "MSVC 2012.2";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2012.2";
 		#elif (_MSC_FULL_VER < 170061030)
-			const char *DYAUNO_COMPILER = "MSVC 2012.3";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2012.3";
 		#elif (_MSC_FULL_VER == 170061030)
-			const char *DYAUNO_COMPILER = "MSVC 2012.4";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2012.4";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1600)
 		#if (_MSC_FULL_VER < 160040219)
-			const char *DYAUNO_COMPILER = "MSVC 2010";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2010";
 		#elif (_MSC_FULL_VER == 160040219)
-			const char *DYAUNO_COMPILER = "MSVC 2010-SP1";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2010-SP1";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1500)
 		#if (_MSC_FULL_VER >= 150030729)
-			const char *DYAUNO_COMPILER = "MSVC 2008-SP1";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2008-SP1";
 		#else
-			const char *DYAUNO_COMPILER = "MSVC 2008";
+			const char *DYNAUDNORM_COMPILER = "MSVC 2008";
 		#endif
 	#else
 		#error Compiler is not supported!
@@ -102,16 +102,16 @@ const char* DYAUNO_BUILD_TIME = __TIME__;
 #elif defined(__GNUC__)
 	#define GCC_VERSION_GLUE1(X,Y,Z) "GCC " #X "." #Y "." #Z
 	#define GCC_VERSION_GLUE2(X,Y,Z) GCC_VERSION_GLUE1(X,Y,Z)
-	const char *DYAUNO_COMPILER = GCC_VERSION_GLUE2(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+	const char *DYNAUDNORM_COMPILER = GCC_VERSION_GLUE2(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #else
 	#error Compiler is not supported!
 #endif
 
 //Architecture detection
 #if defined(_M_X64) || defined(__x86_64__)
-	const char *DYAUNO_ARCH = "x64";
+	const char *DYNAUDNORM_ARCH = "x64";
 #elif defined(_M_IX86) || defined(__i386__)
-	const char *DYAUNO_ARCH = "x86";
+	const char *DYNAUDNORM_ARCH = "x86";
 #else
 	#error Architecture is not supported!
 #endif

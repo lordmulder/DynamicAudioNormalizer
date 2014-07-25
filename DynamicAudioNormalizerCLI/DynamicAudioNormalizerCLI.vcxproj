@@ -15,16 +15,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\DynamicAudioNormalizerShared\src\Platform_Win32.cpp" />
     <ClCompile Include="src\AudioFileIO.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Parameters.cpp" />
+    <ClCompile Include="src\Platform_Linux.cpp" />
+    <ClCompile Include="src\Platform_Win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DynamicAudioNormalizerShared\include\Common.h" />
-    <ClInclude Include="..\DynamicAudioNormalizerShared\include\Platform.h" />
     <ClInclude Include="src\AudioFileIO.h" />
     <ClInclude Include="src\Parameters.h" />
+    <ClInclude Include="src\Platform.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI.vcxproj">

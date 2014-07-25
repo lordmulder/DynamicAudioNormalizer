@@ -26,6 +26,7 @@
 #include "FrameBuffer.h"
 #include "MinimumFilter.h"
 #include "GaussianFilter.h"
+#include "Logging.h"
 #include "Version.h"
 
 #include <cmath>
@@ -218,7 +219,7 @@ bool MDynamicAudioNormalizer::initialize(void)
 	}
 	catch(std::exception &e)
 	{
-		LOG2_ERR(FMT_CHAR, e.what());
+		LOG_ERR(e.what());
 		return false;
 	}
 }
@@ -227,23 +228,23 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 {
 	if(m_initialized)
 	{
-		LOG_WRN(TXT("Already initialized -> ignoring!"));
+		LOG_WRN("Already initialized -> ignoring!");
 		return true;
 	}
 
 	if((m_channels < 1) || (m_channels > 8))
 	{
-		LOG2_ERR(TXT("Invalid or unsupported channel count. Should be in the %d to %d range!"), 1, 8);
+		LOG2_ERR("Invalid or unsupported channel count. Should be in the %d to %d range!", 1, 8);
 		return false;
 	}
 	if((m_sampleRate < 11025) || (m_channels > 192000))
 	{
-		LOG2_ERR(TXT("Invalid or unsupported sampling rate. Should be in the %d to %d range!"), 11025, 192000);
+		LOG2_ERR("Invalid or unsupported sampling rate. Should be in the %d to %d range!", 11025, 192000);
 		return false;
 	}
 	if((m_frameLen < 32) || (m_frameLen > 2097152))
 	{
-		LOG2_ERR(TXT("Invalid or unsupported frame size. Should be in the %d to %d range!"), 32, 2097152);
+		LOG2_ERR("Invalid or unsupported frame size. Should be in the %d to %d range!", 32, 2097152);
 		return false;
 	}
 
@@ -276,14 +277,14 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 
 	if(m_verbose)
 	{
-		LOG_DBG(TXT("[PARAMETERS]"));
-		LOG2_DBG(TXT("Frame size     : %u"),     m_frameLen);
-		LOG2_DBG(TXT("Channels       : %u"),     m_channels);
-		LOG2_DBG(TXT("Sampling rate  : %u"),     m_sampleRate);
-		LOG2_DBG(TXT("Chan. coupling : %s"),     m_channelsCoupled    ? TXT("YES") : TXT("NO"));
-		LOG2_DBG(TXT("DC correction  : %s"),     m_enableDCCorrection ? TXT("YES") : TXT("NO"));
-		LOG2_DBG(TXT("Peak value     : %.4f"),   m_peakValue);
-		LOG2_DBG(TXT("Max amp factor : %.4f\n"), m_maxAmplification);
+		LOG_DBG ("[PARAMETERS]");
+		LOG2_DBG("Frame size     : %u",     m_frameLen);
+		LOG2_DBG("Channels       : %u",     m_channels);
+		LOG2_DBG("Sampling rate  : %u",     m_sampleRate);
+		LOG2_DBG("Chan. coupling : %s",     m_channelsCoupled    ? "YES" : "NO");
+		LOG2_DBG("DC correction  : %s",     m_enableDCCorrection ? "YES" : "NO");
+		LOG2_DBG("Peak value     : %.4f",   m_peakValue);
+		LOG2_DBG("Max amp factor : %.4f\n", m_maxAmplification);
 	}
 
 	m_initialized = true;
@@ -301,7 +302,7 @@ bool MDynamicAudioNormalizer::reset(void)
 	}
 	catch(std::exception &e)
 	{
-		LOG2_ERR(FMT_CHAR, e.what());
+		LOG_ERR(e.what());
 		return false;
 	}
 }
@@ -311,7 +312,7 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	//Check audio normalizer status
 	if(!m_initialized)
 	{
-		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
+		LOG_ERR("Not initialized yet. Must call initialize() first!");
 		return false;
 	}
 
@@ -337,7 +338,7 @@ bool MDynamicAudioNormalizer::processInplace(double **samplesInOut, const int64_
 	}
 	catch(std::exception &e)
 	{
-		LOG2_ERR(FMT_CHAR, e.what());
+		LOG_ERR(e.what());
 		return false;
 	}
 }
@@ -349,7 +350,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 	//Check audio normalizer status
 	if(!m_initialized)
 	{
-		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
+		LOG_ERR("Not initialized yet. Must call initialize() first!");
 		return false;
 	}
 
@@ -386,7 +387,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 			
 			if(!m_frameBuffer->putFrame(m_buffSrc))
 			{
-				LOG_ERR(TXT("Failed to append current input frame to internal buffer!"));
+				LOG_ERR("Failed to append current input frame to internal buffer!");
 				return false;
 			}
 
@@ -400,7 +401,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 			
 			if(!m_frameBuffer->getFrame(m_buffOut))
 			{
-				LOG_ERR(TXT("Failed to retrieve next output frame from internal buffer!"));
+				LOG_ERR("Failed to retrieve next output frame from internal buffer!");
 				return false;
 			}
 
@@ -434,7 +435,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 
 	if(inputSamplesLeft > 0)
 	{
-		LOG_WRN(TXT("No all input samples could be processed -> discarding pending input!"));
+		LOG_WRN("No all input samples could be processed -> discarding pending input!");
 		return false;
 	}
 
@@ -449,7 +450,7 @@ bool MDynamicAudioNormalizer::flushBuffer(double **samplesOut, const int64_t buf
 	}
 	catch(std::exception &e)
 	{
-		LOG2_ERR(FMT_CHAR, e.what());
+		LOG_ERR(e.what());
 		return false;
 	}
 }
@@ -461,7 +462,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 	//Check audio normalizer status
 	if(!m_initialized)
 	{
-		LOG_ERR(TXT("Not initialized yet. Must call initialize() first!"));
+		LOG_ERR("Not initialized yet. Must call initialize() first!");
 		return false;
 	}
 
@@ -496,18 +497,23 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 
 void MDynamicAudioNormalizer::getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch)
 {
-	major = DYAUNO_VERSION_MAJOR;
-	minor = DYAUNO_VERSION_MINOR;
-	patch = DYAUNO_VERSION_PATCH;
+	major = DYNAUDNORM_VERSION_MAJOR;
+	minor = DYNAUDNORM_VERSION_MINOR;
+	patch = DYNAUDNORM_VERSION_PATCH;
 }
 
 void MDynamicAudioNormalizer::getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug)
 {
-	*date     = DYAUNO_BUILD_DATE;
-	*time     = DYAUNO_BUILD_TIME;
-	*compiler = DYAUNO_COMPILER;
-	*arch     = DYAUNO_ARCH;
-	debug     = bool(DYAUNO_DEBUG);
+	*date     = DYNAUDNORM_BUILD_DATE;
+	*time     = DYNAUDNORM_BUILD_TIME;
+	*compiler = DYNAUDNORM_COMPILER;
+	*arch     = DYNAUDNORM_ARCH;
+	debug     = bool(DYNAUDNORM_DEBUG);
+}
+
+MDynamicAudioNormalizer::LogFunction *MDynamicAudioNormalizer::setLogFunction(MDynamicAudioNormalizer::LogFunction *const logFunction)
+{
+	return DYNAUDNORM_LOG_SETCALLBACK(logFunction);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -550,7 +556,7 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 	{
 		if(m_gainHistory_smoothed[c].empty())
 		{
-			LOG_WRN(TXT("There are no information available for the current frame!"));
+			LOG_WRN("There are no information available for the current frame!");
 			break;
 		}
 

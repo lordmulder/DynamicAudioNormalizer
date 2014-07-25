@@ -75,9 +75,6 @@ class MDynamicAudioNormalizer_PrivateData;
 class MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer
 {
 public:
-	//Constant
-	enum { PASS_1ST = 0, PASS_2ND = 1 } pass_t;
-
 	//Constructor & Destructor
 	MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool verbose = false, FILE *const logFile = NULL);
 	virtual ~MDynamicAudioNormalizer(void);
@@ -88,9 +85,14 @@ public:
 	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
 
+	//Callback for console output
+	typedef void (LogFunction)(const int &logLevel, const char *const message);
+	enum { LOG_LEVEL_DBG = 0, LOG_LEVEL_WRN = 1, LOG_LEVEL_ERR = 2 };
+
 	//Static functions
 	static void getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch);
 	static void getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug);
+	static LogFunction *setLogFunction(LogFunction *const logFunction);
 
 private:
 	MDynamicAudioNormalizer(const MDynamicAudioNormalizer&) : p(NULL)  { throw "unsupported"; }

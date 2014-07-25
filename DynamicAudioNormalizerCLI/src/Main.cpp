@@ -22,6 +22,7 @@
 
 //Internal
 #include "Common.h"
+#include "Platform.h"
 #include "Parameters.h"
 #include "AudioFileIO.h"
 
@@ -71,6 +72,22 @@ static const CHR *timeToString(CHR *timeBuffer, const size_t buffSize, const int
 	return timeBuffer;
 }
 
+static void loggingCallback(const int &logLevel, const char *const message)
+{
+	switch(logLevel)
+	{
+	case MDynamicAudioNormalizer::LOG_LEVEL_DBG:
+		PRINT2_DBG(FMT_CHAR, message);
+		break;
+	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
+		PRINT2_WRN(FMT_CHAR, message);
+		break;
+	case MDynamicAudioNormalizer::LOG_LEVEL_ERR:
+		PRINT2_ERR(FMT_CHAR, message);
+		break;
+	}
+}
+
 static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, AudioFileIO **outputFile)
 {
 	bool okay = true;
@@ -81,7 +98,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 	*sourceFile = new AudioFileIO();
 	if(!(*sourceFile)->openRd(parameters.sourceFile()))
 	{
-		LOG2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
+		PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
 		okay = false;
 	}
 	
@@ -94,7 +111,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 			*outputFile = new AudioFileIO();
 			if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
 			{
-				LOG2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
+				PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
 				okay = false;
 			}
 
@@ -103,7 +120,7 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 		}
 		else
 		{
-			LOG_WRN(TXT("Failed to determine source file properties!\n"));
+			PRINT_WRN(TXT("Failed to determine source file properties!\n"));
 			okay = false;
 		}
 	}
@@ -139,7 +156,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 	if(!sourceFile->rewind())
 	{
 		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("Failed to rewind the input file!"));
+		PRINT_ERR(TXT("Failed to rewind the input file!"));
 		return EXIT_FAILURE;
 	}
 
@@ -211,7 +228,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 	else
 	{
 		PRINT(TXT("\n\n"));
-		LOG_ERR(TXT("I/O error encountered -> stopping!\n"));
+		PRINT_ERR(TXT("I/O error encountered -> stopping!\n"));
 	}
 
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
@@ -226,7 +243,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	int64_t length;
 	if(!sourceFile->queryInfo(channels, sampleRate, length, bitDepth))
 	{
-		LOG_WRN(TXT("Failed to determine source file properties!\n"));
+		PRINT_WRN(TXT("Failed to determine source file properties!\n"));
 		return EXIT_FAILURE;
 	}
 
@@ -248,7 +265,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 	//Initialze normalizer
 	if(!normalizer->initialize())
 	{
-		LOG_ERR(TXT("Failed to initialize the normalizer instance!\n"));
+		PRINT_ERR(TXT("Failed to initialize the normalizer instance!\n"));
 		MY_DELETE(normalizer);
 		return EXIT_FAILURE;
 	}
@@ -317,16 +334,16 @@ static void printLogo(void)
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));
 	PRINT(TXT("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n"));
 
-	if(DYAUNO_DEBUG)
+	if(DYNAUDNORM_DEBUG)
 	{
 		PRINT(TXT("\n!!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!!\n\n"));
 	}
 
 	PRINT(TXT("---------------------------------------------------------------------------\n\n"));
 
-	if((DYAUNO_DEBUG) != buildDebug)
+	if((DYNAUDNORM_DEBUG) != buildDebug)
 	{
-		LOG_ERR(TXT("Trying to use DEBUG library with RELEASE binary or vice versa!\n"));
+		PRINT_ERR(TXT("Trying to use DEBUG library with RELEASE binary or vice versa!\n"));
 		exit(EXIT_FAILURE);
 	}
 
@@ -340,7 +357,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	Parameters parameters;
 	if(!parameters.parseArgs(argc, argv))
 	{
-		LOG2_ERR(TXT("Invalid or incomplete command-line arguments have been detected.\n\nType \"%s --help\" for details!\n"), appName(argv[0]));
+		PRINT2_ERR(TXT("Invalid or incomplete command-line arguments have been detected.\n\nType \"%s --help\" for details!\n"), appName(argv[0]));
 		return EXIT_FAILURE;
 	}
 
@@ -350,10 +367,12 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
+	MDynamicAudioNormalizer::setLogFunction(loggingCallback);
+
 	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
 	if(!openFiles(parameters, &sourceFile, &outputFile))
 	{
-		LOG_ERR(TXT("Failed to open input and/or output file!\n"));
+		PRINT_ERR(TXT("Failed to open input and/or output file!\n"));
 		return EXIT_FAILURE;
 	}
 
@@ -362,7 +381,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	{
 		if(!(logFile = FOPEN(parameters.dbgLogFile(), TXT("w"))))
 		{
-			LOG2_WRN(TXT("Failed to open log file \"%s\""), parameters.dbgLogFile());
+			PRINT2_WRN(TXT("Failed to open log file \"%s\""), parameters.dbgLogFile());
 		}
 	}
 
@@ -408,7 +427,7 @@ int MAIN(int argc, CHR* argv[])
 {
 	int exitCode = EXIT_SUCCESS;
 
-	if(DYAUNO_DEBUG)
+	if(DYNAUDNORM_DEBUG)
 	{
 		SYSTEM_INIT();
 		exitCode = dynamicNormalizerMain(argc, argv);

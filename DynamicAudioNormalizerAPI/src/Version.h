@@ -29,14 +29,14 @@
 //=============================================================================
 
 //Version info
-extern const unsigned int DYAUNO_VERSION_MAJOR;
-extern const unsigned int DYAUNO_VERSION_MINOR;
-extern const unsigned int DYAUNO_VERSION_PATCH;
+extern const unsigned int DYNAUDNORM_VERSION_MAJOR;
+extern const unsigned int DYNAUDNORM_VERSION_MINOR;
+extern const unsigned int DYNAUDNORM_VERSION_PATCH;
 
 //Build date/time
-extern const char* DYAUNO_BUILD_DATE;
-extern const char* DYAUNO_BUILD_TIME;
+extern const char* DYNAUDNORM_BUILD_DATE;
+extern const char* DYNAUDNORM_BUILD_TIME;
 
 //Compiler info
-extern const char* DYAUNO_COMPILER;
-extern const char* DYAUNO_ARCH;
+extern const char* DYNAUDNORM_COMPILER;
+extern const char* DYNAUDNORM_ARCH;
