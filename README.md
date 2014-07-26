@@ -290,7 +290,7 @@ This *static* function can be called to register a *callback* function that will
 The signature of the callback function must be *exactly* as follows, with standard <tt>cdecl</tt> calling convention:
 ```
 void LogFunction(
-	const int &logLevel,
+	const int logLevel,
 	const char *const message
 );
 ```
@@ -307,7 +307,9 @@ The source code of the Dynamic Audio Normalizer is available from the official [
 * <tt>https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
 * <tt>https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
 
-Currently project/solution files are provided for Microsoft Visual Studio 2013. The code can be built using, e.g, *Visual Studio Express 2013 for Windows Desktop*, which is available as a free download [here](http://www.visualstudio.com/downloads/download-visual-studio-vs).
+Project/solution files are provided for Microsoft Visual Studio. The code can be built using, e.g, *Visual Studio Express 2013 for Windows Desktop*, which is available as a free download [here](http://www.visualstudio.com/downloads/download-visual-studio-vs).
+
+Furthermore, Makefiles for the Linux platform are provided. They have been tested under Ubuntu 14.04.1 LTS using GCC 4.8.2.
 
 
 Changelog <a name="chap_log"></a>
@@ -320,7 +322,7 @@ Changelog <a name="chap_log"></a>
 * Added new <tt>flushBuffer()</tt> API, which provides a cleaner method of flushing the pending frames
 * Added new <tt>reset()</tt> API, which can be used to reset the internal state of the normalizer instance
 * Added new <tt>setLogFunction</tt> API, which can be used to set up a custom logging callback function
-* There should be **no** changes of the normalized audio output in this release
+* There should be **no** changes of the normalized audio output in this release whatsoever
 
 ### Version 1.03 (2014-07-09) ###
 * Added *static* library configuration to Visual Studio solution

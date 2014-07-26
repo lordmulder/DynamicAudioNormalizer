@@ -22,7 +22,7 @@
 
 #pragma once
 
-typedef void (DYNAUDNORM_LOG_CALLBACK)(const int &logLevel, const char *const message);
+typedef void (DYNAUDNORM_LOG_CALLBACK)(const int logLevel, const char *const message);
 DYNAUDNORM_LOG_CALLBACK * DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback);
 void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...);
 

@@ -72,7 +72,7 @@
 class MDynamicAudioNormalizer_PrivateData;
 
 //Callback for log messages
-typedef void (MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction))(const int &logLevel, const char *const message);
+typedef void (MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction))(const int logLevel, const char *const message);
 
 	//Dynamic Normalizer Class
 class MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer

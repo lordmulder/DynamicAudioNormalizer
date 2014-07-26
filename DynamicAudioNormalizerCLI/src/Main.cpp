@@ -72,7 +72,7 @@ static const CHR *timeToString(CHR *timeBuffer, const size_t buffSize, const int
 	return timeBuffer;
 }
 
-static void loggingCallback_default(const int &logLevel, const char *const message)
+static void loggingCallback_default(const int logLevel, const char *const message)
 {
 	switch(logLevel)
 	{
@@ -85,7 +85,7 @@ static void loggingCallback_default(const int &logLevel, const char *const messa
 	}
 }
 
-static void loggingCallback_verbose(const int &logLevel, const char *const message)
+static void loggingCallback_verbose(const int logLevel, const char *const message)
 {
 	switch(logLevel)
 	{
@@ -348,7 +348,7 @@ static void printLogo(void)
 
 	if(DYNAUDNORM_DEBUG)
 	{
-		PRINT(TXT("\n!!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!!\n\n"));
+		PRINT(TXT("\n!!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!! DEBUG BUILD !!!\n"));
 	}
 
 	PRINT(TXT("---------------------------------------------------------------------------\n\n"));
