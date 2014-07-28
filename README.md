@@ -12,7 +12,8 @@ Dynamic Audio Normalizer
 4. [API Documentation](#chap_api)
 5. [Source Code](#chap_src)
 6. [Changelog](#chap_log)
-7. [License Terms](#chap_lic)
+7. [Frequently Asked Questions](#chap_faq)
+8. [License Terms](#chap_lic)
 
 How It Works<a name="chap_how"></a>
 -------------------------------------------------------------------------------
@@ -333,6 +334,27 @@ Changelog <a name="chap_log"></a>
 ### Version 1.02 (2014-07-06) ###
 * First public release of the Dynamic Audio Normalizer.
 
+
+Frequently Asked Questions (FAQ) <a name="chap_faq"></a>
+-------------------------------------------------------------------------------
+
+### Q: How does Dynamic Audio Normalizer differ from dynamic range compression? ###
+
+A traditional [*audio compressor*](http://en.wikipedia.org/wiki/Dynamic_range_compression) will prune all samples whose magnitude is above a certain threshold. In particular, the portion of the sample's magnitude that is above the pre-defined threshold will be reduced by a certain *ratio*, typically *2:1* or *4:1*. In other words, the signal *peaks* will be *flattened*, while all samples below the threshold are passed through unmodified. This leaves a certain "headroom", i.e. after flattening the signal peaks the maximum magnitude remaining in the *compressed* file will be lower than in the original. For example, if we apply *2:1* reduction to all samples above a threshold of *80%*, then the maximum remaining magnitude will be at *90%*, leaving a headroom of *10%*. After the compression has been applied, the resulting sample values will (usually) be amplified again, by a certain *fixed* gain factor. This factor will be chosen as high as possible *without* exceeding the maximum allowable signal level, similar to a traditional *normalizer*. Clearly, the compression allows for a much stronger amplification of the signal than what would be possible otherwise. However, due to the *flattening* of the signal peaks, the *dynamic range*, i.e. the ratio between the largest and smallest sample value, will be *reduced* significantly – which has a strong tendency to destroy the "vividness" of the audio signal! The excessive use of dynamic range compression in many recent productions is also known as the ["loudness war"](http://en.wikipedia.org/wiki/Loudness_war).
+
+The following waveform view shows an audio signal prior to dynamic range compression (left), after the compression step (center) and after the subsequent amplification step (right). It can be seen that the original audio had a *large* dynamic range, with each drumbeat causing a significant peak. It can also be seen how those peeks have been *eliminated* for the most part after the compression. This makes the drum sound much *less* catchy! Last but not least, it can be seen that the final amplified audio now appears much "louder" than the original, but the dynamics are mostly gone…
+
+![Compression](img/Compression.png "Dynamic Range Compression")  
+<small>**Figure 7:** Example of dynamic range compression.</small>
+
+In contrast, the Dynamic Audio Normalizer also implements dynamic range compression *of some sort*, but it does **not** prune signal peaks above a *fixed* threshold. Actually it does **not** prune any signal peaks at all! Furthermore, it does **not** amplify the samples by a *fixed* gain factor. Instead, an "optimal" gain factor will be chosen for each *frame*. And, since a frame's gain factor is bounded by the highest magnitude sample within that frame, **100%** of the dynamic range will be preserved *within* each frame! The Dynamic Audio Normalizer only performs a "dynamic range compression" in the sense that the gain factors are *dynamically* adjusted over time, allowing "quieter" frames to get a stronger amplification than "louder" frames. This means that the volume differences between the "quiet" and the "loud" parts of an audio recording will be *harmonized* – but still the *full* dynamic range is being preserved within each of these parts. Finally, the Gaussian filter applied by the Dynamic Audio Normalizer ensures that any changes of the gain factor between neighbouring frames will be smooth and seamlessly, avoiding noticeable "jumps" of the audio volume.
+
+
+### Q: But what if I do *not* want the "quiet" and "loud" parts to be harmonized? ###
+
+In this case, the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. Still, by using a larger [filter size](#chap_cfg.g), the Dynamic Audio Normalizer may be configured to act much more similar to a "traditional" normalization filter.
+
+
 License Terms <a name="chap_lic"></a>
 -------------------------------------------------------------------------------
 
@@ -356,7 +378,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ```
 
 **http://www.gnu.org/licenses/gpl-2.0.html**
-
 
 <br>  
 
