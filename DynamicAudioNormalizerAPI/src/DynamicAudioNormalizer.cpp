@@ -72,6 +72,12 @@ static inline double FADE(const double &prev, const double &curr, const double &
 	return (fadeFactors[0][pos] * prev) + (fadeFactors[1][pos] * curr) + (fadeFactors[2][pos] * next);
 }
 
+static inline double BOUND(const double &threshold, const double &val)
+{
+	const double CONST = 0.8862269254527580136490837416705725913987747280611935; //sqrt(PI) / 2.0
+	return erf(CONST * (val / threshold)) * threshold;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // MDynamicAudioNormalizer_PrivateData
 ///////////////////////////////////////////////////////////////////////////////
@@ -562,7 +568,7 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 	if(m_channelsCoupled)
 	{
 		const double peakMagnitude = findPeakMagnitude(frame);
-		const double currentGainFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
+		const double currentGainFactor = BOUND(m_maxAmplification, (m_peakValue / peakMagnitude));
 		
 		for(uint32_t c = 0; c < m_channels; c++)
 		{
@@ -574,7 +580,7 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 		for(uint32_t c = 0; c < m_channels; c++)
 		{
 			const double peakMagnitude = findPeakMagnitude(frame, c);
-			const double currentGainFactor = std::min(m_peakValue / peakMagnitude, m_maxAmplification);
+			const double currentGainFactor = BOUND(m_maxAmplification, (m_peakValue / peakMagnitude));
 			updateGainHistory(c, currentGainFactor);
 		}
 	}
