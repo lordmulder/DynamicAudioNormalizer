@@ -36,7 +36,7 @@ if not exist "%PDOC_PATH%\pandoc.exe" (
 	echo Pandoc binary could not be found. Please check your PDOC_PATH var!
 	goto BuildError
 )
-if not exist ""%QTDIR%\bin\QtGui4.dll" (
+if not exist "%QTDIR%\bin\QtGui4.dll" (
 	echo QtCore library could not be found. Please check your QTDIR var!
 	goto BuildError
 )
