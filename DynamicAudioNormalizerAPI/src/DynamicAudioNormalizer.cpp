@@ -31,6 +31,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <queue>
 #include <deque>
 #include <cassert>
 #include <stdexcept> 
@@ -114,6 +115,10 @@ private:
 	std::deque<double> *m_gainHistory_minimum;
 	std::deque<double> *m_gainHistory_smoothed;
 
+	std::queue<double> *m_loggingData_original;
+	std::queue<double> *m_loggingData_minimum;
+	std::queue<double> *m_loggingData_smoothed;
+
 	MinimumFilter  *m_minimumFilter;
 	GaussianFilter *m_gaussianFilter;
 
@@ -131,6 +136,7 @@ protected:
 	double findPeakMagnitude(FrameData *frame, const uint32_t channel = UINT32_MAX);
 	void updateGainHistory(const uint32_t &channel, const double &currentGainFactor);
 	void perfromDCCorrection(FrameData *frame, const bool &isFirstFrame);
+	void writeLogFile(void);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -171,6 +177,10 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_gainHistory_minimum  = NULL;
 	m_gainHistory_smoothed = NULL;
 
+	m_loggingData_original = NULL;
+	m_loggingData_minimum  = NULL;
+	m_loggingData_smoothed = NULL;
+
 	m_minimumFilter  = NULL;
 	m_gaussianFilter = NULL;
 
@@ -198,6 +208,10 @@ MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 	MY_DELETE_ARRAY(m_gainHistory_original);
 	MY_DELETE_ARRAY(m_gainHistory_minimum );
 	MY_DELETE_ARRAY(m_gainHistory_smoothed);
+
+	MY_DELETE_ARRAY(m_loggingData_original);
+	MY_DELETE_ARRAY(m_loggingData_minimum );
+	MY_DELETE_ARRAY(m_loggingData_smoothed);
 
 	MY_DELETE_ARRAY(m_prevAmplificationFactor);
 	MY_DELETE_ARRAY(m_dcCorrectionValue);
@@ -247,6 +261,10 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 		LOG2_ERR("Invalid or unsupported frame size. Should be in the %d to %d range!", 32, 2097152);
 		return false;
 	}
+	if(m_logFile && (ferror(m_logFile) != 0))
+	{
+		LOG2_WRN("Specified log file has the error indicator set, no logging information will be created!");
+	}
 
 	m_buffSrc = new FrameFIFO(m_channels, m_frameLen);
 	m_buffOut = new FrameFIFO(m_channels, m_frameLen);
@@ -256,6 +274,10 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	m_gainHistory_original = new std::deque<double>[m_channels];
 	m_gainHistory_minimum  = new std::deque<double>[m_channels];
 	m_gainHistory_smoothed = new std::deque<double>[m_channels];
+
+	m_loggingData_original = new std::queue<double>[m_channels];
+	m_loggingData_minimum  = new std::queue<double>[m_channels];
+	m_loggingData_smoothed = new std::queue<double>[m_channels];
 
 	m_minimumFilter = new MinimumFilter(m_filterSize);
 	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
@@ -283,6 +305,12 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	LOG2_DBG("DC correction  : %s",     m_enableDCCorrection ? "YES" : "NO");
 	LOG2_DBG("Peak value     : %.4f",   m_peakValue);
 	LOG2_DBG("Max amp factor : %.4f\n", m_maxAmplification);
+
+	if(m_logFile)
+	{
+		fprintf(m_logFile, "DynamicAudioNormalizer Logfile v%u.%02u-%u\n", DYNAUDNORM_VERSION_MAJOR, DYNAUDNORM_VERSION_MINOR, DYNAUDNORM_VERSION_PATCH);
+		fprintf(m_logFile, "CHANNEL_COUNT:%u\n\n", m_channels);
+	}
 
 	m_initialized = true;
 	reset();
@@ -550,6 +578,9 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 			updateGainHistory(c, currentGainFactor);
 		}
 	}
+
+	//Write data to the log file
+	writeLogFile();
 }
 
 void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
@@ -568,11 +599,6 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 		m_gainHistory_smoothed[c].pop_front();
 		const double nextAmplificationFactor = m_gainHistory_smoothed[c].empty() ? currAmplificationFactor : m_gainHistory_smoothed[c].front();
 
-		if(m_logFile)
-		{
-			fprintf(m_logFile, c ? "\t%.4f" : "%.4f", currAmplificationFactor);
-		}
-
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
 			const double amplificationFactor = FADE(m_prevAmplificationFactor[c], currAmplificationFactor, nextAmplificationFactor, i, m_fadeFactors);
@@ -585,11 +611,6 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 		}
 
 		m_prevAmplificationFactor[c] = currAmplificationFactor;
-	}
-
-	if(m_logFile)
-	{
-		fprintf(m_logFile, "\n");
 	}
 }
 
@@ -642,6 +663,7 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 
 	//Insert current gain factor
 	m_gainHistory_original[channel].push_back(currentGainFactor);
+	m_loggingData_original[channel].push     (currentGainFactor);
 
 	//Apply the minimum filter
 	while(m_gainHistory_original[channel].size() >= m_filterSize)
@@ -650,6 +672,8 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 		const double minimum = m_minimumFilter->apply(m_gainHistory_original[channel]);
 
 		m_gainHistory_minimum[channel].push_back(minimum);
+		m_loggingData_minimum[channel].push     (minimum);
+
 		m_gainHistory_original[channel].pop_front();
 	}
 
@@ -660,6 +684,8 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 		const double smoothed = m_gaussianFilter->apply(m_gainHistory_minimum[channel]);
 			
 		m_gainHistory_smoothed[channel].push_back(smoothed);
+		m_loggingData_smoothed[channel].push     (smoothed);
+
 		m_gainHistory_minimum[channel].pop_front();
 	}
 }
@@ -712,4 +738,46 @@ void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFa
 	//{
 	//	LOG_DBG(TXT("%.8f %.8f %.8f"), fadeFactors[0][pos], fadeFactors[1][pos], fadeFactors[2][pos]);
 	//}
+}
+
+void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
+{
+	bool bWritten = false;
+		
+	for(uint32_t c = 0; c < m_channels; c++)
+	{
+		if(!(m_loggingData_original[c].empty() || m_loggingData_minimum[c].empty() || m_loggingData_smoothed[c].empty()))
+		{
+			if(m_logFile && (ferror(m_logFile) == 0))
+			{
+				if(bWritten)
+				{
+					fprintf(m_logFile, "\t\t");
+				}
+
+				fprintf(m_logFile, "%.5f\t%.5f\t%.5f", m_loggingData_original[c].front(), m_loggingData_minimum[c].front(), m_loggingData_smoothed[c].front());
+				
+				if(ferror(m_logFile) != 0)
+				{
+					LOG_WRN("Error while writing to log file. No further logging output will be created.");
+				}
+				
+				bWritten = true;
+			}
+
+			m_loggingData_original[c].pop();
+			m_loggingData_minimum [c].pop();
+			m_loggingData_smoothed[c].pop();
+		}
+	}
+
+	if(m_logFile && (ferror(m_logFile) == 0) && bWritten)
+	{
+		fprintf(m_logFile, "\n");
+
+		if(ferror(m_logFile) != 0)
+		{
+			LOG_WRN("Error while writing to log file. No further logging output will be created.");
+		}
+	}
 }
