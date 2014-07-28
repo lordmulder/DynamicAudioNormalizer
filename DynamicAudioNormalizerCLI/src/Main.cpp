@@ -407,6 +407,12 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	MY_DELETE(sourceFile);
 	MY_DELETE(outputFile);
 
+	if(logFile)
+	{
+		fclose(logFile);
+		logFile = NULL;
+	}
+
 	PRINT(TXT("---------------------------------------------------------------------------\n\n"));
 	PRINT(TXT("%s\n\nOperation took %.1f seconds.\n\n"), ((result != EXIT_SUCCESS) ? TXT("Sorry, something went wrong :-(") : TXT("Everything completed successfully :-)")), elapsed);
 
