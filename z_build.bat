@@ -36,6 +36,10 @@ if not exist "%PDOC_PATH%\pandoc.exe" (
 	echo Pandoc binary could not be found. Please check your PDOC_PATH var!
 	goto BuildError
 )
+if not exist ""%QTDIR%\bin\QtGui4.dll" (
+	echo QtCore library could not be found. Please check your QTDIR var!
+	goto BuildError
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Get current date and time (in ISO format)
@@ -91,6 +95,8 @@ for %%c in (DLL, Static) do (
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\sdk"
 		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
 		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll"   "%PACK_PATH%\%%c"
+		copy "%QTDIR%\bin\QtGui4.dll"                                    "%PACK_PATH%\%%c"
+		copy "%QTDIR%\bin\QtCore4.dll"                                   "%PACK_PATH%\%%c"
 	)
 
 	copy "%~dp0\LICENSE.html" "%PACK_PATH%\%%c"
