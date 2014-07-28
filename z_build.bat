@@ -41,6 +41,7 @@ if not exist "%QTDIR%\bin\QtGui4.dll" (
 	goto BuildError
 )
 
+
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Get current date and time (in ISO format)
 REM ///////////////////////////////////////////////////////////////////////////
@@ -87,6 +88,7 @@ for %%c in (DLL, Static) do (
 	mkdir "%PACK_PATH%\%%c\img"
 
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerGUI.exe" "%PACK_PATH%\%%c"
 
 	if "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\sdk"
