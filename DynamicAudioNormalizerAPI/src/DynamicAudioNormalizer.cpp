@@ -659,7 +659,7 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 		const uint32_t preFillSize = m_filterSize / 2;
 		while(m_gainHistory_original[channel].size() < preFillSize)
 		{
-			m_gainHistory_original[channel].push_back(currentGainFactor);
+			m_gainHistory_original[channel].push_back(1.0);
 		}
 		while(m_gainHistory_minimum[channel].size() < preFillSize)
 		{
