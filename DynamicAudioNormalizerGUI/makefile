@@ -27,7 +27,9 @@ SHELL=/bin/bash
 # Constants
 ##############################################################################
 
+MOC ?= moc
 QTDIR ?= /usr/include/qt4
+
 PROGRAM_NAME := DynamicAudioNormalizerGUI
 
 ##############################################################################
@@ -96,7 +98,7 @@ $(PROGRAM_DBG): $(SOURCES_OBJ)
 %_MOC.cpp: %.h
 	@$(ECHO) "\e[1;36m[MOC] $<\e[0m"
 	@mkdir -p $(dir $@)
-	moc -o $@ $<
+	$(MOC) -o $@ $<
 
 %.o: %.cpp
 	@$(ECHO) "\e[1;36m[CXX] $<\e[0m"
