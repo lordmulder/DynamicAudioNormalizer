@@ -20,6 +20,11 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 ///////////////////////////////////////////////////////////////////////////////
 
+//Std
+#include <cstdlib>
+#include <cfloat>
+
+//Qt
 #include <QApplication>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -28,6 +33,7 @@
 #include <QPlastiqueStyle>
 #include <QRegExp>
 
+//Internal
 #include "3rd_party/qcustomplot.h"
 
 typedef struct
@@ -81,7 +87,7 @@ static void parseData(QTextStream &textStream, unsigned int &channels, LogFileDa
 		if(!line.isEmpty())
 		{
 			const QStringList tokens = line.split(' ', QString::SkipEmptyParts);
-			if(tokens.count() == (channels * 3))
+			if(((unsigned int) tokens.count()) == (channels * 3))
 			{
 				QStringList::ConstIterator iter = tokens.constBegin();
 				for(unsigned int c = 0; c < channels; c++)

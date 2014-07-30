@@ -269,7 +269,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	}
 	if(m_logFile && (ferror(m_logFile) != 0))
 	{
-		LOG2_WRN("Specified log file has the error indicator set, no logging information will be created!");
+		LOG_WRN("Specified log file has the error indicator set, no logging information will be created!");
 	}
 
 	m_buffSrc = new FrameFIFO(m_channels, m_frameLen);

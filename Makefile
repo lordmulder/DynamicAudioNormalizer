@@ -30,6 +30,7 @@ SHELL=/bin/bash
 API_VERSION  := 1
 LIBRARY_NAME := DynamicAudioNormalizerAPI
 PROGRAM_NAME := DynamicAudioNormalizerCLI
+LOGVIEW_NAME := DynamicAudioNormalizerGUI
 BUILD_DATE   := $(shell date -Idate)
 BUILD_TIME   := $(shell date +%H:%M:%S)
 BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
@@ -40,7 +41,7 @@ OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).zip)
 # Rules
 ##############################################################################
 
-BUILD_PROJECTS = DynamicAudioNormalizerAPI DynamicAudioNormalizerCLI
+BUILD_PROJECTS = $(addprefix DynamicAudioNormalizer,API CLI GUI)
 CLEAN_PROJECTS = $(addprefix Clean,$(BUILD_PROJECTS))
 
 .PHONY: all clean $(BUILD_PROJECTS) $(CLEAN_PROJECTS) DeployBinaries CreateTagFile
@@ -89,6 +90,7 @@ DeployBinaries: CreateTagFile
 	mkdir -p $(TARGET_PATH)/img
 	mv -f $(BUILD_TAG) $(TARGET_PATH)/BUILD_TAG
 	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME) $(TARGET_PATH)
+	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH)
 	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).so $(TARGET_PATH)
 	cp ./LICENSE.html $(TARGET_PATH)
 	pandoc --from markdown_github+header_attributes --to html5 --standalone -H ./img/Style.inc ./README.md --output $(TARGET_PATH)/README.html
