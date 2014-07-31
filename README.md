@@ -76,6 +76,7 @@ While the default parameter of the Dynamic Audio Normalizer have been chosen to 
 * [DC Bias Correction](#chap_cfg.c)
 * [Maximum Gain Factor](#chap_cfg.m)
 * [Frame Length](#chap_cfg.f)
+* [Boundary Mode](#chap_cfg.b)
 * [Write Log File](#chap_cfg.l)
 
 ### Gaussian Filter Window Size <a name="chap_cfg.g"></a> ###
@@ -114,6 +115,13 @@ The Dynamic Audio Normalizer determines the maximum possible (local) gain factor
 
 The Dynamic Audio Normalizer processes the input audio in small chunks, referred to as *frames*. This is required, because a *peak magnitude* has no meaning for just a single sample value. Instead, we need to determine the peak magnitude for a contiguous sequence of sample values. While a "standard" normalizer would simply use the peak magnitude of the *complete* file, the Dynamic Audio Normalizer determines the peak magnitude *individually* for each frame. The length of a frame is specified in milliseconds. By default, the Dynamic Audio Normalizer uses a frame length of **500** milliseconds, which has been found to give good results with most files, but it can be adjusted using the **<tt>--frame-len</tt>** switch. Note that the exact frame length, in number of samples, will be determined automatically, based on the sampling rate of the individual input audio file.
 
+### Boundary Mode <a name="chap_cfg.b"></a> ###
+
+As explained before, the Dynamic Audio Normalizer takes into account a certain neighbourhood around each frame. This includes the *preceding* frames as well as the *subsequent* frames. However, for the "boundary" frames, located at the very beginning and at the very end of the audio file, **not** all neighbouring frames are available. In particular, for the *first* few frames in the audio file, the preceding frames are *not* known. And, similarly, for the *last* few frames in the audio file, the subsequent frames are *not* known. Thus, the question arises which gain factors should be assumed for the *missing* frames in the "boundary" region. The Dynamic Audio Normalizer implements two modes to deal with this situation. The *default* boundary mode assumes a gain factor of exactly *1.0* for the missing frames, resulting in a smooth "fade in" and "fade out" at the beginning and at the end of the file, respectively. The *alternative* boundary mode, can be enabled by using **<tt>--alt-boundary</tt>** switch. The latter mode assumes that the missing frames at the *beginning* of the file have the same gain factor as the very *first* available frame. It furthermore assumes that the missing frames at the *end* of the file have same gain factor as the very *last* frame. The following chart illustrates the difference between the *default* (green) and the *alternative* (red) boundary mode. Note hat, for simplicity's sake, a file containing *constant* volume white noise was used as input here.
+
+![Boundary](img/Boundary.png "Dynamic Audio Normalizer - Boundary Modes")  
+<small>**Figure 8:** Default boundary mode vs. alternative boundary mode.</small>
+
 ### Write Log File <a name="chap_cfg.l"></a> ###
 
 Optionally, the Dynamic Audio Normalizer can create a log file. The log file name is specified using the **<tt>--logfile</tt>** option.  If that option is *not* used, then *no* log file will be written. The log file uses a simple text format. The file starts with a header, followed by a list of gain factors. In that list, there is one line per frame. In each line, the *first* column contains the maximum local gain factor, the *second* column contains the minimum filtered gain factor, and the *third* column contains the final smoothed gain factor. This sequence is repeated once per channel.
@@ -131,7 +139,7 @@ CHANNEL_COUNT:2
 The log file can be displayed as a graphical chart using, for example, the *Log Viewer* application (DynamicAudioNormalizerGUI) that is included with the Dynamic Audio Normalizer:
 
 ![LogViewer](img/LogViewer.png "Dynamic Audio Normalizer - Log Viewer")  
-<small>**Figure 8:** Dynamic Audio Normalizer - Log Viewer.</small>
+<small>**Figure 9:** Dynamic Audio Normalizer - Log Viewer.</small>
 
 
 API Documentation <a name="chap_api"></a>
@@ -373,7 +381,7 @@ A traditional [*audio compressor*](http://en.wikipedia.org/wiki/Dynamic_range_co
 The following waveform view shows an audio signal prior to dynamic range compression (left), after the compression step (center) and after the subsequent amplification step (right). It can be seen that the original audio had a *large* dynamic range, with each drumbeat causing a significant peak. It can also be seen how those peeks have been *eliminated* for the most part after the compression. This makes the drum sound much *less* catchy! Last but not least, it can be seen that the final amplified audio now appears much "louder" than the original, but the dynamics are mostly gone…
 
 ![Compression](img/Compression.png "Dynamic Range Compression")  
-<small>**Figure 9:** Example of dynamic range compression.</small>
+<small>**Figure 10:** Example of dynamic range compression.</small>
 
 In contrast, the Dynamic Audio Normalizer also implements dynamic range compression *of some sort*, but it does **not** prune signal peaks above a *fixed* threshold. Actually it does **not** prune any signal peaks at all! Furthermore, it does **not** amplify the samples by a *fixed* gain factor. Instead, an "optimal" gain factor will be chosen for each *frame*. And, since a frame's gain factor is bounded by the highest magnitude sample within that frame, **100%** of the dynamic range will be preserved *within* each frame! The Dynamic Audio Normalizer only performs a "dynamic range compression" in the sense that the gain factors are *dynamically* adjusted over time, allowing "quieter" frames to get a stronger amplification than "louder" frames. This means that the volume differences between the "quiet" and the "loud" parts of an audio recording will be *harmonized* – but still the *full* dynamic range is being preserved within each of these parts. Finally, the Gaussian filter applied by the Dynamic Audio Normalizer ensures that any changes of the gain factor between neighbouring frames will be smooth and seamlessly, avoiding noticeable "jumps" of the audio volume.
 
