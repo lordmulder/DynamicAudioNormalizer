@@ -347,10 +347,11 @@ Furthermore, Makefiles for the Linux platform are provided. They have been teste
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
-### Version 2.01 (2014-??-??) ###
-* Improved the threshold function for the handling of the maximum gain factor limit
-* Much improved log file format
+### Version 2.01 (2014-08-01) ###
 * Added graphical log viewer application to the distribution package
+* Improved the threshold function for the handling of the maximum gain factor limit
+* Added a new mode for handling the "boundary" frames (disabled by default)
+* Much improved the format of the log file
 
 ### Version 2.00 (2014-07-26) ###
 * Implemented a large lookahead buffer, which eliminates the need of 2-Pass processing
