@@ -271,6 +271,7 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		parameters.peakValue(),
 		parameters.maxAmplification(),
 		parameters.filterSize(),
+		parameters.altBoundaryMode(),
 		logFile
 	);
 	
@@ -323,6 +324,7 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"), defaults.filterSize());
 	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
 	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"), BOOLIFY(defaults.enableDCCorrection()));
+	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"), BOOLIFY(defaults.altBoundaryMode()));
 	PRINT(TXT("  -v --verbose             Enable verbose console output\n"));
 	PRINT(TXT("  -h --help                Print this help screen\n"));
 	PRINT(TXT("\n"));

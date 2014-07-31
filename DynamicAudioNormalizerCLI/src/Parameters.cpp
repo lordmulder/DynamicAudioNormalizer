@@ -108,6 +108,7 @@ void Parameters::setDefaults(void)
 	m_showHelp           = false;
 	m_channelsCoupled    = true;
 	m_enableDCCorrection = false;
+	m_altBoundaryMode       = false;
 	m_verboseMode        = false;
 	
 	m_peakValue = 0.95;
@@ -175,6 +176,11 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		if(IS_ARG_SHRT("c", "correct-dc"))
 		{
 			m_enableDCCorrection = true;
+			continue;
+		}
+		if(IS_ARG_SHRT("b", "alt-boundary"))
+		{
+			m_altBoundaryMode = true;
 			continue;
 		}
 		if(IS_ARG_SHRT("v", "verbose"))

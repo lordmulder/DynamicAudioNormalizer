@@ -85,7 +85,7 @@ static inline double BOUND(const double &threshold, const double &val)
 class MDynamicAudioNormalizer_PrivateData
 {
 public:
-	MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile);
+	MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool altBoundaryMode, FILE *const logFile);
 	~MDynamicAudioNormalizer_PrivateData(void);
 
 	bool initialize(void);
@@ -101,6 +101,7 @@ private:
 
 	const bool m_channelsCoupled;
 	const bool m_enableDCCorrection;
+	const bool m_altBoundaryMode;
 
 	const double m_peakValue;
 	const double m_maxAmplification;
@@ -149,15 +150,15 @@ protected:
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
+MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool altBoundaryMode, FILE *const logFile)
 :
-	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize, logFile))
+	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, channelsCoupled, enableDCCorrection, peakValue, maxAmplification, filterSize, altBoundaryMode, logFile))
 
 {
 	/*nothing to do here*/
 }
 
-MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
+MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const bool channelsCoupled, const bool enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const bool altBoundaryMode, FILE *const logFile)
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
@@ -165,6 +166,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_filterSize(filterSize),
 	m_channelsCoupled(channelsCoupled),
 	m_enableDCCorrection(enableDCCorrection),
+	m_altBoundaryMode(altBoundaryMode),
 	m_peakValue(peakValue),
 	m_maxAmplification(maxAmplification),
 	m_logFile(logFile)
@@ -513,7 +515,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 	{
 		for(uint32_t i = 0; i < pendingSamples; i++)
 		{
-			samplesOut[c][i] = m_peakValue;
+			samplesOut[c][i] = m_altBoundaryMode ? DBL_EPSILON : m_peakValue;
 		}
 	}
 
@@ -659,11 +661,11 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 		const uint32_t preFillSize = m_filterSize / 2;
 		while(m_gainHistory_original[channel].size() < preFillSize)
 		{
-			m_gainHistory_original[channel].push_back(1.0);
+			m_gainHistory_original[channel].push_back(m_altBoundaryMode ? currentGainFactor : 1.0);
 		}
 		while(m_gainHistory_minimum[channel].size() < preFillSize)
 		{
-			m_gainHistory_minimum[channel].push_back(1.0);
+			m_gainHistory_minimum[channel].push_back(m_altBoundaryMode ? currentGainFactor : 1.0);
 		}
 	}
 

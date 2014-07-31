@@ -24,11 +24,11 @@
 
 extern "C"
 {
-	MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance) (const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const int channelsCoupled, const int enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, FILE *const logFile)
+	MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance) (const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const int channelsCoupled, const int enableDCCorrection, const double peakValue, const double maxAmplification, const uint32_t filterSize, const int altBoundaryMode, FILE *const logFile)
 	{
 		try
 		{
-			MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, (channelsCoupled != 0), (enableDCCorrection != 0), peakValue, maxAmplification, filterSize, logFile);
+			MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, (channelsCoupled != 0), (enableDCCorrection != 0), peakValue, maxAmplification, filterSize, (altBoundaryMode != 0), logFile);
 			if(instance->initialize())
 			{
 				return reinterpret_cast<MDynamicAudioNormalizer_Handle*>(instance);

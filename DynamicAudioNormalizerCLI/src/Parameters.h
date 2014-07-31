@@ -41,6 +41,7 @@ public:
 	inline const uint32_t &filterSize(void)         const { return m_filterSize;         }
 	inline const bool     &channelsCoupled(void)    const { return m_channelsCoupled;    }
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
+	inline const bool     &altBoundaryMode(void)       const { return m_altBoundaryMode;       }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
 	inline const bool     &showHelp(void)           const { return m_showHelp;           }
@@ -61,6 +62,7 @@ private:
 	bool m_showHelp;
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
+	bool m_altBoundaryMode;
 	bool m_verboseMode;
 	
 	double m_peakValue;
