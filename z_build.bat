@@ -7,6 +7,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
 set "UPX3_PATH=C:\Program Files (x86)\UPX"
 set "PDOC_PATH=C:\Program Files (x86)\Pandoc"
+set "QT_VS2013=C:\Qt\4.8.6"
 
 REM ###############################################
 REM # DO NOT MODIFY ANY LINES BELOW THIS LINE !!! #
@@ -15,7 +16,9 @@ REM ###############################################
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Setup environment
 REM ///////////////////////////////////////////////////////////////////////////
+set "QTDIR=%QT_VS2013%"
 call "%MSVC_PATH%\vcvarsall.bat" x86
+set "PATH=%QTDIR%\bin;%PATH%"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Check environment
