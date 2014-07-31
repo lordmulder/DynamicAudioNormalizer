@@ -41,13 +41,11 @@
     <CustomBuild Include="src\3rd_party\qcustomplot.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="DynamicAudioNormalizerGUI.rc">
-      <Filter>Resource Files</Filter>
-    </CustomBuild>
+    <CustomBuild Include="DynamicAudioNormalizerGUI.qrc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DynamicAudioNormalizerGUI.qrc">
+    <ResourceCompile Include="DynamicAudioNormalizerGUI.rc">
       <Filter>Resource Files</Filter>
-    </None>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

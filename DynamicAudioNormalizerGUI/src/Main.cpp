@@ -33,6 +33,9 @@
 #include <QPlastiqueStyle>
 #include <QRegExp>
 
+//MDynamicAudioNormalizer API
+#include "DynamicAudioNormalizer.h"
+
 //Internal
 #include "3rd_party/qcustomplot.h"
 
@@ -86,7 +89,7 @@ static void parseData(QTextStream &textStream, unsigned int &channels, LogFileDa
 		const QString line = textStream.readLine().simplified();
 		if(!line.isEmpty())
 		{
-			const QStringList tokens = line.split(' ', QString::SkipEmptyParts);
+			const QStringList tokens = line.split(QChar(0x20), QString::SkipEmptyParts);
 			if(((unsigned int) tokens.count()) == (channels * 3))
 			{
 				QStringList::ConstIterator iter = tokens.constBegin();
@@ -121,12 +124,15 @@ static void createGraph(QCustomPlot *plot, QVector<double> &steps, QVector<doubl
 
 static int dynamicNormalizerGuiMain(int argc, char* argv[])
 {
+	uint32_t versionMajor, versionMinor, versionPatch;
+	MDynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
+
 	QApplication app(argc, argv);
 	app.setWindowIcon(QIcon(":/res/chart_curve.png"));
 	app.setStyle(new QPlastiqueStyle());
 
 	QTabWidget window;
-	window.setWindowTitle(QString("Dynamic Audio Normalizer - Log Viewer"));
+	window.setWindowTitle(QString("Dynamic Audio Normalizer - Log Viewer [%1]").arg(QString().sprintf("v%u.%02u-%u", versionMajor, versionMinor, versionPatch)));
 	window.setMinimumSize(640, 480);
 	window.show();
 
@@ -139,37 +145,46 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 	QFile logFile(logFileName);
 	if(!logFile.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		QMessageBox::critical(&window, QString("Dynamic Audio Normalizer"), QString("Error: The selected log file could not opened for reading!"));
+		QMessageBox::critical(&window, QString().sprintf("Dynamic Audio Normalizer"), QString("Error: The selected log file could not opened for reading!"));
 		return EXIT_FAILURE;
 	}
 
 	QTextStream textStream(&logFile);
 	textStream.setCodec("UTF-8");
 
+	double minValue = DBL_MAX;
+	double maxValue = 0.0;
 	unsigned int channels = 0;
 
+	//parse header
 	if(!parseHeader(textStream, channels))
 	{
 		QMessageBox::critical(&window, QString("Dynamic Audio Normalizer"), QString("Error: Failed to parse the header of the log file!\nProbably the file is of an unsupported type."));
 		return EXIT_FAILURE;
 	}
 
-	double minValue = DBL_MAX;
-	double maxValue = 0.0;
-
+	//allocate buffers
 	LogFileData *data = new LogFileData[channels];
 	QCustomPlot *plot = new QCustomPlot[channels];
 
+	//load data
 	parseData(textStream, channels, data, minValue, maxValue);
+	logFile.close();
 
-	unsigned int length = 0;
+	if((data[0].original.size() < 1) || (data[0].minimal.size() < 1) || (data[0].smoothed.size() < 1))
+	{
+		QMessageBox::critical(&window, QString("Dynamic Audio Normalizer"), QString("Error: Failed to load data. Log file countains no valid data!"));
+		delete [] data;
+		delete [] plot;
+		return EXIT_FAILURE;
+	}
+
+	unsigned int length = UINT_MAX;
 	for(unsigned int c = 0; c < channels; c++)
 	{
-		unsigned int temp = UINT_MAX;
-		temp = qMin(temp, (unsigned int) data[c].original.count());
-		temp = qMin(temp, (unsigned int) data[c].minimal .count());
-		temp = qMin(temp, (unsigned int) data[c].smoothed.count());
-		length =  qMax(length, temp);
+		length = qMin(length, (unsigned int) data[c].original.count());
+		length = qMin(length, (unsigned int) data[c].minimal .count());
+		length = qMin(length, (unsigned int) data[c].smoothed.count());
 	}
 
 	QVector<double> steps(length);
@@ -180,38 +195,38 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 
 	for(unsigned int c = 0; c < channels; c++)
 	{
-		// create graph and assign data to it:
+		//create graph and assign data to it:
 		createGraph(&plot[c], steps, data[c].original, Qt::blue,  Qt::SolidLine, 1);
 		createGraph(&plot[c], steps, data[c].minimal,  Qt::green, Qt::SolidLine, 1);
 		createGraph(&plot[c], steps, data[c].smoothed, Qt::red,   Qt::DashLine,  2);
 
-		// give the axes some labels:
+		//give the axes some labels:
 		plot[c].xAxis->setLabel("Frame #");
 		plot[c].yAxis->setLabel("Gain Factor");
 		makeAxisBold(plot[c].xAxis);
 		makeAxisBold(plot[c].yAxis);
 
-		// set axes ranges, so we see all data:
+		//set axes ranges, so we see all data:
 		plot[c].xAxis->setRange(0.0, length);
 		plot[c].yAxis->setRange(minValue - 0.25, maxValue + 0.25);
 		plot[c].yAxis->setScaleType(QCPAxis::stLinear);
 		plot[c].yAxis->setTickStep(1.0);
 		plot[c].yAxis->setAutoTickStep(false);
 
-		// add title
+		//add title
 		plot[c].plotLayout()->insertRow(0);
 		plot[c].plotLayout()->addElement(0, 0, new QCPPlotTitle(&plot[c], QString("%1 (Channel %2/%3)").arg(QFileInfo(logFile).fileName(), QString::number(c+1), QString::number(channels))));
 
-		// show the plot
+		//show the plot
 		plot[c].replot();
 		window.addTab(&plot[c], QString().sprintf("Channel #%u", c + 1));
 	}
 
-	// run application
+	//run application
 	window.showMaximized();
 	app.exec();
 
-	// clean up
+	//clean up
 	delete [] data;
 	delete [] plot;
 

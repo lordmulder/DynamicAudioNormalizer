@@ -53,6 +53,11 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">$(ProjectDir)tmp\QRC_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI.vcxproj">
+      <Project>{376386ee-8268-47e3-a335-7663716e4c60}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{131C921A-7144-4C1D-9C97-57C43FA83DFE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -114,7 +119,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_THREAD_SUPPORT;QT_DLL;QT_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGUI</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGUI</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -129,11 +134,17 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_THREAD_SUPPORT;QT_DLL;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGUI</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGUI</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,12 +166,17 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_THREAD_SUPPORT;QT_NODLL;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGUI</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGUI</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
