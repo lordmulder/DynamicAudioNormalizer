@@ -179,7 +179,7 @@ MDynamicAudioNormalizer(
 	const double peakValue,
 	const double maxAmplification,
 	const uint32_t filterSize,
-	const bool verbose = false,
+	const bool altBoundaryMode,
 	FILE *const logFile = NULL
 );
 ```
@@ -189,14 +189,14 @@ Constructor. Creates a new *MDynamicAudioNormalizer* instance and sets up the no
 **Parameters:**
 * *channels*: The number of channels in the input/output audio stream (e.g. **2** for Stereo).
 * *sampleRate*: The sampling rate of the input/output audio stream, in Hertz (e.g. **44100** for "CD Quality").
-* *frameLenMsec*: The frame length, in milliseconds. A typical value is **500** milliseconds.
-* *channelsCoupled*: Set to **true** in order to enable channel coupling, or to **false** otherwise (default: **true**).
-* *enableDCCorrection*: Set to **true** in order to enable DC correction, or to **false** otherwise (default: **false**).
-* *peakValue*: Specifies the peak magnitude for normalized audio, in the **0.0** to **1.0** range (default: **0.95**).
-* *maxAmplification*: Specifies the maximum amplification factor. Must be greater than **1.0** (default: **10.0**).
-* *filterSize*: The "window size" of the Gaussian filter, in frames. Must be an *odd* number. (default: **31**).
-* *verbose*: Set to **true** in order to enable additional diagnostic logging, or to **false** otherwise (default: **false**).
-* *logFile*: An open **FILE*** handle with *write* access to be used for logging, or **NULL** to disable logging.
+* *frameLenMsec*: The [frame length](#chap_cfg.f), in milliseconds. A typical value is **500** milliseconds.
+* *channelsCoupled*: Set to **true** in order to enable [channel coupling](#chap_cfg.n), or to **false** otherwise (default: **true**).
+* *enableDCCorrection*: Set to **true** in order to enable [DC correction](#chap_cfg.c), or to **false** otherwise (default: **false**).
+* *peakValue*: Specifies the [peak magnitude](#chap_cfg.p) for normalized audio, in the **0.0** to **1.0** range (default: **0.95**).
+* *maxAmplification*: Specifies the [maximum gain factor](#chap_cfg.m). Must be greater than **1.0** (default: **10.0**).
+* *filterSize*: The ["window size"](#chap_cfg.g) of the Gaussian filter, in frames. Must be an *odd* number. (default: **31**).
+* *altBoundaryMode*: Set to **true** in order to enable the alternative [boundary mode](#chap_cfg.b) (default: **false**).
+* *logFile*: An open **FILE*** handle with *write* access to be used for [logging](#chap_cfg.l), or **NULL** to disable logging.
 
 ### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() <a name="chap_api.destructor"></a> ###
 ```
