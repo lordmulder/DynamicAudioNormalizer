@@ -122,6 +122,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\etc\vld\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,6 +148,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\etc\vld\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -145,6 +145,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -177,6 +178,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
