@@ -23,13 +23,14 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
+MOC ?= moc
+QTDIR ?= /usr/include/qt4
+
 ##############################################################################
 # Constants
 ##############################################################################
 
-MOC ?= moc
-QTDIR ?= /usr/include/qt4
-
+API_VERSION  := 1
 PROGRAM_NAME := DynamicAudioNormalizerGUI
 
 ##############################################################################
@@ -47,13 +48,17 @@ else
 endif
 
 CXXFLAGS += -I./src
-CXXFLAGS += -I./include
+CXXFLAGS += -I../DynamicAudioNormalizerAPI/include
 
+LDXFLAGS += -Wl,-rpath,'$$ORIGIN'
+LDXFLAGS += -L../DynamicAudioNormalizerAPI/lib
+LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
+
+#Externel libraries
 CXXFLAGS += -I$(QTDIR)
 CXXFLAGS += -I$(QTDIR)/QtGui
 CXXFLAGS += -I$(QTDIR)/QtCore
 
-#Externel libraries
 LDXFLAGS += -lQtCore -lQtGui
 
 ##############################################################################
