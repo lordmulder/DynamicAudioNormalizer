@@ -14,6 +14,8 @@ Dynamic Audio Normalizer
 6. [Changelog](#chap_log)
 7. [Frequently Asked Questions](#chap_faq)
 8. [License Terms](#chap_lic)
+9. [Acknowledgement](#chap_ack)
+
 
 How It Works<a name="chap_how"></a>
 -------------------------------------------------------------------------------
@@ -347,6 +349,11 @@ Furthermore, Makefiles for the Linux platform are provided. They have been teste
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
+### Version 2.02 (2014-08-03) ###
+* Update license → core library is now released under LGPL v2.1
+* Some small documentation and build file updates
+* There are **no** code changes in this release whatsoever
+
 ### Version 2.01 (2014-08-01) ###
 * Added graphical log viewer application to the distribution package
 * Improved the threshold function for the handling of the maximum gain factor limit
@@ -401,7 +408,7 @@ The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released
 
 ```
 Dynamic Audio Normalizer - Audio Processing Library
-Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -420,13 +427,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 **http://www.gnu.org/licenses/lgpl-2.1.html**
 
-### Dynamic Audio Normalizer Programs ###
+### Dynamic Audio Normalizer CLI ###
 
-The Dynamic Audio Normalizer **programs** (DynamicAudioNormalizerCLI/GUI) are released under the *GNU General Public License*, Version 2.
+The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) is released under the *GNU General Public License*, Version 2.
 
 ```
 Dynamic Audio Normalizer - Audio Processing Utility
-Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -444,6 +451,50 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ```
 
 **http://www.gnu.org/licenses/gpl-2.0.html**
+
+### Dynamic Audio Normalizer GUI ###
+
+The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) is released under the *GNU General Public License*, Version 3.
+
+```
+Dynamic Audio Normalizer - Audio Processing Utility
+Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+```
+
+**http://www.gnu.org/licenses/gpl-3.0.html**
+
+
+Acknowledgement <a name="chap_ack"></a>
+-------------------------------------------------------------------------------
+
+The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) incorporates the following *third-party* software:
+
+* [**libsndfile**](http://www.mega-nerd.com/libsndfile/)
+  C library for reading and writing files containing sampled sound through one standard library interface
+  Copyright (C) 1999-2011 Erik de Castro Lopo
+  
+The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) incorporates the following *third-party* software:
+
+* [**Qt Framework**](http://qt-project.org/)
+  Cross-platform application and UI framework for developers using C++ or QML, a CSS & JavaScript like language
+  Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies)
+  
+* [**QCustomPlot**](http://www.qcustomplot.com/)
+  Qt C++ widget for plotting and data visualization that focuses on making good looking, publication quality 2D plots
+  Copyright (C) 2011-2014 Emanuel Eichhammer
 
 <br>  
 
