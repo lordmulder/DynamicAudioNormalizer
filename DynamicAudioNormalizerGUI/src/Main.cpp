@@ -222,8 +222,8 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 		createGraph(&plot[c], steps, data[c].smoothed, Qt::red,   Qt::DashLine,  2);
 
 		//set plot names
-		plot[c].graph(0)->setName("Local max. gain");
-		plot[c].graph(1)->setName("Minimum filtered");
+		plot[c].graph(0)->setName("Local Max. Gain");
+		plot[c].graph(1)->setName("Minimum Filtered");
 		plot[c].graph(2)->setName("Final Smoothed");
 
 		//set axes labels:
