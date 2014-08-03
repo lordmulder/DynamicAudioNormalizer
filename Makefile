@@ -92,7 +92,7 @@ DeployBinaries: CreateTagFile
 	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME) $(TARGET_PATH)
 	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH)
 	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).so $(TARGET_PATH)
-	cp ./LICENSE.html $(TARGET_PATH)
+	cp ./LICENSE-*.html $(TARGET_PATH)
 	pandoc --from markdown_github+header_attributes --to html5 --standalone -H ./img/Style.inc ./README.md --output $(TARGET_PATH)/README.html
 	cp ./img/*.png $(TARGET_PATH)/img
 	rm -f $(OUTPUT_FILE)
