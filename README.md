@@ -351,8 +351,10 @@ Changelog <a name="chap_log"></a>
 
 ### Version 2.02 (2014-08-03) ###
 * Update license → core library is now released under LGPL v2.1
-* Some small documentation and build file updates
-* There are **no** code changes in this release whatsoever
+* Enabled FLAC *output* in the command-line program
+* Show legend in the log viewer program
+* Some minor documentation and build file updates
+* There are **no** code changes in the core library in this release
 
 ### Version 2.01 (2014-08-01) ###
 * Added graphical log viewer application to the distribution package

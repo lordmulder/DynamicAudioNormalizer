@@ -523,6 +523,10 @@ int AudioFileIO_Private::formatFromExtension(const CHR *const fileName, const in
 	{
 		format = SF_FORMAT_AIFF;
 	}
+	else if((STRCASECMP(ext, TXT("fla")) == 0) || (STRCASECMP(ext, TXT("flac")) == 0))
+	{
+		format = SF_FORMAT_FLAC;
+	}
 	else if((STRCASECMP(ext, TXT("raw")) == 0) || (STRCASECMP(ext, TXT("pcm")) == 0))
 	{
 		format = SF_FORMAT_RAW;
