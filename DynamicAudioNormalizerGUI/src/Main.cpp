@@ -125,21 +125,35 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 	uint32_t versionMajor, versionMinor, versionPatch;
 	MDynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
 
+	//initialize application
 	QApplication app(argc, argv);
 	app.setWindowIcon(QIcon(":/res/chart_curve.png"));
 	app.setStyle(new QPlastiqueStyle());
 
+	//create basic tab widget
 	QTabWidget window;
 	window.setWindowTitle(QString("Dynamic Audio Normalizer - Log Viewer [%1]").arg(QString().sprintf("v%u.%02u-%u", versionMajor, versionMinor, versionPatch)));
 	window.setMinimumSize(640, 480);
 	window.show();
 
-	const QString logFileName = QFileDialog::getOpenFileName(&window, "Open Log File", QString(), QString("Log File (*.log)"));
+	//get arguments
+	const QStringList args = app.arguments();
+	
+	//choose input file
+	const QString logFileName = (args.size() < 2) ? QFileDialog::getOpenFileName(&window, "Open Log File", QString(), QString("Log File (*.log)")) : args.at(1);
 	if(logFileName.isEmpty())
 	{
 		return EXIT_FAILURE;
 	}
 
+	//check for existence
+	if(!(QFileInfo(logFileName).exists() && QFileInfo(logFileName).isFile()))
+	{
+		QMessageBox::critical(&window, QString().sprintf("Dynamic Audio Normalizer"), QString("Error: The specified log file could not be found!"));
+		return EXIT_FAILURE;
+	}
+
+	//open the input file
 	QFile logFile(logFileName);
 	if(!logFile.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
@@ -147,6 +161,7 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	//wrap into text stream
 	QTextStream textStream(&logFile);
 	textStream.setCodec("UTF-8");
 
@@ -169,6 +184,7 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 	parseData(textStream, channels, data, minValue, maxValue);
 	logFile.close();
 
+	//check data
 	if((data[0].original.size() < 1) || (data[0].minimal.size() < 1) || (data[0].smoothed.size() < 1))
 	{
 		QMessageBox::critical(&window, QString("Dynamic Audio Normalizer"), QString("Error: Failed to load data. Log file countains no valid data!"));
@@ -177,6 +193,7 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	//determine length of data
 	unsigned int length = UINT_MAX;
 	for(unsigned int c = 0; c < channels; c++)
 	{
@@ -185,26 +202,37 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 		length = qMin(length, (unsigned int) data[c].smoothed.count());
 	}
 
+	//create x-axis steps
 	QVector<double> steps(length);
 	for(unsigned int i = 0; i < length; i++)
 	{
 		steps[i] = double(i);
 	}
 
+	//now create the plots
 	for(unsigned int c = 0; c < channels; c++)
 	{
+		//init the legend
+		plot[c].legend->setVisible(true);
+		plot[c].legend->setFont(QFont("Helvetica", 9));
+
 		//create graph and assign data to it:
 		createGraph(&plot[c], steps, data[c].original, Qt::blue,  Qt::SolidLine, 1);
 		createGraph(&plot[c], steps, data[c].minimal,  Qt::green, Qt::SolidLine, 1);
 		createGraph(&plot[c], steps, data[c].smoothed, Qt::red,   Qt::DashLine,  2);
 
-		//give the axes some labels:
+		//set plot names
+		plot[c].graph(0)->setName("Local max. gain");
+		plot[c].graph(1)->setName("Minimum filtered");
+		plot[c].graph(2)->setName("Final Smoothed");
+
+		//set axes labels:
 		plot[c].xAxis->setLabel("Frame #");
 		plot[c].yAxis->setLabel("Gain Factor");
 		makeAxisBold(plot[c].xAxis);
 		makeAxisBold(plot[c].yAxis);
 
-		//set axes ranges, so we see all data:
+		//set axes ranges
 		plot[c].xAxis->setRange(0.0, length);
 		plot[c].yAxis->setRange(minValue - 0.25, maxValue + 0.25);
 		plot[c].yAxis->setScaleType(QCPAxis::stLinear);

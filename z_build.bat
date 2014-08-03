@@ -104,8 +104,9 @@ for %%c in (DLL, Static) do (
 		copy "%QTDIR%\bin\QtCore4.dll"                                   "%PACK_PATH%\%%c"
 	)
 
-	copy "%~dp0\LICENSE-GPL.html"  "%PACK_PATH%\%%c"
 	copy "%~dp0\LICENSE-LGPL.html" "%PACK_PATH%\%%c"
+	copy "%~dp0\LICENSE-GPL2.html" "%PACK_PATH%\%%c"
+	copy "%~dp0\LICENSE-GPL3.html" "%PACK_PATH%\%%c"
 	copy "%~dp0\img\*.png"         "%PACK_PATH%\%%c\img"
 
 	"%PDOC_PATH%\pandoc.exe" --from markdown_github+header_attributes --to html5 --standalone -H "%~dp0\img\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\%%c\README.html"
