@@ -104,8 +104,8 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 {
 	bool okay = true;
 
-	PRINT(TXT("SourceFile: %s\n"), parameters.sourceFile());
-	PRINT(TXT("OutputFile: %s\n"), parameters.outputFile());
+	PRINT(TXT("SourceFile: %s\n"),   parameters.sourceFile());
+	PRINT(TXT("OutputFile: %s\n\n"), parameters.outputFile());
 
 	*sourceFile = new AudioFileIO();
 	if(!(*sourceFile)->openRd(parameters.sourceFile()))
@@ -150,6 +150,15 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 			MY_DELETE(*outputFile);
 		}
 		return false;
+	}
+
+	if(parameters.verboseMode())
+	{
+		CHR info[128];
+		(*sourceFile)->getFormatInfo(info, 128);
+		PRINT(TXT("SourceInfo: %s\n"), info);
+		(*outputFile)->getFormatInfo(info, 128);
+		PRINT(TXT("OutputInfo: %s\n\n"), info);
 	}
 
 	return true;
@@ -235,7 +244,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 	{
 		PRINT(progressStr, 100.0, TXT('*'));
 		FLUSH();
-		PRINT(TXT("\nCompleted.\n\n"));
+		PRINT(TXT("\nFinished.\n\n"));
 	}
 	else
 	{
@@ -370,7 +379,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	Parameters parameters;
 	if(!parameters.parseArgs(argc, argv))
 	{
-		PRINT2_ERR(TXT("Invalid or incomplete command-line arguments have been detected.\n\nType \"%s --help\" for details!\n"), appName(argv[0]));
+		PRINT2_ERR(TXT("Invalid or incomplete command-line arguments have been detected.\n\nPlease type \"%s --help\" for details!\n"), appName(argv[0]));
 		return EXIT_FAILURE;
 	}
 
@@ -385,7 +394,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
 	if(!openFiles(parameters, &sourceFile, &outputFile))
 	{
-		PRINT_ERR(TXT("Failed to open input and/or output file!\n"));
+		PRINT_ERR(TXT("Failed to open input and/or output file -> aborting!\n"));
 		return EXIT_FAILURE;
 	}
 
@@ -394,7 +403,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	{
 		if(!(logFile = FOPEN(parameters.dbgLogFile(), TXT("w"))))
 		{
-			PRINT2_WRN(TXT("Failed to open log file \"%s\""), parameters.dbgLogFile());
+			PRINT_WRN(TXT("Failed to open log file -> No log file will be created!\n"));
 		}
 	}
 
@@ -414,7 +423,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		logFile = NULL;
 	}
 
-	PRINT(TXT("---------------------------------------------------------------------------\n\n"));
+	PRINT(TXT("--------------\n\n"));
 	PRINT(TXT("%s\n\nOperation took %.1f seconds.\n\n"), ((result != EXIT_SUCCESS) ? TXT("Sorry, something went wrong :-(") : TXT("Everything completed successfully :-)")), elapsed);
 
 	return result;

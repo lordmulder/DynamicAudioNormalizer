@@ -54,6 +54,7 @@ public:
 
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth);
+	void getFormatInfo(CHR *buffer, const uint32_t buffSize);
 
 	//Virtual I/O
 	static sf_count_t vio_get_len(void *user_data);
@@ -83,6 +84,7 @@ private:
 	//Helper functions
 	static int formatToBitDepth(const int &format);
 	static int formatFromExtension(const CHR *const fileName, const int &bitDepth);
+	static int getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -152,6 +154,11 @@ bool AudioFileIO::rewind(void)
 bool AudioFileIO::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
 {
 	return p->queryInfo(channels, sampleRate, length, bitDepth);
+}
+
+void AudioFileIO::getFormatInfo(CHR *buffer, const uint32_t buffSize)
+{
+	p->getFormatInfo(buffer, buffSize);
 }
 
 const char *AudioFileIO::libraryVersion(void)
@@ -261,6 +268,13 @@ bool AudioFileIO_Private::openWr(const CHR *const fileName, const uint32_t chann
 		PRINT2_ERR(TXT("AudioFileIO: File open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
 		fclose(file);
 		return false;
+	}
+
+	//Set Vorbis quality
+	if((info.format & SF_FORMAT_SUBMASK) == SF_FORMAT_VORBIS)
+	{
+		double vorbisQualityLevel = 0.6;
+		sf_command(handle, SFC_SET_VBR_ENCODING_QUALITY, &vorbisQualityLevel, sizeof(double));
 	}
 
 	access = SFM_WRITE;
@@ -415,6 +429,39 @@ bool AudioFileIO_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, in
 	return true;
 }
 
+void AudioFileIO_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
+{
+	const CHR *format = TXT("Unknown Format");
+	const CHR *subfmt = TXT("Unknown SubFmt");
+
+	switch(info.format & SF_FORMAT_TYPEMASK)
+	{
+		case SF_FORMAT_WAV:    format = TXT("RIFF WAVE"); break;
+		case SF_FORMAT_AIFF:   format = TXT("AIFF");      break;
+		case SF_FORMAT_AU:     format = TXT("AU/SND");    break;
+		case SF_FORMAT_RAW:    format = TXT("Raw Data");  break;
+		case SF_FORMAT_W64:    format = TXT("Wave64");    break;
+		case SF_FORMAT_WAVEX:  format = TXT("WAVE EX");   break;
+		case SF_FORMAT_FLAC:   format = TXT("FLAC");      break;
+		case SF_FORMAT_OGG:    format = TXT("Ogg");       break;
+		case SF_FORMAT_RF64:   format = TXT("RF64");      break;
+	}
+
+	switch(info.format & SF_FORMAT_SUBMASK)
+	{
+		case SF_FORMAT_PCM_S8: subfmt = TXT("8-Bit Signed");          break;
+		case SF_FORMAT_PCM_U8: subfmt = TXT("8-Bit Unsigned");        break;
+		case SF_FORMAT_PCM_16: subfmt = TXT("16-Bit Integer");        break;
+		case SF_FORMAT_PCM_24: subfmt = TXT("24-Bit Integer");        break;
+		case SF_FORMAT_PCM_32: subfmt = TXT("32-Bit Integer");        break;
+		case SF_FORMAT_FLOAT:  subfmt = TXT("32-Bit Floating-Point"); break;
+		case SF_FORMAT_DOUBLE: subfmt = TXT("64-Bit Floating-Point"); break;
+		case SF_FORMAT_VORBIS: subfmt = TXT("Xiph Vorbis");           break;
+	}
+
+	SNPRINTF(buffer, buffSize, TXT("%s, %s"), format, subfmt);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // File I/O Functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -499,63 +546,78 @@ int AudioFileIO_Private::formatToBitDepth(const int &format)
 
 int AudioFileIO_Private::formatFromExtension(const CHR *const fileName, const int &bitDepth)
 {
-	int format;
+	int format = 0;
 	const CHR *ext = fileName;
 
 	if(const CHR *tmp = STRRCHR(ext, TXT('/' ))) ext = ++tmp;
 	if(const CHR *tmp = STRRCHR(ext, TXT('\\'))) ext = ++tmp;
 	if(const CHR *tmp = STRRCHR(ext, TXT('.' ))) ext = ++tmp;
 
-	/*major format*/
 	if(STRCASECMP(ext, TXT("wav")) == 0)
 	{
-		format = SF_FORMAT_WAV;
+		format = SF_FORMAT_WAV  | getSubFormat(bitDepth, 0, 1);
 	}
 	else if(STRCASECMP(ext, TXT("w64")) == 0)
 	{
-		format = SF_FORMAT_W64;
+		format = SF_FORMAT_W64  | getSubFormat(bitDepth, 0, 1);
+	}
+	else if(STRCASECMP(ext, TXT("rf64")) == 0)
+	{
+		format = SF_FORMAT_RF64 | getSubFormat(bitDepth, 0, 1);
 	}
 	else if(STRCASECMP(ext, TXT("au")) == 0)
 	{
-		format = SF_FORMAT_AU;
+		format = SF_FORMAT_AU   | getSubFormat(bitDepth, 1, 1);
 	}
 	else if(STRCASECMP(ext, TXT("aiff")) == 0)
 	{
-		format = SF_FORMAT_AIFF;
+		format = SF_FORMAT_AIFF | getSubFormat(bitDepth, 1, 1);
+	}
+	else if((STRCASECMP(ext, TXT("ogg")) == 0) || (STRCASECMP(ext, TXT("oga")) == 0))
+	{
+		format = SF_FORMAT_OGG | SF_FORMAT_VORBIS;
 	}
 	else if((STRCASECMP(ext, TXT("fla")) == 0) || (STRCASECMP(ext, TXT("flac")) == 0))
 	{
-		format = SF_FORMAT_FLAC;
+		format = SF_FORMAT_FLAC | getSubFormat(bitDepth, 1, 0);
 	}
 	else if((STRCASECMP(ext, TXT("raw")) == 0) || (STRCASECMP(ext, TXT("pcm")) == 0))
 	{
-		format = SF_FORMAT_RAW;
+		format = SF_FORMAT_RAW  | getSubFormat(bitDepth, 1, 1);
 	}
 	else
 	{
-		format = SF_FORMAT_WAV;
+		format = SF_FORMAT_WAV  | getSubFormat(bitDepth, 0, 1);
 	}
 
-	/*sub-format*/
+
+
+	return format;
+}
+
+int AudioFileIO_Private::getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported)
+{
+	int format = 0;
+
 	switch(bitDepth)
 	{
 	case 8:
-		format |= SF_FORMAT_PCM_S8;
+		format = eightBitIsSigned ? SF_FORMAT_PCM_S8 : SF_FORMAT_PCM_U8;
 		break;
 	case 16:
-		format |= SF_FORMAT_PCM_16;
+		format = SF_FORMAT_PCM_16;
 		break;
 	case 24:
-		format |= SF_FORMAT_PCM_24;
+		format = SF_FORMAT_PCM_24;
 		break;
 	case 32:
-		format |= SF_FORMAT_FLOAT;
+		format = hightBitdepthSupported ? SF_FORMAT_FLOAT  : SF_FORMAT_PCM_24;
 		break;
 	case 64:
-		format |= SF_FORMAT_DOUBLE;
+		format = hightBitdepthSupported ? SF_FORMAT_DOUBLE : SF_FORMAT_PCM_24;
 		break;
 	default:
-		format |= SF_FORMAT_PCM_16;
+		format = SF_FORMAT_PCM_16;
 		break;
 	}
 

@@ -46,6 +46,7 @@ public:
 
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth);
+	void getFormatInfo(CHR *buffer, const uint32_t buffSize);
 
 	//Static functions
 	static const char *libraryVersion(void);
