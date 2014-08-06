@@ -40,7 +40,12 @@ ifeq ($(DEBUG_BUILD), 1)
    CXXFLAGS = -g -O0 -D_DEBUG
 else
    CONFIG_NAME = Release
-   CXXFLAGS = -O3 -march=native -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG
+   CXXFLAGS = -O3 -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG
+   ifeq ($(shell getconf LONG_BIT),64)
+      CXXFLAGS += -march=core2
+   else
+      CXXFLAGS += -march=pentium4
+   endif
 endif
 
 CXXFLAGS += -I./src

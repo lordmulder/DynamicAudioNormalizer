@@ -35,7 +35,7 @@ BUILD_DATE   := $(shell date -Idate)
 BUILD_TIME   := $(shell date +%H:%M:%S)
 BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
 TARGET_PATH  := ./bin/$(BUILD_DATE)
-OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).zip)
+OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).tbz2)
 
 ##############################################################################
 # Rules
@@ -96,7 +96,7 @@ DeployBinaries: CreateTagFile
 	pandoc --from markdown_github+header_attributes --to html5 --standalone -H ./img/Style.inc ./README.md --output $(TARGET_PATH)/README.html
 	cp ./img/*.png $(TARGET_PATH)/img
 	rm -f $(OUTPUT_FILE)
-	pushd $(TARGET_PATH) ; zip -r -9 -z $(OUTPUT_FILE) * < BUILD_TAG ; popd
+	pushd $(TARGET_PATH) ; tar -vcjf $(OUTPUT_FILE) * ; popd
 
 CreateTagFile:
 	@$(ECHO) "\n\e[1;34m-----------------------------------------------------------------------------\e[0m"
@@ -106,7 +106,10 @@ CreateTagFile:
 	echo "Copyright (C) 2014 LoRd_MuldeR <MuldeR2@GMX.de>" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	echo "Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
-	g++ --version | head -n1 | sed 's/^/Compiler version: /' >> $(BUILD_TAG)
+	echo "" >> $(BUILD_TAG)
+	g++ --version | head -n1 | sed 's/^/Compiler version:   /' >> $(BUILD_TAG)
+	uname -srmo | sed 's/^/Build platform:     /' >> $(BUILD_TAG)
+	lsb_release -s -d | sed 's/^/System description: /' >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	echo "This program is free software; you can redistribute it and/or modify" >> $(BUILD_TAG)
 	echo "it under the terms of the GNU General Public License as published by" >> $(BUILD_TAG)
