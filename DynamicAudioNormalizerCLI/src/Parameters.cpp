@@ -104,14 +104,15 @@ void Parameters::setDefaults(void)
 	m_frameLenMsec = 500;
 	m_filterSize   = 31;
 	
-	m_showHelp           = false;
 	m_channelsCoupled    = true;
 	m_enableDCCorrection = false;
-	m_altBoundaryMode       = false;
+	m_altBoundaryMode    = false;
 	m_verboseMode        = false;
+	m_showHelp           = false;
 	
-	m_peakValue = 0.95;
-	m_maxAmplification = 10.0;
+	m_peakValue        =  0.95;
+	m_maxAmplification = 10.00;
+	m_targetRms        =  0.00;
 }
 
 bool Parameters::parseArgs(const int argc, CHR* argv[])
@@ -143,6 +144,18 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			m_dbgLogFile = argv[pos];
 			continue;
 		}
+		if(IS_ARG_SHRT("f", "frame-len"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_UINT(m_frameLenMsec);
+			continue;
+		}
+		if(IS_ARG_SHRT("g", "gauss-size"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_UINT(m_filterSize);
+			continue;
+		}
 		if(IS_ARG_SHRT("p", "peak"))
 		{
 			ENSURE_NEXT_ARG();
@@ -155,16 +168,10 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			PARSE_VALUE_FLT(m_maxAmplification);
 			continue;
 		}
-		if(IS_ARG_SHRT("f", "frame-len"))
+		if(IS_ARG_SHRT("r", "target-rms"))
 		{
 			ENSURE_NEXT_ARG();
-			PARSE_VALUE_UINT(m_frameLenMsec);
-			continue;
-		}
-		if(IS_ARG_SHRT("g", "gauss-size"))
-		{
-			ENSURE_NEXT_ARG();
-			PARSE_VALUE_UINT(m_filterSize);
+			PARSE_VALUE_FLT(m_targetRms);
 			continue;
 		}
 		if(IS_ARG_SHRT("n", "no-coupling"))
@@ -248,9 +255,9 @@ bool Parameters::validateParameters(void)
 		return false;
 	}
 
-	if((m_peakValue < 0.1) || (m_peakValue > 1.0))
+	if((m_peakValue < 0.01) || (m_peakValue > 1.0))
 	{
-		PRINT2_WRN(TXT("Peak value value %.2f is out of range. Must be in the 0.10 to 1.00 range!\n"), m_peakValue);
+		PRINT2_WRN(TXT("Peak value value %.2f is out of range. Must be in the 0.01 to 1.00 range!\n"), m_peakValue);
 		return false;
 	}
 

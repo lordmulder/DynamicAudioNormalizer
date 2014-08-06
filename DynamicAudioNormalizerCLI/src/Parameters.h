@@ -38,11 +38,12 @@ public:
 	
 	inline const uint32_t &frameLenMsec(void)       const { return m_frameLenMsec;       }
 	inline const uint32_t &filterSize(void)         const { return m_filterSize;         }
-	inline const bool     &channelsCoupled(void)    const { return m_channelsCoupled;    }
-	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
-	inline const bool     &altBoundaryMode(void)       const { return m_altBoundaryMode;       }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
+	inline const double   &targetRms(void)          const { return m_targetRms;          }
+	inline const bool     &channelsCoupled(void)    const { return m_channelsCoupled;    }
+	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
+	inline const bool     &altBoundaryMode(void)    const { return m_altBoundaryMode;    }
 	inline const bool     &showHelp(void)           const { return m_showHelp;           }
 	inline const bool     &verboseMode(void)        const { return m_verboseMode;        }
 
@@ -58,12 +59,13 @@ private:
 	uint32_t m_frameLenMsec;
 	uint32_t m_filterSize;
 	
-	bool m_showHelp;
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
 	bool m_altBoundaryMode;
 	bool m_verboseMode;
+	bool m_showHelp;
 	
 	double m_peakValue;
 	double m_maxAmplification;
+	double m_targetRms;
 };

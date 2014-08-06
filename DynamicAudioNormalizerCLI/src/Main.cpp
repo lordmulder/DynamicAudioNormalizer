@@ -274,11 +274,12 @@ static int processFiles(const Parameters &parameters, AudioFileIO *const sourceF
 		channels,
 		sampleRate,
 		parameters.frameLenMsec(),
-		parameters.channelsCoupled(),
-		parameters.enableDCCorrection(),
+		parameters.filterSize(),
 		parameters.peakValue(),
 		parameters.maxAmplification(),
-		parameters.filterSize(),
+		parameters.targetRms(),
+		parameters.channelsCoupled(),
+		parameters.enableDCCorrection(),
 		parameters.altBoundaryMode(),
 		logFile
 	);
@@ -325,15 +326,16 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("Options:\n"));
 	PRINT(TXT("  -i --input <file>        Input audio file [required]\n"));
 	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
-	PRINT(TXT("  -l --logfile <file>      Create log file\n"));
-	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"), defaults.peakValue());
-	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"), defaults.maxAmplification());
 	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"), defaults.frameLenMsec());
 	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"), defaults.filterSize());
+	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"), defaults.peakValue());
+	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"), defaults.maxAmplification());
 	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
+	PRINT(TXT("  -r --rms-mode            Use RMS instead of peak sample [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
 	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"), BOOLIFY(defaults.enableDCCorrection()));
 	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"), BOOLIFY(defaults.altBoundaryMode()));
 	PRINT(TXT("  -v --verbose             Enable verbose console output\n"));
+	PRINT(TXT("  -l --logfile <file>      Create log file\n"));
 	PRINT(TXT("  -h --help                Print this help screen\n"));
 	PRINT(TXT("\n"));
 }
