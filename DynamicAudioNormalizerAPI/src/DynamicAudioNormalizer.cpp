@@ -181,7 +181,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_filterSize(LIMIT(3u, filterSize, 301u)),
 	m_peakValue(LIMIT(0.01, peakValue, 1.0)),
 	m_maxAmplification(LIMIT(1.0, maxAmplification, 100.0)),
-	m_targetRms(LIMIT(0.01, targetRms, 1.0)),
+	m_targetRms(LIMIT(0.0, targetRms, 1.0)),
 	m_channelsCoupled(channelsCoupled),
 	m_enableDCCorrection(enableDCCorrection),
 	m_altBoundaryMode(altBoundaryMode),
@@ -189,7 +189,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 {
 	m_initialized = false;
 	m_flushBuffer = false;
-	
+
 	m_buffSrc = NULL;
 	m_buffOut = NULL;
 	
@@ -523,7 +523,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 	{
 		for(uint32_t i = 0; i < pendingSamples; i++)
 		{
-			samplesOut[c][i] = m_altBoundaryMode ? DBL_EPSILON : m_peakValue;
+			samplesOut[c][i] = m_altBoundaryMode ? DBL_EPSILON : ((m_targetRms > DBL_EPSILON) ? std::min(m_peakValue, m_targetRms) : m_peakValue);
 		}
 	}
 

@@ -261,12 +261,18 @@ bool Parameters::validateParameters(void)
 		return false;
 	}
 
+	if((m_targetRms < 0.0) || (m_targetRms > 1.0))
+	{
+		PRINT2_WRN(TXT("Target RMS value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_targetRms);
+		return false;
+	}
+
 	if((m_maxAmplification < 1.0) || (m_maxAmplification > 100.0))
 	{
 		PRINT2_WRN(TXT("Maximum amplification %.2f is out of range. Must be in the 1.00 to 100.00 range!\n"), m_maxAmplification);
 		return false;
 	}
-	
+
 	if((m_frameLenMsec < 10) || (m_frameLenMsec > 8000))
 	{
 		PRINT2_WRN(TXT("Frame length %u is out of range. Must be in the 10 to 8000 range!\n"), m_frameLenMsec);
