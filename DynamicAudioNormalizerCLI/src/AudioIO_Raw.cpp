@@ -216,7 +216,7 @@ bool AudioIO_Raw_Private::openWr(const CHR *const fileName, const uint32_t chann
 	memset(&info, 0, sizeof(info));
 
 	//Open file
-	file = file = STRCASECMP(fileName, TXT("-")) ? FOPEN(fileName, TXT("wb")) : stdout;
+	file = STRCASECMP(fileName, TXT("-")) ? FOPEN(fileName, TXT("wb")) : stdout;
 	if(!file)
 	{
 		return false;
