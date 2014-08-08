@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AudioIO_File.cpp" />
+    <ClCompile Include="src\AudioIO_Raw.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Parameters.cpp" />
     <ClCompile Include="src\Platform_Linux.cpp" />
@@ -25,6 +26,7 @@
     <ClInclude Include="..\DynamicAudioNormalizerShared\include\Common.h" />
     <ClInclude Include="src\AudioIO.h" />
     <ClInclude Include="src\AudioIO_File.h" />
+    <ClInclude Include="src\AudioIO_Raw.h" />
     <ClInclude Include="src\Parameters.h" />
     <ClInclude Include="src\Platform.h" />
   </ItemGroup>

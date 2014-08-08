@@ -48,3 +48,13 @@ while(0)
 	} \
 } \
 while(0)
+
+#define MY_FREE(X) do \
+{ \
+	if((X)) \
+	{ \
+		free(X); \
+		(X) = NULL; \
+	} \
+} \
+while(0)
