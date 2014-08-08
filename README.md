@@ -429,6 +429,13 @@ In contrast, the Dynamic Audio Normalizer also implements dynamic range compress
 In this case, the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. Still, by using a larger [filter size](#chap_cfg.g), the Dynamic Audio Normalizer may be configured to act much more similar to a "traditional" normalization filter.
 
 
+### Q: Why does the program crash with "GURU MEDITATION" error every time? ###
+
+This error message indicates that the program has encountered a serious problem. On possible reason is that your processor does **not** support the [SSE2](http://en.wikipedia.org/wiki/SSE2) instruction set. That's because the official Dynamic Audio Normalizer binaries have been compiled with SSE and SSE2 code enabled – like pretty much any compiler does *by default* nowadays. So without SSE2 support, the program cannot run, obviosuly. This can be fixed either by upgrading your system to a less antiquated processor, or by recompiling Dynamic Audio Normalizer from the sources with SSE2 code generation *disabled*. Note that SSE2 is supported by the Pentium 4 and Athon 64 processors as well as **all** later processors. Also *every* 64-Bit supports SSE2, because [x86-64](http://en.wikipedia.org/wiki/X86-64) has adopted SSE2 as "core" instructions. That means that *every processor from the last decade* almost certainly supports SSE2.
+
+If your processor *does* support SSE2, but you still get the above error message, you probably have found a bug. In this case it is highly recommended to create a *debug build* and use a [debugger](http://en.wikipedia.org/wiki/Debugger) in order to track down the cause of the problem.
+
+
 License Terms <a name="chap_lic"></a>
 -------------------------------------------------------------------------------
 
