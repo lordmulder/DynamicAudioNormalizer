@@ -21,12 +21,13 @@
 
 #define __STDC_LIMIT_MACROS
 
-#include "AudioFileIO.h"
+#include "AudioIO_File.h"
 
 #include "Common.h"
 
 #include <sndfile.h>
 #include <stdexcept>
+#include <algorithm>
 
 #define MY_THROW(X) throw std::runtime_error((X))
 
@@ -34,11 +35,11 @@
 // Private Data
 ///////////////////////////////////////////////////////////////////////////////
 
-class AudioFileIO_Private
+class AudioIO_File_Private
 {
 public:
-	AudioFileIO_Private(void);
-	~AudioFileIO_Private(void);
+	AudioIO_File_Private(void);
+	~AudioIO_File_Private(void);
 
 	//Open and Close
 	bool openRd(const CHR *const fileName);
@@ -48,9 +49,6 @@ public:
 	//Read and Write
 	int64_t read(double **buffer, const int64_t count);
 	int64_t write(double *const *buffer, const int64_t count);
-
-	//Rewind
-	bool rewind(void);
 
 	//Query info
 	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth);
@@ -74,9 +72,9 @@ private:
 	SNDFILE *handle;
 	int access;
 
-	//(De)Interleaving
+	//(De)Interleaving buffer
 	double *tempBuff;
-	int64_t tempSize;
+	static const size_t BUFF_SIZE = 2048;
 
 	//Library info
 	static char versionBuffer[128];
@@ -91,79 +89,72 @@ private:
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-AudioFileIO::AudioFileIO(void)
+AudioIO_File::AudioIO_File(void)
 :
-	p(new AudioFileIO_Private())
+	p(new AudioIO_File_Private())
 {
 }
 
-AudioFileIO::~AudioFileIO(void)
+AudioIO_File::~AudioIO_File(void)
 {
 	delete p;
 }
 
-AudioFileIO_Private::AudioFileIO_Private(void)
+AudioIO_File_Private::AudioIO_File_Private(void)
 {
 	access = 0;
 	handle = NULL;
 	file = NULL;
 	tempBuff = NULL;
-	tempSize = 0;
 }
 
-AudioFileIO_Private::~AudioFileIO_Private(void)
+AudioIO_File_Private::~AudioIO_File_Private(void)
 {
 	close();
-	MY_DELETE_ARRAY(tempBuff);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
 ///////////////////////////////////////////////////////////////////////////////
 
-bool AudioFileIO::openRd(const CHR *const fileName)
+bool AudioIO_File::openRd(const CHR *const fileName)
 {
 	return p->openRd(fileName);
 }
 
-bool AudioFileIO::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+bool AudioIO_File::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
 	return p->openWr(fileName, channels, sampleRate, bitDepth);
 }
 
-bool AudioFileIO::close(void)
+bool AudioIO_File::close(void)
 {
 	return p->close();
 }
 
-int64_t AudioFileIO::read(double **buffer, const int64_t count)
+int64_t AudioIO_File::read(double **buffer, const int64_t count)
 {
 	return p->read(buffer, count);
 }
 
-int64_t AudioFileIO::write(double *const *buffer, const int64_t count)
+int64_t AudioIO_File::write(double *const *buffer, const int64_t count)
 {
 	return p->write(buffer, count);
 }
 
-bool AudioFileIO::rewind(void)
-{
-	return p->rewind();
-}
-
-bool AudioFileIO::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
+bool AudioIO_File::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
 {
 	return p->queryInfo(channels, sampleRate, length, bitDepth);
 }
 
-void AudioFileIO::getFormatInfo(CHR *buffer, const uint32_t buffSize)
+void AudioIO_File::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 {
 	p->getFormatInfo(buffer, buffSize);
 }
 
-const char *AudioFileIO::libraryVersion(void)
+const char *AudioIO_File::libraryVersion(void)
 {
-	return AudioFileIO_Private::libraryVersion();
+	return AudioIO_File_Private::libraryVersion();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -172,19 +163,19 @@ const char *AudioFileIO::libraryVersion(void)
 
 #define SETUP_VIO(X) do \
 { \
-	(X).get_filelen = AudioFileIO_Private::vio_get_len; \
-	(X).read        = AudioFileIO_Private::vio_read;    \
-	(X).seek        = AudioFileIO_Private::vio_seek;    \
-	(X).tell        = AudioFileIO_Private::vio_tell;    \
-	(X).write       = AudioFileIO_Private::vio_write;   \
+	(X).get_filelen = AudioIO_File_Private::vio_get_len; \
+	(X).read        = AudioIO_File_Private::vio_read;    \
+	(X).seek        = AudioIO_File_Private::vio_seek;    \
+	(X).tell        = AudioIO_File_Private::vio_tell;    \
+	(X).write       = AudioIO_File_Private::vio_write;   \
 } \
 while(0)
 
-bool AudioFileIO_Private::openRd(const CHR *const fileName)
+bool AudioIO_File_Private::openRd(const CHR *const fileName)
 {
 	if(handle)
 	{
-		PRINT_ERR(TXT("AudioFileIO: Sound file is already open!\n"));
+		PRINT_ERR(TXT("AudioIO_File: Sound file is already open!\n"));
 		return false;
 	}
 
@@ -193,20 +184,10 @@ bool AudioFileIO_Private::openRd(const CHR *const fileName)
 	memset(&vio, 0, sizeof(SF_VIRTUAL_IO));
 
 	//Open file
-	if(STRCASECMP(fileName, TXT("-")))
+	file = FOPEN(fileName, TXT("rb"));
+	if(!file)
 	{
-		file = FOPEN(fileName, TXT("rb"));
-		if(!file)
-		{
-			return false;
-		}
-	}
-	else
-	{
-		file = stdin;
-		info.format = SF_FORMAT_RAW | SF_FORMAT_PCM_16;
-		info.channels = 2;
-		info.samplerate = 44100;
+		return false;
 	}
 
 	//Setup the virtual I/O
@@ -217,20 +198,23 @@ bool AudioFileIO_Private::openRd(const CHR *const fileName)
 
 	if(!handle)
 	{
-		PRINT2_ERR(TXT("AudioFileIO: Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
+		PRINT2_ERR(TXT("AudioIO_File: Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
 		fclose(file);
 		return false;
 	}
+
+	//Allocate temp buffer
+	tempBuff = new double[BUFF_SIZE * info.channels];
 
 	access = SFM_READ;
 	return true;
 }
 
-bool AudioFileIO_Private::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+bool AudioIO_File_Private::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
 	if(handle)
 	{
-		PRINT_ERR(TXT("AudioFileIO: Sound file is already open!\n"));
+		PRINT_ERR(TXT("AudioIO_File: Sound file is already open!\n"));
 		return false;
 	}
 
@@ -239,17 +223,10 @@ bool AudioFileIO_Private::openWr(const CHR *const fileName, const uint32_t chann
 	memset(&vio, 0, sizeof(SF_VIRTUAL_IO));
 
 	//Open file
-	if(STRCASECMP(fileName, TXT("-")))
+	file = FOPEN(fileName, TXT("wb"));
+	if(!file)
 	{
-		file = FOPEN(fileName, TXT("wb"));
-		if(!file)
-		{
-			return false;
-		}
-	}
-	else
-	{
-		file = stdout;
+		return false;
 	}
 	
 	//Setup the virtual I/O
@@ -265,10 +242,13 @@ bool AudioFileIO_Private::openWr(const CHR *const fileName, const uint32_t chann
 
 	if(!handle)
 	{
-		PRINT2_ERR(TXT("AudioFileIO: File open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
+		PRINT2_ERR(TXT("AudioIO_File: File open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
 		fclose(file);
 		return false;
 	}
+
+	//Allocate temp buffer
+	tempBuff = new double[BUFF_SIZE * info.channels];
 
 	//Set Vorbis quality
 	if((info.format & SF_FORMAT_SUBMASK) == SF_FORMAT_VORBIS)
@@ -281,7 +261,7 @@ bool AudioFileIO_Private::openWr(const CHR *const fileName, const uint32_t chann
 	return true;
 }
 
-bool AudioFileIO_Private::close(void)
+bool AudioIO_File_Private::close(void)
 {
 	bool result = false;
 
@@ -296,12 +276,12 @@ bool AudioFileIO_Private::close(void)
 	//Close file
 	if(file)
 	{
-		if((file != stdin) && (file != stdout))
-		{
-			fclose(file);
-		}
+		fclose(file);
 		file = NULL;
 	}
+
+	//Free temp buffer
+	MY_DELETE_ARRAY(tempBuff);
 
 	//Clear sndfile status
 	access = 0;
@@ -311,7 +291,7 @@ bool AudioFileIO_Private::close(void)
 	return result;
 }
 
-int64_t AudioFileIO_Private::read(double **buffer, const int64_t count)
+int64_t AudioIO_File_Private::read(double **buffer, const int64_t count)
 {
 	if(!handle)
 	{
@@ -322,46 +302,47 @@ int64_t AudioFileIO_Private::read(double **buffer, const int64_t count)
 		MY_THROW("Audio file not open in READ mode!");
 	}
 
-	//Create temp buffer
-	if((!tempBuff) || (tempSize < (count * info.channels)))
-	{
-		MY_DELETE_ARRAY(tempBuff);
-		if(count * int64_t(info.channels) < int64_t(UINT32_MAX))
-		{
-			tempBuff = new double[static_cast<size_t>(count * int64_t(info.channels))];
-			tempSize = count * int64_t(info.channels);
-		}
-		else
-		{
-			MY_THROW("Requested read size exceeds maximum allowable size!");
-		}
-	}
+	sf_count_t offset    = 0;
+	sf_count_t remaining = count;
 
-	//Read data
-	const sf_count_t result = sf_readf_double(handle, tempBuff, count);
-
-	//Deinterleaving
-	for(sf_count_t i = 0; i < result; i++)
+	while(remaining > 0)
 	{
-		for(int c = 0; c < info.channels; c++)
+		//Read data
+		const sf_count_t rdSize = std::min(remaining, int64_t(BUFF_SIZE));
+		const sf_count_t result = sf_readf_double(handle, tempBuff, rdSize);
+
+		//Deinterleaving
+		for(sf_count_t i = 0; i < result; i++)
 		{
-			buffer[c][i] = tempBuff[(i*info.channels)+c];
+			for(int c = 0; c < info.channels; c++)
+			{
+				buffer[c][i + offset] = tempBuff[(i * info.channels) + c];
+			}
+		}
+
+		offset    += result;
+		remaining -= result;
+
+		if(result < rdSize)
+		{
+			PRINT_WRN(TXT("File read error. Read fewer frames that what was requested!"));
+			break;
 		}
 	}
 
 	//Zero remaining data
-	for(sf_count_t i = result; i < sf_count_t(count); i++)
+	if(remaining > 0)
 	{
 		for(int c = 0; c < info.channels; c++)
 		{
-			buffer[c][i] = 0.0;
+			memset(&buffer[c][offset], 0, sizeof(double) * size_t(remaining));
 		}
 	}
 
-	return result;
+	return count - remaining;
 }
 
-int64_t AudioFileIO_Private::write(double *const *buffer, const int64_t count)
+int64_t AudioIO_File_Private::write(double *const *buffer, const int64_t count)
 {
 	if(!handle)
 	{
@@ -372,49 +353,39 @@ int64_t AudioFileIO_Private::write(double *const *buffer, const int64_t count)
 		MY_THROW("Audio file not open in WRITE mode!");
 	}
 
-	//Create temp buffer
-	if((!tempBuff) || (tempSize < (count * info.channels)))
+	sf_count_t offset    = 0;
+	sf_count_t remaining = count;
+
+	while(remaining > 0)
 	{
-		MY_DELETE_ARRAY(tempBuff);
-		if(count * int64_t(info.channels) < int64_t(UINT32_MAX))
+		const sf_count_t wrSize = std::min(remaining, int64_t(BUFF_SIZE));
+
+		//Interleave data
+		for(sf_count_t i = 0; i < wrSize; i++)
 		{
-			tempBuff = new double[static_cast<size_t>(count * int64_t(info.channels))];
-			tempSize = count * int64_t(info.channels);
+			for(int c = 0; c < info.channels; c++)
+			{
+				tempBuff[(i * info.channels) + c] = buffer[c][i + offset];
+			}
 		}
-		else
+
+		//Write data
+		const sf_count_t result = sf_writef_double(handle, tempBuff, wrSize);
+
+		offset    += result;
+		remaining -= result;
+
+		if(result < wrSize)
 		{
-			MY_THROW("Requested write size exceeds maximum allowable size!");
+			PRINT_WRN(TXT("File write error. Wrote fewer frames that what was requested!"));
+			break;
 		}
 	}
-
-	//Interleave data
-	for(sf_count_t i = 0; i < count; i++)
-	{
-		for(int c = 0; c < info.channels; c++)
-		{
-			tempBuff[(i*info.channels)+c] = buffer[c][i];
-		}
-	}
-
-	//Write data
-	return sf_writef_double(handle, tempBuff, count);
+	
+	return count - remaining;
 }
 
-bool AudioFileIO_Private::rewind(void)
-{
-	if(!handle)
-	{
-		MY_THROW("Audio file not currently open!");
-	}
-	if(access != SFM_READ)
-	{
-		MY_THROW("Audio file not open in READ mode!");
-	}
-
-	return (sf_seek(handle, 0, SEEK_SET) == 0);
-}
-
-bool AudioFileIO_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
+bool AudioIO_File_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
 {
 	if(!handle)
 	{
@@ -429,7 +400,7 @@ bool AudioFileIO_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, in
 	return true;
 }
 
-void AudioFileIO_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
+void AudioIO_File_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 {
 	const CHR *format = TXT("Unknown Format");
 	const CHR *subfmt = TXT("Unknown SubFmt");
@@ -466,7 +437,7 @@ void AudioFileIO_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 // File I/O Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-sf_count_t AudioFileIO_Private::vio_get_len(void *user_data)
+sf_count_t AudioIO_File_Private::vio_get_len(void *user_data)
 {
 	STAT64 stat;
 	if(FSTAT64(FILENO((FILE*)user_data), &stat))
@@ -476,7 +447,7 @@ sf_count_t AudioFileIO_Private::vio_get_len(void *user_data)
 	return stat.st_size;
 }
 
-sf_count_t AudioFileIO_Private::vio_seek(sf_count_t offset, int whence, void *user_data)
+sf_count_t AudioIO_File_Private::vio_seek(sf_count_t offset, int whence, void *user_data)
 {
 	if(FSEEK64((FILE*)user_data, offset, whence))
 	{
@@ -485,7 +456,7 @@ sf_count_t AudioFileIO_Private::vio_seek(sf_count_t offset, int whence, void *us
 	return vio_tell(user_data);
 }
 
-sf_count_t AudioFileIO_Private::vio_read(void *ptr, sf_count_t count, void *user_data)
+sf_count_t AudioIO_File_Private::vio_read(void *ptr, sf_count_t count, void *user_data)
 {
 	if((count < 0) || (uint64_t(count) > uint64_t(SIZE_MAX)))
 	{
@@ -494,7 +465,7 @@ sf_count_t AudioFileIO_Private::vio_read(void *ptr, sf_count_t count, void *user
 	return fread(ptr, 1, size_t(count), (FILE*)user_data);
 }
 
-sf_count_t AudioFileIO_Private::vio_write(const void *ptr, sf_count_t count, void *user_data)
+sf_count_t AudioIO_File_Private::vio_write(const void *ptr, sf_count_t count, void *user_data)
 {
 	if((count < 0) || (uint64_t(count) > uint64_t(SIZE_MAX)))
 	{
@@ -503,7 +474,7 @@ sf_count_t AudioFileIO_Private::vio_write(const void *ptr, sf_count_t count, voi
 	return fwrite(ptr, 1, size_t(count), (FILE*)user_data);
 }
 
-sf_count_t AudioFileIO_Private::vio_tell(void *user_data)
+sf_count_t AudioIO_File_Private::vio_tell(void *user_data)
 {
 	return FTELL64((FILE*)user_data);
 }
@@ -512,9 +483,9 @@ sf_count_t AudioFileIO_Private::vio_tell(void *user_data)
 // Static Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-char AudioFileIO_Private::versionBuffer[128] = { '\0' };
+char AudioIO_File_Private::versionBuffer[128] = { '\0' };
 
-const char *AudioFileIO_Private::libraryVersion(void)
+const char *AudioIO_File_Private::libraryVersion(void)
 {
 	if(!versionBuffer[0])
 	{
@@ -523,7 +494,7 @@ const char *AudioFileIO_Private::libraryVersion(void)
 	return versionBuffer;
 }
 
-int AudioFileIO_Private::formatToBitDepth(const int &format)
+int AudioIO_File_Private::formatToBitDepth(const int &format)
 {
 	switch(format & SF_FORMAT_SUBMASK)
 	{
@@ -544,7 +515,7 @@ int AudioFileIO_Private::formatToBitDepth(const int &format)
 	}
 }
 
-int AudioFileIO_Private::formatFromExtension(const CHR *const fileName, const int &bitDepth)
+int AudioIO_File_Private::formatFromExtension(const CHR *const fileName, const int &bitDepth)
 {
 	int format = 0;
 	const CHR *ext = fileName;
@@ -589,13 +560,11 @@ int AudioFileIO_Private::formatFromExtension(const CHR *const fileName, const in
 	{
 		format = SF_FORMAT_WAV  | getSubFormat(bitDepth, 0, 1);
 	}
-
-
-
+	
 	return format;
 }
 
-int AudioFileIO_Private::getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported)
+int AudioIO_File_Private::getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported)
 {
 	int format = 0;
 

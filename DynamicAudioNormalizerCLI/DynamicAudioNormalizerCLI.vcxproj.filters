@@ -18,9 +18,6 @@
     <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\AudioFileIO.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Parameters.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,11 +27,11 @@
     <ClCompile Include="src\Platform_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\AudioIO_File.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\AudioFileIO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Parameters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,6 +39,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AudioIO_File.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AudioIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

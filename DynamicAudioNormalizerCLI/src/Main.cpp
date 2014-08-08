@@ -23,7 +23,7 @@
 #include "Common.h"
 #include "Platform.h"
 #include "Parameters.h"
-#include "AudioFileIO.h"
+#include "AudioIO_File.h"
 
 //MDynamicAudioNormalizer API
 #include "DynamicAudioNormalizer.h"
@@ -100,33 +100,33 @@ static void loggingCallback_verbose(const int logLevel, const char *const messag
 	}
 }
 
-static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, AudioFileIO **outputFile)
+static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioIO **outputFile)
 {
 	bool okay = true;
+	uint32_t channels = 0, sampleRate = 0, bitDepth = 0;
+	int64_t length = 0;
 
 	PRINT(TXT("SourceFile: %s\n"),   parameters.sourceFile());
 	PRINT(TXT("OutputFile: %s\n\n"), parameters.outputFile());
 
-	*sourceFile = new AudioFileIO();
-	if(!(*sourceFile)->openRd(parameters.sourceFile()))
+	MY_DELETE(*sourceFile);
+	MY_DELETE(*outputFile);
+
+	AudioIO_File *sourceFileTmp = new AudioIO_File();
+	AudioIO_File* outputFileTmp = new AudioIO_File();
+
+	//Open the *source* file
+	if(!sourceFileTmp->openRd(parameters.sourceFile()))
 	{
 		PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
 		okay = false;
 	}
 	
+	//Query file properties
 	if(okay)
 	{
-		uint32_t channels, sampleRate, bitDepth;
-		int64_t length;
-		if((*sourceFile)->queryInfo(channels, sampleRate, length, bitDepth))
+		if(sourceFileTmp->queryInfo(channels, sampleRate, length, bitDepth))
 		{
-			*outputFile = new AudioFileIO();
-			if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
-			{
-				PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
-				okay = false;
-			}
-
 			CHR timeBuffer[32];
 			PRINT(TXT("Properties: %u channels, %u Hz, %u bit/sample (Duration: %s)\n\n"), channels, sampleRate, bitDepth, timeToString(timeBuffer, 32, length, sampleRate));
 		}
@@ -137,34 +137,42 @@ static bool openFiles(const Parameters &parameters, AudioFileIO **sourceFile, Au
 		}
 	}
 
+	//Open the *output* file
+	if(okay)
+	{
+		if(!outputFileTmp->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
+		{
+			PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
+			okay = false;
+		}
+	}
+
+	//Files opened successfull?
 	if(!okay)
 	{
-		if(*sourceFile)
-		{
-			(*sourceFile)->close();
-			MY_DELETE(*sourceFile);
-		}
-		if(*outputFile)
-		{
-			(*outputFile)->close();
-			MY_DELETE(*outputFile);
-		}
+		if(sourceFileTmp) sourceFileTmp->close();
+		MY_DELETE(sourceFileTmp);
+		if(outputFileTmp) outputFileTmp->close();
+		MY_DELETE(outputFileTmp);
 		return false;
 	}
 
 	if(parameters.verboseMode())
 	{
 		CHR info[128];
-		(*sourceFile)->getFormatInfo(info, 128);
+		sourceFileTmp->getFormatInfo(info, 128);
 		PRINT(TXT("SourceInfo: %s\n"), info);
-		(*outputFile)->getFormatInfo(info, 128);
+		outputFileTmp->getFormatInfo(info, 128);
 		PRINT(TXT("OutputInfo: %s\n\n"), info);
 	}
+
+	*sourceFile = sourceFileTmp;
+	*outputFile = outputFileTmp;
 
 	return true;
 }
 
-static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length)
+static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const sourceFile, AudioIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length)
 {
 	static const CHR spinner[4] = { TXT('-'), TXT('\\'), TXT('|'), TXT('/') };
 	static const CHR *progressStr = TXT("\rNormalization in progress: %5.1f%% [%c]");
@@ -172,14 +180,6 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 	//Print progress
 	PRINT(progressStr, 0.0, spinner[0]);
 	FLUSH();
-
-	//Rewind input
-	if(!sourceFile->rewind())
-	{
-		PRINT(TXT("\n\n"));
-		PRINT_ERR(TXT("Failed to rewind the input file!"));
-		return EXIT_FAILURE;
-	}
 
 	//Init status variables
 	int64_t remaining = length;
@@ -255,7 +255,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioFileIO *cons
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-static int processFiles(const Parameters &parameters, AudioFileIO *const sourceFile, AudioFileIO *const outputFile, FILE *const logFile)
+static int processFiles(const Parameters &parameters, AudioIO *const sourceFile, AudioIO *const outputFile, FILE *const logFile)
 {
 	int exitCode = EXIT_SUCCESS;
 
@@ -371,7 +371,7 @@ static void printLogo(void)
 		exit(EXIT_FAILURE);
 	}
 
-	PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioFileIO::libraryVersion());
+	PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_File::libraryVersion());
 }
 
 int dynamicNormalizerMain(int argc, CHR* argv[])
@@ -393,7 +393,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
-	AudioFileIO *sourceFile = NULL, *outputFile = NULL;
+	AudioIO *sourceFile = NULL, *outputFile = NULL;
 	if(!openFiles(parameters, &sourceFile, &outputFile))
 	{
 		PRINT_ERR(TXT("Failed to open input and/or output file -> aborting!\n"));
@@ -459,14 +459,14 @@ int MAIN(int argc, CHR* argv[])
 
 	if(DYNAUDNORM_DEBUG)
 	{
-		SYSTEM_INIT();
+		SYSTEM_INIT(true);
 		exitCode = dynamicNormalizerMain(argc, argv);
 	}
 	else
 	{
 		TRY_SEH
 		{
-			SYSTEM_INIT();
+			SYSTEM_INIT(false);
 			exitCode =  mainEx(argc, argv);
 		}
 		CATCH_SEH

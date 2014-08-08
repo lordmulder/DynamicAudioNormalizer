@@ -19,54 +19,24 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 //////////////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
+#include <stdint.h>
 #include "Platform.h"
 
-#ifdef __linux
-
-#pragma GCC diagnostic ignored "-Wunused-result"
-
-#include <csignal>
-#include <unistd.h>
-
-static void my_crash_handler(const char *const message)
+class AudioIO
 {
-	try
-	{
-		write(STDERR_FILENO, message, strlen(message));
-		fsync(STDERR_FILENO);
-	}
-	catch(...)
-	{
-		/*ignore any exception*/
-	}
-	for(;;)
-	{
-		_exit(666);
-	}
-}
+public:
+	AudioIO(void) {};
+	virtual ~AudioIO(void) {}
 
-static void my_signal_handler(int signal_num)
-{
-	signal(signal_num, my_signal_handler);
-	my_crash_handler("\n\nGURU MEDITATION: Signal handler invoked unexpectedly, application will exit!\n\n");
-}
-
-void SYSTEM_INIT(const bool &debugMode)
-{
-	static const int signal_num[6] = { SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM };
-
-	if(!debugMode)
-	{
-		for(size_t i = 0; i < 6; i++)
-		{
-			struct sigaction sa;
-			sa.sa_handler = my_signal_handler;
-			sigemptyset(&sa.sa_mask);
-			sa.sa_flags = SA_RESTART;
-			sigaction(signal_num[i], &sa, NULL);
-		}
-	}
-}
-
-#endif //__linux
-
+	//Functions implemented in derived classes
+	virtual int64_t read(double **buffer, const int64_t count) = 0;
+	virtual int64_t write(double *const *buffer, const int64_t count) = 0;
+	virtual bool close(void) = 0;
+	virtual bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth) = 0;
+	virtual void getFormatInfo(CHR *buffer, const uint32_t buffSize) = 0;
+	
+private:
+	AudioIO &operator=(const AudioIO &) { throw 666; }
+};

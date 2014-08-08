@@ -168,7 +168,6 @@ protected:
 MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile)
 :
 	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, channelsCoupled, enableDCCorrection, altBoundaryMode, logFile))
-
 {
 	/*nothing to do here*/
 }
@@ -836,7 +835,7 @@ void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 	LOG2_DBG("Channels       : %u",   m_channels);
 	LOG2_DBG("Sampling rate  : %u",   m_sampleRate);
 	LOG2_DBG("Frame size     : %u",   m_frameLen);
-	LOG2_DBG("Filter Length  : %.4f", m_filterSize);
+	LOG2_DBG("Filter Length  : %u",   m_filterSize);
 	LOG2_DBG("Peak value     : %.4f", m_peakValue);
 	LOG2_DBG("Max amp factor : %.4f", m_maxAmplification);
 	LOG2_DBG("Target RMS     : %.4f", m_targetRms);

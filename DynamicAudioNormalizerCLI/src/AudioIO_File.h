@@ -21,37 +21,33 @@
 
 #pragma once
 
-#include <stdint.h>
-#include "Platform.h"
+#include "AudioIO.h"
 
-class AudioFileIO_Private;
+class AudioIO_File_Private;
 
-class AudioFileIO
+class AudioIO_File : public AudioIO
 {
 public:
-	AudioFileIO(void);
-	~AudioFileIO(void);
+	AudioIO_File(void);
+	virtual ~AudioIO_File(void);
 
 	//Open and Close
-	bool openRd(const CHR *const fileName);
-	bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
-	bool close(void);
+	virtual bool openRd(const CHR *const fileName);
+	virtual bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
+	virtual bool close(void);
 
 	//Read and Write
-	int64_t read(double **buffer, const int64_t count);
-	int64_t write(double *const *buffer, const int64_t count);
-
-	//Rewind
-	bool rewind(void);
+	virtual int64_t read(double **buffer, const int64_t count);
+	virtual int64_t write(double *const *buffer, const int64_t count);
 
 	//Query info
-	bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth);
-	void getFormatInfo(CHR *buffer, const uint32_t buffSize);
+	virtual bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth);
+	virtual void getFormatInfo(CHR *buffer, const uint32_t buffSize);
 
 	//Static functions
 	static const char *libraryVersion(void);
 	
 private:
-	AudioFileIO &operator=(const AudioFileIO &) { throw 666; }
-	AudioFileIO_Private *const p;
+	AudioIO_File &operator=(const AudioIO_File &) { throw 666; }
+	AudioIO_File_Private *const p;
 };

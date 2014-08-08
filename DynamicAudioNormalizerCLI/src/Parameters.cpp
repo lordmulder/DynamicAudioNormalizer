@@ -222,31 +222,25 @@ bool Parameters::validateParameters(void)
 		return false;
 	}
 
-	if(STRCASECMP(m_sourceFile, TXT("-")))
+	if((STRCASECMP(m_sourceFile, TXT("-")) != 0) && (ACCESS(m_sourceFile, R_OK) != 0))
 	{
-		if(ACCESS(m_sourceFile, 4) != 0)
+		if(errno != ENOENT)
 		{
-			if(errno != ENOENT)
-			{
-				PRINT_WRN(TXT("Selected input file can not be read!\n"));
-			}
-			else
-			{
-				PRINT_WRN(TXT("Selected input file does not exist!\n"));
-			}
-			return false;
+			PRINT_WRN(TXT("Selected input file can not be read!\n"));
 		}
+		else
+		{
+			PRINT_WRN(TXT("Selected input file does not exist!\n"));
+		}
+		return false;
 	}
 
-	if(STRCASECMP(m_outputFile, TXT("-")))
+	if((STRCASECMP(m_outputFile, TXT("-")) != 0) && (ACCESS(m_outputFile, W_OK) != 0))
 	{
-		if(ACCESS(m_outputFile, 2) != 0)
+		if(errno != ENOENT)
 		{
-			if(errno != ENOENT)
-			{
-				PRINT_WRN(TXT("Selected output file is read-only!\n"));
-				return false;
-			}
+			PRINT_WRN(TXT("Selected output file is read-only!\n"));
+			return false;
 		}
 	}
 

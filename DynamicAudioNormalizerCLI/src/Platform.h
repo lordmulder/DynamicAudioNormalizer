@@ -42,7 +42,7 @@
 #define PRINT2_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
 #define PRINT2_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
 
-void SYSTEM_INIT(void);
+void SYSTEM_INIT(const bool &debugMode);
 
 //============================================================================
 // WINDOWS
@@ -59,6 +59,11 @@ void SYSTEM_INIT(void);
 #define MAIN wmain
 #define TRY_SEH __try
 #define CATCH_SEH __except(1)
+
+#define F_OK 0
+#define X_OK 1
+#define W_OK 2
+#define R_OK 4
 
 typedef wchar_t CHR;
 typedef struct _stat64 STAT64;

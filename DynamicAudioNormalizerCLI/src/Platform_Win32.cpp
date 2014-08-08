@@ -68,19 +68,23 @@ static LONG WINAPI my_exception_handler(struct _EXCEPTION_POINTERS*)
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void SYSTEM_INIT(void)
+void SYSTEM_INIT(const bool &debugMode)
 {
-	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
-	SetUnhandledExceptionFilter(my_exception_handler);
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
-	_set_invalid_parameter_handler(my_invalid_param_handler);
-	
 	static const int signal_num[6] = { SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM };
 
-	for(size_t i = 0; i < 6; i++)
+	if(!debugMode)
 	{
-		signal(signal_num[i], my_signal_handler);
+		SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+		SetUnhandledExceptionFilter(my_exception_handler);
+		_set_invalid_parameter_handler(my_invalid_param_handler);
+
+		for(size_t i = 0; i < 6; i++)
+		{
+			signal(signal_num[i], my_signal_handler);
+		}
 	}
+
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 
 	_setmode(_fileno(stdin ), _O_BINARY);
 	_setmode(_fileno(stderr), _O_U8TEXT);
