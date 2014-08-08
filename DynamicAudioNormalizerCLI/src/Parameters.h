@@ -38,6 +38,9 @@ public:
 	
 	inline const uint32_t &frameLenMsec(void)       const { return m_frameLenMsec;       }
 	inline const uint32_t &filterSize(void)         const { return m_filterSize;         }
+	inline const uint32_t &inputChannels(void)      const { return m_inputChannels;      }
+	inline const uint32_t &inputSampleRate(void)    const { return m_inputSampleRate;    }
+	inline const uint32_t &inputBitDepth(void)      const { return m_inputBitDepth;      }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
 	inline const double   &targetRms(void)          const { return m_targetRms;          }
@@ -45,6 +48,8 @@ public:
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
 	inline const bool     &altBoundaryMode(void)    const { return m_altBoundaryMode;    }
 	inline const bool     &showHelp(void)           const { return m_showHelp;           }
+	inline const bool     &rawSource(void)          const { return m_rawSource;          }
+	inline const bool     &rawOutput(void)          const { return m_rawOutput;          }
 	inline const bool     &verboseMode(void)        const { return m_verboseMode;        }
 
 protected:
@@ -58,10 +63,15 @@ private:
 
 	uint32_t m_frameLenMsec;
 	uint32_t m_filterSize;
+	uint32_t m_inputChannels;
+	uint32_t m_inputSampleRate;
+	uint32_t m_inputBitDepth;
 	
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
 	bool m_altBoundaryMode;
+	bool m_rawSource;
+	bool m_rawOutput;
 	bool m_verboseMode;
 	bool m_showHelp;
 	

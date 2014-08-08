@@ -24,6 +24,7 @@
 #include "Platform.h"
 #include "Parameters.h"
 #include "AudioIO_File.h"
+#include "AudioIO_Raw.h"
 
 //MDynamicAudioNormalizer API
 #include "DynamicAudioNormalizer.h"
@@ -59,15 +60,23 @@ static const CHR *appName(const CHR* argv0)
 
 static const CHR *timeToString(CHR *timeBuffer, const size_t buffSize, const int64_t &length, const uint32_t &sampleRate)
 {
-	double durationInt;
-	double durationFrc = modf(double(length) / double(sampleRate), &durationInt);
+	if(length != INT64_MAX)
+	{
+		double durationInt;
+		double durationFrc = modf(double(length) / double(sampleRate), &durationInt);
 
-	const uint32_t msc = uint32_t(durationFrc * 1000.0);
-	const uint32_t sec = uint32_t(durationInt) % 60;
-	const uint32_t min = (uint32_t(durationInt) / 60) % 60;
-	const uint32_t hrs = uint32_t(durationInt) / 3600;
+		const uint32_t msc = uint32_t(durationFrc * 1000.0);
+		const uint32_t sec = uint32_t(durationInt) % 60;
+		const uint32_t min = (uint32_t(durationInt) / 60) % 60;
+		const uint32_t hrs = uint32_t(durationInt) / 3600;
 
-	SNPRINTF(timeBuffer, buffSize, TXT("%u:%02u:%02u.%03u"), hrs, min, sec, msc);
+		SNPRINTF(timeBuffer, buffSize, TXT("%u:%02u:%02u.%03u"), hrs, min, sec, msc);
+	}
+	else
+	{
+		SNPRINTF(timeBuffer, buffSize, TXT("Unknown"));
+	}
+
 	return timeBuffer;
 }
 
@@ -102,120 +111,169 @@ static void loggingCallback_verbose(const int logLevel, const char *const messag
 
 static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioIO **outputFile)
 {
-	bool okay = true;
 	uint32_t channels = 0, sampleRate = 0, bitDepth = 0;
 	int64_t length = 0;
 
-	PRINT(TXT("SourceFile: %s\n"),   parameters.sourceFile());
-	PRINT(TXT("OutputFile: %s\n\n"), parameters.outputFile());
+	PRINT(TXT("SourceFile: %s\n"),   STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.sourceFile() : TXT("<STDIN>"));
+	PRINT(TXT("OutputFile: %s\n\n"), STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
 
 	MY_DELETE(*sourceFile);
 	MY_DELETE(*outputFile);
 
-	AudioIO_File *sourceFileTmp = new AudioIO_File();
-	AudioIO_File* outputFileTmp = new AudioIO_File();
-
-	//Open the *source* file
-	if(!sourceFileTmp->openRd(parameters.sourceFile()))
+	//Open *source* file
+	if(!parameters.rawSource())
 	{
-		PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
-		okay = false;
-	}
-	
-	//Query file properties
-	if(okay)
-	{
-		if(sourceFileTmp->queryInfo(channels, sampleRate, length, bitDepth))
+		AudioIO_File *sourceFileTmp = new AudioIO_File();
+		if(!sourceFileTmp->openRd(parameters.sourceFile()))
 		{
-			CHR timeBuffer[32];
-			PRINT(TXT("Properties: %u channels, %u Hz, %u bit/sample (Duration: %s)\n\n"), channels, sampleRate, bitDepth, timeToString(timeBuffer, 32, length, sampleRate));
+			PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
+			MY_DELETE(sourceFileTmp);
+			return false;
 		}
 		else
 		{
-			PRINT_WRN(TXT("Failed to determine source file properties!\n"));
-			okay = false;
+			*sourceFile = sourceFileTmp;
 		}
 	}
-
-	//Open the *output* file
-	if(okay)
+	else
 	{
+		AudioIO_Raw *sourceFileTmp = new AudioIO_Raw();
+		if(!sourceFileTmp->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
+		{
+			PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
+			MY_DELETE(sourceFileTmp);
+			return false;
+		}
+		else
+		{
+			*sourceFile = sourceFileTmp;
+		}
+	}
+	
+	//Query file properties
+	if((*sourceFile)->queryInfo(channels, sampleRate, length, bitDepth))
+	{
+		CHR timeBuffer[32];
+		PRINT(TXT("Properties: %u channels, %u Hz, %u bit/sample (Duration: %s)\n\n"), channels, sampleRate, bitDepth, timeToString(timeBuffer, 32, length, sampleRate));
+	}
+	else
+	{
+		PRINT_WRN(TXT("Failed to determine source file properties!\n"));
+		MY_DELETE(*sourceFile);
+		return false;
+	}
+
+	//Open *output* file
+	if(!parameters.rawOutput())
+	{
+		AudioIO_File *outputFileTmp = new AudioIO_File();
 		if(!outputFileTmp->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
 		{
 			PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
-			okay = false;
+			MY_DELETE(*sourceFile);
+			MY_DELETE(outputFileTmp);
+			return false;
+		}
+		else
+		{
+			*outputFile = outputFileTmp;
 		}
 	}
-
-	//Files opened successfull?
-	if(!okay)
+	else
 	{
-		if(sourceFileTmp) sourceFileTmp->close();
-		MY_DELETE(sourceFileTmp);
-		if(outputFileTmp) outputFileTmp->close();
-		MY_DELETE(outputFileTmp);
-		return false;
+		AudioIO_Raw *outputFileTmp = new AudioIO_Raw();
+		if(!outputFileTmp->openWr(parameters.outputFile(), channels, sampleRate, (((bitDepth == 8) || (bitDepth == 16) || (bitDepth == 32)) ? bitDepth : 16)))
+		{
+			PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
+			MY_DELETE(*sourceFile);
+			MY_DELETE(outputFileTmp);
+			return false;
+		}
+		else
+		{
+			*outputFile = outputFileTmp;
+		}
 	}
 
 	if(parameters.verboseMode())
 	{
 		CHR info[128];
-		sourceFileTmp->getFormatInfo(info, 128);
+		(*sourceFile)->getFormatInfo(info, 128);
 		PRINT(TXT("SourceInfo: %s\n"), info);
-		outputFileTmp->getFormatInfo(info, 128);
+		(*outputFile)->getFormatInfo(info, 128);
 		PRINT(TXT("OutputInfo: %s\n\n"), info);
 	}
-
-	*sourceFile = sourceFileTmp;
-	*outputFile = outputFileTmp;
 
 	return true;
 }
 
-static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const sourceFile, AudioIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length)
+static void printProgress(const int64_t &length, const int64_t &remaining, short &spinnerPos, bool done = false)
 {
 	static const CHR spinner[4] = { TXT('-'), TXT('\\'), TXT('|'), TXT('/') };
-	static const CHR *progressStr = TXT("\rNormalization in progress: %5.1f%% [%c]");
+	
+	if(length != INT64_MAX)
+	{
+		const double progress = done ? 100.0 : (99.9 * (double(length - remaining) / double(length)));
+		PRINT(TXT("\rNormalization in progress: %5.1f%% [%c]"), progress, done ? TXT('*') : spinner[spinnerPos++]);
+	}
+	else
+	{
+		PRINT(TXT("\rNormalization in progress... [%c]"), done ? TXT('*') : spinner[spinnerPos++]);
+	}
 
-	//Print progress
-	PRINT(progressStr, 0.0, spinner[0]);
+	spinnerPos %= 4;
 	FLUSH();
+}
 
+static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const sourceFile, AudioIO *const outputFile, double **buffer, const uint32_t channels, const int64_t length)
+{
 	//Init status variables
 	int64_t remaining = length;
 	short indicator = 0, spinnerPos = 1;
 	bool error = false;
 
+	//Print progress
+	printProgress(length, remaining, spinnerPos);
+
 	//Main audio processing loop
 	while(remaining > 0)
 	{
-		if(++indicator > 256)
+		if((++indicator >= 256))
 		{
-			PRINT(progressStr, 99.9 * (double(length - remaining) / double(length)), spinner[spinnerPos++]);
-			FLUSH(); indicator = 0; spinnerPos %= 4;
+			printProgress(length, remaining, spinnerPos);
+			indicator = 0; 
 		}
 
 		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
 		const int64_t samplesRead = sourceFile->read(buffer, readSize);
 
-		remaining -= samplesRead;
-
-		if(samplesRead != readSize)
+		if(samplesRead > 0)
 		{
-			error = true;
-			break; /*read error must have ocurred*/
+			if((length != INT64_MAX))
+			{
+				remaining -= samplesRead;
+			}
+
+			int64_t outputSize;
+			normalizer->processInplace(buffer, samplesRead, outputSize);
+
+			if(outputSize > 0)
+			{
+				if(outputFile->write(buffer, outputSize) != outputSize)
+				{
+					error = true;
+					break; /*write error must have ocurred*/
+				}
+			}
 		}
 
-		int64_t outputSize;
-		normalizer->processInplace(buffer, samplesRead, outputSize);
-
-		if(outputSize > 0)
+		if(samplesRead < readSize)
 		{
-			if(outputFile->write(buffer, outputSize) != outputSize)
+			if((length != INT64_MAX))
 			{
-				error = true;
-				break; /*write error must have ocurred*/
+				error = true; /*read error must have ocurred*/
 			}
+			break;
 		}
 	}
 
@@ -242,8 +300,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 	//Error checking
 	if(!error)
 	{
-		PRINT(progressStr, 100.0, TXT('*'));
-		FLUSH();
+		printProgress(length, remaining, spinnerPos, true);
 		PRINT(TXT("\nFinished.\n\n"));
 	}
 	else
@@ -320,23 +377,34 @@ static void printHelpScreen(int argc, CHR* argv[])
 {
 	Parameters defaults;
 
-	PRINT(TXT("Usage:\n"));
-	PRINT(TXT("  %s [options] -i <input,wav> -o <output,wav>\n"), appName(argv[0]));
+	PRINT(TXT("Basic Usage:\n"));
+	PRINT(TXT("  %s [options] -i <input.wav> -o <output.wav>\n"), appName(argv[0]));
 	PRINT(TXT("\n"));
-	PRINT(TXT("Options:\n"));
+	PRINT(TXT("Input/Output:\n"));
 	PRINT(TXT("  -i --input <file>        Input audio file [required]\n"));
 	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
+	PRINT(TXT("\n"));
+	PRINT(TXT("Algorithm Tweaks:\n"));
 	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"), defaults.frameLenMsec());
 	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"), defaults.filterSize());
 	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"), defaults.peakValue());
 	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"), defaults.maxAmplification());
+	PRINT(TXT("  -r --rms-mode <value>    Use RMS instead of peak sample [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
 	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
-	PRINT(TXT("  -r --rms-mode            Use RMS instead of peak sample [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
 	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"), BOOLIFY(defaults.enableDCCorrection()));
 	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"), BOOLIFY(defaults.altBoundaryMode()));
-	PRINT(TXT("  -v --verbose             Enable verbose console output\n"));
-	PRINT(TXT("  -l --logfile <file>      Create log file\n"));
-	PRINT(TXT("  -h --help                Print this help screen\n"));
+	PRINT(TXT("\n"));
+	PRINT(TXT("Diagnostic:\n"));
+	PRINT(TXT("  -v --verbose             Output additional diagnostic info\n"));
+	PRINT(TXT("  -l --logfile <file>      Create a log file\n"));
+	PRINT(TXT("  -h --help                Print *this* help screen\n"));
+	PRINT(TXT("\n"));
+	PRINT(TXT("Raw I/O Options:\n"));
+	PRINT(TXT("  --raw-input              Treat input file as \"raw\" (headerless)\n"));
+	PRINT(TXT("  --raw-output             Treat output file as \"raw\" (headerless)\n"));
+	PRINT(TXT("  --input-bits <value>     Bits per sample, e.g. '16' or '32'\n"));
+	PRINT(TXT("  --input-chan <value>     Number of channels, e.g. '2' for Stereo\n"));
+	PRINT(TXT("  --input-rate <value>     Sample rate in Hz, e.g. '44100'\n"));
 	PRINT(TXT("\n"));
 }
 
@@ -370,8 +438,6 @@ static void printLogo(void)
 		PRINT_ERR(TXT("Trying to use DEBUG library with RELEASE binary or vice versa!\n"));
 		exit(EXIT_FAILURE);
 	}
-
-	PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_File::libraryVersion());
 }
 
 int dynamicNormalizerMain(int argc, CHR* argv[])
@@ -391,6 +457,11 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
+	if(!(parameters.rawSource() && parameters.rawOutput()))
+	{
+		PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_File::libraryVersion());
+	}
+	
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioIO *sourceFile = NULL, *outputFile = NULL;

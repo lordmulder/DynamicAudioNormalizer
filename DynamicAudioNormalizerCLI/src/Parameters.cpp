@@ -104,9 +104,15 @@ void Parameters::setDefaults(void)
 	m_frameLenMsec = 500;
 	m_filterSize   = 31;
 	
+	m_inputChannels   = 0;
+	m_inputSampleRate = 0;
+	m_inputBitDepth   = 0;
+
 	m_channelsCoupled    = true;
 	m_enableDCCorrection = false;
 	m_altBoundaryMode    = false;
+	m_rawSource          = false;
+	m_rawOutput          = false;
 	m_verboseMode        = false;
 	m_showHelp           = false;
 	
@@ -121,11 +127,14 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 
 	while(++pos < argc)
 	{
+		/*help screen*/
 		if(IS_ARG_SHRT("h", "help"))
 		{
 			m_showHelp = true;
 			break;
 		}
+
+		/*input and output*/
 		if(IS_ARG_SHRT("i", "input"))
 		{
 			ENSURE_NEXT_ARG();
@@ -138,12 +147,8 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			m_outputFile = argv[pos];
 			continue;
 		}
-		if(IS_ARG_SHRT("l", "logfile"))
-		{
-			ENSURE_NEXT_ARG();
-			m_dbgLogFile = argv[pos];
-			continue;
-		}
+
+		/*algorithm twekas*/
 		if(IS_ARG_SHRT("f", "frame-len"))
 		{
 			ENSURE_NEXT_ARG();
@@ -189,9 +194,47 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			m_altBoundaryMode = true;
 			continue;
 		}
+
+		/*diagnostics*/
+		if(IS_ARG_SHRT("l", "logfile"))
+		{
+			ENSURE_NEXT_ARG();
+			m_dbgLogFile = argv[pos];
+			continue;
+		}
 		if(IS_ARG_SHRT("v", "verbose"))
 		{
 			m_verboseMode = true;
+			continue;
+		}
+
+		/*raw input options*/
+		if(IS_ARG_LONG("raw-input"))
+		{
+			m_rawSource = true;
+			continue;
+		}
+		if(IS_ARG_LONG("raw-output"))
+		{
+			m_rawOutput = true;
+			continue;
+		}
+		if(IS_ARG_LONG("input-chan"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_UINT(m_inputChannels);
+			continue;
+		}
+		if(IS_ARG_LONG("input-rate"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_UINT(m_inputSampleRate);
+			continue;
+		}
+		if(IS_ARG_LONG("input-bits"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_UINT(m_inputBitDepth);
 			continue;
 		}
 
@@ -215,35 +258,68 @@ bool Parameters::validateParameters(void)
 		PRINT_WRN(TXT("Input file not specified!\n"));
 		return false;
 	}
-
 	if(!m_outputFile)
 	{
 		PRINT_WRN(TXT("Output file not specified!\n"));
 		return false;
 	}
 
-	if((STRCASECMP(m_sourceFile, TXT("-")) != 0) && (ACCESS(m_sourceFile, R_OK) != 0))
+	/*check input file*/
+	if(STRCASECMP(m_sourceFile, TXT("-")) != 0)
 	{
-		if(errno != ENOENT)
+		if(ACCESS(m_sourceFile, R_OK) != 0)
 		{
-			PRINT_WRN(TXT("Selected input file can not be read!\n"));
-		}
-		else
-		{
-			PRINT_WRN(TXT("Selected input file does not exist!\n"));
-		}
-		return false;
-	}
-
-	if((STRCASECMP(m_outputFile, TXT("-")) != 0) && (ACCESS(m_outputFile, W_OK) != 0))
-	{
-		if(errno != ENOENT)
-		{
-			PRINT_WRN(TXT("Selected output file is read-only!\n"));
+			if(errno != ENOENT)
+			{
+				PRINT_WRN(TXT("Selected input file can not be read!\n"));
+			}
+			else
+			{
+				PRINT_WRN(TXT("Selected input file does not exist!\n"));
+			}
 			return false;
 		}
 	}
+	else
+	{
+		m_rawSource = true; /*force raw input for stdin*/
+	}
 
+	/*check output file*/
+	if(STRCASECMP(m_outputFile, TXT("-")) != 0)
+	{
+		if(ACCESS(m_outputFile, W_OK) != 0)
+		{
+			if(errno != ENOENT)
+			{
+				PRINT_WRN(TXT("Selected output file is read-only!\n"));
+				return false;
+			}
+		}
+	}
+	else
+	{
+		m_rawOutput = true; /*force raw output for stdout*/
+	}
+
+	/*check input properties for raw data*/
+	if(m_rawSource)
+	{
+		if((m_inputChannels == 0) || (m_inputSampleRate == 0) || (m_inputBitDepth == 0))
+		{
+			PRINT2_WRN(TXT("Channel-count/sample-rate/bit-depth *must* be specified for RAW data!\n"), m_filterSize);
+			return false;
+		}
+	}
+	else
+	{
+		if((m_inputChannels != 0) || (m_inputSampleRate != 0) || (m_inputBitDepth != 0))
+		{
+			PRINT2_WRN(TXT("Channel-count/sample-rate/bit-depth will be ignored for file source!\n"), m_filterSize);
+		}
+	}
+
+	/*parameter range checking*/
 	if((m_filterSize < 3) || (m_filterSize > 301))
 	{
 		PRINT2_WRN(TXT("Filter size %u is out of range. Must be in the 3 to 301 range!\n"), m_filterSize);
@@ -254,25 +330,21 @@ bool Parameters::validateParameters(void)
 		PRINT2_WRN(TXT("Filter size %u is invalid. Must be an odd value! (i.e. `filter_size mod 2 == 1´)\n"), m_filterSize);
 		return false;
 	}
-
 	if((m_peakValue < 0.01) || (m_peakValue > 1.0))
 	{
 		PRINT2_WRN(TXT("Peak value value %.2f is out of range. Must be in the 0.01 to 1.00 range!\n"), m_peakValue);
 		return false;
 	}
-
 	if((m_targetRms < 0.0) || (m_targetRms > 1.0))
 	{
 		PRINT2_WRN(TXT("Target RMS value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_targetRms);
 		return false;
 	}
-
 	if((m_maxAmplification < 1.0) || (m_maxAmplification > 100.0))
 	{
 		PRINT2_WRN(TXT("Maximum amplification %.2f is out of range. Must be in the 1.00 to 100.00 range!\n"), m_maxAmplification);
 		return false;
 	}
-
 	if((m_frameLenMsec < 10) || (m_frameLenMsec > 8000))
 	{
 		PRINT2_WRN(TXT("Frame length %u is out of range. Must be in the 10 to 8000 range!\n"), m_frameLenMsec);

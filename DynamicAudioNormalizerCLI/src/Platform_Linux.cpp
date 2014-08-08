@@ -47,8 +47,14 @@ static void my_crash_handler(const char *const message)
 
 static void my_signal_handler(int signal_num)
 {
-	signal(signal_num, my_signal_handler);
-	my_crash_handler("\n\nGURU MEDITATION: Signal handler invoked unexpectedly, application will exit!\n\n");
+	if(signal_num != SIGINT)
+	{
+		my_crash_handler("\n\nGURU MEDITATION: Signal handler has been invoked, application will exit!\n\n");
+	}
+	else
+	{
+		my_crash_handler("\n\nGURU MEDITATION: Operation has been interrupted, application will exit!\n\n");
+	}
 }
 
 void SYSTEM_INIT(const bool &debugMode)

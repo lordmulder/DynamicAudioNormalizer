@@ -38,6 +38,14 @@ template<typename T> static inline T LIMIT(const T &min, const T &val, const T &
 	return std::min(max, std::max(min, val));
 }
 
+static inline double DEC_SAMPLE(const int8_t  &val) { return LIMIT(-1.0, double(val) / double(INT8_MAX ), 1.0); }
+static inline double DEC_SAMPLE(const int16_t &val) { return LIMIT(-1.0, double(val) / double(INT16_MAX), 1.0); }
+static inline double DEC_SAMPLE(const float   &val) { return LIMIT(-1.0, double(val), 1.0); }
+
+static inline int8_t  ENC_SAMPLE_8 (const double &val) { return static_cast<int8_t >(LIMIT(-1.0, val, 1.0) * double(INT8_MAX )); }
+static inline int16_t ENC_SAMPLE_16(const double &val) { return static_cast<int16_t>(LIMIT(-1.0, val, 1.0) * double(INT16_MAX)); }
+static inline float   ENC_SAMPLE_32(const double &val) { return static_cast<float  >(LIMIT(-1.0, val, 1.0)); }
+
 ///////////////////////////////////////////////////////////////////////////////
 // Private Data
 ///////////////////////////////////////////////////////////////////////////////
@@ -160,7 +168,7 @@ bool AudioIO_Raw_Private::openRd(const CHR *const fileName, const uint32_t chann
 {
 	if(file)
 	{
-		PRINT_ERR(TXT("AudioIO_Raw: Sound file is already open!\n"));
+		PRINT_ERR(TXT("Sound file is already open!\n"));
 		return false;
 	}
 	
@@ -173,7 +181,7 @@ bool AudioIO_Raw_Private::openRd(const CHR *const fileName, const uint32_t chann
 	memset(&info, 0, sizeof(info));
 
 	//Open file
-	file = FOPEN(fileName, TXT("rb"));
+	file = STRCASECMP(fileName, TXT("-")) ? FOPEN(fileName, TXT("rb")) : stdin;
 	if(!file)
 	{
 		return false;
@@ -195,7 +203,7 @@ bool AudioIO_Raw_Private::openWr(const CHR *const fileName, const uint32_t chann
 {
 	if(file)
 	{
-		PRINT_ERR(TXT("AudioIO_Raw: Sound file is already open!\n"));
+		PRINT_ERR(TXT("Sound file is already open!\n"));
 		return false;
 	}
 	
@@ -208,7 +216,7 @@ bool AudioIO_Raw_Private::openWr(const CHR *const fileName, const uint32_t chann
 	memset(&info, 0, sizeof(info));
 
 	//Open file
-	file = FOPEN(fileName, TXT("wb"));
+	file = file = STRCASECMP(fileName, TXT("-")) ? FOPEN(fileName, TXT("wb")) : stdout;
 	if(!file)
 	{
 		return false;
@@ -233,7 +241,10 @@ bool AudioIO_Raw_Private::close(void)
 	//Close file
 	if(file)
 	{
-		fclose(file);
+		if((file != stdin) && (file != stdout) && (file != stderr))
+		{
+			fclose(file);
+		}
 		file = NULL;
 	}
 
@@ -265,7 +276,7 @@ int64_t AudioIO_Raw_Private::read(double **buffer, const int64_t count)
 	{
 		//Read data
 		const int64_t rdSize = std::min(remaining, int64_t(BUFF_SIZE));
-		const int64_t result = fread(tempBuff, (info.bitDepth / 8), size_t(rdSize), file);
+		const int64_t result = fread(tempBuff, (info.bitDepth / 8) * info.channels, size_t(rdSize), file);
 
 		//Deinterleaving
 		for(int64_t i = 0; i < result; i++)
@@ -275,11 +286,14 @@ int64_t AudioIO_Raw_Private::read(double **buffer, const int64_t count)
 				switch(info.bitDepth)
 				{
 				case 8:
-					buffer[c][i + offset] = LIMIT(-1.0, double(reinterpret_cast<int8_t*> (tempBuff)[(i * info.channels) + c]) / double(INT8_MAX),  1.0);
+					buffer[c][i + offset] = DEC_SAMPLE(reinterpret_cast<int8_t*> (tempBuff)[(i * info.channels) + c]);
+					break;
 				case 16:
-					buffer[c][i + offset] = LIMIT(-1.0, double(reinterpret_cast<int16_t*>(tempBuff)[(i * info.channels) + c]) / double(INT16_MAX), 1.0);
+					buffer[c][i + offset] = DEC_SAMPLE(reinterpret_cast<int16_t*>(tempBuff)[(i * info.channels) + c]);
+					break;
 				case 32:
-					buffer[c][i + offset] = LIMIT(-1.0, double(reinterpret_cast<float*>  (tempBuff)[(i * info.channels) + c]),                     1.0);
+					buffer[c][i + offset] = DEC_SAMPLE(reinterpret_cast<float*>  (tempBuff)[(i * info.channels) + c]);
+					break;
 				}
 			}
 		}
@@ -289,7 +303,10 @@ int64_t AudioIO_Raw_Private::read(double **buffer, const int64_t count)
 
 		if(result < rdSize)
 		{
-			PRINT_WRN(TXT("File read error. Read fewer frames that what was requested!"));
+			if(!feof(file))
+			{
+				PRINT_WRN(TXT("File read error. Read fewer frames that what was requested!"));
+			}
 			break;
 		}
 	}
@@ -332,17 +349,20 @@ int64_t AudioIO_Raw_Private::write(double *const *buffer, const int64_t count)
 				switch(info.bitDepth)
 				{
 				case 8:
-					reinterpret_cast<int8_t*> (tempBuff)[(i * info.channels) + c] = static_cast<int8_t> (LIMIT(-1.0, buffer[c][i + offset], 1.0) * double(INT8_MAX ));
+					reinterpret_cast<int8_t*> (tempBuff)[(i * info.channels) + c] = ENC_SAMPLE_8 (buffer[c][i + offset]);
+					break;
 				case 16:
-					reinterpret_cast<int16_t*>(tempBuff)[(i * info.channels) + c] = static_cast<int16_t>(LIMIT(-1.0, buffer[c][i + offset], 1.0) * double(INT16_MAX));
+					reinterpret_cast<int16_t*>(tempBuff)[(i * info.channels) + c] = ENC_SAMPLE_16(buffer[c][i + offset]);
+					break;
 				case 32:
-					reinterpret_cast<float*>  (tempBuff)[(i * info.channels) + c] = static_cast<float>  (LIMIT(-1.0, buffer[c][i + offset], 1.0));
+					reinterpret_cast<float*>  (tempBuff)[(i * info.channels) + c] = ENC_SAMPLE_32(buffer[c][i + offset]);
+					break;
 				}
 			}
 		}
 
 		//Write data
-		const int64_t result = fwrite(tempBuff, (info.bitDepth / 8), size_t(wrSize), file);
+		const int64_t result = fwrite(tempBuff, (info.bitDepth / 8) * info.channels, size_t(wrSize), file);
 
 		offset    += result;
 		remaining -= result;
@@ -383,7 +403,7 @@ void AudioIO_Raw_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 		case 32: subfmt = TXT("32-Bit Floating-Point"); break;
 	}
 
-	SNPRINTF(buffer, buffSize, TXT("Raw PCM, %s"), subfmt);
+	SNPRINTF(buffer, buffSize, TXT("Raw Data, %s"), subfmt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -394,19 +414,19 @@ bool AudioIO_Raw_Private::checkProperties(const uint32_t channels, const uint32_
 {
 	if((channels < 1) || (channels > 16))
 	{
-		PRINT2_ERR(TXT("AudioIO_Raw: Invalid number of channels (%u). Must be in the %u to %u range!\n"), channels, 1, 16);
+		PRINT2_ERR(TXT("Invalid number of channels (%u). Must be in the %u to %u range!\n"), channels, 1, 16);
 		return false;
 	}
 
 	if((sampleRate < 11025) || (sampleRate > 192000))
 	{
-		PRINT2_ERR(TXT("AudioIO_Raw: Invalid sampele rate (%u). Must be in the %u to %u range!\n"), sampleRate, 11025, 192000);
+		PRINT2_ERR(TXT("Invalid sampele rate (%u). Must be in the %u to %u range!\n"), sampleRate, 11025, 192000);
 		return false;
 	}
 
 	if((bitDepth != 8) && (bitDepth != 16) && (bitDepth != 32))
 	{
-		PRINT2_ERR(TXT("AudioIO_Raw: Invalid bit depth (%u). Only 8, 16 and 32 bits/sample are currently supported!\n"), bitDepth);
+		PRINT2_ERR(TXT("Invalid bit depth (%u). Only 8, 16 and 32 bits/sample are currently supported!\n"), bitDepth);
 		return false;
 	}
 

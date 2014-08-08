@@ -59,7 +59,15 @@ static void my_invalid_param_handler(const wchar_t*, const wchar_t*, const wchar
 static void my_signal_handler(int signal_num)
 {
 	signal(signal_num, my_signal_handler);
-	my_crash_handler("\n\nGURU MEDITATION: Signal handler invoked unexpectedly, application will exit!\n\n");
+
+	if(signal_num != SIGINT)
+	{
+		my_crash_handler("\n\nGURU MEDITATION: Signal handler has been invoked, application will exit!\n\n");
+	}
+	else
+	{
+		my_crash_handler("\n\nGURU MEDITATION: Operation has been interrupted, application will exit!\n\n");
+	}
 }
 
 static LONG WINAPI my_exception_handler(struct _EXCEPTION_POINTERS*)
@@ -88,7 +96,7 @@ void SYSTEM_INIT(const bool &debugMode)
 
 	_setmode(_fileno(stdin ), _O_BINARY);
 	_setmode(_fileno(stderr), _O_U8TEXT);
-	_setmode(_fileno(stdout), _O_U8TEXT);
+	_setmode(_fileno(stdout), _O_BINARY);
 }
 
 #endif //_WIN32
