@@ -51,19 +51,31 @@ Finally, the following waveform view illustrates how the volume of a "real world
 Command-Line Usage <a name="chap_cli"></a>
 -------------------------------------------------------------------------------
 
-Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface), e.g. manually from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or automatically by a script file. The basic CLI syntax is extremely simple:
+Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface) (CLI), either *manually* from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or *automatically* by a [batch](http://en.wikipedia.org/wiki/Batch_file) file.
+
+### Basic CLI syntax: ###
+
 * ```DynamicAudioNormalizerCLI.exe -i <input_file> -o <output_file> [options]```
 
-Note that the *input* and *output* files always need to be specified, while the rest is optional. Existing output files will be *overwritten*!
+Note that the *input* file and the *output* file always have to be specified, while all other parameters are optional. But take care, an existing output file will be *overwritten*!
 
-Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output, so it can deal with a wide range of file formats (WAV, W64, AIFF, AU, etc) and various sample types (8-Bit/16-Bit/24-Bit Integer, 32-Bit/64-Bit Float, ADPCM, etc).
+Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output, so a wide range of file formats (WAV, W64, FLAC, Ogg/Vorbis, AIFF, AU/SND, etc) as well as various sample types (ranging from 8-Bit Integer to 64-Bit floating point) are supported.
 
-**Example:**
+Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported too. Just specify the file name <tt>"-"</tt> in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams) stream, respectively. When reading from the *stdin*, you have to explicitly specify the *input* sample format, channel count and sampling rate.
+
+For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> from the command prompt or refer to the following chapter.
+
+### Usage examples: ###
+
 * ```DynamicAudioNormalizerCLI.exe -i "c:\my music\in_original.wav" -o "c:\my music\out_normalized.wav"```
 
-For a list of available options, run <tt>DynamicAudioNormalizerCLI.exe -h</tt> or see the following chapter…
+* ```ffmpeg.exe -i "movie.mkv" -loglevel quiet -vn -f s16le -c:a pcm_s16le - |```
+  ```…DynamicAudioNormalizerCLI.exe -i - --input-bits 16 --input-chan 2 --input-rate 48000 -o "output.wav"```
 
+* ```DynamicAudioNormalizerCLI.exe -i "input.wav" -o - |```
+  ```…ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i - -c:a libmp3lame -qscale:a 2 "output.mp3"```
 
+  
 Configuration <a name="chap_cfg"></a>
 -------------------------------------------------------------------------------
 
@@ -134,7 +146,7 @@ As explained before, the Dynamic Audio Normalizer takes into account a certain n
 
 ### Write Log File <a name="chap_cfg.l"></a> ###
 
-Optionally, the Dynamic Audio Normalizer can create a log file. The log file name is specified using the **<tt>--logfile</tt>** option.  If that option is *not* used, then *no* log file will be written. The log file uses a simple text format. The file starts with a header, followed by a list of gain factors. In that list, there is one line per frame. In each line, the *first* column contains the maximum local gain factor, the *second* column contains the minimum filtered gain factor, and the *third* column contains the final smoothed gain factor. This sequence is repeated once per channel.
+Optionally, the Dynamic Audio Normalizer can create a log file. The log file name is specified using the **<tt>--log-file</tt>** option.  If that option is *not* used, then *no* log file will be written. The log file uses a simple text format. The file starts with a header, followed by a list of gain factors. In that list, there is one line per frame. In each line, the *first* column contains the maximum local gain factor, the *second* column contains the minimum filtered gain factor, and the *third* column contains the final smoothed gain factor. This sequence is repeated once per channel.
 
 ```
 DynamicAudioNormalizer Logfile v2.00-5
@@ -358,6 +370,12 @@ Furthermore, Makefiles for the Linux platform are provided. They have been teste
 
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
+
+### Version 2.03 (2014-08-??) ###
+* Implemented an *optional* RMS-based normalization mode
+* Added support for "raw" (headerless) audio data
+* Added pipe support, i.e. reading from *stdin* or writing to *stdout*
+* Enabled FLAC/Vorbis support in the *static* Win32 binaries
 
 ### Version 2.02 (2014-08-03) ###
 * Update license → core library is now released under LGPL v2.1

@@ -394,17 +394,17 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"), BOOLIFY(defaults.enableDCCorrection()));
 	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"), BOOLIFY(defaults.altBoundaryMode()));
 	PRINT(TXT("\n"));
-	PRINT(TXT("Diagnostic:\n"));
+	PRINT(TXT("Diagnostics:\n"));
 	PRINT(TXT("  -v --verbose             Output additional diagnostic info\n"));
-	PRINT(TXT("  -l --logfile <file>      Create a log file\n"));
+	PRINT(TXT("  -l --log-file <file>     Create a log file\n"));
 	PRINT(TXT("  -h --help                Print *this* help screen\n"));
 	PRINT(TXT("\n"));
-	PRINT(TXT("Raw I/O Options:\n"));
+	PRINT(TXT("Raw Data Options:\n"));
 	PRINT(TXT("  --raw-input              Treat input file as \"raw\" (headerless)\n"));
 	PRINT(TXT("  --raw-output             Treat output file as \"raw\" (headerless)\n"));
 	PRINT(TXT("  --input-bits <value>     Bits per sample, e.g. '16' or '32'\n"));
 	PRINT(TXT("  --input-chan <value>     Number of channels, e.g. '2' for Stereo\n"));
-	PRINT(TXT("  --input-rate <value>     Sample rate in Hz, e.g. '44100'\n"));
+	PRINT(TXT("  --input-rate <value>     Sample rate in Hertz, e.g. '44100'\n"));
 	PRINT(TXT("\n"));
 }
 

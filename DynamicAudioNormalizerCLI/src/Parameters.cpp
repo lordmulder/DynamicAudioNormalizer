@@ -196,7 +196,7 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		}
 
 		/*diagnostics*/
-		if(IS_ARG_SHRT("l", "logfile"))
+		if(IS_ARG_SHRT("l", "log-file"))
 		{
 			ENSURE_NEXT_ARG();
 			m_dbgLogFile = argv[pos];
