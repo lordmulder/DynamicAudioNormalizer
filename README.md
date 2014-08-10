@@ -358,24 +358,30 @@ void LogFunction(
 Source Code <a name="chap_src"></a>
 -------------------------------------------------------------------------------
 
-The source code of the Dynamic Audio Normalizer is available from the official [Git](http://git-scm.com/) repository at:
+The source code of the Dynamic Audio Normalizer is available from one of the official [Git](http://git-scm.com/) repository mirrors:
 * <tt>https://github.com/lordmulder/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
 * <tt>https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
 * <tt>https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
 
-Project/solution files are provided for Microsoft Visual Studio. The code can be built using, e.g, *Visual Studio Express 2013 for Windows Desktop*, which is available as a free download [here](http://www.visualstudio.com/downloads/download-visual-studio-vs).
+### Supported build environments: ###
+* Microsoft Windows with Visual Studio 2013, e.g. [*Visual Studio Express 2013 for Windows Desktop*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
+* Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.04.1 LTS*](http://releases.ubuntu.com/14.04.1/)
 
-Furthermore, Makefiles for the Linux platform are provided. They have been tested under Ubuntu 14.04.1 LTS using GCC 4.8.2.
+### Build prerequisites: ###
+* [*libsndfile*](http://www.mega-nerd.com/libsndfile/) is required for building the command-line program
+* [*Qt 4.x*](http://qt-project.org/) is required for building the log viewer program
+* [*Pandoc*](http://johnmacfarlane.net/pandoc/) is required for generating the documentation (HTML)
 
 
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
-### Version 2.03 (2014-08-??) ###
+### Version 2.03 (2014-08-11) ###
 * Implemented an *optional* RMS-based normalization mode
 * Added support for "raw" (headerless) audio data
-* Added pipe support, i.e. reading from *stdin* or writing to *stdout*
+* Added pipeline support, i.e. reading from *stdin* or writing to *stdout*
 * Enabled FLAC/Vorbis support in the *static* Win32 binaries
+* Various minor fixes and improvements
 
 ### Version 2.02 (2014-08-03) ###
 * Update license → core library is now released under LGPL v2.1
