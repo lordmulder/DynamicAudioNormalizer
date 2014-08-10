@@ -110,7 +110,7 @@ CreateTagFile:
 	echo "Dynamic Audio Normalizer" > $(BUILD_TAG)
 	echo "Copyright (C) 2014 LoRd_MuldeR <MuldeR2@GMX.de>" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
-	echo "Version $(VER_MAJOR).$(VER_MINOR)-$(VER_PATCH). Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
+	echo "Version $$(printf %d.%02d-%d $(VER_MAJOR).$(VER_MINOR)-$(VER_PATCH)). Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	g++ --version | head -n1 | sed 's/^/Compiler version:   /' >> $(BUILD_TAG)
 	uname -srmo | sed 's/^/Build platform:     /' >> $(BUILD_TAG)
