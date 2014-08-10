@@ -21,7 +21,10 @@
 
 #pragma once
 
-//Standard Library include
+//StdLib includes
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
 #include <stdint.h>
 
 //DLL Export Definitions

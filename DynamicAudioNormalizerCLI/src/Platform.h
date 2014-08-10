@@ -25,6 +25,10 @@
 // COMMON
 //============================================================================
 
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
+
 #include <cstdlib>
 #include <stdint.h>
 #include <cstdio>

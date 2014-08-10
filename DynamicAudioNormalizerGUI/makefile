@@ -32,6 +32,19 @@ API_VERSION  := 1
 PROGRAM_NAME := DynamicAudioNormalizerGUI
 
 ##############################################################################
+# Qt Checks
+##############################################################################
+
+MOC_CHECK = $(findstring Qt Meta Object Compiler,$(shell $(MOC) -v 2>&1))
+ifneq ($(MOC_CHECK),Qt Meta Object Compiler)
+   $(error Qt Meta Object Compiler not found. Please set MOC environment variable properly!)
+endif
+
+ifneq ($(notdir $(realpath $(QTDIR)/QtGui/QApplication)),QApplication)
+   $(error "QtGui/QApplication" not found in Qt include path. Please set QTDIR environment variable properly!)
+endif
+
+##############################################################################
 # Flags
 ##############################################################################
 
