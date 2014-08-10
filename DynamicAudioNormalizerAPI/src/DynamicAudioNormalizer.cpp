@@ -308,11 +308,6 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 
 	m_dcCorrectionValue       = new double[m_channels];
 	m_prevAmplificationFactor = new double[m_channels];
-	for(uint32_t channel = 0; channel < m_channels; channel++)
-	{
-		m_dcCorrectionValue      [channel] = 0.0;
-		m_prevAmplificationFactor[channel] = 1.0;
-	}
 
 	m_fadeFactors[0] = new double[m_frameLen];
 	m_fadeFactors[1] = new double[m_frameLen];
@@ -365,6 +360,12 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	m_gainHistory_original->clear();
 	m_gainHistory_minimum ->clear();
 	m_gainHistory_smoothed->clear();
+
+	for(uint32_t channel = 0; channel < m_channels; channel++)
+	{
+		m_dcCorrectionValue      [channel] = 0.0;
+		m_prevAmplificationFactor[channel] = 1.0;
+	}
 
 	return true;
 }
@@ -523,6 +524,11 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 		for(uint32_t i = 0; i < pendingSamples; i++)
 		{
 			samplesOut[c][i] = m_altBoundaryMode ? DBL_EPSILON : ((m_targetRms > DBL_EPSILON) ? std::min(m_peakValue, m_targetRms) : m_peakValue);
+			if(m_enableDCCorrection)
+			{
+				samplesOut[c][i] *= ((i % 2) == 1) ? (-1) : 1;
+				samplesOut[c][i] += m_dcCorrectionValue[c];
+			}
 		}
 	}
 
@@ -698,6 +704,7 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	if(m_gainHistory_original[channel].empty() || m_gainHistory_minimum[channel].empty())
 	{
 		const uint32_t preFillSize = m_filterSize / 2;
+		m_prevAmplificationFactor[channel] = m_altBoundaryMode ? currentGainFactor : 1.0;
 		while(m_gainHistory_original[channel].size() < preFillSize)
 		{
 			m_gainHistory_original[channel].push_back(m_altBoundaryMode ? currentGainFactor : 1.0);
@@ -739,10 +746,11 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 
 void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, const bool &isFirstFrame)
 {
+	const double diff = 1.0 / double(m_frameLen);
+
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
 		double *const dataPtr = frame->data(c);
-		const double diff = 1.0 / double(m_frameLen);
 		double currentAverageValue = 0.0;
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
@@ -750,12 +758,12 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, 
 			currentAverageValue += (dataPtr[i] * diff);
 		}
 
-		const double prevCorrectionValue = m_dcCorrectionValue[c];
+		const double prevValue = isFirstFrame ? currentAverageValue : m_dcCorrectionValue[c];
 		m_dcCorrectionValue[c] = isFirstFrame ? currentAverageValue : UPDATE_VALUE(currentAverageValue, m_dcCorrectionValue[c], 0.1);
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			dataPtr[i] -= FADE(prevCorrectionValue, m_dcCorrectionValue[c], m_dcCorrectionValue[c], i, m_fadeFactors);
+			dataPtr[i] -= FADE(prevValue, m_dcCorrectionValue[c], m_dcCorrectionValue[c], i, m_fadeFactors);
 		}
 	}
 }
@@ -831,16 +839,17 @@ void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
 
 void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 {
-	LOG1_DBG("------- PARAMETERS -------");
-	LOG2_DBG("Channels       : %u",   m_channels);
-	LOG2_DBG("Sampling rate  : %u",   m_sampleRate);
-	LOG2_DBG("Frame size     : %u",   m_frameLen);
-	LOG2_DBG("Filter Length  : %u",   m_filterSize);
-	LOG2_DBG("Peak value     : %.4f", m_peakValue);
-	LOG2_DBG("Max amp factor : %.4f", m_maxAmplification);
-	LOG2_DBG("Target RMS     : %.4f", m_targetRms);
-	LOG2_DBG("Chan. coupling : %s",   BOOLIFY(m_channelsCoupled));
-	LOG2_DBG("DC correction  : %s",   BOOLIFY(m_enableDCCorrection));
-	LOG2_DBG("Alt boundry md : %s",   BOOLIFY(m_altBoundaryMode));
-	LOG1_DBG("------- PARAMETERS -------\n");
+	LOG1_DBG("\n------- DynamicAudioNormalizer -------");
+	LOG2_DBG("Lib Version    : %u.%2u-%u", DYNAUDNORM_VERSION_MAJOR, DYNAUDNORM_VERSION_MINOR ,DYNAUDNORM_VERSION_PATCH);
+	LOG2_DBG("Channels       : %u",        m_channels);
+	LOG2_DBG("Sampling rate  : %u",        m_sampleRate);
+	LOG2_DBG("Frame size     : %u",        m_frameLen);
+	LOG2_DBG("Filter Length  : %u",        m_filterSize);
+	LOG2_DBG("Peak value     : %.4f",      m_peakValue);
+	LOG2_DBG("Max amp factor : %.4f",      m_maxAmplification);
+	LOG2_DBG("Target RMS     : %.4f",      m_targetRms);
+	LOG2_DBG("Chan. coupling : %s",        BOOLIFY(m_channelsCoupled));
+	LOG2_DBG("DC correction  : %s",        BOOLIFY(m_enableDCCorrection));
+	LOG2_DBG("Alt boundry md : %s",        BOOLIFY(m_altBoundaryMode));
+	LOG1_DBG("------- DynamicAudioNormalizer -------\n");
 }
