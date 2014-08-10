@@ -61,6 +61,24 @@ if "%ISO_DATE%"=="" goto BuildError
 if "%ISO_TIME%"=="" goto BuildError
 
 REM ///////////////////////////////////////////////////////////////////////////
+REM // Detect version number
+REM ///////////////////////////////////////////////////////////////////////////
+set "VER_MAJOR="
+set "VER_MINOR="
+set "VER_PATCH="
+for /F "tokens=4,5,6 delims=; " %%a in (%~dp0\DynamicAudioNormalizerAPI\src\Version.cpp) do (
+	if "%%b"=="=" (
+		if "%%a"=="DYNAUDNORM_VERSION_MAJOR" set "VER_MAJOR=%%c"
+		if "%%a"=="DYNAUDNORM_VERSION_MINOR" set "VER_MINOR=%%c"
+		if "%%a"=="DYNAUDNORM_VERSION_PATCH" set "VER_PATCH=%%c"
+	)
+)
+if "%VER_MAJOR%"=="" goto BuildError
+if "%VER_MINOR%"=="" goto BuildError
+if "%VER_PATCH%"=="" goto BuildError
+if %VER_MINOR% LSS 10 set "VER_MINOR=0%VER_MINOR%
+
+REM ///////////////////////////////////////////////////////////////////////////
 REM // Build the binaries
 REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
@@ -147,16 +165,24 @@ for %%c in (DLL, Static) do (
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Create version tag
 REM ///////////////////////////////////////////////////////////////////////////
-echo Dynamic Audio Normalizer > "%PACK_PATH%\BUILD_TAG"
-echo Copyright (C) 2014 LoRd_MuldeR ^<MuldeR2@GMX.de^> >> "%PACK_PATH%\BUILD_TAG"
-echo. >> "%PACK_PATH%\BUILD_TAG"
-echo Built on %ISO_DATE%, at %TIME% >> "%PACK_PATH%\BUILD_TAG"
-cl 2>&1 | "%~dp0\etc\head.exe" -n1 | "%~dp0\etc\sed.exe" "s/^/Compiler version: /" >> "%PACK_PATH%\BUILD_TAG"
-echo. >> "%PACK_PATH%\BUILD_TAG"
-echo This program is free software; you can redistribute it and/or modify >> "%PACK_PATH%\BUILD_TAG"
-echo it under the terms of the GNU General Public License as published by >> "%PACK_PATH%\BUILD_TAG"
-echo the Free Software Foundation; either version 2 of the License, or >> "%PACK_PATH%\BUILD_TAG"
-echo (at your option) any later version. >> "%PACK_PATH%\BUILD_TAG"
+echo Dynamic Audio Normalizer >                                                                      "%PACK_PATH%\BUILD_TAG"
+echo Copyright (C) 2014 LoRd_MuldeR ^<MuldeR2@GMX.de^> >>                                            "%PACK_PATH%\BUILD_TAG"
+echo Version %VER_MAJOR%.%VER_MINOR%-%VER_PATCH% >>                                                  "%PACK_PATH%\BUILD_TAG"
+echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
+echo Built on %ISO_DATE%, at %ISO_TIME% >>                                                           "%PACK_PATH%\BUILD_TAG"
+echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
+cl 2>&1  | "%~dp0\etc\head.exe" -n1 | "%~dp0\etc\sed.exe" -e "/^$/d" -e "s/^/Compiler version: /" >> "%PACK_PATH%\BUILD_TAG"
+ver 2>&1 |                            "%~dp0\etc\sed.exe" -e "/^$/d" -e "s/^/Build platform:   /" >> "%PACK_PATH%\BUILD_TAG"
+echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
+echo This library is free software; you can redistribute it and/or >>                                "%PACK_PATH%\BUILD_TAG"
+echo modify it under the terms of the GNU Lesser General Public >>                                   "%PACK_PATH%\BUILD_TAG"
+echo License as published by the Free Software Foundation; either >>                                 "%PACK_PATH%\BUILD_TAG"
+echo version 2.1 of the License, or (at your option) any later version. >>                           "%PACK_PATH%\BUILD_TAG"
+echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
+echo This library is distributed in the hope that it will be useful, >>                              "%PACK_PATH%\BUILD_TAG"
+echo but WITHOUT ANY WARRANTY; without even the implied warranty of >>                               "%PACK_PATH%\BUILD_TAG"
+echo MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU >>                            "%PACK_PATH%\BUILD_TAG"
+echo Lesser General Public License for more details. >>                                              "%PACK_PATH%\BUILD_TAG"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Build the package

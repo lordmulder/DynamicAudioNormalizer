@@ -37,6 +37,11 @@ BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
 TARGET_PATH  := ./bin/$(BUILD_DATE)
 OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).tbz2)
 
+# Version info
+VER_MAJOR = $(shell sed -n 's/.*DYNAUDNORM_VERSION_MAJOR = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
+VER_MINOR = $(shell sed -n 's/.*DYNAUDNORM_VERSION_MINOR = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
+VER_PATCH = $(shell sed -n 's/.*DYNAUDNORM_VERSION_PATCH = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
+
 ##############################################################################
 # Rules
 ##############################################################################
@@ -105,7 +110,7 @@ CreateTagFile:
 	echo "Dynamic Audio Normalizer" > $(BUILD_TAG)
 	echo "Copyright (C) 2014 LoRd_MuldeR <MuldeR2@GMX.de>" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
-	echo "Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
+	echo "Version $(VER_MAJOR).$(VER_MINOR)-$(VER_PATCH). Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	g++ --version | head -n1 | sed 's/^/Compiler version:   /' >> $(BUILD_TAG)
 	uname -srmo | sed 's/^/Build platform:     /' >> $(BUILD_TAG)
