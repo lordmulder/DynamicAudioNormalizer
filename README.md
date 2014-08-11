@@ -362,9 +362,10 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 * <tt>https://github.com/lordmulder/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
 * <tt>https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
 * <tt>https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
+* <tt>https://git.assembla.com/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://www.assembla.com/code/dynamicaudionormalizer/git/nodes))
 
 ### Supported build environments: ###
-* Microsoft Windows with Visual Studio 2013, e.g. [*Visual Studio Express 2013 for Windows Desktop*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
+* Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
 * Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.04.1 LTS*](http://releases.ubuntu.com/14.04.1/)
 
 ### Build prerequisites: ###
@@ -381,7 +382,7 @@ Changelog <a name="chap_log"></a>
 * Added support for "raw" (headerless) audio data
 * Added pipeline support, i.e. reading from *stdin* or writing to *stdout*
 * Enabled FLAC/Vorbis support in the *static* Win32 binaries
-* Various minor fixes and improvements
+* Various fixes and minor improvements
 
 ### Version 2.02 (2014-08-03) ###
 * Update license → core library is now released under LGPL v2.1
