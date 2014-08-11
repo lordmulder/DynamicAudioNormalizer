@@ -167,9 +167,8 @@ REM // Create version tag
 REM ///////////////////////////////////////////////////////////////////////////
 echo Dynamic Audio Normalizer >                                                                      "%PACK_PATH%\BUILD_TAG"
 echo Copyright (C) 2014 LoRd_MuldeR ^<MuldeR2@GMX.de^> >>                                            "%PACK_PATH%\BUILD_TAG"
-echo Version %VER_MAJOR%.%VER_MINOR%-%VER_PATCH% >>                                                  "%PACK_PATH%\BUILD_TAG"
 echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
-echo Built on %ISO_DATE%, at %ISO_TIME% >>                                                           "%PACK_PATH%\BUILD_TAG"
+echo Version %VER_MAJOR%.%VER_MINOR%-%VER_PATCH%. Built on %ISO_DATE%, at %ISO_TIME% >>              "%PACK_PATH%\BUILD_TAG"
 echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
 cl 2>&1  | "%~dp0\etc\head.exe" -n1 | "%~dp0\etc\sed.exe" -e "/^$/d" -e "s/^/Compiler version: /" >> "%PACK_PATH%\BUILD_TAG"
 ver 2>&1 |                            "%~dp0\etc\sed.exe" -e "/^$/d" -e "s/^/Build platform:   /" >> "%PACK_PATH%\BUILD_TAG"
