@@ -84,7 +84,6 @@ const char* DYNAUDNORM_BUILD_TIME = __TIME__;
 	#else
 		#error Compiler is not supported!
 	#endif
-
 	// Note: /arch:SSE and /arch:SSE2 are only available for the x86 platform
 	#if !defined(_M_X64) && defined(_M_IX86_FP)
 		#if (_M_IX86_FP == 1)
@@ -93,6 +92,10 @@ const char* DYNAUDNORM_BUILD_TIME = __TIME__;
 			#pragma message("SSE2 (or higher) instruction set is enabled!")
 		#endif
 	#endif
+#elif defined(__GNUC__)
+	#define GCC_VERSION_GLUE1(X,Y,Z) "GCC " #X "." #Y "." #Z
+	#define GCC_VERSION_GLUE2(X,Y,Z) GCC_VERSION_GLUE1(X,Y,Z)
+	const char *DYNAUDNORM_COMPILER = GCC_VERSION_GLUE2(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #else
 	#error Compiler is not supported!
 #endif
