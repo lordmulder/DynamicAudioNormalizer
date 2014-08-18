@@ -92,6 +92,7 @@ While the default parameter of the Dynamic Audio Normalizer have been chosen to 
 * [Target RMS Value](#chap_cfg.r)
 * [Frame Length](#chap_cfg.f)
 * [Boundary Mode](#chap_cfg.b)
+* [Input Compression](#chap_cfg.s)
 * [Write Log File](#chap_cfg.l)
 
 ### Gaussian Filter Window Size <a name="chap_cfg.g"></a> ###
@@ -128,7 +129,7 @@ The Dynamic Audio Normalizer determines the maximum possible (local) gain factor
 
 ### Target RMS Value <a name="chap_cfg.r"></a> ###
 
-By default, the Dynamic Audio Normalizer performs "peak" normalization. This means that the maximum local gain factor for each frame is defined (only) by the frame's highest magnitude sample. This way, the samples can be amplified as much as possible *without* exceeding the maximum signal level, i.e. *without* clipping. Optionally, however, the Dynamic Audio Normalizer can also take into account the frame's [*root mean square*](http://en.wikipedia.org/wiki/Root_mean_square), abbreviated RMS. In electrical engineering, the RMS is commonly used to determine the *power* of a time-varying signal. It is therefore considered that the RMS is a better approximation of the "perceived loudness" than just looking at the signal's peak magnitude. Consequently, by adjusting all frames to a *constant* RMS value, a *uniform* "perceived loudness" can be established. With the Dynamic Audio Normalizer, RMS processing can be enabled using the **<tt>--target-rms</tt>** switch. This specifies the desired RMS value, in the *0.0* to *1.0* range. There is *no* default value, because RMS processing is *disabled* by default. If a target RMS value has been specified, a frame's local gain factor is defined as the factor that would result in exactly *that* RMS value. Note, however, that the maximum local gain factor is still restricted by the frame's highest magnitude sample, in order to prevent clipping. The following chart shows the same file normalized *without* (green) and *with* (orange) RMS processing enabled.
+By default, the Dynamic Audio Normalizer performs "peak" normalization. This means that the maximum local gain factor for each frame is defined (only) by the frame's highest magnitude sample. This way, the samples can be amplified as much as possible *without* exceeding the maximum signal level, i.e. *without* clipping. Optionally, however, the Dynamic Audio Normalizer can also take into account the frame's [*root mean square*](http://en.wikipedia.org/wiki/Root_mean_square), abbreviated RMS. In electrical engineering, the RMS is commonly used to determine the *power* of a time-varying signal. It is therefore considered that the RMS is a better approximation of the "perceived loudness" than just looking at the signal's peak magnitude. Consequently, by adjusting all frames to a *constant* RMS value, a *uniform* "perceived loudness" can be established. With the Dynamic Audio Normalizer, RMS processing can be enabled using the **<tt>--target-rms</tt>** switch. This specifies the desired RMS value, in the *0.0* to *1.0* range. There is **no** default value, because RMS processing is *disabled* by default. If a target RMS value has been specified, a frame's local gain factor is defined as the factor that would result in exactly *that* RMS value. Note, however, that the maximum local gain factor is still restricted by the frame's highest magnitude sample, in order to prevent clipping. The following chart shows the same file normalized *without* (green) and *with* (orange) RMS processing enabled.
 
 ![RMS](img/RMS.png "Dynamic Audio Normalizer – RMS Processing")  
 <small>**Figure 8:** Root Mean Square (RMS) processing example.</small>
@@ -143,6 +144,13 @@ As explained before, the Dynamic Audio Normalizer takes into account a certain n
 
 ![Boundary](img/Boundary.png "Dynamic Audio Normalizer - Boundary Modes")  
 <small>**Figure 9:** Default boundary mode vs. alternative boundary mode.</small>
+
+### Input Compression <a name="chap_cfg.s"></a> ###
+
+By default, the Dynamic Audio Normalizer does **not** apply "traditional" compression. This means that signal peaks will **not** be pruned and thus the *full* dynamic range will be retained within each local neighbourhood. However, in some cases it may be desirable to combine the Dynamic Audio Normalizer's default algorithm with a more "traditional" compression. The *compression* (thresholding) function can be enabled by using the **<tt>--compress</tt>** switch. This specifies the *threshold* value, which must be in the *0.0* to *1.0* range. Put simply, all samples whose magnitude exceeds the specified threshold value will be pruned. More specifically, a [*soft knee*](http://soundtech.files.wordpress.com/2009/02/compression_knee.png) threshold function will be applied. This means that the *smaller* the threshold value, the *stronger* the compression effect. There is **no** default value, because the compression (thresholding) function is *disabled* by default. Note that the compression will be applied *before* the actual normalization process. As a result, applying the compression allows for *stronger* amplification. But be aware that the compression will also significantly reduce the dynamic range. Strong compression can even result in audible distortions. Therefore, the **<tt>--compress</tt>** option has to be used with extreme care! The following wave view illustrates the effect of the input compression function: It shows the same input file processed with *default* settings (top) and again with the compression function *enabled* (bottom).
+
+![Compression](img/Compression-1.png "Input Compression")
+<small>**Figure 10:** The effect of input compression (thresholding).</small>
 
 ### Write Log File <a name="chap_cfg.l"></a> ###
 
@@ -161,7 +169,7 @@ CHANNEL_COUNT:2
 The log file can be displayed as a graphical chart using, for example, the *Log Viewer* application (DynamicAudioNormalizerGUI) that is included with the Dynamic Audio Normalizer:
 
 ![LogViewer](img/LogViewer.png "Dynamic Audio Normalizer - Log Viewer")  
-<small>**Figure 10:** Dynamic Audio Normalizer - Log Viewer.</small>
+<small>**Figure 11:** Dynamic Audio Normalizer - Log Viewer.</small>
 
 
 API Documentation <a name="chap_api"></a>
@@ -429,8 +437,8 @@ A traditional [*audio compressor*](http://en.wikipedia.org/wiki/Dynamic_range_co
 
 The following waveform view shows an audio signal prior to dynamic range compression (left), after the compression step (center) and after the subsequent amplification step (right). It can be seen that the original audio had a *large* dynamic range, with each drumbeat causing a significant peak. It can also be seen how those peeks have been *eliminated* for the most part after the compression. This makes the drum sound much *less* catchy! Last but not least, it can be seen that the final amplified audio now appears much "louder" than the original, but the dynamics are mostly gone…
 
-![Compression](img/Compression.png "Dynamic Range Compression")  
-<small>**Figure 11:** Example of dynamic range compression.</small>
+![Compression](img/Compression-2.png "Dynamic Range Compression")  
+<small>**Figure 12:** Example of dynamic range compression.</small>
 
 In contrast, the Dynamic Audio Normalizer also implements dynamic range compression *of some sort*, but it does **not** prune signal peaks above a *fixed* threshold. Actually it does **not** prune any signal peaks at all! Furthermore, it does **not** amplify the samples by a *fixed* gain factor. Instead, an "optimal" gain factor will be chosen for each *frame*. And, since a frame's gain factor is bounded by the highest magnitude sample within that frame, **100%** of the dynamic range will be preserved *within* each frame! The Dynamic Audio Normalizer only performs a "dynamic range compression" in the sense that the gain factors are *dynamically* adjusted over time, allowing "quieter" frames to get a stronger amplification than "louder" frames. This means that the volume differences between the "quiet" and the "loud" parts of an audio recording will be *harmonized* – but still the *full* dynamic range is being preserved within each of these parts. Finally, the Gaussian filter applied by the Dynamic Audio Normalizer ensures that any changes of the gain factor between neighbouring frames will be smooth and seamlessly, avoiding noticeable "jumps" of the audio volume.
 

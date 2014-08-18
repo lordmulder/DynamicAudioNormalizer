@@ -864,17 +864,17 @@ void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
 void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 {
 	LOG1_DBG("\n------- DynamicAudioNormalizer -------");
-	LOG2_DBG("Lib Version          : %u.%2u-%u", DYNAUDNORM_VERSION_MAJOR, DYNAUDNORM_VERSION_MINOR ,DYNAUDNORM_VERSION_PATCH);
-	LOG2_DBG("m_channels           : %u",        m_channels);
-	LOG2_DBG("m_sampleRate         : %u",        m_sampleRate);
-	LOG2_DBG("m_frameLen           : %u",        m_frameLen);
-	LOG2_DBG("m_filterSize         : %u",        m_filterSize);
-	LOG2_DBG("m_peakValue          : %.4f",      m_peakValue);
-	LOG2_DBG("m_maxAmplification   : %.4f",      m_maxAmplification);
-	LOG2_DBG("m_targetRms          : %.4f",      m_targetRms);
-	LOG2_DBG("m_compressThresh     : %.4f",      m_compressThresh);
-	LOG2_DBG("m_channelsCoupled    : %s",        BOOLIFY(m_channelsCoupled));
-	LOG2_DBG("m_enableDCCorrection : %s",        BOOLIFY(m_enableDCCorrection));
-	LOG2_DBG("m_altBoundaryMode    : %s",        BOOLIFY(m_altBoundaryMode));
+	LOG2_DBG("Lib Version          : %u.%02u-%u", DYNAUDNORM_VERSION_MAJOR, DYNAUDNORM_VERSION_MINOR ,DYNAUDNORM_VERSION_PATCH);
+	LOG2_DBG("m_channels           : %u",         m_channels);
+	LOG2_DBG("m_sampleRate         : %u",         m_sampleRate);
+	LOG2_DBG("m_frameLen           : %u",         m_frameLen);
+	LOG2_DBG("m_filterSize         : %u",         m_filterSize);
+	LOG2_DBG("m_peakValue          : %.4f",       m_peakValue);
+	LOG2_DBG("m_maxAmplification   : %.4f",       m_maxAmplification);
+	LOG2_DBG("m_targetRms          : %.4f",       m_targetRms);
+	LOG2_DBG("m_compressThresh     : %.4f",       m_compressThresh);
+	LOG2_DBG("m_channelsCoupled    : %s",         BOOLIFY(m_channelsCoupled));
+	LOG2_DBG("m_enableDCCorrection : %s",         BOOLIFY(m_enableDCCorrection));
+	LOG2_DBG("m_altBoundaryMode    : %s",         BOOLIFY(m_altBoundaryMode));
 	LOG1_DBG("------- DynamicAudioNormalizer -------\n");
 }
