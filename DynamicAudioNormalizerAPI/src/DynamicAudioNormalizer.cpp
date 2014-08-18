@@ -784,7 +784,6 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame)
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
 		double *const dataPtr = frame->data(c);
-		double currentAverageValue = 0.0;
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
