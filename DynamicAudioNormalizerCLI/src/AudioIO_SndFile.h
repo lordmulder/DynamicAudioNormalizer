@@ -25,14 +25,14 @@
 
 class AudioIO_File_Private;
 
-class AudioIO_File : public AudioIO
+class AudioIO_SndFile : public AudioIO
 {
 public:
-	AudioIO_File(void);
-	virtual ~AudioIO_File(void);
+	AudioIO_SndFile(void);
+	virtual ~AudioIO_SndFile(void);
 
 	//Open and Close
-	virtual bool openRd(const CHR *const fileName);
+	virtual bool openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	virtual bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	virtual bool close(void);
 
@@ -48,6 +48,6 @@ public:
 	static const char *libraryVersion(void);
 	
 private:
-	AudioIO_File &operator=(const AudioIO_File &) { throw 666; }
+	AudioIO_SndFile &operator=(const AudioIO_SndFile &) { throw 666; }
 	AudioIO_File_Private *const p;
 };

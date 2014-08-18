@@ -27,10 +27,7 @@
     <ClCompile Include="src\Platform_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\AudioIO_File.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AudioIO_Raw.cpp">
+    <ClCompile Include="src\AudioIO_SndFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,13 +41,10 @@
     <ClInclude Include="src\Platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\AudioIO_File.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\AudioIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\AudioIO_Raw.h">
+    <ClInclude Include="src\AudioIO_SndFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

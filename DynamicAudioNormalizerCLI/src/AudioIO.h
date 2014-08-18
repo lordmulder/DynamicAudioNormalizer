@@ -31,6 +31,8 @@ public:
 	virtual ~AudioIO(void) {}
 
 	//Functions implemented in derived classes
+	virtual bool openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth) = 0;
+	virtual bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth) = 0;
 	virtual int64_t read(double **buffer, const int64_t count) = 0;
 	virtual int64_t write(double *const *buffer, const int64_t count) = 0;
 	virtual bool close(void) = 0;

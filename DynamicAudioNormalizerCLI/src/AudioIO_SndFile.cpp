@@ -21,13 +21,21 @@
 
 #define __STDC_LIMIT_MACROS
 
-#include "AudioIO_File.h"
+#include "AudioIO_SndFile.h"
 
 #include "Common.h"
 
 #include <sndfile.h>
 #include <stdexcept>
 #include <algorithm>
+
+#ifdef __unix
+#include <unistd.h>
+#else
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+#endif
 
 #define MY_THROW(X) throw std::runtime_error((X))
 
@@ -42,7 +50,7 @@ public:
 	~AudioIO_File_Private(void);
 
 	//Open and Close
-	bool openRd(const CHR *const fileName);
+	bool openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 	bool close(void);
 
@@ -83,19 +91,20 @@ private:
 	static int formatToBitDepth(const int &format);
 	static int formatFromExtension(const CHR *const fileName, const int &bitDepth);
 	static int getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported);
+	static bool checkRawParameters(const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-AudioIO_File::AudioIO_File(void)
+AudioIO_SndFile::AudioIO_SndFile(void)
 :
 	p(new AudioIO_File_Private())
 {
 }
 
-AudioIO_File::~AudioIO_File(void)
+AudioIO_SndFile::~AudioIO_SndFile(void)
 {
 	delete p;
 }
@@ -117,42 +126,42 @@ AudioIO_File_Private::~AudioIO_File_Private(void)
 // Public API
 ///////////////////////////////////////////////////////////////////////////////
 
-bool AudioIO_File::openRd(const CHR *const fileName)
+bool AudioIO_SndFile::openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
-	return p->openRd(fileName);
+	return p->openRd(fileName, channels, sampleRate, bitDepth);
 }
 
-bool AudioIO_File::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+bool AudioIO_SndFile::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
 	return p->openWr(fileName, channels, sampleRate, bitDepth);
 }
 
-bool AudioIO_File::close(void)
+bool AudioIO_SndFile::close(void)
 {
 	return p->close();
 }
 
-int64_t AudioIO_File::read(double **buffer, const int64_t count)
+int64_t AudioIO_SndFile::read(double **buffer, const int64_t count)
 {
 	return p->read(buffer, count);
 }
 
-int64_t AudioIO_File::write(double *const *buffer, const int64_t count)
+int64_t AudioIO_SndFile::write(double *const *buffer, const int64_t count)
 {
 	return p->write(buffer, count);
 }
 
-bool AudioIO_File::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
+bool AudioIO_SndFile::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
 {
 	return p->queryInfo(channels, sampleRate, length, bitDepth);
 }
 
-void AudioIO_File::getFormatInfo(CHR *buffer, const uint32_t buffSize)
+void AudioIO_SndFile::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 {
 	p->getFormatInfo(buffer, buffSize);
 }
 
-const char *AudioIO_File::libraryVersion(void)
+const char *AudioIO_SndFile::libraryVersion(void)
 {
 	return AudioIO_File_Private::libraryVersion();
 }
@@ -171,7 +180,7 @@ const char *AudioIO_File::libraryVersion(void)
 } \
 while(0)
 
-bool AudioIO_File_Private::openRd(const CHR *const fileName)
+bool AudioIO_File_Private::openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
 	if(handle)
 	{
@@ -181,25 +190,47 @@ bool AudioIO_File_Private::openRd(const CHR *const fileName)
 
 	//Initialize
 	memset(&info, 0, sizeof(SF_INFO));
-	memset(&vio, 0, sizeof(SF_VIRTUAL_IO));
+	memset(&vio,  0, sizeof(SF_VIRTUAL_IO));
+	memset(&file, 0, sizeof(FILE*));
 
-	//Open file
-	file = FOPEN(fileName, TXT("rb"));
-	if(!file)
+	//Use pipe?
+	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
+
+	//Open input file
+	if(!bPipe)
 	{
-		return false;
+		file = FOPEN(fileName, TXT("rb"));
+		if(!file)
+		{
+			return false;
+		}
 	}
 
 	//Setup the virtual I/O
 	SETUP_VIO(vio);
 	
+	//Setup info for "raw" input
+	if(bPipe)
+	{
+		if(!checkRawParameters(channels, sampleRate, bitDepth))
+		{
+			return false;
+		}
+		info.format = formatFromExtension(TXT("raw"), bitDepth);
+		info.channels = channels;
+		info.samplerate = sampleRate;
+	}
+
 	//Open file in libsndfile
-	handle = sf_open_virtual(&vio, SFM_READ, &info, file);
+	handle = bPipe ? sf_open_fd(STDIN_FILENO, SFM_READ, &info, SF_FALSE) : sf_open_virtual(&vio, SFM_READ, &info, file);
 
 	if(!handle)
 	{
-		PRINT2_ERR(TXT("Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
-		fclose(file);
+		if(!bPipe)
+		{
+			PRINT2_ERR(TXT("Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
+			fclose(file);
+		}
 		return false;
 	}
 
@@ -220,30 +251,40 @@ bool AudioIO_File_Private::openWr(const CHR *const fileName, const uint32_t chan
 
 	//Initialize
 	memset(&info, 0, sizeof(SF_INFO));
-	memset(&vio, 0, sizeof(SF_VIRTUAL_IO));
+	memset(&vio,  0, sizeof(SF_VIRTUAL_IO));
+	memset(&file, 0, sizeof(FILE*));
+
+	//Use pipe?
+	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
 
 	//Open file
-	file = FOPEN(fileName, TXT("wb"));
-	if(!file)
+	if(!bPipe)
 	{
-		return false;
+		file = FOPEN(fileName, TXT("wb"));
+		if(!file)
+		{
+			return false;
+		}
 	}
 	
 	//Setup the virtual I/O
 	SETUP_VIO(vio);
 
 	//Setup output format
-	info.format = STRCASECMP(fileName, TXT("-")) ? formatFromExtension(fileName, bitDepth) : formatFromExtension(TXT("raw"), bitDepth);
+	info.format = bPipe ? formatFromExtension(TXT("raw"), bitDepth) : formatFromExtension(fileName, bitDepth);
 	info.channels = channels;
 	info.samplerate = sampleRate;
 
 	//Open file in libsndfile
-	handle = sf_open_virtual(&vio, SFM_WRITE, &info, file);
+	handle = bPipe ? sf_open_fd(STDOUT_FILENO, SFM_WRITE, &info, SF_FALSE) : sf_open_virtual(&vio, SFM_WRITE, &info, file);
 
 	if(!handle)
 	{
-		PRINT2_ERR(TXT("Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
-		fclose(file);
+		if(file)
+		{
+			PRINT2_ERR(TXT("Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
+			fclose(file);
+		}
 		return false;
 	}
 
@@ -325,7 +366,10 @@ int64_t AudioIO_File_Private::read(double **buffer, const int64_t count)
 
 		if(result < rdSize)
 		{
-			PRINT_WRN(TXT("File read error. Read fewer frames that what was requested!"));
+			if(file)
+			{
+				PRINT_WRN(TXT("File read error. Read fewer frames that what was requested!"));
+			}
 			break;
 		}
 	}
@@ -394,7 +438,7 @@ bool AudioIO_File_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, i
 
 	channels = info.channels;
 	sampleRate = info.samplerate;
-	length = info.frames;
+	length = (file) ? info.frames : INT64_MAX;
 	bitDepth = formatToBitDepth(info.format);
 
 	return true;
@@ -591,4 +635,27 @@ int AudioIO_File_Private::getSubFormat(const int &bitDepth, const bool &eightBit
 	}
 
 	return format;
+}
+
+bool AudioIO_File_Private::checkRawParameters(const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+{
+	if((channels < 1) || (channels > 16))
+	{
+		PRINT2_ERR(TXT("Invalid number of channels (%u). Must be in the %u to %u range!\n"), channels, 1, 16);
+		return false;
+	}
+
+	if((sampleRate < 11025) || (sampleRate > 192000))
+	{
+		PRINT2_ERR(TXT("Invalid sampele rate (%u). Must be in the %u to %u range!\n"), sampleRate, 11025, 192000);
+		return false;
+	}
+
+	if((bitDepth != 8) && (bitDepth != 16) && (bitDepth != 24) && (bitDepth != 32) && (bitDepth != 64))
+	{
+		PRINT2_ERR(TXT("Invalid bit depth (%u). Only 8, 16, 24, 32 and 64 bits/sample are supported!\n"), bitDepth);
+		return false;
+	}
+
+	return true;
 }

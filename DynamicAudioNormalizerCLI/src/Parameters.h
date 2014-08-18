@@ -48,8 +48,6 @@ public:
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
 	inline const bool     &altBoundaryMode(void)    const { return m_altBoundaryMode;    }
 	inline const bool     &showHelp(void)           const { return m_showHelp;           }
-	inline const bool     &rawSource(void)          const { return m_rawSource;          }
-	inline const bool     &rawOutput(void)          const { return m_rawOutput;          }
 	inline const bool     &verboseMode(void)        const { return m_verboseMode;        }
 
 protected:
@@ -70,8 +68,6 @@ private:
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
 	bool m_altBoundaryMode;
-	bool m_rawSource;
-	bool m_rawOutput;
 	bool m_verboseMode;
 	bool m_showHelp;
 	

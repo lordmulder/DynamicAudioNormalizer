@@ -23,8 +23,7 @@
 #include "Common.h"
 #include "Platform.h"
 #include "Parameters.h"
-#include "AudioIO_File.h"
-#include "AudioIO_Raw.h"
+#include "AudioIO_SndFile.h"
 
 //MDynamicAudioNormalizer API
 #include "DynamicAudioNormalizer.h"
@@ -121,33 +120,12 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	MY_DELETE(*outputFile);
 
 	//Open *source* file
-	if(!parameters.rawSource())
+	*sourceFile = new AudioIO_SndFile();
+	if(!(*sourceFile)->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
 	{
-		AudioIO_File *sourceFileTmp = new AudioIO_File();
-		if(!sourceFileTmp->openRd(parameters.sourceFile()))
-		{
-			PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
-			MY_DELETE(sourceFileTmp);
-			return false;
-		}
-		else
-		{
-			*sourceFile = sourceFileTmp;
-		}
-	}
-	else
-	{
-		AudioIO_Raw *sourceFileTmp = new AudioIO_Raw();
-		if(!sourceFileTmp->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
-		{
-			PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
-			MY_DELETE(sourceFileTmp);
-			return false;
-		}
-		else
-		{
-			*sourceFile = sourceFileTmp;
-		}
+		PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
+		MY_DELETE(*sourceFile);
+		return false;
 	}
 	
 	//Query file properties
@@ -164,35 +142,13 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	}
 
 	//Open *output* file
-	if(!parameters.rawOutput())
+	*outputFile = new AudioIO_SndFile();
+	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
 	{
-		AudioIO_File *outputFileTmp = new AudioIO_File();
-		if(!outputFileTmp->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
-		{
-			PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
-			MY_DELETE(*sourceFile);
-			MY_DELETE(outputFileTmp);
-			return false;
-		}
-		else
-		{
-			*outputFile = outputFileTmp;
-		}
-	}
-	else
-	{
-		AudioIO_Raw *outputFileTmp = new AudioIO_Raw();
-		if(!outputFileTmp->openWr(parameters.outputFile(), channels, sampleRate, (((bitDepth == 8) || (bitDepth == 16) || (bitDepth == 32)) ? bitDepth : 16)))
-		{
-			PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
-			MY_DELETE(*sourceFile);
-			MY_DELETE(outputFileTmp);
-			return false;
-		}
-		else
-		{
-			*outputFile = outputFileTmp;
-		}
+		PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
+		MY_DELETE(*sourceFile);
+		MY_DELETE(*outputFile);
+		return false;
 	}
 
 	if(parameters.verboseMode())
@@ -400,8 +356,6 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("  -h --help                Print *this* help screen\n"));
 	PRINT(TXT("\n"));
 	PRINT(TXT("Raw Data Options:\n"));
-	PRINT(TXT("  --raw-input              Treat input file as \"raw\" (headerless)\n"));
-	PRINT(TXT("  --raw-output             Treat output file as \"raw\" (headerless)\n"));
 	PRINT(TXT("  --input-bits <value>     Bits per sample, e.g. '16' or '32'\n"));
 	PRINT(TXT("  --input-chan <value>     Number of channels, e.g. '2' for Stereo\n"));
 	PRINT(TXT("  --input-rate <value>     Sample rate in Hertz, e.g. '44100'\n"));
@@ -457,11 +411,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
-	if(!(parameters.rawSource() && parameters.rawOutput()))
-	{
-		PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_File::libraryVersion());
-	}
-	
+	PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_SndFile::libraryVersion());
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioIO *sourceFile = NULL, *outputFile = NULL;

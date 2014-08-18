@@ -111,8 +111,6 @@ void Parameters::setDefaults(void)
 	m_channelsCoupled    = true;
 	m_enableDCCorrection = false;
 	m_altBoundaryMode    = false;
-	m_rawSource          = false;
-	m_rawOutput          = false;
 	m_verboseMode        = false;
 	m_showHelp           = false;
 	
@@ -209,16 +207,6 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		}
 
 		/*raw input options*/
-		if(IS_ARG_LONG("raw-input"))
-		{
-			m_rawSource = true;
-			continue;
-		}
-		if(IS_ARG_LONG("raw-output"))
-		{
-			m_rawOutput = true;
-			continue;
-		}
 		if(IS_ARG_LONG("input-chan"))
 		{
 			ENSURE_NEXT_ARG();
@@ -280,10 +268,6 @@ bool Parameters::validateParameters(void)
 			return false;
 		}
 	}
-	else
-	{
-		m_rawSource = true; /*force raw input for stdin*/
-	}
 
 	/*check output file*/
 	if(STRCASECMP(m_outputFile, TXT("-")) != 0)
@@ -297,17 +281,13 @@ bool Parameters::validateParameters(void)
 			}
 		}
 	}
-	else
-	{
-		m_rawOutput = true; /*force raw output for stdout*/
-	}
 
 	/*check input properties for raw data*/
-	if(m_rawSource)
+	if(STRCASECMP(m_sourceFile, TXT("-")) == 0)
 	{
 		if((m_inputChannels == 0) || (m_inputSampleRate == 0) || (m_inputBitDepth == 0))
 		{
-			PRINT2_WRN(TXT("Channel-count/sample-rate/bit-depth *must* be specified for RAW data!\n"), m_filterSize);
+			PRINT2_WRN(TXT("Channel-count, sample-rate and bit-depth *must* be specified for RAW data!\n"), m_filterSize);
 			return false;
 		}
 	}
@@ -315,7 +295,7 @@ bool Parameters::validateParameters(void)
 	{
 		if((m_inputChannels != 0) || (m_inputSampleRate != 0) || (m_inputBitDepth != 0))
 		{
-			PRINT2_WRN(TXT("Channel-count/sample-rate/bit-depth will be ignored for file source!\n"), m_filterSize);
+			PRINT2_WRN(TXT("Channel-count, sample-rate and bit-depth will be *ignored* for file source!\n"), m_filterSize);
 		}
 	}
 
