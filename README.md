@@ -377,6 +377,10 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
+### Version 2.04 (2014-08-??) ###
+* Added an optional input *compression* (thresholding) function
+* Improved handling of "raw" PCM data
+
 ### Version 2.03 (2014-08-11) ###
 * Implemented an *optional* RMS-based normalization mode
 * Added support for "raw" (headerless) audio data

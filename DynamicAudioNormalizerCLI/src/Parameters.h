@@ -44,6 +44,7 @@ public:
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
 	inline const double   &targetRms(void)          const { return m_targetRms;          }
+	inline const double   &compressThresh(void)     const { return m_compressThresh;     }
 	inline const bool     &channelsCoupled(void)    const { return m_channelsCoupled;    }
 	inline const bool     &enableDCCorrection(void) const { return m_enableDCCorrection; }
 	inline const bool     &altBoundaryMode(void)    const { return m_altBoundaryMode;    }
@@ -74,4 +75,5 @@ private:
 	double m_peakValue;
 	double m_maxAmplification;
 	double m_targetRms;
+	double m_compressThresh;
 };

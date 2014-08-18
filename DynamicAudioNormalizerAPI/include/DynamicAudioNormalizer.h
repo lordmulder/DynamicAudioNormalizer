@@ -61,6 +61,9 @@
 #define MDYNAMICAUDIONORMALIZER_FUNCTION(X) MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_##X##_r, MDYNAMICAUDIONORMALIZER_CORE)
 #define MDynamicAudioNormalizer MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_r,MDYNAMICAUDIONORMALIZER_CORE)
 
+//Callback for log messages
+typedef void (MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction))(const int logLevel, const char *const message);
+
 ///////////////////////////////////////////////////////////////////////////////
 // API for C++ application
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,15 +76,12 @@
 //Opaque Data Class
 class MDynamicAudioNormalizer_PrivateData;
 
-//Callback for log messages
-typedef void (MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction))(const int logLevel, const char *const message);
-
 	//Dynamic Normalizer Class
 class MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer
 {
 public:
 	//Constructor & Destructor
-	MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec = 500, const uint32_t filterSize = 31, const double peakValue = 0.95, const double maxAmplification = 10.0, const double targetRms = 0.0, const bool channelsCoupled = true, const bool enableDCCorrection = false, const bool altBoundaryMode = false, FILE *const logFile = NULL);
+	MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec = 500, const uint32_t filterSize = 31, const double peakValue = 0.95, const double maxAmplification = 10.0, const double targetRms = 0.0, const double compressThresh = 0.0, const bool channelsCoupled = true, const bool enableDCCorrection = false, const bool altBoundaryMode = false, FILE *const logFile = NULL);
 	virtual ~MDynamicAudioNormalizer(void);
 	
 	//Public API
@@ -123,7 +123,7 @@ extern "C" {
 typedef struct MDynamicAudioNormalizer_Handle MDynamicAudioNormalizer_Handle;
 
 //Global Functions
-MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const int channelsCoupled, const int enableDCCorrection, const int altBoundaryMode, FILE *const logFile);
+MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressThresh, const int channelsCoupled, const int enableDCCorrection, const int altBoundaryMode, FILE *const logFile);
 MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(MDynamicAudioNormalizer_Handle **handle);
 MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(MDynamicAudioNormalizer_Handle *handle, double **samplesInOut, int64_t inputSize, int64_t *outputSize);
 MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(MDynamicAudioNormalizer_Handle *handle, double **samplesOut, const int64_t bufferSize, int64_t *outputSize);

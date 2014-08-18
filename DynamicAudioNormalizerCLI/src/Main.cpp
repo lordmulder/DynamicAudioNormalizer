@@ -291,6 +291,7 @@ static int processFiles(const Parameters &parameters, AudioIO *const sourceFile,
 		parameters.peakValue(),
 		parameters.maxAmplification(),
 		parameters.targetRms(),
+		parameters.compressThresh(),
 		parameters.channelsCoupled(),
 		parameters.enableDCCorrection(),
 		parameters.altBoundaryMode(),
@@ -341,14 +342,15 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
 	PRINT(TXT("\n"));
 	PRINT(TXT("Algorithm Tweaks:\n"));
-	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"), defaults.frameLenMsec());
-	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"), defaults.filterSize());
-	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"), defaults.peakValue());
-	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"), defaults.maxAmplification());
-	PRINT(TXT("  -r --rms-mode <value>    Use RMS instead of peak sample [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
-	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"), BOOLIFY(defaults.channelsCoupled()));
-	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"), BOOLIFY(defaults.enableDCCorrection()));
-	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"), BOOLIFY(defaults.altBoundaryMode()));
+	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"),    defaults.frameLenMsec());
+	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"),     defaults.filterSize());
+	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"),   defaults.peakValue());
+	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"),            defaults.maxAmplification());
+	PRINT(TXT("  -r --rms-mode <value>    Target RMS value [default: %.2f]\n"),               defaults.targetRms());
+	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"),         BOOLIFY(defaults.channelsCoupled()));
+	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"),    BOOLIFY(defaults.enableDCCorrection()));
+	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"),    BOOLIFY(defaults.altBoundaryMode()));
+	PRINT(TXT("  -s --compress <value>    Compress the input data [default: %.2f]\n"),        defaults.compressThresh());
 	PRINT(TXT("\n"));
 	PRINT(TXT("Diagnostics:\n"));
 	PRINT(TXT("  -v --verbose             Output additional diagnostic info\n"));

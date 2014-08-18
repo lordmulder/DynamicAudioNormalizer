@@ -96,7 +96,7 @@ static inline double POW2(const double &value)
 class MDynamicAudioNormalizer_PrivateData
 {
 public:
-	MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile);
+	MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressThresh, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile);
 	~MDynamicAudioNormalizer_PrivateData(void);
 
 	bool initialize(void);
@@ -113,6 +113,7 @@ private:
 	const double m_peakValue;
 	const double m_maxAmplification;
 	const double m_targetRms;
+	const double m_compressThresh;
 
 	const bool m_channelsCoupled;
 	const bool m_enableDCCorrection;
@@ -157,6 +158,7 @@ protected:
 	double computeFrameRMS(FrameData *frame, const uint32_t channel = UINT32_MAX);
 	void updateGainHistory(const uint32_t &channel, const double &currentGainFactor);
 	void perfromDCCorrection(FrameData *frame, const bool &isFirstFrame);
+	void perfromCompression(FrameData *frame);
 	void writeLogFile(void);
 	void printParameters(void);
 };
@@ -165,14 +167,14 @@ protected:
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile)
+MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressThresh, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile)
 :
-	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, channelsCoupled, enableDCCorrection, altBoundaryMode, logFile))
+	p(new MDynamicAudioNormalizer_PrivateData(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressThresh, channelsCoupled, enableDCCorrection, altBoundaryMode,logFile))
 {
 	/*nothing to do here*/
 }
 
-MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile)
+MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressThres, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile)
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
@@ -181,6 +183,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_peakValue(LIMIT(0.01, peakValue, 1.0)),
 	m_maxAmplification(LIMIT(1.0, maxAmplification, 100.0)),
 	m_targetRms(LIMIT(0.0, targetRms, 1.0)),
+	m_compressThresh(LIMIT(0.0, compressThres, 1.0)),
 	m_channelsCoupled(channelsCoupled),
 	m_enableDCCorrection(enableDCCorrection),
 	m_altBoundaryMode(altBoundaryMode),
@@ -579,6 +582,12 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 		perfromDCCorrection(frame, m_gainHistory_original[0].empty());
 	}
 
+	//Perform compression (optional)
+	if((m_compressThresh > DBL_EPSILON) && (m_compressThresh < (1.0 - DBL_EPSILON)))
+	{
+		perfromCompression(frame);
+	}
+
 	//Find the frame's peak sample value
 	if(m_channelsCoupled)
 	{
@@ -768,6 +777,22 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, 
 	}
 }
 
+void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame)
+{
+	const double dCorr = m_compressThresh / BOUND(m_compressThresh, 1.0);
+
+	for(uint32_t c = 0; c < m_channels; c++)
+	{
+		double *const dataPtr = frame->data(c);
+		double currentAverageValue = 0.0;
+
+		for(uint32_t i = 0; i < m_frameLen; i++)
+		{
+			dataPtr[i] = copysign(BOUND(m_compressThresh, fabs(dataPtr[i])), dataPtr[i]) * dCorr;
+		}
+	}
+}
+
 void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3])
 {
 	assert((m_frameLen % 2) == 0);
@@ -840,16 +865,17 @@ void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
 void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 {
 	LOG1_DBG("\n------- DynamicAudioNormalizer -------");
-	LOG2_DBG("Lib Version    : %u.%2u-%u", DYNAUDNORM_VERSION_MAJOR, DYNAUDNORM_VERSION_MINOR ,DYNAUDNORM_VERSION_PATCH);
-	LOG2_DBG("Channels       : %u",        m_channels);
-	LOG2_DBG("Sampling rate  : %u",        m_sampleRate);
-	LOG2_DBG("Frame size     : %u",        m_frameLen);
-	LOG2_DBG("Filter Length  : %u",        m_filterSize);
-	LOG2_DBG("Peak value     : %.4f",      m_peakValue);
-	LOG2_DBG("Max amp factor : %.4f",      m_maxAmplification);
-	LOG2_DBG("Target RMS     : %.4f",      m_targetRms);
-	LOG2_DBG("Chan. coupling : %s",        BOOLIFY(m_channelsCoupled));
-	LOG2_DBG("DC correction  : %s",        BOOLIFY(m_enableDCCorrection));
-	LOG2_DBG("Alt boundry md : %s",        BOOLIFY(m_altBoundaryMode));
+	LOG2_DBG("Lib Version          : %u.%2u-%u", DYNAUDNORM_VERSION_MAJOR, DYNAUDNORM_VERSION_MINOR ,DYNAUDNORM_VERSION_PATCH);
+	LOG2_DBG("m_channels           : %u",        m_channels);
+	LOG2_DBG("m_sampleRate         : %u",        m_sampleRate);
+	LOG2_DBG("m_frameLen           : %u",        m_frameLen);
+	LOG2_DBG("m_filterSize         : %u",        m_filterSize);
+	LOG2_DBG("m_peakValue          : %.4f",      m_peakValue);
+	LOG2_DBG("m_maxAmplification   : %.4f",      m_maxAmplification);
+	LOG2_DBG("m_targetRms          : %.4f",      m_targetRms);
+	LOG2_DBG("m_compressThresh     : %.4f",      m_compressThresh);
+	LOG2_DBG("m_channelsCoupled    : %s",        BOOLIFY(m_channelsCoupled));
+	LOG2_DBG("m_enableDCCorrection : %s",        BOOLIFY(m_enableDCCorrection));
+	LOG2_DBG("m_altBoundaryMode    : %s",        BOOLIFY(m_altBoundaryMode));
 	LOG1_DBG("------- DynamicAudioNormalizer -------\n");
 }

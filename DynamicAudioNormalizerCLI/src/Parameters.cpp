@@ -34,7 +34,17 @@
 { \
 	if(++pos >= argc) \
 	{ \
-		PRINT2_WRN(TXT("Missing argument for option \"%s\"\n"), argv[pos-1]); \
+		PRINT2_WRN(TXT("Missing argument for option \"%s\".\n"), argv[pos-1]); \
+		return false; \
+	} \
+} \
+while(0)
+
+#define ENSURE_NEXT_ARGS(N) do \
+{ \
+	if(((pos++) + (N)) >= argc) \
+	{ \
+		PRINT2_WRN(TXT("Missing argument(s) for option \"%s\".\n"), argv[pos-1]); \
 		return false; \
 	} \
 } \
@@ -117,6 +127,7 @@ void Parameters::setDefaults(void)
 	m_peakValue        =  0.95;
 	m_maxAmplification = 10.00;
 	m_targetRms        =  0.00;
+	m_compressThresh   =  0.00;
 }
 
 bool Parameters::parseArgs(const int argc, CHR* argv[])
@@ -175,6 +186,12 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		{
 			ENSURE_NEXT_ARG();
 			PARSE_VALUE_FLT(m_targetRms);
+			continue;
+		}
+		if(IS_ARG_SHRT("s", "compress"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_FLT(m_compressThresh);
 			continue;
 		}
 		if(IS_ARG_SHRT("n", "no-coupling"))
