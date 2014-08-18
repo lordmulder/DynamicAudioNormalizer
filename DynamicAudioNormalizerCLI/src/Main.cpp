@@ -115,7 +115,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	int64_t length = 0;
 
 	PRINT(TXT("SourceFile: %s\n"),   STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.sourceFile() : TXT("<STDIN>"));
-	PRINT(TXT("OutputFile: %s\n\n"), STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
+	PRINT(TXT("OutputFile: %s\n\n"), STRCASECMP(parameters.outputFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
 
 	MY_DELETE(*sourceFile);
 	MY_DELETE(*outputFile);
