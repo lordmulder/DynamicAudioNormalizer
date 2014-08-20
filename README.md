@@ -67,13 +67,13 @@ For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.
 
 ### Usage examples: ###
 
-* Read input from Wave file and write output to a Wave file again:
+* Read input from Wave file and write output to a Wave file again:  
   <tt>DynamicAudioNormalizerCLI.exe -i "in_original.wav" -o "out_normalized.wav"</tt>
 
-* Read input from *stdin* (input is provided by [FFmpeg](http://ffmpeg.org/about.html) via pipe) and write output to Wave file:
+* Read input from *stdin* (input is provided by [FFmpeg](http://ffmpeg.org/about.html) via pipe) and write output to Wave file:  
   <tt>ffmpeg.exe -i "movie.mkv" -loglevel quiet -vn -f s16le -c:a pcm_s16le **-** **|** DynamicAudioNormalizerCLI.exe -i **-** --input-bits 16 --input-chan 2 --input-rate 48000 -o "output.wav"</tt>
 
-* Read input from Wave file and write output to *stdout* (output is passed to [FFmpeg](http://ffmpeg.org/about.html) via pipe):
+* Read input from Wave file and write output to *stdout* (output is passed to [FFmpeg](http://ffmpeg.org/about.html) via pipe):  
   <tt>DynamicAudioNormalizerCLI.exe -i "input.wav" -o **-** **|** ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i **-** -c:a libmp3lame -qscale:a 2 "output.mp3"</tt>
 
   
