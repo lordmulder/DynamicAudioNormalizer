@@ -35,7 +35,7 @@
 #include <cassert>
 #include <stdexcept> 
 #include <cfloat>
-#include <cinttypes>
+#include <inttypes.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
