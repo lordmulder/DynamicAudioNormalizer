@@ -55,7 +55,7 @@ Dynamic Audio Normalizer program can be invoked via [command-line interface](htt
 
 ### Basic CLI syntax: ###
 
-* ```DynamicAudioNormalizerCLI.exe -i <input_file> -o <output_file> [options]```
+* <tt>DynamicAudioNormalizerCLI.exe -i &lt;input_file&gt; -o &lt;output_file&gt; [options]</tt>
 
 Note that the *input* file and the *output* file always have to be specified, while all other parameters are optional. But take care, an existing output file will be *overwritten*!
 
@@ -63,17 +63,18 @@ Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www
 
 Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported too. Just specify the file name <tt>"-"</tt> in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams) stream, respectively. When reading from the *stdin*, you have to explicitly specify the *input* sample format, channel count and sampling rate.
 
-For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> from the command prompt or refer to the following chapter.
+For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> from the command prompt. Also refer to the following chapter for some more details.
 
 ### Usage examples: ###
 
-* ```DynamicAudioNormalizerCLI.exe -i "c:\my music\in_original.wav" -o "c:\my music\out_normalized.wav"```
+* Read input from Wave file and write output to a Wave file again:
+  <tt>DynamicAudioNormalizerCLI.exe -i "in_original.wav" -o "out_normalized.wav"</tt>
 
-* ```ffmpeg.exe -i "movie.mkv" -loglevel quiet -vn -f s16le -c:a pcm_s16le - |```
-  ```…DynamicAudioNormalizerCLI.exe -i - --input-bits 16 --input-chan 2 --input-rate 48000 -o "output.wav"```
+* Read input from *stdin* (input is provided by [FFmpeg](http://ffmpeg.org/about.html) via pipe) and write output to Wave file:
+  <tt>ffmpeg.exe -i "movie.mkv" -loglevel quiet -vn -f s16le -c:a pcm_s16le **-** **|** DynamicAudioNormalizerCLI.exe -i **-** --input-bits 16 --input-chan 2 --input-rate 48000 -o "output.wav"</tt>
 
-* ```DynamicAudioNormalizerCLI.exe -i "input.wav" -o - |```
-  ```…ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i - -c:a libmp3lame -qscale:a 2 "output.mp3"```
+* Read input from Wave file and write output to *stdout* (output is passed to [FFmpeg](http://ffmpeg.org/about.html) via pipe):
+  <tt>DynamicAudioNormalizerCLI.exe -i "input.wav" -o **-** **|** ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i **-** -c:a libmp3lame -qscale:a 2 "output.mp3"</tt>
 
   
 Configuration <a name="chap_cfg"></a>
