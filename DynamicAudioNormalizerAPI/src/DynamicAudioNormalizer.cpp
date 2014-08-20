@@ -152,7 +152,6 @@ protected:
 	void analyzeFrame(FrameData *frame);
 	void amplifyFrame(FrameData *frame);
 	
-	void precalculateFadeFactors(double *fadeFactors[3]);
 	double getMaxLocalGain(FrameData *frame, const uint32_t channel = UINT32_MAX);
 	double findPeakMagnitude(FrameData *frame, const uint32_t channel = UINT32_MAX);
 	double computeFrameRMS(FrameData *frame, const uint32_t channel = UINT32_MAX);
@@ -161,6 +160,9 @@ protected:
 	void perfromCompression(FrameData *frame);
 	void writeLogFile(void);
 	void printParameters(void);
+	
+	static void precalculateFadeFactors(double *fadeFactors[3], const uint32_t frameLen);
+	static double setupCompressThresh(const double &dThreshold);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -183,7 +185,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_peakValue(LIMIT(0.01, peakValue, 1.0)),
 	m_maxAmplification(LIMIT(1.0, maxAmplification, 100.0)),
 	m_targetRms(LIMIT(0.0, targetRms, 1.0)),
-	m_compressThresh(LIMIT(0.0, compressThres, 1.0)),
+	m_compressThresh(setupCompressThresh(LIMIT(0.0, compressThres, 1.0))),
 	m_channelsCoupled(channelsCoupled),
 	m_enableDCCorrection(enableDCCorrection),
 	m_altBoundaryMode(altBoundaryMode),
@@ -316,7 +318,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	m_fadeFactors[1] = new double[m_frameLen];
 	m_fadeFactors[2] = new double[m_frameLen];
 	
-	precalculateFadeFactors(m_fadeFactors);
+	precalculateFadeFactors(m_fadeFactors, m_frameLen);
 	printParameters();
 
 	if(m_logFile)
@@ -546,7 +548,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Static Functions
+// Public Static Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 void MDynamicAudioNormalizer::getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch)
@@ -779,44 +781,15 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, 
 
 void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame)
 {
-	const double dCorr = m_compressThresh / BOUND(m_compressThresh, 1.0);
-
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
 		double *const dataPtr = frame->data(c);
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			dataPtr[i] = copysign(BOUND(m_compressThresh, fabs(dataPtr[i])), dataPtr[i]) * dCorr;
+			dataPtr[i] = copysign(BOUND(m_compressThresh, fabs(dataPtr[i])), dataPtr[i]);
 		}
 	}
-}
-
-void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3])
-{
-	assert((m_frameLen % 2) == 0);
-
-	const uint32_t frameFadeDiv2 = m_frameLen / 2U;
-	const double frameFadeStep = 0.5 / double(frameFadeDiv2);
-
-	for(uint32_t pos = 0; pos < frameFadeDiv2; pos++)
-	{
-		fadeFactors[0][pos] = 0.5 - (frameFadeStep * double(pos));
-		fadeFactors[2][pos] = 0.0;
-		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
-	}
-
-	for(uint32_t pos = frameFadeDiv2; pos < m_frameLen; pos++)
-	{
-		fadeFactors[2][pos] = frameFadeStep * double(pos % frameFadeDiv2);
-		fadeFactors[0][pos] = 0.0;
-		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
-	}
-
-	//for(uint32_t pos = 0; pos < m_frameLen; pos++)
-	//{
-	//	LOG_DBG(TXT("%.8f %.8f %.8f"), fadeFactors[0][pos], fadeFactors[1][pos], fadeFactors[2][pos]);
-	//}
 }
 
 void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
@@ -877,4 +850,55 @@ void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 	LOG2_DBG("m_enableDCCorrection : %s",         BOOLIFY(m_enableDCCorrection));
 	LOG2_DBG("m_altBoundaryMode    : %s",         BOOLIFY(m_altBoundaryMode));
 	LOG1_DBG("------- DynamicAudioNormalizer -------\n");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Static Utility Functions
+///////////////////////////////////////////////////////////////////////////////
+
+void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3], const uint32_t frameLen)
+{
+	assert((m_frameLen % 2) == 0);
+
+	const uint32_t frameFadeDiv2 = frameLen / 2U;
+	const double frameFadeStep = 0.5 / double(frameFadeDiv2);
+
+	for(uint32_t pos = 0; pos < frameFadeDiv2; pos++)
+	{
+		fadeFactors[0][pos] = 0.5 - (frameFadeStep * double(pos));
+		fadeFactors[2][pos] = 0.0;
+		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
+	}
+
+	for(uint32_t pos = frameFadeDiv2; pos < frameLen; pos++)
+	{
+		fadeFactors[2][pos] = frameFadeStep * double(pos % frameFadeDiv2);
+		fadeFactors[0][pos] = 0.0;
+		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
+	}
+
+	//for(uint32_t pos = 0; pos < m_frameLen; pos++)
+	//{
+	//	LOG_DBG(TXT("%.8f %.8f %.8f"), fadeFactors[0][pos], fadeFactors[1][pos], fadeFactors[2][pos]);
+	//}
+}
+
+double MDynamicAudioNormalizer_PrivateData::setupCompressThresh(const double &dThreshold)
+{
+	double dCurrentThreshold = dThreshold;
+
+	if(dThreshold > DBL_EPSILON)
+	{
+		double dStepSize = 1.0;
+		while(dStepSize > DBL_EPSILON)
+		{
+			while(BOUND(dCurrentThreshold + dStepSize, 1.0) <= dThreshold)
+			{
+				dCurrentThreshold += dStepSize;
+			}
+			dStepSize /= 2.0;
+		}
+	}
+
+	return dCurrentThreshold;
 }
