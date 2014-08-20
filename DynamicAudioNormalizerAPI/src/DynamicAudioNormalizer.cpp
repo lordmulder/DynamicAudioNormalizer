@@ -847,7 +847,7 @@ void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
 
 void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 {
-	LOG1_DBG("\n------- DynamicAudioNormalizer -------");
+	LOG1_DBG("------- DynamicAudioNormalizer -------");
 	LOG2_DBG("Lib Version          : %u.%02u-%u", DYNAUDNORM_VERSION_MAJOR, DYNAUDNORM_VERSION_MINOR ,DYNAUDNORM_VERSION_PATCH);
 	LOG2_DBG("m_channels           : %u",         m_channels);
 	LOG2_DBG("m_sampleRate         : %u",         m_sampleRate);
