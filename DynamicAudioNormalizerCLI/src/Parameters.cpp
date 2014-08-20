@@ -337,6 +337,11 @@ bool Parameters::validateParameters(void)
 		PRINT2_WRN(TXT("Target RMS value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_targetRms);
 		return false;
 	}
+	if((m_compressThresh < 0.0) || (m_compressThresh > 1.0))
+	{
+		PRINT2_WRN(TXT("Compression threshold value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_compressThresh);
+		return false;
+	}
 	if((m_maxAmplification < 1.0) || (m_maxAmplification > 100.0))
 	{
 		PRINT2_WRN(TXT("Maximum amplification %.2f is out of range. Must be in the 1.00 to 100.00 range!\n"), m_maxAmplification);

@@ -896,13 +896,13 @@ void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFa
 
 double MDynamicAudioNormalizer_PrivateData::setupCompressThresh(const double &dThreshold)
 {
-	if(dThreshold > DBL_EPSILON)
+	if((dThreshold > DBL_EPSILON) && (dThreshold < (1.0 - DBL_EPSILON)))
 	{
 		double dCurrentThreshold = dThreshold;
 		double dStepSize = 1.0;
 		while(dStepSize > DBL_EPSILON)
 		{
-			while(BOUND(dCurrentThreshold + dStepSize, 1.0) <= dThreshold)
+			while((dCurrentThreshold + dStepSize > dCurrentThreshold) && (BOUND(dCurrentThreshold + dStepSize, 1.0) <= dThreshold))
 			{
 				dCurrentThreshold += dStepSize;
 			}
