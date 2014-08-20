@@ -35,6 +35,7 @@
 #include <cassert>
 #include <stdexcept> 
 #include <cfloat>
+#include <cinttypes>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -129,6 +130,10 @@ private:
 	
 	int64_t m_delayedSamples;
 
+	uint64_t m_sampleCounterTotal;
+	uint64_t m_sampleCounterClips;
+	uint64_t m_sampleCounterCompr;
+
 	FrameBuffer *m_frameBuffer;
 	
 	std::deque<double> *m_gainHistory_original;
@@ -198,7 +203,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_buffOut = NULL;
 	
 	m_delayedSamples = 0;
-
+	m_sampleCounterClips = m_sampleCounterTotal = 0;
 	m_frameBuffer = NULL;
 
 	m_gainHistory_original = NULL;
@@ -225,6 +230,10 @@ MDynamicAudioNormalizer::~MDynamicAudioNormalizer(void)
 
 MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 {
+	LOG2_DBG("Processed %" PRIu64 " samples total, clipped %" PRIu64 " samples (%.2f%%).\n",
+		m_sampleCounterTotal, m_sampleCounterClips, double(m_sampleCounterClips) / double(m_sampleCounterTotal) * 100.0
+	);
+
 	MY_DELETE(m_buffSrc);
 	MY_DELETE(m_buffOut);
 
@@ -634,11 +643,13 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 			LOG_VALUE(amplificationFactor, m_prevAmplificationFactor[channel], currAmplificationFactor, nextAmplificationFactor, channel, i);
 			if(fabs(dataPtr[i]) > m_peakValue)
 			{
+				m_sampleCounterClips++;
 				dataPtr[i] = copysign(m_peakValue, dataPtr[i]); /*fix rare clipping*/
 			}
 		}
-
+		
 		m_prevAmplificationFactor[c] = currAmplificationFactor;
+		m_sampleCounterTotal += m_frameLen;
 	}
 }
 
@@ -885,10 +896,9 @@ void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFa
 
 double MDynamicAudioNormalizer_PrivateData::setupCompressThresh(const double &dThreshold)
 {
-	double dCurrentThreshold = dThreshold;
-
 	if(dThreshold > DBL_EPSILON)
 	{
+		double dCurrentThreshold = dThreshold;
 		double dStepSize = 1.0;
 		while(dStepSize > DBL_EPSILON)
 		{
@@ -898,7 +908,10 @@ double MDynamicAudioNormalizer_PrivateData::setupCompressThresh(const double &dT
 			}
 			dStepSize /= 2.0;
 		}
+		return dCurrentThreshold;
 	}
-
-	return dCurrentThreshold;
+	else
+	{
+		return dThreshold;
+	}
 }
