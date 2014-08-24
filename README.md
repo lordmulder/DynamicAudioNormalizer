@@ -55,7 +55,8 @@ Dynamic Audio Normalizer program can be invoked via [command-line interface](htt
 
 ### Basic CLI syntax: ###
 
-* <tt>DynamicAudioNormalizerCLI.exe -i &lt;input_file&gt; -o &lt;output_file&gt; [options]</tt>
+The basic Dynamic Audio Normalizer command-line syntax is as follows:  
+<tt>DynamicAudioNormalizerCLI.exe -i &lt;input_file&gt; -o &lt;output_file&gt; [options]</tt>
 
 Note that the *input* file and the *output* file always have to be specified, while all other parameters are optional. But take care, an existing output file will be *overwritten*!
 
@@ -76,7 +77,18 @@ For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.
 * Read input from Wave file and write output to *stdout* (output is passed to [FFmpeg](http://ffmpeg.org/about.html) via pipe):  
   <tt>DynamicAudioNormalizerCLI.exe -i "input.wav" -o **-** **|** ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i **-** -c:a libmp3lame -qscale:a 2 "output.mp3"</tt>
 
-  
+### SoX integration: ### 
+
+As an alternative to the Dynamic Audio Normalizer command-line front-end, the Dynamic Audio Normalizer library may also be used as an effect in [*Sound eXchange* (SoX)](http://sox.sourceforge.net/), a versatile audio editor and converter.
+
+Note, however, that *standard* SoX distributions do **not** currently support the Dynamic Audio Normalizer. Instead, a special *patched* build of SoX that has the Dynamic Audio Normalizer effect enabled is required!
+
+When working with SoX, the Dynamic Audio Normalizer can be invoked by adding the "dynaudnorm" effect to your effect chain, which can be done as follows:  
+<tt>SoX.exe -S "in_original.wav" -o "out_normalized.wav" dynaudnorm [options]</tt>
+
+For details about the SoX command-line syntax, please refer to the excellent [SoX documentation](http://sox.sourceforge.net/sox.html). You can also type <tt>SoX.exe --help-effect dynaudnorm</tt> for a list of available options.
+
+
 Configuration <a name="chap_cfg"></a>
 -------------------------------------------------------------------------------
 
@@ -388,6 +400,7 @@ Changelog <a name="chap_log"></a>
 
 ### Version 2.04 (2014-08-??) ###
 * Added an optional input *compression* (thresholding) function
+* Implemented [SoX](http://sox.sourceforge.net/) wrapper → Dynamic Audio Normalizer can now be used as an effect in SoX
 * Improved internal handling of "raw" PCM data
 
 ### Version 2.03 (2014-08-11) ###
