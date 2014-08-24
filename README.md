@@ -77,7 +77,7 @@ For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.
 * Read input from Wave file and write output to *stdout* (output is passed to [FFmpeg](http://ffmpeg.org/about.html) via pipe):  
   <tt>DynamicAudioNormalizerCLI.exe -i "input.wav" -o **-** **|** ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i **-** -c:a libmp3lame -qscale:a 2 "output.mp3"</tt>
 
-### SoX integration: ### 
+### SoX integration: ###
 
 As an alternative to the Dynamic Audio Normalizer command-line front-end, the Dynamic Audio Normalizer library may also be used as an effect in [*Sound eXchange* (SoX)](http://sox.sourceforge.net/), a versatile audio editor and converter.
 
@@ -565,6 +565,12 @@ The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) 
 * [**QCustomPlot**](http://www.qcustomplot.com/)
   Qt C++ widget for plotting and data visualization that focuses on making good looking, publication quality 2D plots
   Copyright (C) 2011-2014 Emanuel Eichhammer
+
+The Dynamic Audio Normalizer can operate as a **plug-in** (effect) in the following *third-party* applications:
+
+  * [**Sound eXchange**](http://sox.sourceforge.net/)
+  Cross-platform command line utility that can convert various formats of computer audio files in to other formats
+  Copyright (C) 1998-2009 Chris Bagwell and SoX contributors
 
 <br>  
 
