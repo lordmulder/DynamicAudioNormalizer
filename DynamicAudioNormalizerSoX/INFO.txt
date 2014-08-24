@@ -1,0 +1,35 @@
+Dynamic Audio Normalizer - SoX Wrapper
+======================================
+
+The purpose of the SoX Wrapper is integrating the Dynamic Audio Normalizer into the SoX (Sound eXchange) application, a versatile audio editor and converter.
+
+
+Build Instructions
+------------------
+
+How to build SoX with the Dynamic Audio Normalizer effect:
+
+1. Download the latest SoX sources from the official SoX web-site (http://sox.sourceforge.net/)
+
+2. Use CMake to generate solution/project files, as usually
+
+3. Open the SoX solution and add the provided source code file "dynaudnorm_sox.c" to the "libsox" project
+
+4. In the "libsox" project settings, add the directory "DynamicAudioNormalizerAPI\include" to the Additional Include Directories paths
+
+5. In the "libsox" project settings, add "DynamicAudioNormalizerAPI.lib" to the Additional Dependencies
+
+6. Open the file "src\effects.h" and insert the following line, *without* the quotation marks: "EFFECT(dynaudnorm)"
+
+7. Now (re)build SoX!
+
+
+Usage Instructions
+------------------
+
+With SoX, the Dynamic Audio Normalizer effect can be invoked like this:
+
+> sox.exe <input_file> <output_file> dynaudnorm [options]
+
+
+e.o.f.
