@@ -19,12 +19,16 @@
 // http://www.gnu.org/licenses/lgpl-2.1.txt
 //////////////////////////////////////////////////////////////////////////////////
 
+//Shut up warnings
+#define _CRT_SECURE_NO_WARNINGS
+
 //SoX internal stuff
 #include "sox_i.h"
 
 //StdLib
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 //Dynamic Audio Normalizer
 #include <DynamicAudioNormalizer.h>
@@ -42,6 +46,22 @@
 
 typedef struct
 {
+	uint32_t frameLenMsec;
+	uint32_t filterSize;
+	double peakValue;
+	double maxAmplification;
+	double targetRms;
+	double compressThresh;
+	int channelsCoupled;
+	int enableDCCorrection;
+	int altBoundaryMode;
+	FILE *logFile;
+}
+settings_t;
+
+typedef struct
+{
+	settings_t settings;
 	MDynamicAudioNormalizer_Handle *instance;
 	double **temp;
 	size_t tempSize;
@@ -51,6 +71,110 @@ priv_t;
 // =============================================================================
 // Internal Functions
 // =============================================================================
+
+static int parseArgInt(const char *const str, uint32_t *parameter, const uint32_t min_val, const uint32_t max_val)
+{
+	uint32_t temp;
+	if(sscanf(str, "%u", &temp) == 1)
+	{
+		*parameter = max(min_val, min(max_val, temp));
+		return 1;
+	}
+	lsx_fail("Failed to parse integral value `%s'", str);
+	return 0;
+}
+
+static int parseArgDbl(const char *const str, double *parameter, const double min_val, const double max_val)
+{
+	double temp;
+	if(sscanf(str, "%lf", &temp) == 1)
+	{
+		*parameter = max(min_val, min(max_val, temp));
+		return 1;
+	}
+	lsx_fail("Failed to parse floating point value `%s'", str);
+	return 0;
+}
+
+#define TRY_PARSE(TYPE, PARAM, MIN, MAX) do \
+{ \
+	if(!parseArg##TYPE(optstate.arg, &(PARAM), (MIN), (MAX))) \
+	{ \
+		return 0; \
+	} \
+} \
+while(0)
+
+static void dynaudnorm_defaults(settings_t *settings)
+{
+	memset(settings, 0, sizeof(settings_t));
+
+	settings->frameLenMsec       = 500;
+	settings->filterSize         =  31;
+	settings->peakValue          =   0.95;
+	settings->maxAmplification   =  10.0;
+	settings->targetRms          =   0.0;
+	settings->compressThresh     =   0.0;
+	settings->channelsCoupled    =   1;
+	settings->enableDCCorrection =   0;
+	settings->altBoundaryMode    =   0;
+}
+
+static int dynaudnorm_parse_args(settings_t *settings, int argc, char **argv)
+{
+	static const char *const opts = "+f:g:p:m:r:ncbs:l:";
+	lsx_getopt_t optstate; char c;
+	lsx_getopt_init(argc, argv, opts, NULL, lsx_getopt_flag_opterr, 1, &optstate);
+
+	while((c = lsx_getopt(&optstate)) != -1)
+	{
+		switch(tolower(c))
+		{
+		case 'f':
+			TRY_PARSE(Int, settings->frameLenMsec, 10, 8000);
+			break;
+		case 'g':
+			TRY_PARSE(Int, settings->filterSize, 3, 301);
+			settings->filterSize += ((settings->filterSize + 1) % 2);
+			break;
+		case 'p':
+			TRY_PARSE(Dbl, settings->peakValue, 0.0, 1.0);
+			break;
+		case 'm':
+			TRY_PARSE(Dbl, settings->maxAmplification, 1.0, 100.0);
+			break;
+		case 'r':
+			TRY_PARSE(Dbl, settings->targetRms, 0.0, 1.0);
+			break;
+		case 'n':
+			settings->channelsCoupled = 0;
+			break;
+		case 'c':
+			settings->enableDCCorrection = 1;
+			break;
+		case 'b':
+			settings->altBoundaryMode = 1;
+			break;
+		case 's':
+			TRY_PARSE(Dbl, settings->compressThresh, 0.0, 1.0);
+			break;
+		case 'l':
+			if(!settings->logFile)
+			{
+				settings->logFile = fopen(optstate.arg, "w");
+				if(!settings->logFile)
+				{
+					lsx_warn("Failed to open logfile `%s'", optstate.arg);
+				}
+			}
+			break;
+		default:
+			return 0;
+		}
+	}
+
+	return 1;
+}
 
 static void dynaudnorm_deinterleave(double **temp, const sox_sample_t *const in, const size_t samples_per_channel, const size_t channels)
 {
@@ -89,6 +213,22 @@ static void dynaudnorm_print(sox_effect_t *effp, const char *const fmt, ...)
 	}
 }
 
+void dynaudnorm_log(const int logLevel, const char *const message)
+{
+	switch(logLevel)
+	{
+	case 0:
+		lsx_report("%s", message);
+		break;
+	case 1:
+		lsx_warn("%s", message);
+		break;
+	case 2:
+		lsx_fail("%s", message);
+		break;
+	}
+}
+
 // =============================================================================
 // SoX Callback Functions
 // =============================================================================
@@ -103,7 +243,16 @@ static int dynaudnorm_kill(sox_effect_t *effp)
 static int dynaudnorm_create(sox_effect_t *effp, int argc, char **argv)
 {
 	lsx_report("dynaudnorm_create()");
+
 	memset(effp->priv, 0, sizeof(priv_t));
+	priv_t *const p = (priv_t *)effp->priv;
+	dynaudnorm_defaults(&p->settings);
+
+	if(!dynaudnorm_parse_args(&p->settings, argc, argv))
+	{
+		return lsx_usage(effp);
+	}
+
 	return SOX_SUCCESS;
 }
 
@@ -116,6 +265,12 @@ static int dynaudnorm_stop(sox_effect_t *effp)
 	{
 		MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(&p->instance);
 		p->instance = NULL;
+	}
+
+	if(p->settings.logFile)
+	{
+		fclose(p->settings.logFile);
+		p->settings.logFile = NULL;
 	}
 
 	if(p->temp)
@@ -135,10 +290,7 @@ static int dynaudnorm_stop(sox_effect_t *effp)
 static int dynaudnorm_start(sox_effect_t *effp)
 {
 	lsx_report("dynaudnorm_start()");
-	lsx_report("--> flows=%u",              effp->flows);
-	lsx_report("--> flow=%u",               effp->flow);
-	lsx_report("--> in_signal.rate=%.2f",   effp->in_signal.rate);
-	lsx_report("--> in_signal.channels=%u", effp->in_signal.channels);
+	lsx_report("flows=%u, flow=%u, in_signal.rate=%.2f, in_signal.channels=%u", effp->flows, effp->flow, effp->in_signal.rate, effp->in_signal.channels);
 
 	if((effp->flow == 0) && (effp->global_info->global_info->verbosity > 1))
 	{
@@ -165,16 +317,16 @@ static int dynaudnorm_start(sox_effect_t *effp)
 	(
 		effp->in_signal.channels,
 		(uint32_t) round(effp->in_signal.rate),
-		500,
-		31,
-		0.95,
-		10.0,
-		0.0,
-		0.0,
-		1,
-		0,
-		0,
-		NULL
+		p->settings.frameLenMsec,
+		p->settings.filterSize,
+		p->settings.peakValue,
+		p->settings.maxAmplification,
+		p->settings.targetRms,
+		p->settings.compressThresh,
+		p->settings.channelsCoupled,
+		p->settings.enableDCCorrection,
+		p->settings.altBoundaryMode,
+		p->settings.logFile
 	);
 
 	if(p->instance)
@@ -273,5 +425,6 @@ sox_effect_handler_t const * lsx_dynaudnorm_effect_fn(void)
 	static char *usage;
 	handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
 
+	MDYNAMICAUDIONORMALIZER_FUNCTION(setLogFunction)(dynaudnorm_log);
 	return &handler;
 }
