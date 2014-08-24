@@ -30,15 +30,18 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-//Dynamic Audio Normalizer
-#include <DynamicAudioNormalizer.h>
-
 //Linkage
+#ifdef _MT
+#define MDYNAMICAUDIONORMALIZER_STATIC
+#endif
 #ifdef MDYNAMICAUDIONORMALIZER_STATIC
 	static const char *LINKAGE = "Static";
 #else
 	static const char *LINKAGE = "Shared";
 #endif
+
+//Dynamic Audio Normalizer
+#include <DynamicAudioNormalizer.h>
 
 // =============================================================================
 // Private Data
