@@ -154,7 +154,7 @@ FILE *lsx_fopen(const char *filename_utf8, const char *mode_utf8)
 	return ret;
 }
 
-int lsx_stat(const char *path_utf8, struct stat *buf)
+int lsx_stat(const char *path_utf8, struct _stat *buf)
 {
 	int ret = -1;
 	
