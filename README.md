@@ -398,7 +398,7 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
-### Version 2.04 (2014-08-??) ###
+### Version 2.04 (2014-08-25) ###
 * Added an optional input *compression* (thresholding) function
 * Implemented [SoX](http://sox.sourceforge.net/) wrapper → Dynamic Audio Normalizer can now be used as an effect in SoX
 * Improved internal handling of "raw" PCM data
