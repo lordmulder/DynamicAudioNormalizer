@@ -1,0 +1,496 @@
+ src/8svx.c            |   3 +-
+ src/effects_i.c       |   4 +-
+ src/formats.c         |   9 ++-
+ src/libsox_i.c        |   7 +-
+ src/noiseprof.c       |   3 +-
+ src/sox.c             |  34 +++++++--
+ src/unicode_support.c | 199 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/unicode_support.h |  50 +++++++++++++
+ 8 files changed, 291 insertions(+), 18 deletions(-)
+
+diff --git a/src/8svx.c b/src/8svx.c
+index 63c30e6..ad87cd1 100644
+--- a/src/8svx.c
++++ b/src/8svx.c
+@@ -1,6 +1,7 @@
+ /* Amiga 8SVX format handler: W V Neisius, February 1992 */
+ 
+ #include "sox_i.h"
++#include "unicode_support.h"
+ 
+ #include <errno.h>
+ #include <string.h>
+@@ -161,7 +162,7 @@ static int startread(sox_format_t * ft)
+         chan1_pos = lsx_tell(ft);
+ 
+         for (i = 1; i < channels; i++) {
+-                if ((p->ch[i] = fopen(ft->filename, "rb")) == NULL)
++                if ((p->ch[i] = lsx_fopen(ft->filename, "rb")) == NULL)
+                 {
+                         lsx_fail_errno(ft,errno,"Can't open channel file '%s'",
+                                 ft->filename);
+diff --git a/src/effects_i.c b/src/effects_i.c
+index 7d72166..1b93032 100644
+--- a/src/effects_i.c
++++ b/src/effects_i.c
+@@ -20,6 +20,8 @@
+ 
+ #define LSX_EFF_ALIAS
+ #include "sox_i.h"
++#include "unicode_support.h"
++
+ #include <string.h>
+ #include <ctype.h>
+ 
+@@ -355,7 +357,7 @@ FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename)
+     effp->global_info->global_info->stdin_in_use_by = effp->handler.name;
+     file = stdin;
+   }
+-  else if (!(file = fopen(filename, "r"))) {
++  else if (!(file = lsx_fopen(filename, "r"))) {
+     lsx_fail("couldn't open file %s: %s", filename, strerror(errno));
+     return NULL;
+   }
+diff --git a/src/formats.c b/src/formats.c
+index 785eca7..e92167d 100644
+--- a/src/formats.c
++++ b/src/formats.c
+@@ -19,6 +19,7 @@
+  */
+ 
+ #include "sox_i.h"
++#include "unicode_support.h"
+ 
+ #include <assert.h>
+ #include <ctype.h>
+@@ -397,7 +398,7 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
+ #endif
+     return f;
+   }
+-  return fopen(identifier, mode);
++  return lsx_fopen(identifier, mode);
+ }
+ 
+ /* Hack to rewind pipes (a small amount).
+@@ -848,8 +849,8 @@ static sox_format_t * open_write(
+       ft->fp = stdout;
+     }
+     else {
+-      struct stat st;
+-      if (!stat(path, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
++      struct _stat st;
++      if (!lsx_stat(path, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
+           (overwrite_permitted && !overwrite_permitted(path))) {
+         lsx_fail("permission to overwrite `%s' denied", path);
+         goto error;
+@@ -859,7 +860,7 @@ static sox_format_t * open_write(
+         buffer? fmemopen(buffer, buffer_size, "w+b") :
+         buffer_ptr? open_memstream(buffer_ptr, buffer_size_ptr) :
+ #endif
+-        fopen(path, "w+b");
++        lsx_fopen(path, "w+b");
+       if (ft->fp == NULL) {
+         lsx_fail("can't open output file `%s': %s", path, strerror(errno));
+         goto error;
+diff --git a/src/libsox_i.c b/src/libsox_i.c
+index 8a7074a..7a7cb1c 100644
+--- a/src/libsox_i.c
++++ b/src/libsox_i.c
+@@ -20,6 +20,7 @@
+ 
+ 
+ #include "sox_i.h"
++#include "unicode_support.h"
+ 
+ #ifdef HAVE_IO_H
+   #include <io.h>
+@@ -48,8 +49,8 @@
+ #ifdef WIN32
+ static int check_dir(char * buf, size_t buflen, char const * name)
+ {
+-  struct stat st;
+-  if (!name || stat(name, &st) || (st.st_mode & S_IFMT) != S_IFDIR)
++  struct _stat st;
++  if (!name || lsx_stat(name, &st) || (st.st_mode & S_IFMT) != S_IFDIR)
+   {
+     return 0;
+   }
+@@ -102,7 +103,7 @@ FILE * lsx_tmpfile(void)
+     fildes = mkstemp(name);
+ #ifdef HAVE_UNISTD_H
+     lsx_debug(FAKE_MKSTEMP "mkstemp, name=%s (unlinked)", name);
+-    unlink(name);
++    lsx_unlink(name);
+ #else
+     lsx_debug(FAKE_MKSTEMP "mkstemp, name=%s (O_TEMPORARY)", name);
+ #endif
+diff --git a/src/noiseprof.c b/src/noiseprof.c
+index 603402f..25cab35 100644
+--- a/src/noiseprof.c
++++ b/src/noiseprof.c
+@@ -19,6 +19,7 @@
+  */
+ 
+ #include "noisered.h"
++#include "unicode_support.h"
+ 
+ #include <assert.h>
+ #include <string.h>
+@@ -75,7 +76,7 @@ static int sox_noiseprof_start(sox_effect_t * effp)
+     effp->global_info->global_info->stdout_in_use_by = effp->handler.name;
+     data->output_file = stdout;
+   }
+-  else if ((data->output_file = fopen(data->output_filename, "w")) == NULL) {
++  else if ((data->output_file = lsx_fopen(data->output_filename, "w")) == NULL) {
+     lsx_fail("Couldn't open profile file %s: %s", data->output_filename, strerror(errno));
+     return SOX_EOF;
+   }
+diff --git a/src/sox.c b/src/sox.c
+index 8160fc1..bf5b481 100644
+--- a/src/sox.c
++++ b/src/sox.c
+@@ -24,6 +24,7 @@
+ #include "soxconfig.h"
+ #include "sox.h"
+ #include "util.h"
++#include "unicode_support.h"
+ 
+ #include <ctype.h>
+ #include <errno.h>
+@@ -236,10 +237,10 @@ static void cleanup(void)
+   if (file_count) {
+     if (ofile->ft) {
+       if (!success && ofile->ft->fp) {   /* If we failed part way through */
+-        struct stat st;                  /* writing a normal file, remove it. */
+-        if (!stat(ofile->ft->filename, &st) &&
++        struct _stat st;                  /* writing a normal file, remove it. */
++        if (!lsx_stat(ofile->ft->filename, &st) &&
+             (st.st_mode & S_IFMT) == S_IFREG)
+-          unlink(ofile->ft->filename);
++          lsx_unlink(ofile->ft->filename);
+       }
+       sox_close(ofile->ft); /* Assume we can unlink a file before closing it. */
+     }
+@@ -293,8 +294,8 @@ static char const * str_time(double seconds)
+ 
+ static char const * size_and_bitrate(sox_format_t * ft, char const * * text)
+ {
+-  struct stat st;    /* ft->fp may validly be NULL, so stat not fstat */
+-  if (stat(ft->filename, &st) || (st.st_mode & S_IFMT) != S_IFREG)
++  struct _stat st;    /* ft->fp may validly be NULL, so stat not fstat */
++  if (lsx_stat(ft->filename, &st) || (st.st_mode & S_IFMT) != S_IFREG)
+     return NULL;
+   if (ft->signal.length && ft->signal.channels && ft->signal.rate && text) {
+     double secs = ft->signal.length / ft->signal.channels / ft->signal.rate;
+@@ -906,7 +907,7 @@ static char * * strtoargv(char * s, int * argc)
+ 
+ static void read_user_effects(char const *filename)
+ {
+-    FILE *file = fopen(filename, "rt");
++    FILE *file = lsx_fopen(filename, "rt");
+     const size_t buffer_size_step = 1024;
+     size_t buffer_size = buffer_size_step;
+     char *s = lsx_malloc(buffer_size); /* buffer for one input line */
+@@ -2127,7 +2128,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
+   int c;
+   size_t text_length = 100;
+   char * text = lsx_malloc(text_length + 1);
+-  FILE * file = fopen(filename, "rt");
++  FILE * file = lsx_fopen(filename, "rt");
+ 
+   if (file == NULL) {
+     lsx_fail("Cannot open comment file `%s'", filename);
+@@ -2853,7 +2854,7 @@ static sox_bool cmp_comment_text(char const * c1, char const * c2)
+   return c1 && c2 && !strcasecmp(c1, c2);
+ }
+ 
+-int main(int argc, char **argv)
++int sox_main(int argc, char **argv)
+ {
+   size_t i;
+   char mybase[6];
+@@ -3055,3 +3056,20 @@ int main(int argc, char **argv)
+ 
+   return 0;
+ }
++
++int main( int argc, char **argv )
++{
++  int sox_argc;
++  char **sox_argv;
++  int exit_code;
++  
++  lsx_init_console();
++  lsx_init_commandline_arguments(&sox_argc, &sox_argv);
++
++  exit_code = sox_main(sox_argc, sox_argv);
++  
++  lsx_uninit_console();
++  lsx_free_commandline_arguments(&sox_argc, &sox_argv);
++
++  return exit_code;
++}
+\ No newline at end of file
+diff --git a/src/unicode_support.c b/src/unicode_support.c
+new file mode 100644
+index 0000000..7519a8a
+--- /dev/null
++++ b/src/unicode_support.c
+@@ -0,0 +1,199 @@
++/* Copyright (c) 2004-2012 LoRd_MuldeR <mulder2@gmx.de>
++   File: unicode_support.c
++
++   This file was originally part of a patch included with LameXP,
++   released under the same license as the original audio tools.
++
++   Redistribution and use in source and binary forms, with or without
++   modification, are permitted provided that the following conditions
++   are met:
++
++   - Redistributions of source code must retain the above copyright
++   notice, this list of conditions and the following disclaimer.
++
++   - Redistributions in binary form must reproduce the above copyright
++   notice, this list of conditions and the following disclaimer in the
++   documentation and/or other materials provided with the distribution.
++
++   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++   ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
++   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
++
++#include "unicode_support.h"
++
++#include <windows.h>
++#include <io.h>
++
++static UINT g_old_output_cp = ((UINT)-1);
++
++static char *utf16_to_utf8(const wchar_t *input)
++{
++	char *Buffer;
++	int BuffSize = 0, Result = 0;
++
++	BuffSize = WideCharToMultiByte(CP_UTF8, 0, input, -1, NULL, 0, NULL, NULL);
++	Buffer = (char*) malloc(sizeof(char) * BuffSize);
++	if(Buffer)
++	{
++		Result = WideCharToMultiByte(CP_UTF8, 0, input, -1, Buffer, BuffSize, NULL, NULL);
++	}
++
++	return ((Result > 0) && (Result <= BuffSize)) ? Buffer : NULL;
++}
++
++static char *utf16_to_ansi(const wchar_t *input)
++{
++	char *Buffer;
++	int BuffSize = 0, Result = 0;
++
++	BuffSize = WideCharToMultiByte(CP_ACP, 0, input, -1, NULL, 0, NULL, NULL);
++	Buffer = (char*) malloc(sizeof(char) * BuffSize);
++	if(Buffer)
++	{
++		Result = WideCharToMultiByte(CP_ACP, 0, input, -1, Buffer, BuffSize, NULL, NULL);
++	}
++
++	return ((Result > 0) && (Result <= BuffSize)) ? Buffer : NULL;
++}
++
++static wchar_t *utf8_to_utf16(const char *input)
++{
++	wchar_t *Buffer;
++	int BuffSize = 0, Result = 0;
++
++	BuffSize = MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
++	Buffer = (wchar_t*) malloc(sizeof(wchar_t) * BuffSize);
++	if(Buffer)
++	{
++		Result = MultiByteToWideChar(CP_UTF8, 0, input, -1, Buffer, BuffSize);
++	}
++
++	return ((Result > 0) && (Result <= BuffSize)) ? Buffer : NULL;
++}
++
++void lsx_init_commandline_arguments(int *argc, char ***argv)
++{
++	int i, nArgs;
++	LPWSTR *szArglist;
++
++	szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
++
++	if(NULL == szArglist)
++	{
++		fprintf(stderr, "\nFATAL: CommandLineToArgvW failed\n\n");
++		exit(-1);
++	}
++
++	*argv = (char**) malloc(sizeof(char*) * nArgs);
++	*argc = nArgs;
++
++	if(NULL == *argv)
++	{
++		fprintf(stderr, "\nFATAL: Malloc failed\n\n");
++		exit(-1);
++	}
++	
++	for(i = 0; i < nArgs; i++)
++	{
++		(*argv)[i] = utf16_to_utf8(szArglist[i]);
++		if(NULL == (*argv)[i])
++		{
++			fprintf(stderr, "\nFATAL: utf16_to_utf8 failed\n\n");
++			exit(-1);
++		}
++	}
++
++	LocalFree(szArglist);
++}
++
++void lsx_free_commandline_arguments(int *argc, char ***argv)
++{
++	int i = 0;
++	
++	if(*argv != NULL)
++	{
++		for(i = 0; i < *argc; i++)
++		{
++			if((*argv)[i] != NULL)
++			{
++				free((*argv)[i]);
++				(*argv)[i] = NULL;
++			}
++		}
++		free(*argv);
++		*argv = NULL;
++	}
++}
++
++FILE *lsx_fopen(const char *filename_utf8, const char *mode_utf8)
++{
++	FILE *ret = NULL;
++	wchar_t *filename_utf16 = utf8_to_utf16(filename_utf8);
++	wchar_t *mode_utf16 = utf8_to_utf16(mode_utf8);
++	
++	if(filename_utf16 && mode_utf16)
++	{
++		FILE *fh = NULL;
++		int err = _wfopen_s(&fh, filename_utf16, mode_utf16);
++		if(err == 0) ret = fh;
++	}
++
++	if(filename_utf16) free(filename_utf16);
++	if(mode_utf16) free(mode_utf16);
++
++	return ret;
++}
++
++int lsx_stat(const char *path_utf8, struct _stat *buf)
++{
++	int ret = -1;
++	
++	wchar_t *path_utf16 = utf8_to_utf16(path_utf8);
++	if(path_utf16)
++	{
++		ret = _wstat(path_utf16, buf);
++		free(path_utf16);
++	}
++	
++	return ret;
++}
++
++int lsx_unlink(const char *path_utf8)
++{
++	int ret = -1;
++	
++	wchar_t *path_utf16 = utf8_to_utf16(path_utf8);
++	if(path_utf16)
++	{
++		ret = _wunlink(path_utf16);
++		free(path_utf16);
++	}
++	
++	return ret;
++}
++
++void lsx_init_console(void)
++{
++	g_old_output_cp = GetConsoleOutputCP();
++	SetConsoleOutputCP(CP_UTF8);
++}
++
++void lsx_uninit_console(void)
++{
++	if(g_old_output_cp != ((UINT)-1))
++	{
++		SetConsoleOutputCP(g_old_output_cp);
++	}
++}
++
++#endif
+\ No newline at end of file
+diff --git a/src/unicode_support.h b/src/unicode_support.h
+new file mode 100644
+index 0000000..36dc0c5
+--- /dev/null
++++ b/src/unicode_support.h
+@@ -0,0 +1,50 @@
++/* Copyright (c) 2004-2012 LoRd_MuldeR <mulder2@gmx.de>
++   File: unicode_support.h
++
++   This file was originally part of a patch included with LameXP,
++   released under the same license as the original audio tools.
++
++   Redistribution and use in source and binary forms, with or without
++   modification, are permitted provided that the following conditions
++   are met:
++
++   - Redistributions of source code must retain the above copyright
++   notice, this list of conditions and the following disclaimer.
++
++   - Redistributions in binary form must reproduce the above copyright
++   notice, this list of conditions and the following disclaimer in the
++   documentation and/or other materials provided with the distribution.
++
++   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++   ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
++   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++#ifndef UNICODE_SUPPORT_H_INCLUDED
++#define UNICODE_SUPPORT_H_INCLUDED
++
++#include <stdio.h>
++#include <sys/stat.h>
++
++#define WIN_UNICODE 1
++
++//char *utf16_to_utf8(const wchar_t *input);
++//char *utf16_to_ansi(const wchar_t *input);
++//wchar_t *utf8_to_utf16(const char *input);
++
++void lsx_init_commandline_arguments(int *argc, char ***argv);
++void lsx_free_commandline_arguments(int *argc, char ***argv);
++FILE *lsx_fopen(const char *filename_utf8, const char *mode_utf8);
++int lsx_stat(const char *path_utf8, struct _stat *buf);
++int lsx_unlink(const char *path_utf8);
++void lsx_init_console(void);
++void lsx_uninit_console(void);
++
++#endif
+\ No newline at end of file

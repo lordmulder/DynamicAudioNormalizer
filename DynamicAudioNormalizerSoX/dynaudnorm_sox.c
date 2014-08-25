@@ -24,6 +24,7 @@
 
 //SoX internal stuff
 #include "sox_i.h"
+#include "unicode_support.h"
 
 //StdLib
 #include <string.h>
@@ -162,7 +163,7 @@ static int dynaudnorm_parse_args(settings_t *settings, int argc, char **argv)
 		case 'l':
 			if(!settings->logFile)
 			{
-				settings->logFile = fopen(optstate.arg, "w");
+				settings->logFile = lsx_fopen(optstate.arg, "w");
 				if(!settings->logFile)
 				{
 					lsx_warn("Failed to open logfile `%s'", optstate.arg);
