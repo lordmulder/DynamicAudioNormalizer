@@ -31,13 +31,11 @@
 #include <ctype.h>
 
 //Linkage
-#ifdef _MT
+#if defined(_MSC_VER) && defined(_MT)
 #define MDYNAMICAUDIONORMALIZER_STATIC
-#endif
-#ifdef MDYNAMICAUDIONORMALIZER_STATIC
-	static const char *LINKAGE = "Static";
+static const char *LINKAGE = "Static";
 #else
-	static const char *LINKAGE = "Shared";
+static const char *LINKAGE = "Shared";
 #endif
 
 //Dynamic Audio Normalizer
@@ -232,6 +230,19 @@ void dynaudnorm_log(const int logLevel, const char *const message)
 	}
 }
 
+void dynaudnorm_update_buffsize(const sox_effect_t *const effp, priv_t *const p, const size_t input_samples)
+{
+	if(input_samples > p->tempSize)
+	{
+		lsx_warn("Increasing buffer size: %u -> %u", p->tempSize, input_samples);
+		for(size_t c = 0; c < effp->in_signal.channels; c++)
+		{
+			p->temp[c] = lsx_realloc(p->temp[c], input_samples * sizeof(double));
+		}
+		p->tempSize = input_samples;
+	}
+}
+
 // =============================================================================
 // SoX Callback Functions
 // =============================================================================
@@ -314,7 +325,7 @@ static int dynaudnorm_start(sox_effect_t *effp)
 	}
 
 	priv_t *const p = (priv_t *)effp->priv;
-	p->tempSize = (size_t) round(effp->in_signal.rate * 10.0);
+	p->tempSize = (size_t) max(ceil(effp->in_signal.rate), 8192.0); /*initial buffer size is one second*/
 
 	p->instance = MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)
 	(
@@ -348,22 +359,27 @@ static int dynaudnorm_flow(sox_effect_t *effp, const sox_sample_t *ibuf, sox_sam
 {
 	lsx_debug("dynaudnorm_flow()");
 	priv_t *const p = (priv_t *)effp->priv;
-	const size_t samples_per_channel = min(p->tempSize, min((*isamp), (*osamp)) / effp->in_signal.channels);
 
-	dynaudnorm_deinterleave(p->temp, ibuf, samples_per_channel, effp->in_signal.channels);
+	const size_t input_samples = min((*isamp), (*osamp)) / effp->in_signal.channels; /*this is per channel!*/
+	int64_t output_samples = 0;
+	dynaudnorm_update_buffsize(effp, p, input_samples);
 
-	int64_t output_samples = p->tempSize;
-	MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(p->instance, p->temp, samples_per_channel, &output_samples);
-
-	if(output_samples > 0)
+	if(input_samples > 0)
 	{
-		dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
-		*osamp = (size_t)(output_samples * effp->in_signal.channels);
+		dynaudnorm_deinterleave(p->temp, ibuf, input_samples, effp->in_signal.channels);
+		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(p->instance, p->temp, input_samples, &output_samples))
+		{
+			return SOX_EOF;
+		}
+		if(output_samples > 0)
+		{
+			dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
+		}
 	}
-	else
-	{
-		*osamp = 0;
-	}
+
+
+	*isamp = (size_t)(input_samples  * effp->in_signal.channels);
+	*osamp = (size_t)(output_samples * effp->in_signal.channels);
 
 	return SOX_SUCCESS;
 }
@@ -372,21 +388,24 @@ static int dynaudnorm_drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * o
 {
 	lsx_debug("dynaudnorm_drain()");
 	priv_t *const p = (priv_t *)effp->priv;
-	const size_t samples_per_channel = min(p->tempSize, (*osamp) / effp->in_signal.channels);
 
-	int64_t output_samples = p->tempSize;
-	MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(p->instance, p->temp, samples_per_channel, &output_samples);
+	const size_t input_samples = (*osamp) / effp->in_signal.channels; /*this is per channel!*/
+	int64_t output_samples = 0;
+	dynaudnorm_update_buffsize(effp, p, input_samples);
 
-	if(output_samples > 0)
+	if(input_samples > 0)
 	{
-		dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
-		*osamp = (size_t)(output_samples * effp->in_signal.channels);
-	}
-	else
-	{
-		*osamp = 0;
+		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(p->instance, p->temp, input_samples, &output_samples))
+		{
+			return SOX_EOF;
+		}
+		if(output_samples > 0)
+		{
+			dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
+		}
 	}
 
+	*osamp = (size_t)(output_samples * effp->in_signal.channels);
 	return SOX_SUCCESS;
 }
 
