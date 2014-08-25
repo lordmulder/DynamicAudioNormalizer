@@ -404,6 +404,10 @@ static int dynaudnorm_drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * o
 			dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
 		}
 	}
+	else
+	{
+		lsx_warn("drain() was called with zero-size output buffer!");
+	}
 
 	*osamp = (size_t)(output_samples * effp->in_signal.channels);
 	return SOX_SUCCESS;
