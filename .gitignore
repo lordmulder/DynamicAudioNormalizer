@@ -4,9 +4,11 @@
 *.user
 *.local.*
 /bin
-/obj
-/ipch
 /doc
-/tmp
-/out
 /DynamicAudioNormalizerGUI/tmp
+/etc/vst_sdk/pluginterfaces
+/etc/vst_sdk/public.sdk
+/ipch
+/obj
+/out
+/tmp
