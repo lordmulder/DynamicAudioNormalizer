@@ -1,37 +1,37 @@
-//////////////////////////////////////////////////////////////////////////////////
-// Dynamic Audio Normalizer - Effect Wrapper for SoX
-// Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-//
-// http://www.gnu.org/licenses/lgpl-2.1.txt
-//////////////////////////////////////////////////////////////////////////////////
+/* ================================================================================== */
+/* Dynamic Audio Normalizer - Effect Wrapper for SoX                                  */
+/* Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.             */
+/*                                                                                    */
+/* This library is free software; you can redistribute it and/or                      */
+/* modify it under the terms of the GNU Lesser General Public                         */
+/* License as published by the Free Software Foundation; either                       */
+/* version 2.1 of the License, or (at your option) any later version.                 */
+/*                                                                                    */
+/* This library is distributed in the hope that it will be useful,                    */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of                     */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU                  */
+/* Lesser General Public License for more details.                                    */
+/*                                                                                    */
+/* You should have received a copy of the GNU Lesser General Public                   */
+/* License along with this library; if not, write to the Free Software                */
+/* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA     */
+/*                                                                                    */
+/* http://www.gnu.org/licenses/lgpl-2.1.txt                                           */
+/* ================================================================================== */
 
-//Shut up warnings
+/*Shut up warnings*/
 #define _CRT_SECURE_NO_WARNINGS
 
-//SoX internal stuff
+/*SoX internal stuff*/
 #include "sox_i.h"
 #include "unicode_support.h"
 
-//StdLib
+/*StdLib*/
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
 
-//Linkage
+/*Linkage*/
 #if defined(_MSC_VER) && defined(_MT)
 #define MDYNAMICAUDIONORMALIZER_STATIC
 static const char *LINKAGE = "Static";
@@ -39,12 +39,12 @@ static const char *LINKAGE = "Static";
 static const char *LINKAGE = "Shared";
 #endif
 
-//Dynamic Audio Normalizer
+/*Dynamic Audio Normalizer*/
 #include <DynamicAudioNormalizer.h>
 
-// =============================================================================
-// Private Data
-// =============================================================================
+/* ================================================================================== */
+/* Private Data                                                                       */
+/* ================================================================================== */
 
 typedef struct
 {
@@ -70,9 +70,9 @@ typedef struct
 }
 priv_t;
 
-// =============================================================================
-// Internal Functions
-// =============================================================================
+/* ================================================================================== */
+/* Internal Functions                                                                 */
+/* ================================================================================== */
 
 static int parseArgInt(const char *const str, uint32_t *parameter, const uint32_t min_val, const uint32_t max_val)
 {
@@ -244,9 +244,9 @@ void dynaudnorm_update_buffsize(const sox_effect_t *const effp, priv_t *const p,
 	}
 }
 
-// =============================================================================
-// SoX Callback Functions
-// =============================================================================
+/* ================================================================================== */
+/* SoX Callback Functions                                                             */
+/* ================================================================================== */
 
 static int dynaudnorm_kill(sox_effect_t *effp)
 {
@@ -414,9 +414,9 @@ static int dynaudnorm_drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * o
 	return SOX_SUCCESS;
 }
 
-// =============================================================================
-// SoX Public API
-// =============================================================================
+/* ================================================================================== */
+/* SoX Public API                                                                     */
+/* ================================================================================== */
 
 sox_effect_handler_t const * lsx_dynaudnorm_effect_fn(void)
 {
