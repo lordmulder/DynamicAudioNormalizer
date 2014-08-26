@@ -900,7 +900,7 @@ void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 
 void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3], const uint32_t frameLen)
 {
-	assert((m_frameLen % 2) == 0);
+	assert((frameLen % 2) == 0);
 
 	const uint32_t frameFadeDiv2 = frameLen / 2U;
 	const double frameFadeStep = 0.5 / double(frameFadeDiv2);
