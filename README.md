@@ -552,24 +552,24 @@ Acknowledgement <a name="chap_ack"></a>
 
 The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) incorporates the following *third-party* software:
 
-* [**libsndfile**](http://www.mega-nerd.com/libsndfile/)
-  C library for reading and writing files containing sampled sound through one standard library interface
+* [**libsndfile**](http://www.mega-nerd.com/libsndfile/)  
+  C library for reading and writing files containing sampled sound through one standard library interface  
   Copyright (C) 1999-2011 Erik de Castro Lopo
   
 The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) incorporates the following *third-party* software:
 
-* [**Qt Framework**](http://qt-project.org/)
-  Cross-platform application and UI framework for developers using C++ or QML, a CSS & JavaScript like language
+* [**Qt Framework**](http://qt-project.org/)  
+  Cross-platform application and UI framework for developers using C++ or QML, a CSS & JavaScript like language  
   Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies)
   
-* [**QCustomPlot**](http://www.qcustomplot.com/)
-  Qt C++ widget for plotting and data visualization that focuses on making good looking, publication quality 2D plots
+* [**QCustomPlot**](http://www.qcustomplot.com/)  
+  Qt C++ widget for plotting and data visualization that focuses on making good looking, publication quality 2D plots  
   Copyright (C) 2011-2014 Emanuel Eichhammer
 
 The Dynamic Audio Normalizer can operate as a **plug-in** (effect) in the following *third-party* applications:
 
-  * [**Sound eXchange**](http://sox.sourceforge.net/)
-  Cross-platform command line utility that can convert various formats of computer audio files in to other formats
+  * [**Sound eXchange**](http://sox.sourceforge.net/)  
+  Cross-platform command line utility that can convert various formats of computer audio files in to other formats  
   Copyright (C) 1998-2009 Chris Bagwell and SoX contributors
 
 <br>  
