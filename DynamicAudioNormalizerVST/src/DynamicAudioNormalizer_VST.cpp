@@ -24,26 +24,75 @@
 //Dynamic Audio Normalizer API
 #include "DynamicAudioNormalizer.h"
 
+//Standard Library
+#include <cmath>
+#include <algorithm>
+
+//Win32 API
+#ifdef _WIN32
+#define NOMINMAX 1
+#define WIN32_LEAN_AND_MEAN 1
+#include <Windows.h>
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+// Helper functions
+///////////////////////////////////////////////////////////////////////////////
+
+static void showErrorMsg(const char *const text)
+{
+	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Private Data
+///////////////////////////////////////////////////////////////////////////////
+
+class DynamicAudioNormalizerVST_PrivateData
+{
+public:
+	MDynamicAudioNormalizer *instance;
+	double *temp[2];
+	uint32_t tempSize;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-DynamicAudioNormalizerVST::DynamicAudioNormalizerVST (audioMasterCallback audioMaster)
+DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMaster)
 :
-	AudioEffectX (audioMaster, 1, 1)
+	AudioEffectX (audioMaster, 1, 1),
+	p(new DynamicAudioNormalizerVST_PrivateData())
 {
-	setNumInputs (2);		// stereo in
-	setNumOutputs (2);		// stereo out
-	setUniqueID ('Gain');	// identify
-	canProcessReplacing ();	// supports replacing output
-	canDoubleReplacing ();	// supports double precision processing
+	setNumInputs(2);			// stereo in
+	setNumOutputs(2);			// stereo out
+	setUniqueID(0xBEAB9367);	// identify
+	canProcessReplacing();		// supports replacing output
+	canDoubleReplacing();		// supports double precision processing
 
 	vst_strncpy (programName, "Default", kVstMaxProgNameLen);
+	
+	p->instance = 0;
+	p->temp[0] = p->temp[1] = NULL;
+	p->tempSize = 0;
 }
 
-DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST ()
+DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 {
-	// nothing to do here
+	if(p->instance)
+	{
+		delete p->instance;
+		p->instance = NULL;
+	}
+
+	if(p->tempSize > 0)
+	{
+		delete [] p->temp[0]; p->temp[0] = NULL;
+		delete [] p->temp[1]; p->temp[1] = NULL;
+	}
+
+	delete p;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,22 +111,22 @@ void DynamicAudioNormalizerVST::getProgramName (char* name)
 
 void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
 {
-	fGain = value;
+	fDummyParam = value;
 }
 
 float DynamicAudioNormalizerVST::getParameter (VstInt32 index)
 {
-	return fGain;
+	return fDummyParam;
 }
 
 void DynamicAudioNormalizerVST::getParameterName (VstInt32 index, char* label)
 {
-	vst_strncpy (label, "Gain", kVstMaxParamStrLen);
+	vst_strncpy (label, "Dummy", kVstMaxParamStrLen);
 }
 
 void DynamicAudioNormalizerVST::getParameterDisplay (VstInt32 index, char* text)
 {
-	dB2string (fGain, text, kVstMaxParamStrLen);
+	dB2string (fDummyParam, text, kVstMaxParamStrLen);
 }
 
 void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
@@ -123,35 +172,244 @@ VstInt32 DynamicAudioNormalizerVST::getVendorVersion ()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// State Handling
+///////////////////////////////////////////////////////////////////////////////
+
+void DynamicAudioNormalizerVST::open(void)
+{
+	/*nothing to do here*/
+}
+
+void DynamicAudioNormalizerVST::close(void)
+{
+	/*nothing to do here*/
+}
+
+void DynamicAudioNormalizerVST::resume(void)
+{
+	if(createNewInstance(static_cast<uint32_t>(round(getSampleRate()))))
+	{
+		int64_t delayInSamples;
+		if(p->instance->getInternalDelay(delayInSamples))
+		{
+			setInitialDelay(static_cast<VstInt32>(std::min(delayInSamples, int64_t(INT32_MAX))));
+			ioChanged();
+		}
+	}
+}
+
+void DynamicAudioNormalizerVST::suspend(void)
+{
+	if(p->instance)
+	{
+		delete p->instance;
+		p->instance = NULL;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Audio Processing
 ///////////////////////////////////////////////////////////////////////////////
 
 void DynamicAudioNormalizerVST::processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames)
 {
-	float* in1  =  inputs[0];
-	float* in2  =  inputs[1];
-	float* out1 = outputs[0];
-	float* out2 = outputs[1];
-
-	while (--sampleFrames >= 0)
+	if(sampleFrames < 1)
 	{
-		(*out1++) = (*in1++) * fGain;
-		(*out2++) = (*in2++) * fGain;
+		return; /*number of samples is zero or even negative!*/
 	}
+
+	if(!p->instance)
+	{
+		showErrorMsg("Dynamic Audio Normalizer instance not created yet!");
+		return;
+	}
+
+	updateBufferSize(sampleFrames);
+	readInputSamplesFlt(inputs, sampleFrames);
+
+	int64_t outputSamples;
+	if(!p->instance->processInplace(p->temp, sampleFrames, outputSamples))
+	{
+		showErrorMsg("Dynamic Audio Normalizer processing failed!");
+		return;
+	}
+
+	writeOutputSamplesFlt(outputs, sampleFrames, outputSamples);
 }
 
 void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double** outputs, VstInt32 sampleFrames)
 {
-	double* in1  =  inputs[0];
-	double* in2  =  inputs[1];
-	double* out1 = outputs[0];
-	double* out2 = outputs[1];
-	double dGain = fGain;
-
-	while (--sampleFrames >= 0)
+	if(sampleFrames < 1)
 	{
-		(*out1++) = (*in1++) * dGain;
-		(*out2++) = (*in2++) * dGain;
+		return; /*number of samples is zero or even negative!*/
+	}
+
+	if(!p->instance)
+	{
+		showErrorMsg("Dynamic Audio Normalizer instance not created yet!");
+		return;
+	}
+
+	updateBufferSize(sampleFrames);
+	readInputSamplesDbl(inputs, sampleFrames);
+
+	int64_t outputSamples;
+	if(!p->instance->processInplace(p->temp, sampleFrames, outputSamples))
+	{
+		showErrorMsg("Dynamic Audio Normalizer processing failed!");
+		return;
+	}
+
+	writeOutputSamplesDbl(outputs, sampleFrames, outputSamples);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Internal FUnctions
+///////////////////////////////////////////////////////////////////////////////
+
+bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
+{
+	if(p->instance)
+	{
+		showErrorMsg("Dynamic Audio Normalizer instance already created!");
+		return true;
+	}
+	
+	try
+	{
+		p->instance = new MDynamicAudioNormalizer(2, sampleRate);
+	}
+	catch(...)
+	{
+		showErrorMsg("Failed to create Dynamic Audio Normalizer instance!");
+		return false;
+	}
+
+	if(!p->instance->initialize())
+	{
+		showErrorMsg("Dynamic Audio Normalizer initialization has failed!");
+		return false;
+	}
+
+	return true;
+}
+
+void DynamicAudioNormalizerVST::updateBufferSize(const size_t requiredSize)
+{
+	if(p->tempSize < requiredSize)
+	{
+		if(p->tempSize > 0)
+		{
+			delete [] p->temp[0];
+			delete [] p->temp[0];
+		}
+		try
+		{
+			p->temp[0] = new double[requiredSize];
+			p->temp[1] = new double[requiredSize];
+		}
+		catch(...)
+		{
+			showErrorMsg("Memory allocation has failed: Out of memory!");
+			_exit(0xC0000017);
+		}
+		p->tempSize = requiredSize;
+	}
+}
+
+void DynamicAudioNormalizerVST::readInputSamplesFlt(const float *const *const inputs, const int64_t sampleCount)
+{
+	for(int64_t i = 0; i < sampleCount; i++)
+	{
+		p->temp[0][i] = inputs[0][i];
+		p->temp[1][i] = inputs[1][i];
+	}
+}
+
+void DynamicAudioNormalizerVST::readInputSamplesDbl(const double *const *const inputs, const int64_t sampleCount)
+{
+	for(int64_t i = 0; i < sampleCount; i++)
+	{
+		p->temp[0][i] = inputs[0][i];
+		p->temp[1][i] = inputs[1][i];
+	}
+}
+
+void DynamicAudioNormalizerVST::writeOutputSamplesFlt(float *const *const outputs, const int64_t sampleCount, const int64_t outputSamples)
+{
+	if(outputSamples == 0)
+	{
+		for(int64_t i = 0; i < sampleCount; i++)
+		{
+			outputs[0][i] = 0.0f;
+			outputs[1][i] = 0.0f;
+		}
+	}
+	else if(outputSamples < sampleCount)
+	{
+		const int64_t offset = sampleCount - outputSamples;
+		int64_t pos0 = 0, pos1 = 0;
+		for(int64_t i = 0; i < offset; i++)
+		{
+			outputs[0][pos0++] = 0.0f;
+			outputs[1][pos1++] = 0.0f;
+		}
+		for(int64_t i = 0; i < outputSamples; i++)
+		{
+			outputs[0][pos0++] = static_cast<float>(p->temp[0][i]);
+			outputs[1][pos1++] = static_cast<float>(p->temp[1][i]);
+		}
+	}
+	else if(outputSamples == sampleCount)
+	{
+		for(int64_t i = 0; i < outputSamples; i++)
+		{
+			outputs[0][i] = static_cast<float>(p->temp[0][i]);
+			outputs[1][i] = static_cast<float>(p->temp[1][i]);
+		}
+	}
+	else
+	{
+		showErrorMsg("Number of output samples exceeds output buffer size!");
+	}
+}
+
+void DynamicAudioNormalizerVST::writeOutputSamplesDbl(double *const *const outputs, const int64_t sampleCount, const int64_t outputSamples)
+{
+	if(outputSamples == 0)
+	{
+		for(int64_t i = 0; i < sampleCount; i++)
+		{
+			outputs[0][i] = 0.0f;
+			outputs[1][i] = 0.0f;
+		}
+	}
+	else if(outputSamples < sampleCount)
+	{
+		const int64_t offset = sampleCount - outputSamples;
+		int64_t pos0 = 0, pos1 = 0;
+		for(int64_t i = 0; i < offset; i++)
+		{
+			outputs[0][pos0++] = 0.0f;
+			outputs[1][pos1++] = 0.0f;
+		}
+		for(int64_t i = 0; i < outputSamples; i++)
+		{
+			outputs[0][pos0++] = p->temp[0][i];
+			outputs[1][pos1++] = p->temp[1][i];
+		}
+	}
+	else if(outputSamples == sampleCount)
+	{
+		for(int64_t i = 0; i < outputSamples; i++)
+		{
+			outputs[0][i] = p->temp[0][i];
+			outputs[1][i] = p->temp[1][i];
+		}
+	}
+	else
+	{
+		showErrorMsg("Number of output samples exceeds output buffer size!");
 	}
 }
 

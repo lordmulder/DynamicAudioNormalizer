@@ -25,11 +25,22 @@
 //VST SDK includes
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 
+//Forward declaration
+class DynamicAudioNormalizerVST_PrivateData;
+
+//Standard Lib
+#include <stdint.h>
+
 class DynamicAudioNormalizerVST : public AudioEffectX
 {
 public:
 	DynamicAudioNormalizerVST(audioMasterCallback audioMaster);
 	~DynamicAudioNormalizerVST();
+
+	virtual void open(void);
+	virtual void close(void);
+	virtual void suspend(void);
+	virtual void resume(void);
 
 	// Processing
 	virtual void processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames);
@@ -46,13 +57,22 @@ public:
 	virtual void getParameterDisplay (VstInt32 index, char* text);
 	virtual void getParameterName (VstInt32 index, char* text);
 
+	// Information
 	virtual bool getEffectName (char* name);
 	virtual bool getVendorString (char* text);
 	virtual bool getProductString (char* text);
 	virtual VstInt32 getVendorVersion ();
 
-protected:
-	float fGain;
+private:
+	bool createNewInstance(const uint32_t sampleRate);
+	void updateBufferSize(const size_t requiredSize);
+	void readInputSamplesFlt(const float  *const *const inputs, const int64_t sampleCount);
+	void readInputSamplesDbl(const double *const *const inputs, const int64_t sampleCount);
+	void writeOutputSamplesFlt(float  *const *const outputs, const int64_t sampleCount, const int64_t outputSamples);
+	void writeOutputSamplesDbl(double *const *const outputs, const int64_t sampleCount, const int64_t outputSamples);
+
+	DynamicAudioNormalizerVST_PrivateData *const p;
+	float fDummyParam;
 	char programName[kVstMaxProgNameLen + 1];
 };
 
