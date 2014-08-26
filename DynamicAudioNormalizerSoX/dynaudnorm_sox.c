@@ -22,14 +22,26 @@
 /*Shut up warnings*/
 #define _CRT_SECURE_NO_WARNINGS
 
+/*printf() macros*/
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS 1
+#endif
+
 /*SoX internal stuff*/
 #include "sox_i.h"
+
+/*Win32 Unicode support*/
+#ifdef _WIN32
 #include "unicode_support.h"
+#else
+#define lsx_fopen(X,Y) fopen((X),(Y))
+#endif /*_WIN32*/
 
 /*StdLib*/
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 /*Linkage*/
 #if defined(_MSC_VER) && defined(_MT)
@@ -178,26 +190,26 @@ static int dynaudnorm_parse_args(settings_t *settings, int argc, char **argv)
 	return 1;
 }
 
-static void dynaudnorm_deinterleave(double **temp, const sox_sample_t *const in, const size_t samples_per_channel, const size_t channels)
+static void dynaudnorm_deinterleave(double **temp, const sox_sample_t *const in, const size_t samples_per_channel, const unsigned channels)
 {
-	size_t in_pos = 0;
+	size_t i, c, in_pos = 0;
 
-	for(size_t i = 0; i < samples_per_channel; i++)
+	for(i = 0; i < samples_per_channel; i++)
 	{
-		for(size_t c = 0; c < channels; c++)
+		for(c = 0; c < channels; c++)
 		{
 			temp[c][i] = ((double)in[in_pos++]) / ((double)SOX_INT32_MAX);
 		}
 	}
 }
 
-static void dynaudnorm_interleave(sox_sample_t *const out, const double *const *const temp, const size_t samples_per_channel, const size_t channels)
+static void dynaudnorm_interleave(sox_sample_t *const out, const double *const *const temp, const size_t samples_per_channel, const unsigned channels)
 {
-	size_t out_pos = 0;
+	size_t i, c, out_pos = 0;
 
-	for(size_t i = 0; i < samples_per_channel; i++)
+	for(i = 0; i < samples_per_channel; i++)
 	{
-		for(size_t c = 0; c < channels; c++)
+		for(c = 0; c < channels; c++)
 		{
 			out[out_pos++] = (sox_sample_t) round(min(1.0, max(-1.0, temp[c][i])) * ((double)SOX_INT32_MAX));
 		}
@@ -215,7 +227,7 @@ static void dynaudnorm_print(sox_effect_t *effp, const char *const fmt, ...)
 	}
 }
 
-void dynaudnorm_log(const int logLevel, const char *const message)
+static void dynaudnorm_log(const int logLevel, const char *const message)
 {
 	switch(logLevel)
 	{
@@ -231,12 +243,13 @@ void dynaudnorm_log(const int logLevel, const char *const message)
 	}
 }
 
-void dynaudnorm_update_buffsize(const sox_effect_t *const effp, priv_t *const p, const size_t input_samples)
+static void dynaudnorm_update_buffsize(const sox_effect_t *const effp, priv_t *const p, const size_t input_samples)
 {
+	size_t c;
 	if(input_samples > p->tempSize)
 	{
-		lsx_warn("Increasing buffer size: %u -> %u", p->tempSize, input_samples);
-		for(size_t c = 0; c < effp->in_signal.channels; c++)
+		lsx_warn("Increasing buffer size: %" PRIu64 " -> %" PRIu64, (uint64_t)p->tempSize, (uint64_t)input_samples);
+		for(c = 0; c < effp->in_signal.channels; c++)
 		{
 			p->temp[c] = lsx_realloc(p->temp[c], input_samples * sizeof(double));
 		}
@@ -251,16 +264,18 @@ void dynaudnorm_update_buffsize(const sox_effect_t *const effp, priv_t *const p,
 static int dynaudnorm_kill(sox_effect_t *effp)
 {
 	lsx_report("dynaudnorm_kill()");
-	priv_t * p = (priv_t *)effp->priv;
+	lsx_report("flows=%" PRIu64 ", flow=%" PRIu64 , (uint64_t)effp->flows, (uint64_t)effp->flow);
 	return SOX_SUCCESS;
 }
 
 static int dynaudnorm_create(sox_effect_t *effp, int argc, char **argv)
 {
+	priv_t *const p = (priv_t *)effp->priv;
+
 	lsx_report("dynaudnorm_create()");
+	lsx_report("flows=%" PRIu64 ", flow=%" PRIu64 , (uint64_t)effp->flows, (uint64_t)effp->flow);
 
 	memset(effp->priv, 0, sizeof(priv_t));
-	priv_t *const p = (priv_t *)effp->priv;
 	dynaudnorm_defaults(&p->settings);
 
 	if(!dynaudnorm_parse_args(&p->settings, argc, argv))
@@ -273,8 +288,10 @@ static int dynaudnorm_create(sox_effect_t *effp, int argc, char **argv)
 
 static int dynaudnorm_stop(sox_effect_t *effp)
 {
-	lsx_report("dynaudnorm_stop()");
 	priv_t *const p = (priv_t *)effp->priv;
+	size_t c;
+
+	lsx_report("dynaudnorm_stop()");
 
 	if(p->instance)
 	{
@@ -290,7 +307,7 @@ static int dynaudnorm_stop(sox_effect_t *effp)
 
 	if(p->temp)
 	{
-		for(size_t c = 0; c < effp->in_signal.channels; c++)
+		for(c = 0; c < effp->in_signal.channels; c++)
 		{
 			free(p->temp[c]);
 			p->temp[c] = NULL;
@@ -304,15 +321,17 @@ static int dynaudnorm_stop(sox_effect_t *effp)
 
 static int dynaudnorm_start(sox_effect_t *effp)
 {
+	priv_t *const p = (priv_t *)effp->priv;
+
 	lsx_report("dynaudnorm_start()");
-	lsx_report("flows=%u, flow=%u, in_signal.rate=%.2f, in_signal.channels=%u", effp->flows, effp->flow, effp->in_signal.rate, effp->in_signal.channels);
+	lsx_report("flows=%" PRIu64 ", flow=%" PRIu64 ", in_signal.rate=%.2f, in_signal.channels=%" PRIu64, (uint64_t)effp->flows, (uint64_t)effp->flow, effp->in_signal.rate, (uint64_t)effp->in_signal.channels);
 
 	if((effp->flow == 0) && (effp->global_info->global_info->verbosity > 1))
 	{
 		uint32_t versionMajor, versionMinor, versionPatch;
-		MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(&versionMajor, &versionMinor, &versionPatch);
-
 		const char *buildDate, *buildTime, *buildCompiler, *buildArch; int buildDebug;
+
+		MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(&versionMajor, &versionMinor, &versionPatch);
 		MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(&buildDate, &buildTime, &buildCompiler, &buildArch, &buildDebug);
 
 		dynaudnorm_print(effp, "\n---------------------------------------------------------------------------\n");
@@ -325,7 +344,6 @@ static int dynaudnorm_start(sox_effect_t *effp)
 		dynaudnorm_print(effp, "---------------------------------------------------------------------------\n\n");
 	}
 
-	priv_t *const p = (priv_t *)effp->priv;
 	p->tempSize = (size_t) max(ceil(effp->in_signal.rate), 8192.0); /*initial buffer size is one second*/
 
 	p->instance = MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)
@@ -346,8 +364,9 @@ static int dynaudnorm_start(sox_effect_t *effp)
 
 	if(p->instance)
 	{
+		size_t c;
 		p->temp = (double**) lsx_calloc(effp->in_signal.channels, sizeof(double*));
-		for(size_t c = 0; c < effp->in_signal.channels; c++)
+		for(c = 0; c < effp->in_signal.channels; c++)
 		{
 			p->temp[c] = (double*) lsx_calloc(p->tempSize, sizeof(double));
 		}
@@ -358,23 +377,23 @@ static int dynaudnorm_start(sox_effect_t *effp)
 
 static int dynaudnorm_flow(sox_effect_t *effp, const sox_sample_t *ibuf, sox_sample_t *obuf, size_t *isamp, size_t *osamp)
 {
-	lsx_debug("dynaudnorm_flow()");
 	priv_t *const p = (priv_t *)effp->priv;
-
 	const size_t input_samples = min((*isamp), (*osamp)) / effp->in_signal.channels; /*this is per channel!*/
 	int64_t output_samples = 0;
+
+	lsx_debug("dynaudnorm_flow()");
 	dynaudnorm_update_buffsize(effp, p, input_samples);
 
 	if(input_samples > 0)
 	{
 		dynaudnorm_deinterleave(p->temp, ibuf, input_samples, effp->in_signal.channels);
-		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(p->instance, p->temp, input_samples, &output_samples))
+		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(p->instance, p->temp, ((int64_t) input_samples), &output_samples))
 		{
 			return SOX_EOF;
 		}
 		if(output_samples > 0)
 		{
-			dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
+			dynaudnorm_interleave(obuf, ((const double**) p->temp), ((size_t) output_samples), effp->in_signal.channels);
 		}
 	}
 
@@ -387,22 +406,22 @@ static int dynaudnorm_flow(sox_effect_t *effp, const sox_sample_t *ibuf, sox_sam
 
 static int dynaudnorm_drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
-	lsx_debug("dynaudnorm_drain()");
 	priv_t *const p = (priv_t *)effp->priv;
-
 	const size_t input_samples = (*osamp) / effp->in_signal.channels; /*this is per channel!*/
 	int64_t output_samples = 0;
+
+	lsx_debug("dynaudnorm_drain()");
 	dynaudnorm_update_buffsize(effp, p, input_samples);
 
 	if(input_samples > 0)
 	{
-		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(p->instance, p->temp, input_samples, &output_samples))
+		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(p->instance, p->temp, ((int64_t) input_samples), &output_samples))
 		{
 			return SOX_EOF;
 		}
 		if(output_samples > 0)
 		{
-			dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
+			dynaudnorm_interleave(obuf, ((const double**) p->temp), ((size_t) output_samples), effp->in_signal.channels);
 		}
 	}
 	else
