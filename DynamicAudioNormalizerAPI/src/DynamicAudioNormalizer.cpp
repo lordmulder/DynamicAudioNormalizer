@@ -108,6 +108,7 @@ public:
 	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush);
 	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
+	bool getInternalDelay(int64_t &delayInSamples);
 
 private:
 	const uint32_t m_channels;
@@ -385,6 +386,32 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 		m_prevAmplificationFactor[channel] = 1.0;
 	}
 
+	return true;
+}
+
+bool MDynamicAudioNormalizer::getInternalDelay(int64_t &delayInSamples)
+{
+	try
+	{
+		return p->getInternalDelay(delayInSamples);
+	}
+	catch(std::exception &e)
+	{
+		LOG1_ERR(e.what());
+		return false;
+	}
+}
+
+bool MDynamicAudioNormalizer_PrivateData::getInternalDelay(int64_t &delayInSamples)
+{
+	//Check audio normalizer status
+	if(!m_initialized)
+	{
+		LOG1_ERR("Not initialized yet. Must call initialize() first!");
+		return false;
+	}
+
+	delayInSamples = m_frameLen * m_filterSize;
 	return true;
 }
 

@@ -57,7 +57,7 @@
 #define MDYNAMICAUDIONORMALIZER_GLUE2(X,Y) MDYNAMICAUDIONORMALIZER_GLUE1(X,Y)
 
 /*Interface version*/
-#define MDYNAMICAUDIONORMALIZER_CORE 4
+#define MDYNAMICAUDIONORMALIZER_CORE 5
 #define MDYNAMICAUDIONORMALIZER_FUNCTION(X) MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_##X##_r, MDYNAMICAUDIONORMALIZER_CORE)
 #define MDynamicAudioNormalizer MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_r,MDYNAMICAUDIONORMALIZER_CORE)
 
@@ -89,6 +89,7 @@ public:
 	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize);
 	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
+	bool getInternalDelay(int64_t &delayInSamples);
 
 	/*Type definitions*/
 	typedef MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) LogFunction;
