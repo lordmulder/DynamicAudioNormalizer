@@ -45,6 +45,7 @@ public:
 	// Processing
 	virtual void processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames);
 	virtual void processDoubleReplacing (double** inputs, double** outputs, VstInt32 sampleFrames);
+	virtual VstInt32 getGetTailSize(void);
 
 	// Program
 	virtual void setProgramName (char* name);

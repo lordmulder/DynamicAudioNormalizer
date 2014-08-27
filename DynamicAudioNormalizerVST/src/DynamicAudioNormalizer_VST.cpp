@@ -65,11 +65,14 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	AudioEffectX (audioMaster, 1, 1),
 	p(new DynamicAudioNormalizerVST_PrivateData())
 {
+	static const VstInt32 uniqueId = CCONST('!','c','2','N');
+
 	setNumInputs(2);			// stereo in
 	setNumOutputs(2);			// stereo out
-	setUniqueID(0xBEAB9367);	// identify
+	setUniqueID(uniqueId);		// identify
 	canProcessReplacing();		// supports replacing output
 	canDoubleReplacing();		// supports double precision processing
+	noTail(false);				// does have Tail!
 
 	vst_strncpy (programName, "Default", kVstMaxProgNameLen);
 	
@@ -168,7 +171,10 @@ bool DynamicAudioNormalizerVST::getVendorString (char* text)
 
 VstInt32 DynamicAudioNormalizerVST::getVendorVersion ()
 { 
-	return 1000; 
+	uint32_t major, minor, patch;
+	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
+
+	return (major * 1000U) + (minor * 10U) + patch;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -193,7 +199,6 @@ void DynamicAudioNormalizerVST::resume(void)
 		if(p->instance->getInternalDelay(delayInSamples))
 		{
 			setInitialDelay(static_cast<VstInt32>(std::min(delayInSamples, int64_t(INT32_MAX))));
-			ioChanged();
 		}
 	}
 }
@@ -263,8 +268,21 @@ void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double*
 	writeOutputSamplesDbl(outputs, sampleFrames, outputSamples);
 }
 
+VstInt32 DynamicAudioNormalizerVST::getGetTailSize(void)
+{
+	if(p->instance)
+	{
+		int64_t delayInSamples;
+		if(p->instance->getInternalDelay(delayInSamples))
+		{
+			return static_cast<VstInt32>(delayInSamples);
+		}
+	}
+	return 0;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
-// Internal FUnctions
+// Internal Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
