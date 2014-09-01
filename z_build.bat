@@ -106,10 +106,12 @@ for %%c in (DLL, Static) do (
 	echo ---------------------------------------------------------------------
 	
 	mkdir "%PACK_PATH%\%%c"
+	mkdir "%PACK_PATH%\%%c\extra"
 	mkdir "%PACK_PATH%\%%c\img"
 
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%\%%c"
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerGUI.exe" "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c\extra"
 
 	if "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\sdk"
