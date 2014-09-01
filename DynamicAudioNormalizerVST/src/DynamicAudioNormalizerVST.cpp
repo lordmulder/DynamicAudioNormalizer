@@ -19,7 +19,7 @@
 // http://www.gnu.org/licenses/lgpl-2.1.txt
 //////////////////////////////////////////////////////////////////////////////////
 
-#include "DynamicAudioNormalizer_VST.h"
+#include "DynamicAudioNormalizerVST.h"
 
 //Dynamic Audio Normalizer API
 #include "DynamicAudioNormalizer.h"
@@ -35,6 +35,11 @@
 #include <Windows.h>
 #endif
 
+//Constants
+static const VstInt32 CHANNEL_COUNT = 2;
+static const VstInt32 PARAMETER_COUNT = 8;
+static const VstInt32 PROGRAM_COUNT = 16;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,14 +49,111 @@ static void showErrorMsg(const char *const text)
 	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST);
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Program Class
+///////////////////////////////////////////////////////////////////////////////
+
+class DynamicAudioNormalizerVST_Program
+{
+	friend class DynamicAudioNormalizerVST;
+
+public:
+	DynamicAudioNormalizerVST_Program()
+	{
+		frameLenMsec       = 0.5;
+		filterSize         = 0.5;
+		peakValue          = 0.9444;
+		maxAmplification   = 0.5;
+		targetRms          = 0.0;
+		compressThresh     = 0.0;
+		channelsCoupled    = 0.0;
+		enableDCCorrection = 0.0;
+
+		vst_strncpy(name, "Default", kVstMaxProgNameLen);
+	}
+
+	~DynamicAudioNormalizerVST_Program()
+	{
+	}
+
+	uint32_t getFrameLen(void)
+	{
+		return static_cast<uint32_t>(round(50.0 + (900.0 * frameLenMsec)));
+	}
+	
+	uint32_t getFilterSize(void)
+	{
+		return static_cast<uint32_t>(round(3.0 + (56.0 * filterSize)));
+	}
+
+	double getPeakValue(void)
+	{
+		return 0.1 + (0.9 * peakValue);
+	}
+
+	double getMaxAmplification(void)
+	{
+		return 1.25 + (17.5 * maxAmplification);
+	}
+
+	double getTargetRms(void)
+	{
+		return 0.1 + (0.9 * targetRms);
+	}
+
+	double getCompressThresh(void)
+	{
+		return 0.1 + (0.9 * compressThresh);
+	}
+
+	bool getChannelsCoupled(void)
+	{
+		return channelsCoupled >= 0.5;
+	}
+
+	bool getEnableDCCorrection(void)
+	{
+		return enableDCCorrection >= 0.5;
+	}
+
+private:
+	char name[kVstMaxProgNameLen + 1];
+
+	float frameLenMsec;
+	float filterSize;
+	float peakValue;
+	float maxAmplification;
+	float targetRms;
+	float compressThresh;
+	float channelsCoupled;
+	float enableDCCorrection;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Private Data
 ///////////////////////////////////////////////////////////////////////////////
 
 class DynamicAudioNormalizerVST_PrivateData
 {
+	friend class DynamicAudioNormalizerVST;
+
 public:
+	DynamicAudioNormalizerVST_PrivateData(void)
+	{
+		this->instance = NULL;
+		this->programs = NULL;
+		this->temp[0] = this->temp[1] = NULL;
+		this->tempSize = 0;
+	}
+
+	~DynamicAudioNormalizerVST_PrivateData(void)
+	{
+	}
+
+protected:
 	MDynamicAudioNormalizer *instance;
+	DynamicAudioNormalizerVST_Program *programs;
 	double *temp[2];
 	uint32_t tempSize;
 };
@@ -62,23 +164,20 @@ public:
 
 DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMaster)
 :
-	AudioEffectX (audioMaster, 1, 1),
+	AudioEffectX(audioMaster, PROGRAM_COUNT, PARAMETER_COUNT),
 	p(new DynamicAudioNormalizerVST_PrivateData())
 {
 	static const VstInt32 uniqueId = CCONST('!','c','2','N');
 
-	setNumInputs(2);			// stereo in
-	setNumOutputs(2);			// stereo out
-	setUniqueID(uniqueId);		// identify
-	canProcessReplacing();		// supports replacing output
-	canDoubleReplacing();		// supports double precision processing
-	noTail(false);				// does have Tail!
+	setNumInputs(CHANNEL_COUNT);	// stereo in
+	setNumOutputs(CHANNEL_COUNT);	// stereo out
+	setUniqueID(uniqueId);			// identify
+	canProcessReplacing();			// supports replacing output
+	canDoubleReplacing();			// supports double precision processing
+	noTail(false);					// does have Tail!
 
-	vst_strncpy (programName, "Default", kVstMaxProgNameLen);
-	
-	p->instance = 0;
-	p->temp[0] = p->temp[1] = NULL;
-	p->tempSize = 0;
+	curProgram = 0;
+	p->programs = new DynamicAudioNormalizerVST_Program[PROGRAM_COUNT];
 }
 
 DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
@@ -93,48 +192,176 @@ DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 	{
 		delete [] p->temp[0]; p->temp[0] = NULL;
 		delete [] p->temp[1]; p->temp[1] = NULL;
+		p->tempSize = 0;
+	}
+
+	if (p->programs)
+	{
+		delete[] p->programs;
+		p->programs = NULL;
 	}
 
 	delete p;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Program Handling
+// Program and Parameter Handling
 ///////////////////////////////////////////////////////////////////////////////
+
+void DynamicAudioNormalizerVST::setProgram(VstInt32 program)
+{
+	curProgram = std::min(PROGRAM_COUNT-1, std::max(0, program));
+}
 
 void DynamicAudioNormalizerVST::setProgramName (char* name)
 {
-	vst_strncpy (programName, name, kVstMaxProgNameLen);
+	vst_strncpy(p->programs[curProgram].name, name, kVstMaxProgNameLen);
 }
 
 void DynamicAudioNormalizerVST::getProgramName (char* name)
 {
-	vst_strncpy (name, programName, kVstMaxProgNameLen);
+	vst_strncpy(name, p->programs[curProgram].name, kVstMaxProgNameLen);
+}
+
+bool DynamicAudioNormalizerVST::getProgramNameIndexed(VstInt32 category, VstInt32 index, char* text)
+{
+	if ((index >= 0) && (index < PROGRAM_COUNT))
+	{
+		vst_strncpy(text, p->programs[index].name, kVstMaxProgNameLen);
+		return true;
+	}
+	else
+	{
+		vst_strncpy(text, "N/A", kVstMaxProgNameLen);
+		return false;
+	}
 }
 
 void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
 {
-	fDummyParam = value;
+	switch (index)
+	{
+		case 0: p->programs[curProgram].frameLenMsec = value;       break;
+		case 1: p->programs[curProgram].filterSize = value;         break;
+		case 2: p->programs[curProgram].peakValue = value;          break;
+		case 3: p->programs[curProgram].maxAmplification = value;   break;
+		case 4: p->programs[curProgram].targetRms = value;          break;
+		case 5: p->programs[curProgram].compressThresh = value;     break;
+		case 6: p->programs[curProgram].channelsCoupled = value;    break;
+		case 7: p->programs[curProgram].enableDCCorrection = value; break;
+	}
 }
 
 float DynamicAudioNormalizerVST::getParameter (VstInt32 index)
 {
-	return fDummyParam;
+	switch (index)
+	{
+		case 0: return p->programs[curProgram].frameLenMsec;
+		case 1: return p->programs[curProgram].filterSize;
+		case 2: return p->programs[curProgram].peakValue;
+		case 3: return p->programs[curProgram].maxAmplification;
+		case 4: return p->programs[curProgram].targetRms;
+		case 5: return p->programs[curProgram].compressThresh;
+		case 6: return p->programs[curProgram].channelsCoupled;
+		case 7: return p->programs[curProgram].enableDCCorrection;
+	}
+
+	return 0.0;
 }
 
 void DynamicAudioNormalizerVST::getParameterName (VstInt32 index, char* label)
 {
-	vst_strncpy (label, "Dummy", kVstMaxParamStrLen);
+	static const char *NAMES[PARAMETER_COUNT] =
+	{
+		"FrameLen",
+		"FltrSize",
+		"PeakVal",
+		"MaxAmpl",
+		"TrgtRMS",
+		"Compress",
+		"ChanCpld",
+		"DCCorrct"
+	};
+
+	if ((index >= 0) && (index < PARAMETER_COUNT))
+	{
+		vst_strncpy(label, NAMES[index], kVstMaxParamStrLen);
+	}
+	else
+	{
+		vst_strncpy(label, "N/A", kVstMaxParamStrLen);
+	}
 }
 
-void DynamicAudioNormalizerVST::getParameterDisplay (VstInt32 index, char* text)
+void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
 {
-	dB2string (fDummyParam, text, kVstMaxParamStrLen);
+	text[0] = '\0';
+
+	switch (index)
+	{
+	case 0:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%u", p->programs[curProgram].getFrameLen());
+		break;
+	case 1:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%u", p->programs[curProgram].getFilterSize());
+		break;
+	case 2:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", p->programs[curProgram].getPeakValue());
+		break;
+	case 3:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", p->programs[curProgram].getMaxAmplification());
+		break;
+	case 4:
+		if (p->programs[curProgram].targetRms > DBL_EPSILON)
+		{
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", p->programs[curProgram].getTargetRms());
+		}
+		else
+		{
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "OFF");
+		}
+		break;
+	case 5:
+		if (p->programs[curProgram].compressThresh > DBL_EPSILON)
+		{
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", p->programs[curProgram].getCompressThresh());
+		}
+		else
+		{
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "OFF");
+		}
+		break;
+	case 6:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", p->programs[curProgram].getChannelsCoupled()? "ON" : "OFF");
+		break;
+	case 7:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", p->programs[curProgram].getEnableDCCorrection() ? "ON" : "OFF");
+		break;
+	}
 }
 
 void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
 {
-	vst_strncpy (label, "dB", kVstMaxParamStrLen);
+	static const char *LABEL[PARAMETER_COUNT] =
+	{
+		"MSec",
+		"Frames",
+		"%",
+		"Factor",
+		"%",
+		"%",
+		"On/Off",
+		"On/Off"
+	};
+
+	if ((index >= 0) && (index < PARAMETER_COUNT))
+	{
+		vst_strncpy(label, LABEL[index], kVstMaxParamStrLen);
+	}
+	else
+	{
+		vst_strncpy(label, "N/A", kVstMaxParamStrLen);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,10 +372,7 @@ bool DynamicAudioNormalizerVST::getEffectName (char* name)
 {
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-
-	_snprintf(name, kVstMaxEffectNameLen, "DynamicAudioNormalizer %u.%02u-%u", major, minor, patch);
-	name[kVstMaxEffectNameLen-1] = '\0';
-
+	_snprintf_s(name, kVstMaxEffectNameLen, _TRUNCATE, "DynamicAudioNormalizer %u.%02u-%u", major, minor, patch);
 	return true;
 }
 
@@ -156,16 +380,13 @@ bool DynamicAudioNormalizerVST::getProductString (char* text)
 {
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-
-	_snprintf(text, kVstMaxProductStrLen, "DynamicAudioNormalizer_%u", (100U * major) + minor);
-	text[kVstMaxProductStrLen-1] = '\0';
-
+	_snprintf_s(text, kVstMaxProductStrLen, _TRUNCATE, "DynamicAudioNormalizer_%u", (100U * major) + minor);
 	return true;
 }
 
 bool DynamicAudioNormalizerVST::getVendorString (char* text)
 {
-	vst_strncpy (text, "LoRd_MuldeR <mulder2@gmxde>", kVstMaxVendorStrLen);
+	vst_strncpy(text, "LoRd_MuldeR <mulder2@gmxde>", kVstMaxVendorStrLen);
 	return true;
 }
 
@@ -295,7 +516,19 @@ bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
 	
 	try
 	{
-		p->instance = new MDynamicAudioNormalizer(2, sampleRate);
+		p->instance = new MDynamicAudioNormalizer
+		(
+			CHANNEL_COUNT,
+			sampleRate,
+			p->programs[curProgram].getFrameLen(),
+			p->programs[curProgram].getFilterSize(),
+			p->programs[curProgram].getPeakValue(),
+			p->programs[curProgram].getMaxAmplification(),
+			p->programs[curProgram].getTargetRms(),
+			p->programs[curProgram].getCompressThresh(),
+			p->programs[curProgram].getChannelsCoupled(),
+			p->programs[curProgram].getEnableDCCorrection()
+		);
 	}
 	catch(...)
 	{

@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\DynamicAudioNormalizer_VST.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\etc\vst_sdk\public.sdk\source\vst2.x\audioeffect.cpp">
       <Filter>Source Files\VST 2.x SDK</Filter>
     </ClCompile>
@@ -33,11 +30,11 @@
     <ClCompile Include="..\etc\vst_sdk\public.sdk\source\vst2.x\vstplugmain.cpp">
       <Filter>Source Files\VST 2.x SDK</Filter>
     </ClCompile>
+    <ClCompile Include="src\DynamicAudioNormalizerVST.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\DynamicAudioNormalizer_VST.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\etc\vst_sdk\public.sdk\source\vst2.x\aeffeditor.h">
       <Filter>Header Files\VST 2.x SDK</Filter>
     </ClInclude>
@@ -46,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="..\etc\vst_sdk\public.sdk\source\vst2.x\audioeffectx.h">
       <Filter>Header Files\VST 2.x SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DynamicAudioNormalizerVST.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

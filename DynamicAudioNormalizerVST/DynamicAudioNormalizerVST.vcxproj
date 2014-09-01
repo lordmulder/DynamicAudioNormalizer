@@ -18,13 +18,13 @@
     <ClCompile Include="..\etc\vst_sdk\public.sdk\source\vst2.x\audioeffect.cpp" />
     <ClCompile Include="..\etc\vst_sdk\public.sdk\source\vst2.x\audioeffectx.cpp" />
     <ClCompile Include="..\etc\vst_sdk\public.sdk\source\vst2.x\vstplugmain.cpp" />
-    <ClCompile Include="src\DynamicAudioNormalizer_VST.cpp" />
+    <ClCompile Include="src\DynamicAudioNormalizerVST.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\etc\vst_sdk\public.sdk\source\vst2.x\aeffeditor.h" />
     <ClInclude Include="..\etc\vst_sdk\public.sdk\source\vst2.x\audioeffect.h" />
     <ClInclude Include="..\etc\vst_sdk\public.sdk\source\vst2.x\audioeffectx.h" />
-    <ClInclude Include="src\DynamicAudioNormalizer_VST.h" />
+    <ClInclude Include="src\DynamicAudioNormalizerVST.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI.vcxproj">

@@ -48,8 +48,10 @@ public:
 	virtual VstInt32 getGetTailSize(void);
 
 	// Program
+	virtual void setProgram(VstInt32 program);
 	virtual void setProgramName (char* name);
 	virtual void getProgramName (char* name);
+	virtual bool getProgramNameIndexed(VstInt32 category, VstInt32 index, char* text);
 
 	// Parameters
 	virtual void setParameter (VstInt32 index, float value);
@@ -73,8 +75,6 @@ private:
 	void writeOutputSamplesDbl(double *const *const outputs, const int64_t sampleCount, const int64_t outputSamples);
 
 	DynamicAudioNormalizerVST_PrivateData *const p;
-	float fDummyParam;
-	char programName[kVstMaxProgNameLen + 1];
 };
 
 #endif //DYNAMICAUDIONORMALIZERVST_H

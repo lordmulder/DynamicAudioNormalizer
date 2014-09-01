@@ -1,5 +1,13 @@
-Please put the VST 2.x SDK files into this directory!
+Virtual Studio Technology (VST) SDK
+===================================
 
-The required SDK can be downloaded from the Steinberg Media Technologies web-site!
+Please put the VST SDK files (v2.4) into this directory. These files are NOT redistributed for legal reasons.
 
+After you have extracted the VST SDK files (v2.4), there should be *two* sub-directories inside the "vst_sdk" directory:
+(1) "pluginterfaces"
+(2) "public.sdk"
+
+The required SDK can be downloaded from the Steinberg Media Technologies web-site:
 http://www.steinberg.net/en/company/developers.html
+
+Note that VST v3.x is not currently used or supported, but the v3.x SDK also includes the required v2.4 files.
