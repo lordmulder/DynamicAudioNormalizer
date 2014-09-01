@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////
-// Dynamic Audio Normalizer - Audio Processing Library
+// Dynamic Audio Normalizer - VST 2.x Wrapper
 // Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // This library is free software; you can redistribute it and/or
@@ -17,6 +17,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // http://www.gnu.org/licenses/lgpl-2.1.txt
+//////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////
+// ACKNOWLEDGEMENT:
+// (1) VST PlugIn Interface Technology by Steinberg Media Technologies GmbH.
+// (2) VST is a trademark of Steinberg Media Technologies GmbH.
 //////////////////////////////////////////////////////////////////////////////////
 
 #include "DynamicAudioNormalizerVST.h"
