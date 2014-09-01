@@ -102,42 +102,42 @@ public:
 	{
 	}
 
-	uint32_t getFrameLen(void)
+	uint32_t getFrameLen(void) const
 	{
 		return static_cast<uint32_t>(round(50.0 + (900.0 * frameLenMsec)));
 	}
 	
-	uint32_t getFilterSize(void)
+	uint32_t getFilterSize(void) const
 	{
-		return static_cast<uint32_t>(round(3.0 + (56.0 * filterSize)));
+		return 1U + (static_cast<uint32_t>(round(1.0 + (28.0 * filterSize))) * 2U);
 	}
 
-	double getPeakValue(void)
+	double getPeakValue(void) const
 	{
 		return 0.1 + (0.9 * peakValue);
 	}
 
-	double getMaxAmplification(void)
+	double getMaxAmplification(void) const
 	{
 		return 1.25 + (17.5 * maxAmplification);
 	}
 
-	double getTargetRms(void)
+	double getTargetRms(void) const
 	{
 		return (targetRms > DBL_EPSILON) ? (0.1 + (0.9 * targetRms)) : 0.0;
 	}
 
-	double getCompressThresh(void)
+	double getCompressThresh(void) const
 	{
 		return (compressThresh > DBL_EPSILON) ? (0.1 + (0.9 * compressThresh)) : 0.0;
 	}
 
-	bool getChannelsCoupled(void)
+	bool getChannelsCoupled(void) const
 	{
 		return channelsCoupled >= 0.5;
 	}
 
-	bool getEnableDCCorrection(void)
+	bool getEnableDCCorrection(void) const
 	{
 		return enableDCCorrection >= 0.5;
 	}
@@ -201,7 +201,7 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	canDoubleReplacing();			// supports double precision processing
 	noTail(false);					// does have Tail!
 
-	curProgram = 0;
+	setProgram(0);
 	p->programs = new DynamicAudioNormalizerVST_Program[PROGRAM_COUNT];
 }
 
@@ -235,7 +235,7 @@ DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 
 void DynamicAudioNormalizerVST::setProgram(VstInt32 program)
 {
-	curProgram = std::min(PROGRAM_COUNT-1, std::max(0, program));
+	AudioEffectX::setProgram(std::min(PROGRAM_COUNT-1, std::max(0, program)));
 }
 
 void DynamicAudioNormalizerVST::setProgramName (char* name)
@@ -557,20 +557,22 @@ bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
 		return true;
 	}
 	
+	const DynamicAudioNormalizerVST_Program *const currentProg = &p->programs[curProgram];
+
 	try
 	{
 		p->instance = new MDynamicAudioNormalizer
 		(
 			CHANNEL_COUNT,
 			sampleRate,
-			p->programs[curProgram].getFrameLen(),
-			p->programs[curProgram].getFilterSize(),
-			p->programs[curProgram].getPeakValue(),
-			p->programs[curProgram].getMaxAmplification(),
-			p->programs[curProgram].getTargetRms(),
-			p->programs[curProgram].getCompressThresh(),
-			p->programs[curProgram].getChannelsCoupled(),
-			p->programs[curProgram].getEnableDCCorrection()
+			currentProg->getFrameLen(),
+			currentProg->getFilterSize(),
+			currentProg->getPeakValue(),
+			currentProg->getMaxAmplification(),
+			currentProg->getTargetRms(),
+			currentProg->getCompressThresh(),
+			currentProg->getChannelsCoupled(),
+			currentProg->getEnableDCCorrection()
 		);
 	}
 	catch(...)
