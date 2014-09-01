@@ -235,7 +235,7 @@ MDynamicAudioNormalizer::~MDynamicAudioNormalizer(void)
 
 MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 {
-	LOG2_DBG("Processed %" PRIu64 " samples total, clipped %" PRIu64 " samples (%.2f%%).\n",
+	LOG2_DBG("Processed %" PRIu64 " samples total, clipped %" PRIu64 " samples (%.2f%%).",
 		m_sampleCounterTotal,
 		m_sampleCounterClips,
 		m_sampleCounterTotal ? (double(m_sampleCounterClips) / double(m_sampleCounterTotal) * 100.0) : 0.0
