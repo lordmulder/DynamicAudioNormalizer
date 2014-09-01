@@ -236,7 +236,9 @@ MDynamicAudioNormalizer::~MDynamicAudioNormalizer(void)
 MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 {
 	LOG2_DBG("Processed %" PRIu64 " samples total, clipped %" PRIu64 " samples (%.2f%%).\n",
-		m_sampleCounterTotal, m_sampleCounterClips, double(m_sampleCounterClips) / double(m_sampleCounterTotal) * 100.0
+		m_sampleCounterTotal,
+		m_sampleCounterClips,
+		m_sampleCounterTotal ? (double(m_sampleCounterClips) / double(m_sampleCounterTotal) * 100.0) : 0.0
 	);
 
 	MY_DELETE(m_buffSrc);
@@ -891,7 +893,7 @@ void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 	LOG2_DBG("m_channelsCoupled    : %s",         BOOLIFY(m_channelsCoupled));
 	LOG2_DBG("m_enableDCCorrection : %s",         BOOLIFY(m_enableDCCorrection));
 	LOG2_DBG("m_altBoundaryMode    : %s",         BOOLIFY(m_altBoundaryMode));
-	LOG1_DBG("------- DynamicAudioNormalizer -------\n");
+	LOG1_DBG("------- DynamicAudioNormalizer -------");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
