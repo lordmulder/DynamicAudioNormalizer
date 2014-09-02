@@ -152,7 +152,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(QTDIR)\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QT_SHARED)\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>QtCore4.lib;QtGui4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">win32EntryPoint</EntryPointSymbol>
       <EntryPointSymbol Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">win32EntryPoint</EntryPointSymbol>
@@ -160,6 +160,7 @@
       <EntryPointSymbol Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">win32EntryPoint</EntryPointSymbol>
       <EntryPointSymbol Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">win32EntryPoint</EntryPointSymbol>
       <EntryPointSymbol>win32EntryPoint</EntryPointSymbol>
+      <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
@@ -184,9 +185,10 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\LameXP_Qt\etc\Prerequisites\qt4_static\lib\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QT_STATIC)\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>QtCore.lib;QtGui.lib;Imm32.lib;Winmm.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>win32EntryPoint</EntryPointSymbol>
+      <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
