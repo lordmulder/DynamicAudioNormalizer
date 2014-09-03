@@ -95,7 +95,7 @@ public:
 		frameLenMsec       = 0.5;
 		filterSize         = 0.5;
 		peakValue          = 0.9444;
-		maxAmplification   = 0.5;
+		maxAmplification   = 0.4595;
 		targetRms          = 0.0;
 		compressThresh     = 0.0;
 		channelsCoupled    = 1.0;
@@ -125,7 +125,7 @@ public:
 
 	double getMaxAmplification(void) const
 	{
-		return 1.25 + (17.5 * maxAmplification);
+		return 1.5 + (18.5 * maxAmplification);
 	}
 
 	double getTargetRms(void) const
@@ -351,7 +351,7 @@ void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
 		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%u", p->programs[curProgram].getFilterSize());
 		break;
 	case 2:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", p->programs[curProgram].getPeakValue());
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", 100.0 * p->programs[curProgram].getPeakValue());
 		break;
 	case 3:
 		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", p->programs[curProgram].getMaxAmplification());
@@ -359,25 +359,25 @@ void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
 	case 4:
 		if(const double targetRms = p->programs[curProgram].targetRms)
 		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", targetRms);
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", 100.0 * targetRms);
 		}
 		else
 		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "OFF");
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "(OFF)");
 		}
 		break;
 	case 5:
 		if(const double compressThresh = p->programs[curProgram].getCompressThresh())
 		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", compressThresh);
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", 100.0 * compressThresh);
 		}
 		else
 		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "OFF");
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "(OFF)");
 		}
 		break;
 	case 6:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", p->programs[curProgram].getChannelsCoupled()? "ON" : "OFF");
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", p->programs[curProgram].getChannelsCoupled() ? "ON" : "OFF");
 		break;
 	case 7:
 		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", p->programs[curProgram].getEnableDCCorrection() ? "ON" : "OFF");
@@ -392,11 +392,11 @@ void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
 		"MSec",
 		"Frames",
 		"%",
-		"Factor",
+		"x",
 		"%",
 		"%",
-		"On/Off",
-		"On/Off"
+		"",
+		""
 	};
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
