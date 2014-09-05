@@ -106,14 +106,20 @@ The Dynamic Audio Normalizer is also available in the form of a [**VST** (Virtua
 
 The exact steps that are required to load, activate and configure a VST plug-in differ from application to application. However, it will generally be required to make the application "recognize" the new VST plug-in, i.e. <tt>DynamicAudioNormalizerVST.dll</tt> first. Most applications will either pick up the VST plug-in from the *global* VST directory (usually located at <tt>C:\Program Files (x86)\Steinberg\Vstplugins</tt> on Windows) or provide an option to choose the directory from where to load the VST plug-in. This means that, depending on the application, you will need to copy the Dynamic Audio Normalizer VST plug-in into the *global* VST directory or tell the application where the Dynamic Audio Normalizer VST plug-in is located. Note that, with some applications, it is required to *explicitly* scan for new pluig-ins. See the manual for details!
 
-Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the VST plug-in DLL, i.e. <tt>DynamicAudioNormalizerVST.dll</tt>, also requires the Dynamic Audio Normalizer *core* library, i.e. <tt>DynamicAudioNormalizerAPI.dll</tt>. This means that the *core* library **must** be made available to the VST host *in addition* to the VST plug-in itself. Otherwise, loading the VST plug-in DLL is going to fail! Copying the *core* library to the same directory, where the VST plug-in DLL, is located generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the <tt>DynamicAudioNormalizerAPI.dll</tt> file into the same directory where the VST host's "main" executable (EXE file) is located.
-
 ![FilterSize](img/VSTPlugInDirs.png "Dynamic Audio Normalizer – VST Plug-In")  
 <small>**Figure 5:** Setting up the new *VST Plug-In* directory (in Acoustica 6.0, Copyright © 2014 Acon AS).</small>
 
+Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the VST plug-in DLL, i.e. <tt>DynamicAudioNormalizerVST.dll</tt>, also requires the Dynamic Audio Normalizer *core* library, i.e. <tt>DynamicAudioNormalizerAPI.dll</tt>. This means that the *core* library **must** be made available to the VST host *in addition* to the VST plug-in itself. Otherwise, loading the VST plug-in DLL is going to fail! Copying the *core* library to the same directory, where the VST plug-in DLL, is located generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the <tt>DynamicAudioNormalizerAPI.dll</tt> file into the same directory where the VST host's "main" executable (EXE file) is located.
+
+Please note that Dynamic Audio Normalizer uses the VST interface version 2.x, which is the most widely supported version. VST version 3.x is *not* currently used, supported or required.
+
 ### Known VST Limitations ###
 
-TODO!
+The algorithm used by the Dynamic Audio Normalizer uses a "look ahead" buffer. This necessarily requires that – at the beginning of the process – we read a certain minimum number of *input* samples <u>before</u> the first *output* samples can be computed. With a more flexible effect interface, like the one used by [SoX](http://sox.sourceforge.net/), the plug-in could request as many input samples from the host application as required, before it starts returning output samples. The *VST* interface, however, is rather limited in this regard: VST *enforces* that the plug-in process the audio in small chunks. The size of these chunks is *dictated* by the host application. Furthermore, VST *enforces* that the plug-in returns the corresponding output samples for each chunk of audio data *immediately* – the VST host won't provide the next chunk of input samples until the VST plug-in has returned the output samples for the previous chunk. To the best of our knowledge, there is **no** way to request even more input samples from the VST host! Consequently, the **only** known way to realize a "look ahead" buffer with VST is actually <u>delaying</u> all audio samples and returning some "silent" samples at the beginning.
+
+At least, VST provides the VST plug-in with a method to *report* its delay to the VST host application. Unfortunately, to the best of our knowledge, the VST specification lacks a detailed description on how a host application is required to deal with such a delay. This means that the actual behaviour totally depends on the individual host application! Anyway, it is clear that, if a VST plug-in reports a delay of N samples, an audio editor **shall** discard the *first* N samples returned by that plug-in. Also, the audio editor **shall** feed N samples of additional "dummy" data to the plug-in at the very end of the process – in order to flush the pending output samples. In practice, however, it turns out that, while *some* audio editors show the "correct" behaviour, others do **not**. Those audio editors seem to *ignore* the plug-in's delay, so the audio file will end up shifted and truncated!
+
+The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host application. Thus, if you encounter shifted and/or truncated audio after the processing, this means that there is a **bug** in the VST host application. And, sadly, the plug-in can do absolutely *nothing* about this. Below, there is a non-exhaustive list of audio editors with *proper* VST support. Those have been tested to work correctly. There also is a list of audio editors with *known problems*. Those should **not** be used for VST processing, until the respective developers have fixed the issue…
 
 ### Supported VST Hosts ###
 
@@ -125,12 +131,12 @@ Non-exhaustive list of VST hosts that have been tested to *work correctly* with 
 * [Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro"), by Adobe Systems Inc.
 
 List of VST hosts that have *known problems* and do **not** work correctly with the Dynamic Audio Normalizer VST plug-in:
-* [Audacity](http://audacity.sourceforge.net/) v2.0.5 → audio will be shifted and truncated!
-* [Waveosaur](http://www.wavosaur.com/) v1.1.0 → audio will be shifted and truncated!
-* [WavePad](http://www.nch.com.au/wavepad/), by NCH Software → audio will be shifted and truncated + doesn't expose the plug-in's settings!
-* [Ocenaudio](http://www.ocenaudio.com.br/) v2.0.9 → audio will be shifted and truncated + some settings are displayed incorrectly!
+* [Audacity](http://audacity.sourceforge.net/) v2.0.5 → VST support broken → audio will be shifted and truncated
+* [Waveosaur](http://www.wavosaur.com/) v1.1.0 → VST support broken → audio will be shifted and truncated
+* [WavePad](http://www.nch.com.au/wavepad/), by NCH Software → VST support broken → audio will be shifted and truncated + doesn't expose the plug-in's settings
+* [Ocenaudio](http://www.ocenaudio.com.br/) v2.0.9 → VST support broken → audio will be shifted and truncated + some settings are displayed incorrectly
 
-*If you are the developer of one of these tools and have fixed the problem, please let us know…*
+*If you are the developer of one of these tools and you have fixed the problem in the meantime, then please let us know…*
 
 
 Configuration <a name="chap_cfg"></a>
