@@ -609,9 +609,9 @@ The Dynamic Audio Normalizer can operate as a **plug-in** (effect) using the fol
   Cross-platform command line utility that can convert various formats of computer audio files in to other formats  
   Copyright (C) 1998-2009 Chris Bagwell and SoX contributors
 
-  * [**Virtual Studio Technology (VST 2.x)**](http://en.wikipedia.org/wiki/Virtual_Studio_Technology)
-  Software interface that integrates software audio synthesizer and effect Plug-ins with audio editors and recording systems.
-  Copyright (C) 2006 Steinberg Media Technologies. All Rights Reserved.
+  * [**Virtual Studio Technology (VST 2.x)**](http://en.wikipedia.org/wiki/Virtual_Studio_Technology)  
+  Software interface that integrates software audio synthesizer and effect Plug-ins with audio editors and recording systems.  
+  Copyright (C) 2006 Steinberg Media Technologies. All Rights Reserved.  
   <small>**VST PlugIn Interface Technology by Steinberg Media Technologies GmbH. VST is a trademark of Steinberg Media Technologies GmbH.**</small>
 
 <br>  
