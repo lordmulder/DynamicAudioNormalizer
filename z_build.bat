@@ -7,7 +7,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
 set "UPX3_PATH=C:\Program Files (x86)\UPX"
 set "PDOC_PATH=C:\Program Files (x86)\Pandoc"
-set "QT_VS2013=C:\Qt\4.8.6"
+set "QT_SOURCE=C:\Qt\4.8.6"
 set "QT_SHARED=C:\Qt\4.8.6-Shared"
 set "QT_STATIC=C:\Qt\4.8.6-Static"
 
@@ -18,7 +18,7 @@ REM ###############################################
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Setup environment
 REM ///////////////////////////////////////////////////////////////////////////
-set "QTDIR=%QT_VS2013%"
+set "QTDIR=%QT_SOURCE%"
 call "%MSVC_PATH%\vcvarsall.bat" x86
 set "PATH=%QTDIR%\bin;%PATH%"
 
@@ -26,26 +26,37 @@ REM ///////////////////////////////////////////////////////////////////////////
 REM // Check environment
 REM ///////////////////////////////////////////////////////////////////////////
 if "%VCINSTALLDIR%"=="" (
-	echo %%VCINSTALLDIR%% not specified. Please check your MSVC_PATH var!
+	echo %%VCINSTALLDIR%% not specified. Please check your MSVC_PATH var^^!
 	goto BuildError
 )
 if not exist "%VCINSTALLDIR%\bin\cl.exe" (
-	echo C++ compiler binary not found. Please check your MSVC_PATH var!
+	echo C++ compiler binary not found. Please check your MSVC_PATH var^^!
 	goto BuildError
 )
 if not exist "%UPX3_PATH%\upx.exe" (
-	echo UPX binary could not be found. Please check your UPX3_PATH var!
+	echo UPX binary could not be found. Please check your UPX3_PATH var^^!
 	goto BuildError
 )
 if not exist "%PDOC_PATH%\pandoc.exe" (
-	echo Pandoc binary could not be found. Please check your PDOC_PATH var!
+	echo Pandoc binary could not be found. Please check your PDOC_PATH var^^!
 	goto BuildError
 )
-if not exist "%QTDIR%\bin\QtGui4.dll" (
-	echo QtCore library could not be found. Please check your QTDIR var!
+if not exist "%QTDIR%\bin\moc.exe" (
+	echo Qt could not be found. Please check your QT_SOURCE var^^!
 	goto BuildError
 )
-
+if not exist "%QTDIR%\include\QtCore\qglobal.h" (
+	echo Qt could not be found. Please check your QT_SOURCE var^^!
+	goto BuildError
+)
+if not exist "%QT_SHARED%\bin\QtCore4.dll" (
+	echo Qt *shared* libraries could not be found. Please check your QT_SHARED var^^!
+	goto BuildError
+)
+if not exist "%QT_STATIC%\lib\QtCore.lib" (
+	echo Qt *static* libraries could not be found. Please check your QT_STATIC var^^!
+	goto BuildError
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Get current date and time (in ISO format)
@@ -215,6 +226,6 @@ REM // FAILED
 REM ///////////////////////////////////////////////////////////////////////////
 :BuildError
 echo.
-echo Build has failed !!!
+echo Build has failed ^^!^^!^^!
 echo.
 pause
