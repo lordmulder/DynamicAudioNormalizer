@@ -43,9 +43,10 @@ So far it has been discussed how the optimal gain factor for each frame is deter
 <small>**Figure 2:** Linear interpolation of the per-sample gain factors.</small>  
 <br>
 
-Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper view shows the unprocessed original recording while the lower view shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified to a great extent, while retaining the dynamics of the input and avoiding clipping or distortion.
+Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper graph shows the unprocessed original recording while the lower graph shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified to a great extent, while retaining the dynamics of the input and avoiding clipping or distortion.
 
-![Waveform](img/Waveform.png "Dynamic Audio Normalizer – Example")  
+![Waveform1](img/Waveform-1.png "Dynamic Audio Normalizer – Example")  
+![Waveform2](img/Waveform-2.png "Dynamic Audio Normalizer – Example")  
 <small>**Figure 3:** Waveform before and after processing.</small>
 
 
