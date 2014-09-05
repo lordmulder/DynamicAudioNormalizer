@@ -93,8 +93,29 @@ For details about the SoX command-line syntax, please refer to the excellent [So
 VST Plug-In Usage<a name="chap_vst"></a>
 -------------------------------------------------------------------------------
 
+The Dynamic Audio Normalizer is also available in the form of a [**VST** (Virtual Studio Technology) plug-in](http://en.wikipedia.org/wiki/Virtual_Studio_Technology). The VST plug-in interface technology, developed by Steinberg Media Technologies, provides a way of integrating arbitrary audio effects (and instruments) into arbitrary applications – provided that the audio effect is available in the form of a VST plug-in and provided that the application supports "hosting" VST plug-ins. An application capable of loading and using VST plug-ins is referred to as a *VST host*. This means that the Dynamic Audio Normalizer can be used as an effect in *any* VST host. Note that VST is widely supported in [DAWs (Digital Audio Workstations)](http://en.wikipedia.org/wiki/Digital_audio_workstation) nowadays, including most of the popular Wave Editors. Therefore, the provided Dynamic Audio Normalizer VST plug-in can be integrated into all of these applications easily.
+
+<small>**VST PlugIn Interface Technology by Steinberg Media Technologies GmbH. VST is a trademark of Steinberg Media Technologies GmbH.**</small>
+
 ![FilterSize](img/VSTPlugIn.png "Dynamic Audio Normalizer – VST Plug-In")  
 <small>**Figure 4:** The Dynamic Audio Normalizer *VST Plug-In* interface (in Acoustica 6.0, Copyright © 2014 Acon AS).</small>
+
+### Supported VST Hosts ###
+
+Non-exhaustive list of VST hosts that have been tested to *work correctly* with the Dynamic Audio Normalizer VST plug-in:
+* [Acoustica](http://acondigital.com/products/acoustica-audio-editor/), by Acon AS → completely free "basic" version available → **recommended!**
+* [GoldWave](http://www.goldwave.com/), by GoldWave Inc. → free *evaluation* version available
+* [REAPER](http://www.reaper.fm/), by Cockos Inc → free *evaluation* version available
+* [WaveLab](http://www.steinberg.net/en/products/wavelab/start.html), by Steinberg Media Technologies GmbH → free *trial* version available
+* [Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro"), by Adobe Systems Inc.
+
+List of VST hosts that have *known problems* and do **not** work correctly with the Dynamic Audio Normalizer VST plug-in:
+* [Audacity](http://audacity.sourceforge.net/) v2.0.5 → audio will be shifted and truncated!
+* [Waveosaur](http://www.wavosaur.com/) v1.1.0 → audio will be shifted and truncated!
+* [WavePad](http://www.nch.com.au/wavepad/), by NCH Software → audio will be shifted and truncated + doesn't expose the plug-in's settings!
+* [Ocenaudio](http://www.ocenaudio.com.br/) v2.0.9 → audio will be shifted and truncated + some settings are displayed incorrectly!
+
+*If you are the developer of one of these tools and have fixed the problem, please let us know…*
 
 
 Configuration <a name="chap_cfg"></a>
