@@ -151,6 +151,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\extra\*.dll"
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
