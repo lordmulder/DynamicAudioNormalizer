@@ -291,7 +291,7 @@ static int processFiles(const Parameters &parameters, AudioIO *const sourceFile,
 		parameters.peakValue(),
 		parameters.maxAmplification(),
 		parameters.targetRms(),
-		parameters.compressThresh(),
+		parameters.compressFactor(),
 		parameters.channelsCoupled(),
 		parameters.enableDCCorrection(),
 		parameters.altBoundaryMode(),
@@ -350,7 +350,7 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"),         BOOLIFY(defaults.channelsCoupled()));
 	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"),    BOOLIFY(defaults.enableDCCorrection()));
 	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"),    BOOLIFY(defaults.altBoundaryMode()));
-	PRINT(TXT("  -s --compress <value>    Compress the input data [default: %.2f]\n"),        defaults.compressThresh());
+	PRINT(TXT("  -s --compress <value>    Compress the input data [default: %.2f]\n"),        defaults.compressFactor());
 	PRINT(TXT("\n"));
 	PRINT(TXT("Diagnostics:\n"));
 	PRINT(TXT("  -v --verbose             Output additional diagnostic info\n"));

@@ -47,7 +47,7 @@ Finally, the following waveform view illustrates how the volume of a "real world
 
 ![Waveform1](img/Waveform-1.png "Dynamic Audio Normalizer – Example")  
 ![Waveform2](img/Waveform-2.png "Dynamic Audio Normalizer – Example")  
-<small>**Figure 3:** Waveform before and after processing.</small>
+<small>**Figure 3:** Waveform before and after processing with the Dynamic Audio Normalizer.</small>
 
 
 Command-Line Usage <a name="chap_cli"></a>

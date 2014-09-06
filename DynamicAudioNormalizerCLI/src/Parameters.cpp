@@ -127,7 +127,7 @@ void Parameters::setDefaults(void)
 	m_peakValue        =  0.95;
 	m_maxAmplification = 10.00;
 	m_targetRms        =  0.00;
-	m_compressThresh   =  0.00;
+	m_compressFactor   =  0.00;
 }
 
 bool Parameters::parseArgs(const int argc, CHR* argv[])
@@ -191,7 +191,7 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		if(IS_ARG_SHRT("s", "compress"))
 		{
 			ENSURE_NEXT_ARG();
-			PARSE_VALUE_FLT(m_compressThresh);
+			PARSE_VALUE_FLT(m_compressFactor);
 			continue;
 		}
 		if(IS_ARG_SHRT("n", "no-coupling"))
@@ -337,9 +337,9 @@ bool Parameters::validateParameters(void)
 		PRINT2_WRN(TXT("Target RMS value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_targetRms);
 		return false;
 	}
-	if((m_compressThresh < 0.0) || (m_compressThresh > 1.0))
+	if((m_compressFactor && (m_compressFactor < 1.0)) || (m_compressFactor > 30.0))
 	{
-		PRINT2_WRN(TXT("Compression threshold value %.2f is out of range. Must be in the 0.00 to 1.00 range!\n"), m_compressThresh);
+		PRINT2_WRN(TXT("Compression threshold value %.2f is out of range. Must be in the 1.00 to 30.00 range!\n"), m_compressFactor);
 		return false;
 	}
 	if((m_maxAmplification < 1.0) || (m_maxAmplification > 100.0))

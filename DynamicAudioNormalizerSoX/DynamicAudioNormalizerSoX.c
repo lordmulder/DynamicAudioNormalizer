@@ -69,7 +69,7 @@ typedef struct
 	double peakValue;
 	double maxAmplification;
 	double targetRms;
-	double compressThresh;
+	double compressFactor;
 	int channelsCoupled;
 	int enableDCCorrection;
 	int altBoundaryMode;
@@ -132,7 +132,7 @@ static void dynaudnorm_defaults(settings_t *settings)
 	settings->peakValue          =   0.95;
 	settings->maxAmplification   =  10.0;
 	settings->targetRms          =   0.0;
-	settings->compressThresh     =   0.0;
+	settings->compressFactor     =   0.0;
 	settings->channelsCoupled    =   1;
 	settings->enableDCCorrection =   0;
 	settings->altBoundaryMode    =   0;
@@ -174,7 +174,7 @@ static int dynaudnorm_parse_args(settings_t *settings, int argc, char **argv)
 			settings->altBoundaryMode = 1;
 			break;
 		case 's':
-			TRY_PARSE(Dbl, settings->compressThresh, 0.0, 1.0);
+			TRY_PARSE(Dbl, settings->compressFactor, 0.0, 30.0);
 			break;
 		case 'l':
 			if(!settings->logFile)
@@ -359,7 +359,7 @@ static int dynaudnorm_start(sox_effect_t *effp)
 		p->settings.peakValue,
 		p->settings.maxAmplification,
 		p->settings.targetRms,
-		p->settings.compressThresh,
+		p->settings.compressFactor,
 		p->settings.channelsCoupled,
 		p->settings.enableDCCorrection,
 		p->settings.altBoundaryMode,

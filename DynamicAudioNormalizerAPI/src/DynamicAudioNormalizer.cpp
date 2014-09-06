@@ -119,7 +119,7 @@ private:
 	const double m_peakValue;
 	const double m_maxAmplification;
 	const double m_targetRms;
-	const double m_compressThresh;
+	const double m_compressFactor;
 
 	const bool m_channelsCoupled;
 	const bool m_enableDCCorrection;
@@ -154,6 +154,7 @@ private:
 
 	double *m_prevAmplificationFactor;
 	double *m_dcCorrectionValue;
+	double *m_compressThreshold;
 
 	double *m_fadeFactors[3];
 
@@ -164,10 +165,11 @@ protected:
 	
 	double getMaxLocalGain(FrameData *frame, const uint32_t channel = UINT32_MAX);
 	double findPeakMagnitude(FrameData *frame, const uint32_t channel = UINT32_MAX);
-	double computeFrameRMS(FrameData *frame, const uint32_t channel = UINT32_MAX);
+	double computeFrameRMS(const FrameData *frame, const uint32_t channel = UINT32_MAX);
+	double computeFrameStdDev(const FrameData *frame, double &mean, const uint32_t channel = UINT32_MAX);
 	void updateGainHistory(const uint32_t &channel, const double &currentGainFactor);
 	void perfromDCCorrection(FrameData *frame, const bool &isFirstFrame);
-	void perfromCompression(FrameData *frame);
+	void perfromCompression(FrameData *frame, const bool &isFirstFrame);
 	void writeLogFile(void);
 	void printParameters(void);
 	
@@ -186,7 +188,7 @@ MDynamicAudioNormalizer::MDynamicAudioNormalizer(const uint32_t channels, const 
 	/*nothing to do here*/
 }
 
-MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressThres, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile)
+MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressFactor, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode, FILE *const logFile)
 :
 	m_channels(channels),
 	m_sampleRate(sampleRate),
@@ -195,7 +197,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_peakValue(LIMIT(0.01, peakValue, 1.0)),
 	m_maxAmplification(LIMIT(1.0, maxAmplification, 100.0)),
 	m_targetRms(LIMIT(0.0, targetRms, 1.0)),
-	m_compressThresh(setupCompressThresh(LIMIT(0.0, compressThres, 1.0))),
+	m_compressFactor(compressFactor ? LIMIT(1.0, compressFactor, 30.0) : 0.0),
 	m_channelsCoupled(channelsCoupled),
 	m_enableDCCorrection(enableDCCorrection),
 	m_altBoundaryMode(altBoundaryMode),
@@ -224,6 +226,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 
 	m_prevAmplificationFactor = NULL;
 	m_dcCorrectionValue = NULL;
+	m_compressThreshold = NULL;
 
 	m_fadeFactors[0] = m_fadeFactors[1] = m_fadeFactors[2] = NULL;
 }
@@ -259,6 +262,7 @@ MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 
 	MY_DELETE_ARRAY(m_prevAmplificationFactor);
 	MY_DELETE_ARRAY(m_dcCorrectionValue);
+	MY_DELETE_ARRAY(m_compressThreshold);
 
 	MY_DELETE_ARRAY(m_fadeFactors[0]);
 	MY_DELETE_ARRAY(m_fadeFactors[1]);
@@ -329,6 +333,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 
 	m_dcCorrectionValue       = new double[m_channels];
 	m_prevAmplificationFactor = new double[m_channels];
+	m_compressThreshold  = new double[m_channels];
 
 	m_fadeFactors[0] = new double[m_frameLen];
 	m_fadeFactors[1] = new double[m_frameLen];
@@ -386,6 +391,7 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	{
 		m_dcCorrectionValue      [channel] = 0.0;
 		m_prevAmplificationFactor[channel] = 1.0;
+		m_compressThreshold [channel] = 0.0;
 	}
 
 	return true;
@@ -627,9 +633,9 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 	}
 
 	//Perform compression (optional)
-	if((m_compressThresh > DBL_EPSILON) && (m_compressThresh < (1.0 - DBL_EPSILON)))
+	if(m_compressFactor > DBL_EPSILON)
 	{
-		perfromCompression(frame);
+		perfromCompression(frame, m_gainHistory_original[0].empty());
 	}
 
 	//Find the frame's peak sample value
@@ -724,7 +730,7 @@ double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *frame, 
 	return dMax;
 }
 
-double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(FrameData *frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(const FrameData *frame, const uint32_t channel)
 {
 	double rmsValue = 0.0;
 	
@@ -732,7 +738,7 @@ double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(FrameData *frame, co
 	{
 		for(uint32_t c = 0; c < m_channels; c++)
 		{
-			double *dataPtr = frame->data(c);
+			const double *dataPtr = frame->data(c);
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
 				rmsValue += POW2(dataPtr[i]);
@@ -742,7 +748,7 @@ double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(FrameData *frame, co
 	}
 	else
 	{
-		double *dataPtr = frame->data(channel);
+		const double *dataPtr = frame->data(channel);
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
 			rmsValue += POW2(dataPtr[i]);
@@ -751,6 +757,45 @@ double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(FrameData *frame, co
 	}
 
 	return std::max(sqrt(rmsValue), DBL_EPSILON);
+}
+
+double MDynamicAudioNormalizer_PrivateData::computeFrameStdDev(const FrameData *frame, double &mean, const uint32_t channel)
+{
+	size_t n = 0;
+	double temp = 0.0;
+	mean = 0.0;
+	
+	if(channel == UINT32_MAX)
+	{
+		for(uint32_t c = 0; c < m_channels; c++)
+		{
+			const double *dataPtr = frame->data(c);
+			for(uint32_t i = 0; i < m_frameLen; i++)
+			{
+				const double delta = fabs(dataPtr[i]) - mean;
+				mean += delta / double(++n);
+				temp += delta * (fabs(dataPtr[i]) - mean);
+			}
+		}
+	}
+	else
+	{
+		const double *dataPtr = frame->data(channel);
+		for(uint32_t i = 0; i < m_frameLen; i++)
+		{
+			const double delta = fabs(dataPtr[i]) - mean;
+			mean += delta / double(++n);
+			temp += delta * (fabs(dataPtr[i]) - mean);
+		}
+	}
+
+	if(n < 2)
+	{
+		return DBL_EPSILON;
+	}
+
+	const double variance = temp / double(n - 1);
+	return std::max(sqrt(variance), DBL_EPSILON);
 }
 
 void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &channel, const double &currentGainFactor)
@@ -823,15 +868,51 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, 
 	}
 }
 
-void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame)
+void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, const bool &isFirstFrame)
 {
-	for(uint32_t c = 0; c < m_channels; c++)
+	//Find the frame's peak sample value
+	if(m_channelsCoupled)
 	{
-		double *const dataPtr = frame->data(c);
+		double mean;
+		const double standardDeviation = computeFrameStdDev(frame, mean);
+		const double currentThreshold  = std::min(1.0, mean + (m_compressFactor * standardDeviation));
 
-		for(uint32_t i = 0; i < m_frameLen; i++)
+		const double prevValue = isFirstFrame ? currentThreshold : m_compressThreshold[0];
+		m_compressThreshold[0] = isFirstFrame ? currentThreshold : UPDATE_VALUE(currentThreshold, m_compressThreshold[0], (1.0/3.0));
+
+		const double prevActualThresh = setupCompressThresh(prevValue);
+		const double currActualThresh = setupCompressThresh(m_compressThreshold[0]);
+
+		for(uint32_t c = 0; c < m_channels; c++)
 		{
-			dataPtr[i] = copysign(BOUND(m_compressThresh, fabs(dataPtr[i])), dataPtr[i]);
+			double *const dataPtr = frame->data(c);
+			for(uint32_t i = 0; i < m_frameLen; i++)
+			{
+				const double localThresh = FADE(prevActualThresh, currActualThresh, currActualThresh, i, m_fadeFactors);
+				dataPtr[i] = copysign(BOUND(localThresh, fabs(dataPtr[i])), dataPtr[i]);
+			}
+		}
+	}
+	else
+	{
+		for(uint32_t c = 0; c < m_channels; c++)
+		{
+			double mean;
+			const double standardDeviation = computeFrameStdDev(frame, mean, c);
+			const double currentThreshold  = setupCompressThresh(std::min(1.0, mean + (m_compressFactor * standardDeviation)));
+
+			const double prevValue = isFirstFrame ? currentThreshold : m_compressThreshold[c];
+			m_compressThreshold[c] = isFirstFrame ? currentThreshold : UPDATE_VALUE(currentThreshold, m_compressThreshold[c], (1.0/3.0));
+
+			const double prevActualThresh = setupCompressThresh(prevValue);
+			const double currActualThresh = setupCompressThresh(m_compressThreshold[c]);
+
+			double *const dataPtr = frame->data(c);
+			for(uint32_t i = 0; i < m_frameLen; i++)
+			{
+				const double localThresh = FADE(prevActualThresh, currActualThresh, currActualThresh, i, m_fadeFactors);
+				dataPtr[i] = copysign(BOUND(localThresh, fabs(dataPtr[i])), dataPtr[i]);
+			}
 		}
 	}
 }
@@ -889,7 +970,7 @@ void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 	LOG2_DBG("m_peakValue          : %.4f",       m_peakValue);
 	LOG2_DBG("m_maxAmplification   : %.4f",       m_maxAmplification);
 	LOG2_DBG("m_targetRms          : %.4f",       m_targetRms);
-	LOG2_DBG("m_compressThresh     : %.4f",       m_compressThresh);
+	LOG2_DBG("m_compressFactor     : %.4f",       m_compressFactor);
 	LOG2_DBG("m_channelsCoupled    : %s",         BOOLIFY(m_channelsCoupled));
 	LOG2_DBG("m_enableDCCorrection : %s",         BOOLIFY(m_enableDCCorrection));
 	LOG2_DBG("m_altBoundaryMode    : %s",         BOOLIFY(m_altBoundaryMode));

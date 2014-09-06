@@ -101,7 +101,7 @@ public:
 		peakValue          = 0.9444;
 		maxAmplification   = 0.4595;
 		targetRms          = 0.0;
-		compressThresh     = 0.0;
+		compressFactor     = 0.0;
 		channelsCoupled    = 1.0;
 		enableDCCorrection = 0.0;
 
@@ -137,9 +137,9 @@ public:
 		return (targetRms > DBL_EPSILON) ? (0.1 + (0.9 * targetRms)) : 0.0;
 	}
 
-	double getCompressThresh(void) const
+	double getCompressFactor(void) const
 	{
-		return (compressThresh > DBL_EPSILON) ? (0.1 + (0.9 * compressThresh)) : 0.0;
+		return (compressFactor > DBL_EPSILON) ? (1.0 + (29.0 * compressFactor)) : 0.0;
 	}
 
 	bool getChannelsCoupled(void) const
@@ -160,7 +160,7 @@ private:
 	float peakValue;
 	float maxAmplification;
 	float targetRms;
-	float compressThresh;
+	float compressFactor;
 	float channelsCoupled;
 	float enableDCCorrection;
 };
@@ -295,7 +295,7 @@ void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
 		case 2: p->programs[curProgram].peakValue = value;          break;
 		case 3: p->programs[curProgram].maxAmplification = value;   break;
 		case 4: p->programs[curProgram].targetRms = value;          break;
-		case 5: p->programs[curProgram].compressThresh = value;     break;
+		case 5: p->programs[curProgram].compressFactor = value;     break;
 		case 6: p->programs[curProgram].channelsCoupled = value;    break;
 		case 7: p->programs[curProgram].enableDCCorrection = value; break;
 	}
@@ -310,7 +310,7 @@ float DynamicAudioNormalizerVST::getParameter (VstInt32 index)
 		case 2: return p->programs[curProgram].peakValue;
 		case 3: return p->programs[curProgram].maxAmplification;
 		case 4: return p->programs[curProgram].targetRms;
-		case 5: return p->programs[curProgram].compressThresh;
+		case 5: return p->programs[curProgram].compressFactor;
 		case 6: return p->programs[curProgram].channelsCoupled;
 		case 7: return p->programs[curProgram].enableDCCorrection;
 	}
@@ -371,9 +371,9 @@ void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
 		}
 		break;
 	case 5:
-		if(const double compressThresh = p->programs[curProgram].getCompressThresh())
+		if(const double compressFactor = p->programs[curProgram].getCompressFactor())
 		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", 100.0 * compressThresh);
+			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", compressFactor);
 		}
 		else
 		{
@@ -398,7 +398,7 @@ void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
 		"%",
 		"x",
 		"%",
-		"%",
+		"sigma",
 		"",
 		""
 	};
@@ -580,7 +580,7 @@ bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
 			currentProg->getPeakValue(),
 			currentProg->getMaxAmplification(),
 			currentProg->getTargetRms(),
-			currentProg->getCompressThresh(),
+			currentProg->getCompressFactor(),
 			currentProg->getChannelsCoupled(),
 			currentProg->getEnableDCCorrection()
 		);
