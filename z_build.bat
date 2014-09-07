@@ -95,16 +95,18 @@ REM ///////////////////////////////////////////////////////////////////////////
 REM // Build the binaries
 REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
-	echo ---------------------------------------------------------------------
-	echo BEGIN BUILD [Release_%%c]
-	echo ---------------------------------------------------------------------
+	for %%p in (Win32, x64) do (
+		echo ---------------------------------------------------------------------
+		echo BEGIN BUILD [%%p/Release_%%c]
+		echo ---------------------------------------------------------------------
 
-	MSBuild.exe /property:Configuration=Release_%%c /target:clean   "%~dp0\DynamicAudioNormalizer.sln"
-	if not "!ERRORLEVEL!"=="0" goto BuildError
-	MSBuild.exe /property:Configuration=Release_%%c /target:rebuild "%~dp0\DynamicAudioNormalizer.sln"
-	if not "!ERRORLEVEL!"=="0" goto BuildError
-	MSBuild.exe /property:Configuration=Release_%%c /target:build   "%~dp0\DynamicAudioNormalizer.sln"
-	if not "!ERRORLEVEL!"=="0" goto BuildError
+		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:clean   "%~dp0\DynamicAudioNormalizer.sln"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:rebuild "%~dp0\DynamicAudioNormalizer.sln"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:build   "%~dp0\DynamicAudioNormalizer.sln"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+	)
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
@@ -119,18 +121,21 @@ for %%c in (DLL, Static) do (
 	echo ---------------------------------------------------------------------
 	
 	mkdir "%PACK_PATH%\%%c"
-	mkdir "%PACK_PATH%\%%c\extra"
+	mkdir "%PACK_PATH%\%%c\x64"
 	mkdir "%PACK_PATH%\%%c\img"
 
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%\%%c"
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerGUI.exe" "%PACK_PATH%\%%c"
-	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c\extra"
+	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c\x64"
 
 	if "%%c"=="DLL" (
-		mkdir "%PACK_PATH%\%%c\sdk"
+		mkdir "%PACK_PATH%\%%c\include"
 		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c"
-		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\sdk"
-		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\sdk"
+		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\include"
 		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
 		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll"   "%PACK_PATH%\%%c"
 		copy "%QT_SHARED%\bin\QtGui4.dll"                                "%PACK_PATH%\%%c"
@@ -151,7 +156,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\extra\*.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\*.dll"
 )
 
 REM ///////////////////////////////////////////////////////////////////////////

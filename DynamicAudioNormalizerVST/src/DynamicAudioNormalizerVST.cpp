@@ -190,7 +190,7 @@ protected:
 	MDynamicAudioNormalizer *instance;
 	DynamicAudioNormalizerVST_Program *programs;
 	double *temp[2];
-	uint32_t tempSize;
+	size_t tempSize;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -886,7 +886,7 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, c
 			double *const dataPtr = frame->data(c);
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
-				const size_t index = LIMIT(0U, static_cast<size_t>(round(abs(dataPtr[i]) * 100.0)), 100U);
+				const size_t index = LIMIT(size_t(0), static_cast<size_t>(round(abs(dataPtr[i]) * 100.0)), size_t(100));
 				m_stats[index]++;
 
 				const double localThresh = FADE(prevActualThresh, currActualThresh, currActualThresh, i, m_fadeFactors);
