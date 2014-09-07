@@ -93,6 +93,7 @@ static inline double POW2(const double &value)
 }
 
 #define BOOLIFY(X) ((X) ? "YES" : "NO")
+#define POW2(X) ((X)*(X))
 
 ///////////////////////////////////////////////////////////////////////////////
 // MDynamicAudioNormalizer_PrivateData
@@ -158,6 +159,8 @@ private:
 
 	double *m_fadeFactors[3];
 
+	uint64_t m_stats[101];
+
 protected:
 	void processNextFrame(void);
 	void analyzeFrame(FrameData *frame);
@@ -166,7 +169,7 @@ protected:
 	double getMaxLocalGain(FrameData *frame, const uint32_t channel = UINT32_MAX);
 	double findPeakMagnitude(FrameData *frame, const uint32_t channel = UINT32_MAX);
 	double computeFrameRMS(const FrameData *frame, const uint32_t channel = UINT32_MAX);
-	double computeFrameStdDev(const FrameData *frame, double &mean, const uint32_t channel = UINT32_MAX);
+	double computeFrameStdDev(const FrameData *frame, const uint32_t channel = UINT32_MAX);
 	void updateGainHistory(const uint32_t &channel, const double &currentGainFactor);
 	void perfromDCCorrection(FrameData *frame, const bool &isFirstFrame);
 	void perfromCompression(FrameData *frame, const bool &isFirstFrame);
@@ -238,6 +241,11 @@ MDynamicAudioNormalizer::~MDynamicAudioNormalizer(void)
 
 MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 {
+	for(size_t i = 0; i <= 100; i++)
+	{
+		LOG2_WRN("%u\t%I64u", i, m_stats[i]);
+	}
+
 	LOG2_DBG("Processed %" PRIu64 " samples total, clipped %" PRIu64 " samples (%.2f%%).",
 		m_sampleCounterTotal,
 		m_sampleCounterClips,
@@ -394,6 +402,7 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 		m_compressThreshold [channel] = 0.0;
 	}
 
+	memset(&m_stats[0], 0, sizeof(uint64_t) * 101);
 	return true;
 }
 
@@ -759,12 +768,10 @@ double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(const FrameData *fra
 	return std::max(sqrt(rmsValue), DBL_EPSILON);
 }
 
-double MDynamicAudioNormalizer_PrivateData::computeFrameStdDev(const FrameData *frame, double &mean, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::computeFrameStdDev(const FrameData *frame, const uint32_t channel)
 {
-	size_t n = 0;
-	double temp = 0.0;
-	mean = 0.0;
-	
+	double variance = 0.0;
+
 	if(channel == UINT32_MAX)
 	{
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -772,29 +779,22 @@ double MDynamicAudioNormalizer_PrivateData::computeFrameStdDev(const FrameData *
 			const double *dataPtr = frame->data(c);
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
-				const double delta = fabs(dataPtr[i]) - mean;
-				mean += delta / double(++n);
-				temp += delta * (fabs(dataPtr[i]) - mean);
+				variance += POW2(dataPtr[i]);	//Assume that MEAN is *zero*
 			}
 		}
+		variance /= double((m_channels * m_frameLen) - 1);
 	}
 	else
 	{
 		const double *dataPtr = frame->data(channel);
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			const double delta = fabs(dataPtr[i]) - mean;
-			mean += delta / double(++n);
-			temp += delta * (fabs(dataPtr[i]) - mean);
+			variance += POW2(dataPtr[i]);	//Assume that MEAN is *zero*
 		}
+		variance /= double(m_frameLen - 1);
 	}
 
-	if(n < 2)
-	{
-		return DBL_EPSILON;
-	}
 
-	const double variance = temp / double(n - 1);
 	return std::max(sqrt(variance), DBL_EPSILON);
 }
 
@@ -870,12 +870,10 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, 
 
 void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, const bool &isFirstFrame)
 {
-	//Find the frame's peak sample value
 	if(m_channelsCoupled)
 	{
-		double mean;
-		const double standardDeviation = computeFrameStdDev(frame, mean);
-		const double currentThreshold  = std::min(1.0, mean + (m_compressFactor * standardDeviation));
+		const double standardDeviation = computeFrameStdDev(frame);
+		const double currentThreshold  = std::min(1.0, m_compressFactor * standardDeviation);
 
 		const double prevValue = isFirstFrame ? currentThreshold : m_compressThreshold[0];
 		m_compressThreshold[0] = isFirstFrame ? currentThreshold : UPDATE_VALUE(currentThreshold, m_compressThreshold[0], (1.0/3.0));
@@ -888,6 +886,9 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, c
 			double *const dataPtr = frame->data(c);
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
+				const size_t index = LIMIT(0U, static_cast<size_t>(round(abs(dataPtr[i]) * 100.0)), 100U);
+				m_stats[index]++;
+
 				const double localThresh = FADE(prevActualThresh, currActualThresh, currActualThresh, i, m_fadeFactors);
 				dataPtr[i] = copysign(BOUND(localThresh, fabs(dataPtr[i])), dataPtr[i]);
 			}
@@ -897,9 +898,8 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, c
 	{
 		for(uint32_t c = 0; c < m_channels; c++)
 		{
-			double mean;
-			const double standardDeviation = computeFrameStdDev(frame, mean, c);
-			const double currentThreshold  = setupCompressThresh(std::min(1.0, mean + (m_compressFactor * standardDeviation)));
+			const double standardDeviation = computeFrameStdDev(frame, c);
+			const double currentThreshold  = setupCompressThresh(std::min(1.0,m_compressFactor * standardDeviation));
 
 			const double prevValue = isFirstFrame ? currentThreshold : m_compressThreshold[c];
 			m_compressThreshold[c] = isFirstFrame ? currentThreshold : UPDATE_VALUE(currentThreshold, m_compressThreshold[c], (1.0/3.0));
