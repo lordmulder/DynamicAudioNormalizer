@@ -57,27 +57,36 @@ static const char *DEFAULT_NAME = "#$!__DEFAULT__!$#";
 // Helper functions
 ///////////////////////////////////////////////////////////////////////////////
 
-__declspec(thread) static char g_logBuffer[1024];
+static void outputMessage(const char *const format, ...)
+{
+	static const size_t BUFF_SIZE = 512;
+	char logBuffer[BUFF_SIZE];
+
+	va_list argList;
+	va_start(argList, format);
+	vsnprintf_s(logBuffer, BUFF_SIZE, _TRUNCATE, format, argList);
+	va_end(argList);
+
+	OutputDebugStringA(logBuffer);
+}
 
 static void logFunction(const int logLevel, const char *const message)
 {
 	switch (logLevel) 
 	{
 	case MDynamicAudioNormalizer::LOG_LEVEL_NFO:
-		_snprintf_s(g_logBuffer, 1024, _TRUNCATE, "[DynAudNorm] NFO: %s\n", message);
+		outputMessage("[DynAudNorm] NFO: %s\n", message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
-		_snprintf_s(g_logBuffer, 1024, _TRUNCATE, "[DynAudNorm] WAR: %s\n", message);
+		outputMessage("[DynAudNorm] WAR: %s\n", message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_ERR:
-		_snprintf_s(g_logBuffer, 1024, _TRUNCATE, "[DynAudNorm] ERR: %s\n", message);
+		outputMessage("[DynAudNorm] ERR: %s\n", message);
 		break;
 	default:
-		_snprintf_s(g_logBuffer, 1024, _TRUNCATE, "[DynAudNorm] DBG: %s\n", message);
+		outputMessage("[DynAudNorm] DBG: %s\n", message);
 		break;
 	}
-
-	OutputDebugStringA(g_logBuffer);
 }
 
 static void showErrorMsg(const char *const text)
@@ -203,6 +212,7 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	p(new DynamicAudioNormalizerVST_PrivateData())
 {
 	static const VstInt32 uniqueId = CCONST('!','c','2','N');
+	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST()");
 
 	setNumInputs(CHANNEL_COUNT);	// stereo in
 	setNumOutputs(CHANNEL_COUNT);	// stereo out
@@ -217,6 +227,8 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 
 DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 {
+	outputMessage("DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()");
+
 	if(p->instance)
 	{
 		delete p->instance;
@@ -447,23 +459,28 @@ VstInt32 DynamicAudioNormalizerVST::getVendorVersion ()
 	return (major * 1000U) + (minor * 10U) + patch;
 }
 
+VstPlugCategory DynamicAudioNormalizerVST::getPlugCategory(void)
+{
+	return kPlugCategEffect;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // State Handling
 ///////////////////////////////////////////////////////////////////////////////
 
 void DynamicAudioNormalizerVST::open(void)
 {
-	logFunction(-1, "DynamicAudioNormalizerVST::open()");
+	outputMessage("DynamicAudioNormalizerVST::open()");
 }
 
 void DynamicAudioNormalizerVST::close(void)
 {
-	logFunction(-1, "DynamicAudioNormalizerVST::close()");
+	outputMessage("DynamicAudioNormalizerVST::close()");
 }
 
 void DynamicAudioNormalizerVST::resume(void)
 {
-	logFunction(-1, "DynamicAudioNormalizerVST::resume()");
+	outputMessage("DynamicAudioNormalizerVST::resume()");
 
 	if (createNewInstance(static_cast<uint32_t>(round(getSampleRate()))))
 	{
@@ -477,7 +494,7 @@ void DynamicAudioNormalizerVST::resume(void)
 
 void DynamicAudioNormalizerVST::suspend(void)
 {
-	logFunction(-1, "DynamicAudioNormalizerVST::suspend()");
+	outputMessage("DynamicAudioNormalizerVST::suspend()");
 
 	if(p->instance)
 	{
@@ -544,6 +561,8 @@ void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double*
 
 VstInt32 DynamicAudioNormalizerVST::getGetTailSize(void)
 {
+	outputMessage("DynamicAudioNormalizerVST::getGetTailSize()");
+
 	if(p->instance)
 	{
 		int64_t delayInSamples;
@@ -727,6 +746,10 @@ static bool g_initialized = false;
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
+	uint32_t major, minor, patch;
+	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
+	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
+
 	if(!g_initialized)
 	{
 		MDynamicAudioNormalizer::setLogFunction(logFunction);

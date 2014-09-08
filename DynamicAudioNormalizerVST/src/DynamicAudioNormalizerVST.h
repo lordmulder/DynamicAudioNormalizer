@@ -74,7 +74,8 @@ public:
 	virtual bool getEffectName (char* name);
 	virtual bool getVendorString (char* text);
 	virtual bool getProductString (char* text);
-	virtual VstInt32 getVendorVersion ();
+	virtual VstInt32 getVendorVersion(void);
+	virtual VstPlugCategory getPlugCategory(void);
 
 private:
 	bool createNewInstance(const uint32_t sampleRate);

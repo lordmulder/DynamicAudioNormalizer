@@ -23,9 +23,6 @@
 
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
-#define THREAD_LOCAL __declspec(thread)
-#else
-#define THREAD_LOCAL __thread 
 #endif
 
 #include <cstdlib>
@@ -33,7 +30,6 @@
 #include <cstdarg>
 
 static DYNAUDNORM_LOG_CALLBACK *g_loggingCallback = NULL;
-static THREAD_LOCAL char g_messageBuffer[512];
 
 DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback)
 {
@@ -44,12 +40,15 @@ DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *con
 
 void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...)
 {
+	static const size_t BUFF_SIZE = 512;
+	char messageBuffer[BUFF_SIZE];
+
 	if(g_loggingCallback)
 	{
 		va_list args;
 		va_start (args, message);
-		vsnprintf(g_messageBuffer, 512, message, args);
+		vsnprintf(messageBuffer, BUFF_SIZE, message, args);
 		va_end(args);
-		g_loggingCallback(logLevel, g_messageBuffer);
+		g_loggingCallback(logLevel, messageBuffer);
 	}
 }
