@@ -6,16 +6,17 @@ Dynamic Audio Normalizer
 **Dynamic Audio Normalizer** is a library and a command-line tool for [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization). It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" parts of the audio while avoiding distortions or clipping the "loud" parts. In other words, the volume of the "quiet" and the "loud" parts will be *harmonized*.
 
 ### Contents: ###
-0. [How It Works](#chap_how)
-1. [Command-Line Usage](#chap_cli)
-2. [VST Plug-In Usage](#chap_vst)
-3. [Configuration](#chap_cfg)
-4. [API Documentation](#chap_api)
-5. [Source Code](#chap_src)
-6. [Changelog](#chap_log)
-7. [Frequently Asked Questions](#chap_faq)
-8. [License Terms](#chap_lic)
-9. [Acknowledgement](#chap_ack)
+1.  [How It Works](#chap_how)
+2.  [Package Contents](#chap_pkg)
+3.  [Command-Line Usage](#chap_cli)
+4.  [VST Plug-In Usage](#chap_vst)
+5.  [Configuration](#chap_cfg)
+6.  [API Documentation](#chap_api)
+7.  [Source Code](#chap_src)
+8.  [Changelog](#chap_log)
+9.  [Frequently Asked Questions](#chap_faq)
+10. [License Terms](#chap_lic)
+11. [Acknowledgement](#chap_ack)
 
 
 How It Works<a name="chap_how"></a>
@@ -48,6 +49,31 @@ Finally, the following waveform view illustrates how the volume of a "real world
 ![Waveform1](img/Waveform-1.png "Dynamic Audio Normalizer – Example")  
 ![Waveform2](img/Waveform-2.png "Dynamic Audio Normalizer – Example")  
 <small>**Figure 3:** Waveform before and after processing with the Dynamic Audio Normalizer.</small>
+
+
+Package Contents <a name="chap_pkg"></a>
+-------------------------------------------------------------------------------
+
+The following files are included in the Dynamic Audio Normalizer release package:
+
+```
+DynamicAudioNormalizerCLI.exe  -  Dynamic Audio Normalizer command-line application
+DynamicAudioNormalizerGUI.exe  -  Dynamic Audio Normalizer graphical log viewer application
+DynamicAudioNormalizerSoX.exe  -  SoX binary with included Dynamic Audio Normalizer effect
+DynamicAudioNormalizerAPI.dll  -  Dynamic Audio Normalizer core library
+DynamicAudioNormalizerVST.dll  -  Dynamic Audio Normalizer VST wrapper library
+DynamicAudioNormalizerAPI.lib  -  Import library for the Dynamic Audio Normalizer library (for developers)
+DynamicAudioNormalizer.h       -  Header file for the Dynamic Audio Normalizer library (for developers)
+msvcp120.dll                   -  Visual C++ 2013 runtime library
+msvcr120.dll                   -  Visual C++ 2013 runtime library
+libsndfile-1.dll               -  libsndfile library, used for reading and writing audio files
+pthreadVC2.dll                 -  POSIX threading library, used for thread management
+QtCore4.dll                    -  Qt Framework library, used to create graphical user interfaces
+QtGui4.dll                     -  Qt Framework library, used to create graphical user interfaces
+README.html                    -  The README file
+```
+
+<small>**Note:** Standard binaries are *32-Bit* (x86), the *64-Bit* (AMD64/Intel64) versions can be found in the "x64" directory.</small>
 
 
 Command-Line Usage <a name="chap_cli"></a>
@@ -86,9 +112,9 @@ As an alternative to the Dynamic Audio Normalizer command-line front-end, the Dy
 Note, however, that *standard* SoX distributions do **not** currently support the Dynamic Audio Normalizer. Instead, a special *patched* build of SoX that has the Dynamic Audio Normalizer effect enabled is required!
 
 When working with SoX, the Dynamic Audio Normalizer can be invoked by adding the "dynaudnorm" effect to your effect chain, which can be done as follows:  
-<tt>SoX.exe -S "in_original.wav" -o "out_normalized.wav" dynaudnorm [options]</tt>
+<tt>DynamicAudioNormalizerSoX.exe -S "in_original.wav" -o "out_normalized.wav" dynaudnorm [options]</tt>
 
-For details about the SoX command-line syntax, please refer to the excellent [SoX documentation](http://sox.sourceforge.net/sox.html). You can also type <tt>SoX.exe --help-effect dynaudnorm</tt> for a list of available options.
+For details about the SoX command-line syntax, please refer to the [SoX documentation](http://sox.sourceforge.net/sox.html), or type <tt>DynamicAudioNormalizerSoX.exe --help-effect dynaudnorm</tt> for a list of available options.
 
 
 VST Plug-In Usage<a name="chap_vst"></a>
@@ -140,8 +166,8 @@ List of VST hosts that have *known problems* and do **not** work correctly with 
 * [WavePad](http://www.nch.com.au/wavepad/), by NCH Software → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
 * [Nero WaveEditor](http://www.nero.com/enu/downloads/) v12.5, by Nero AG → <span style="color:FireBrick">VST support broken</span> → application crashes when trying to load *any* VST plug-in
 * [AudioDope](http://www.audiodope.org/) v0.26 → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + plug-in settings are displayed incorrectly
-* [Dexster Audio Editor](http://www.dexster.net/) v4.3 → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
-* [AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v4 → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated *by a very large amount*
+* [Dexster Audio Editor](http://www.dexster.net/) v4.3, by Softdiv Software → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
+* [AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v4, by CyberLink Corp → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated *by a very large amount*
 
 *If you are the developer of one of these tools and you have fixed the problem in the meantime, then please let us know…*
 
