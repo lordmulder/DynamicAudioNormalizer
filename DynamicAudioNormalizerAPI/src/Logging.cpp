@@ -25,6 +25,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+//Internal
+#include <Common.h>
+
 //Stdlib
 #include <cstdlib>
 #include <cstdio>
@@ -42,39 +45,22 @@ static char g_messageBuffer[1024];
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Helper Macros
-///////////////////////////////////////////////////////////////////////////////
-
-#define PTHREAD_LOCK(X) do \
-{ \
-	if(pthread_mutex_lock(&(X)) != 0) abort(); \
-} \
-while(0)
-
-#define PTHREAD_UNLOCK(X) do \
-{ \
-	if(pthread_mutex_unlock(&(X)) != 0) abort(); \
-} \
-while(0)
-
-///////////////////////////////////////////////////////////////////////////////
 // Logging Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback)
 {
-	PTHREAD_LOCK(g_mutex);
-
+	MY_CRITSEC_ENTER(g_mutex);
 	DYNAUDNORM_LOG_CALLBACK *const oldCallback = g_loggingCallback;
 	g_loggingCallback = callback;
+	MY_CRITSEC_LEAVE(g_mutex);
 
-	PTHREAD_UNLOCK(g_mutex);
 	return oldCallback;
 }
 
 void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...)
 {
-	PTHREAD_LOCK(g_mutex);
+	MY_CRITSEC_ENTER(g_mutex);
 
 	if(g_loggingCallback)
 	{
@@ -85,5 +71,5 @@ void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, 
 		g_loggingCallback(logLevel, g_messageBuffer);
 	}
 
-	PTHREAD_UNLOCK(g_mutex);
+	MY_CRITSEC_LEAVE(g_mutex);
 }

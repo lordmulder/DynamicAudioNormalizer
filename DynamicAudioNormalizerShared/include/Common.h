@@ -58,3 +58,21 @@ while(0)
 	} \
 } \
 while(0)
+
+#define MY_CRITSEC_ENTER(X) do \
+{ \
+	if(pthread_mutex_lock(&(X)) != 0) \
+	{ \
+		abort(); \
+	} \
+} \
+while(0)
+
+#define MY_CRITSEC_LEAVE(X) do \
+{ \
+	if(pthread_mutex_unlock(&(X)) != 0) \
+	{ \
+		abort(); \
+	} \
+} \
+while(0)

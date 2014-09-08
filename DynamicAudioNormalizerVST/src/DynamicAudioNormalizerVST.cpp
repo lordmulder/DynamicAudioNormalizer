@@ -34,6 +34,9 @@
 //Dynamic Audio Normalizer API
 #include "DynamicAudioNormalizer.h"
 
+//Internal
+#include <Common.h>
+
 //Standard Library
 #include <cmath>
 #include <algorithm>
@@ -61,23 +64,7 @@ static const char *DEFAULT_NAME = "#$!__DEFAULT__!$#";
 
 //Critical Section
 static char g_loggingBuffer[1024];
-static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-///////////////////////////////////////////////////////////////////////////////
-// Helper Macros
-///////////////////////////////////////////////////////////////////////////////
-
-#define PTHREAD_LOCK(X) do \
-{ \
-	if(pthread_mutex_lock(&(X)) != 0) abort(); \
-} \
-while(0)
-
-#define PTHREAD_UNLOCK(X) do \
-{ \
-	if(pthread_mutex_unlock(&(X)) != 0) abort(); \
-} \
-while(0)
+static pthread_mutex_t g_loggingMutex = PTHREAD_MUTEX_INITIALIZER;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -85,7 +72,7 @@ while(0)
 
 static void outputMessage(const char *const format, ...)
 {
-	PTHREAD_LOCK(g_mutex);
+	MY_CRITSEC_ENTER(g_loggingMutex);
 
 	va_list argList;
 	va_start(argList, format);
@@ -93,7 +80,7 @@ static void outputMessage(const char *const format, ...)
 	va_end(argList);
 	OutputDebugStringA(g_loggingBuffer);
 
-	PTHREAD_UNLOCK(g_mutex);
+	MY_CRITSEC_LEAVE(g_loggingMutex);
 }
 
 static void logFunction(const int logLevel, const char *const message)
@@ -773,22 +760,16 @@ void DynamicAudioNormalizerVST::writeOutputSamplesDbl(double *const *const outpu
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool g_initialized = false;
-
-static AudioEffect* createEffectInstanceHelper(audioMasterCallback audioMaster)
-{
-
-
-}
+static pthread_mutex_t g_createEffMutex = PTHREAD_MUTEX_INITIALIZER;
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
+	MY_CRITSEC_ENTER(g_createEffMutex);
 	AudioEffect *effectInstance = NULL;
 
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
 	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
-
-	PTHREAD_LOCK(g_mutex);
 	
 	if(!g_initialized)
 	{
@@ -797,7 +778,7 @@ AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 	}
 	
 	effectInstance = new DynamicAudioNormalizerVST(audioMaster);
-
-	PTHREAD_UNLOCK(g_mutex);
+	
+	MY_CRITSEC_LEAVE(g_createEffMutex);
 	return effectInstance;
 }
