@@ -214,7 +214,7 @@ As explained before, the Dynamic Audio Normalizer takes into account a certain n
 By default, the Dynamic Audio Normalizer does **not** apply "traditional" compression. This means that signal peaks will **not** be pruned and thus the *full* dynamic range will be retained within each local neighbourhood. However, in some cases it may be desirable to *combine* the Dynamic Audio Normalizer's normalization algorithm with a more "traditional" compression. For this purpose, the Dynamic Audio Normalizer provides an *optional* compression (thresholding) function. It is disabled by default and can be enabled by using the **<tt>--compress</tt>** switch. If (and only if) the compression feature is enabled, all input frames will be processed by a [*soft knee*](https://mdn.mozillademos.org/files/5113/WebAudioKnee.png) thresholding function *prior to* the actual normalization process. Put simply, the thresholding function is going to prune all samples whose magnitude exceeds a certain threshold value. However, the Dynamic Audio Normalizer does *not* simply apply a fixed threshold value. Instead, the threshold value will be adjusted for each individual frame. More specifically, the threshold for a specific input frame is defined as <tt>T = μ + (c · σ)</tt>, where **μ** is the *mean* of all sample magnitudes in the current frame, **σ** is the *standard deviation* of those sample magnitudes and **c** is the parameter controlled by the user. Note that, assuming the samples magnitudes are following (roughly) a [normal distribution](http://content.answcdn.com/main/content/img/barrons/accounting/New/images/normaldistribution2.jpg), about 68% of the sample values will be within the **μ ± σ** range, about 95% of the sample values will be within the **μ ± 2σ** range and more than 99% of the sample values will be within the **μ ± 3σ** range. Consequently, a parameter of **c = 2** will prune about 5% of the frame's highest magnitude samples, a parameter of **c = 3** will prune about 1% of the frame's highest magnitude samples, and so on. In general, *smaller* parameters result in *stronger* compression, and vice versa. Values below *3.0* are **not** recommended, because audible distortion may appear! The following waveform view illustrates the effect of the input compression feature: It shows the same input file *before* (upper view) and *after* (lower view) the thresholding function has been applied. Please note that, for the sake of clarity, the actual normalization process has been *disabled* in the following chart. Under normal circumstances, the normalization process is applied immediately after the thresholding function.
 
 ![Compression](img/Compression-1.png "Input Compression")
-<small>**Figure 12:** The effect of input compression (thresholding) function.</small>
+<small>**Figure 12:** The effect of the input compression (thresholding) function.</small>
 
 ### Write Log File <a name="chap_cfg.l"></a> ###
 
@@ -449,9 +449,14 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
+### Version 2.05 (2014-09-??) ###
+* Significant overhaul of the *compression* (thresholding) function
+* Implemented [VST](http://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be used in any VST host
+* Added *64-Bit* library and VST plug-in binaries to the release package (Windows)
+
 ### Version 2.04 (2014-08-25) ###
 * Added an optional input *compression* (thresholding) function
-* Implemented [SoX](http://sox.sourceforge.net/) wrapper → Dynamic Audio Normalizer can now be used as an effect in SoX
+* Implemented [SoX](http://sox.sourceforge.net/) wrapper → Dynamic Audio Normalizer can now be used as a SoX effect
 * Improved internal handling of "raw" PCM data
 
 ### Version 2.03 (2014-08-11) ###
