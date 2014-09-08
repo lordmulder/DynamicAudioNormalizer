@@ -112,7 +112,7 @@ The exact steps that are required to load, activate and configure a VST plug-in 
 
 Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the VST plug-in DLL, i.e. <tt>DynamicAudioNormalizerVST.dll</tt>, also requires the Dynamic Audio Normalizer *core* library, i.e. <tt>DynamicAudioNormalizerAPI.dll</tt>. This means that the *core* library **must** be made available to the VST host *in addition* to the VST plug-in itself. Otherwise, loading the VST plug-in DLL is going to fail! Copying the *core* library to the same directory, where the VST plug-in DLL, is located generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the <tt>DynamicAudioNormalizerAPI.dll</tt> file into the same directory where the VST host's "main" executable (EXE file) is located.
 
-**Important:** Please note that Dynamic Audio Normalizer VST plug-in uses the VST interface version 2.x, which is the most widely supported VST version at this time. VST interface version 3.x is *not* currently used, supported or required. Also note that *32-Bit* (x86) VST host application can only work with *32-Bit* VST plug-ins and, similarly, *64-Bit* (AMD64/Intel64) VST host application can only work with *64-Bit* VST plug-ins. Depending on the "bitness" of your individual VST host application, always the suitable VST plug-in DLL file, 32- or 64-Bit, must be chosen!
+**Important:** Please note that Dynamic Audio Normalizer VST plug-in uses the VST interface version 2.x, which is the most widely supported VST version at this time. VST interface version 3.x is *not* currently used, supported or required. Also note that *32-Bit* (x86) VST host application can <u>only</u> work with *32-Bit* VST plug-ins and, similarly, *64-Bit* (AMD64/Intel64) VST host application can <u>only</u> work with *64-Bit* VST plug-ins. Depending on the "bitness" of your individual VST host application, always the suitable VST plug-in DLL file, 32- or 64-Bit, must be chosen!
 
 ### Known VST Limitations ###
 
@@ -458,7 +458,8 @@ Changelog <a name="chap_log"></a>
 ### Version 2.05 (2014-09-??) ###
 * Significant overhaul of the *compression* (thresholding) function
 * Implemented [VST](http://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be used in any VST host
-* Added *64-Bit* library and VST plug-in binaries to the release package (Windows)
+* Added *64-Bit* library and VST plug-in binaries to the Windows release packages
+* No longer use <tt>__declspec(thread)</tt>, because it can crash on Windows XP ([details](http://www.nynaeve.net/?p=187))
 
 ### Version 2.04 (2014-08-25) ###
 * Added an optional input *compression* (thresholding) function
