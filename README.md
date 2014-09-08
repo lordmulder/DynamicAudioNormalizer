@@ -57,20 +57,20 @@ Package Contents <a name="chap_pkg"></a>
 The following files are included in the Dynamic Audio Normalizer release package:
 
 ```
-DynamicAudioNormalizerCLI.exe  -  Dynamic Audio Normalizer command-line application
-DynamicAudioNormalizerGUI.exe  -  Dynamic Audio Normalizer graphical log viewer application
-DynamicAudioNormalizerSoX.exe  -  SoX binary with included Dynamic Audio Normalizer effect
-DynamicAudioNormalizerAPI.dll  -  Dynamic Audio Normalizer core library
-DynamicAudioNormalizerVST.dll  -  Dynamic Audio Normalizer VST wrapper library
-DynamicAudioNormalizerAPI.lib  -  Import library for the Dynamic Audio Normalizer library (for developers)
-DynamicAudioNormalizer.h       -  Header file for the Dynamic Audio Normalizer library (for developers)
-msvcp120.dll                   -  Visual C++ 2013 runtime library
-msvcr120.dll                   -  Visual C++ 2013 runtime library
-libsndfile-1.dll               -  libsndfile library, used for reading and writing audio files
-pthreadVC2.dll                 -  POSIX threading library, used for thread management
-QtCore4.dll                    -  Qt Framework library, used to create graphical user interfaces
-QtGui4.dll                     -  Qt Framework library, used to create graphical user interfaces
-README.html                    -  The README file
+DynamicAudioNormalizerCLI.exe - Dynamic Audio Normalizer command-line application
+DynamicAudioNormalizerGUI.exe - Dynamic Audio Normalizer log viewer application
+DynamicAudioNormalizerSoX.exe - SoX binary with included Dynamic Audio Normalizer effect
+DynamicAudioNormalizerAPI.dll - Dynamic Audio Normalizer core library
+DynamicAudioNormalizerVST.dll - Dynamic Audio Normalizer VST wrapper library
+DynamicAudioNormalizerAPI.lib - Import library for the Dynamic Audio Normalizer library
+DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
+msvcp120.dll                  - Visual C++ 2013 runtime library
+msvcr120.dll                  - Visual C++ 2013 runtime library
+libsndfile-1.dll              - libsndfile library, used for reading/writing audio files
+pthreadVC2.dll                - POSIX threading library, used for thread management
+QtCore4.dll                   - Qt library, used to create the graphical user interfaces
+QtGui4.dll                    - Qt library, used to create the graphical user interfaces
+README.html                   - The README file
 ```
 
 <small>**Note:** Standard binaries are *32-Bit* (x86), the *64-Bit* (AMD64/Intel64) versions can be found in the "x64" directory.</small>
