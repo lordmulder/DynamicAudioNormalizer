@@ -39,9 +39,17 @@
 #include <algorithm>
 
 //Win32 API
+#ifdef _WIN32
 #define NOMINMAX 1
 #define WIN32_LEAN_AND_MEAN 1
 #include <Windows.h>
+#endif
+
+//PThread
+#if defined(_WIN32) && defined(_MT)
+#define PTW32_STATIC_LIB 1
+#endif
+#include <pthread.h>
 
 //Constants
 static const VstInt32 CHANNEL_COUNT = 2;
@@ -52,41 +60,40 @@ static const VstInt32 PROGRAM_COUNT = 8;
 static const char *DEFAULT_NAME = "#$!__DEFAULT__!$#";
 
 //Critical Section
-static RTL_CRITICAL_SECTION g_criticalSection;
+static char g_loggingBuffer[1024];
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Global initialization
+// Helper Macros
 ///////////////////////////////////////////////////////////////////////////////
 
-static DWORD globalInitFunc(void)
-{
-	InitializeCriticalSection(&g_criticalSection);
-	return GetCurrentThreadId();
-}
+#define PTHREAD_LOCK(X) do \
+{ \
+	if(pthread_mutex_lock(&(X)) != 0) abort(); \
+} \
+while(0)
 
-static const DWORD g_globalInitHelper = globalInitFunc();
+#define PTHREAD_UNLOCK(X) do \
+{ \
+	if(pthread_mutex_unlock(&(X)) != 0) abort(); \
+} \
+while(0)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
 ///////////////////////////////////////////////////////////////////////////////
 
-static char g_logBuffer[1024];
-
 static void outputMessage(const char *const format, ...)
 {
-	EnterCriticalSection(&g_criticalSection);
-	__try
-	{
-		va_list argList;
-		va_start(argList, format);
-		vsnprintf_s(g_logBuffer, 1024, _TRUNCATE, format, argList);
-		va_end(argList);
-		OutputDebugStringA(g_logBuffer);
-	}
-	__finally
-	{
-		LeaveCriticalSection(&g_criticalSection);
-	}
+	PTHREAD_LOCK(g_mutex);
+
+	va_list argList;
+	va_start(argList, format);
+	vsnprintf_s(g_loggingBuffer, 1024, _TRUNCATE, format, argList);
+	va_end(argList);
+	OutputDebugStringA(g_loggingBuffer);
+
+	PTHREAD_UNLOCK(g_mutex);
 }
 
 static void logFunction(const int logLevel, const char *const message)
@@ -769,32 +776,28 @@ static bool g_initialized = false;
 
 static AudioEffect* createEffectInstanceHelper(audioMasterCallback audioMaster)
 {
-	uint32_t major, minor, patch;
-	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
 
-	if(!g_initialized)
-	{
-		MDynamicAudioNormalizer::setLogFunction(logFunction);
-		g_initialized = true;
-	}
 
-	return new DynamicAudioNormalizerVST(audioMaster);
 }
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
 	AudioEffect *effectInstance = NULL;
-	EnterCriticalSection(&g_criticalSection);
 
-	__try
-	{
-		effectInstance = createEffectInstanceHelper(audioMaster);
-	}
-	__finally
-	{
-		LeaveCriticalSection(&g_criticalSection);
-	}
+	uint32_t major, minor, patch;
+	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
+	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
 
+	PTHREAD_LOCK(g_mutex);
+	
+	if(!g_initialized)
+	{
+		MDynamicAudioNormalizer::setLogFunction(logFunction);
+		g_initialized = true;
+	}
+	
+	effectInstance = new DynamicAudioNormalizerVST(audioMaster);
+
+	PTHREAD_UNLOCK(g_mutex);
 	return effectInstance;
 }

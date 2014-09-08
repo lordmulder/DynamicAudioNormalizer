@@ -25,22 +25,57 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+//Stdlib
 #include <cstdlib>
 #include <cstdio>
 #include <cstdarg>
 
-static char g_messageBuffer[1024];
+//PThread
+#if defined(_WIN32) && defined(_MT)
+#define PTW32_STATIC_LIB 1
+#endif
+#include <pthread.h>
+
+//Globals
 static DYNAUDNORM_LOG_CALLBACK *g_loggingCallback = NULL;
+static char g_messageBuffer[1024];
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+///////////////////////////////////////////////////////////////////////////////
+// Helper Macros
+///////////////////////////////////////////////////////////////////////////////
+
+#define PTHREAD_LOCK(X) do \
+{ \
+	if(pthread_mutex_lock(&(X)) != 0) abort(); \
+} \
+while(0)
+
+#define PTHREAD_UNLOCK(X) do \
+{ \
+	if(pthread_mutex_unlock(&(X)) != 0) abort(); \
+} \
+while(0)
+
+///////////////////////////////////////////////////////////////////////////////
+// Logging Functions
+///////////////////////////////////////////////////////////////////////////////
 
 DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback)
 {
+	PTHREAD_LOCK(g_mutex);
+
 	DYNAUDNORM_LOG_CALLBACK *const oldCallback = g_loggingCallback;
 	g_loggingCallback = callback;
+
+	PTHREAD_UNLOCK(g_mutex);
 	return oldCallback;
 }
 
 void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...)
 {
+	PTHREAD_LOCK(g_mutex);
+
 	if(g_loggingCallback)
 	{
 		va_list args;
@@ -49,4 +84,6 @@ void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, 
 		va_end(args);
 		g_loggingCallback(logLevel, g_messageBuffer);
 	}
+
+	PTHREAD_UNLOCK(g_mutex);
 }
