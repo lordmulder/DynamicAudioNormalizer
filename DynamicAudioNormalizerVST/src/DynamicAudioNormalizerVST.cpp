@@ -39,11 +39,9 @@
 #include <algorithm>
 
 //Win32 API
-#ifdef _WIN32
 #define NOMINMAX 1
 #define WIN32_LEAN_AND_MEAN 1
 #include <Windows.h>
-#endif
 
 //Constants
 static const VstInt32 CHANNEL_COUNT = 2;
@@ -53,21 +51,42 @@ static const VstInt32 PROGRAM_COUNT = 8;
 //Default
 static const char *DEFAULT_NAME = "#$!__DEFAULT__!$#";
 
+//Critical Section
+static RTL_CRITICAL_SECTION g_criticalSection;
+
+///////////////////////////////////////////////////////////////////////////////
+// Global initialization
+///////////////////////////////////////////////////////////////////////////////
+
+static DWORD globalInitFunc(void)
+{
+	InitializeCriticalSection(&g_criticalSection);
+	return GetCurrentThreadId();
+}
+
+static const DWORD g_globalInitHelper = globalInitFunc();
+
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
 ///////////////////////////////////////////////////////////////////////////////
 
+static char g_logBuffer[1024];
+
 static void outputMessage(const char *const format, ...)
 {
-	static const size_t BUFF_SIZE = 512;
-	char logBuffer[BUFF_SIZE];
-
-	va_list argList;
-	va_start(argList, format);
-	vsnprintf_s(logBuffer, BUFF_SIZE, _TRUNCATE, format, argList);
-	va_end(argList);
-
-	OutputDebugStringA(logBuffer);
+	EnterCriticalSection(&g_criticalSection);
+	__try
+	{
+		va_list argList;
+		va_start(argList, format);
+		vsnprintf_s(g_logBuffer, 1024, _TRUNCATE, format, argList);
+		va_end(argList);
+		OutputDebugStringA(g_logBuffer);
+	}
+	__finally
+	{
+		LeaveCriticalSection(&g_criticalSection);
+	}
 }
 
 static void logFunction(const int logLevel, const char *const message)
@@ -212,7 +231,7 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	p(new DynamicAudioNormalizerVST_PrivateData())
 {
 	static const VstInt32 uniqueId = CCONST('!','c','2','N');
-	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST()");
+	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST() - A");
 
 	setNumInputs(CHANNEL_COUNT);	// stereo in
 	setNumOutputs(CHANNEL_COUNT);	// stereo out
@@ -221,8 +240,12 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	canDoubleReplacing();			// supports double precision processing
 	noTail(false);					// does have Tail!
 
+	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST() - B");
+
 	setProgram(0);
 	p->programs = new DynamicAudioNormalizerVST_Program[PROGRAM_COUNT];
+
+	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST() - C");
 }
 
 DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
@@ -744,7 +767,7 @@ void DynamicAudioNormalizerVST::writeOutputSamplesDbl(double *const *const outpu
 
 static bool g_initialized = false;
 
-AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
+static AudioEffect* createEffectInstanceHelper(audioMasterCallback audioMaster)
 {
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
@@ -757,4 +780,21 @@ AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 	}
 
 	return new DynamicAudioNormalizerVST(audioMaster);
+}
+
+AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
+{
+	AudioEffect *effectInstance = NULL;
+	EnterCriticalSection(&g_criticalSection);
+
+	__try
+	{
+		effectInstance = createEffectInstanceHelper(audioMaster);
+	}
+	__finally
+	{
+		LeaveCriticalSection(&g_criticalSection);
+	}
+
+	return effectInstance;
 }

@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdarg>
 
+static char g_messageBuffer[1024];
 static DYNAUDNORM_LOG_CALLBACK *g_loggingCallback = NULL;
 
 DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback)
@@ -40,15 +41,12 @@ DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *con
 
 void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...)
 {
-	static const size_t BUFF_SIZE = 512;
-	char messageBuffer[BUFF_SIZE];
-
 	if(g_loggingCallback)
 	{
 		va_list args;
 		va_start (args, message);
-		vsnprintf(messageBuffer, BUFF_SIZE, message, args);
+		vsnprintf(g_messageBuffer, 1024, message, args);
 		va_end(args);
-		g_loggingCallback(logLevel, messageBuffer);
+		g_loggingCallback(logLevel, g_messageBuffer);
 	}
 }
