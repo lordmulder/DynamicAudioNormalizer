@@ -131,13 +131,19 @@ for %%c in (DLL, Static) do (
 
 	if "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\include"
+		
 		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c"
 		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c"
 		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c\x64"
 		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\x64"
+		
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\include"
 		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
-		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc?120.dll"   "%PACK_PATH%\%%c"
+		copy "%~dp0\etc\pthread\lib\Win32\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c"
+		copy "%~dp0\etc\pthread\lib\x64\.\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c\x64"
+		
+		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc????.dll"   "%PACK_PATH%\%%c"
+		copy "%MSVC_PATH%\redist\x64\Microsoft.VC120.CRT\msvc????.dll"   "%PACK_PATH%\%%c\x64"
 		copy "%QT_SHARED%\bin\QtGui4.dll"                                "%PACK_PATH%\%%c"
 		copy "%QT_SHARED%\bin\QtCore4.dll"                               "%PACK_PATH%\%%c"
 	)
