@@ -64,11 +64,13 @@ public:
 	virtual bool getProgramNameIndexed(VstInt32 category, VstInt32 index, char* text);
 
 	// Parameters
-	virtual void setParameter (VstInt32 index, float value);
-	virtual float getParameter (VstInt32 index);
-	virtual void getParameterLabel (VstInt32 index, char* label);
-	virtual void getParameterDisplay (VstInt32 index, char* text);
-	virtual void getParameterName (VstInt32 index, char* text);
+	virtual void setParameter(VstInt32 index, float value);
+	virtual float getParameter(VstInt32 index);
+	virtual float getParameterDefault(VstInt32 index);
+	virtual double getParameterValue(VstInt32 index);
+	virtual void getParameterLabel(VstInt32 index, char* label);
+	virtual void getParameterDisplay(VstInt32 index, char* text);
+	virtual void getParameterName(VstInt32 index, char* text);
 
 	// Information
 	virtual bool getEffectName (char* name);

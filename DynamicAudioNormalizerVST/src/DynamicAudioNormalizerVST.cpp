@@ -55,9 +55,9 @@
 #include <pthread.h>
 
 //Constants
-static const VstInt32 CHANNEL_COUNT = 2;
+static const VstInt32 CHANNEL_COUNT   = 2;
 static const VstInt32 PARAMETER_COUNT = 8;
-static const VstInt32 PROGRAM_COUNT = 8;
+static const VstInt32 PROGRAM_COUNT   = 8;
 
 //Default
 static const char *DEFAULT_NAME = "#$!__DEFAULT__!$#";
@@ -65,6 +65,15 @@ static const char *DEFAULT_NAME = "#$!__DEFAULT__!$#";
 //Critical Section
 static char g_loggingBuffer[1024];
 static pthread_mutex_t g_loggingMutex = PTHREAD_MUTEX_INITIALIZER;
+
+//Enumerations
+enum
+{
+	PARAM_REALVAL = 0,
+	PARAM_INTEGER = 1,
+	PARAM_BOOLEAN = 2
+}
+param_type_t;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -107,84 +116,57 @@ static void showErrorMsg(const char *const text)
 	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST);
 }
 
+static double param2value(const double &min, const double &val, const double &max, const bool &forceInt)
+{
+	const double range = max - min;
+	const double factr = std::min(1.0, std::max(0.0, val));
+	const double reslt = min + (factr * range);
+	return forceInt ? round(reslt) : reslt;
+}
+
+static float value2param(const double &min, const double &val, const double &max)
+{
+	const double range = max - min;
+	const double targt = std::min(max, std::max(min, double(val)));
+	return static_cast<float>((targt - min) / range);
+}
+
+static void value2string(char *text, const double &val, const int &type, const bool &zeroDisables)
+{
+	if(zeroDisables && (type != PARAM_BOOLEAN) && (fabs(val) < DBL_EPSILON))
+	{
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "(OFF)");
+		return;
+	}
+
+	switch(type)
+	{
+	case PARAM_REALVAL:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", val);
+		break;
+	case PARAM_INTEGER:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%d", static_cast<int>(round(val)));
+		break;
+	case PARAM_BOOLEAN:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", (val >= 0.5) ? "ON" : "OFF");
+		break;
+	default:
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "N/A");
+	}
+}
+
+static uint32_t value2integer(const double &val) { return static_cast<uint32_t>(round(val)); }
+static uint32_t value2oddnmbr(const double &val) {return static_cast<uint32_t>((floor(val / 2.0) * 2.0) + 1.0); }
+static bool     value2boolean(const double &val)    { return (val >= 0.5); }
+
 ///////////////////////////////////////////////////////////////////////////////
 // Program Class
 ///////////////////////////////////////////////////////////////////////////////
 
-class DynamicAudioNormalizerVST_Program
+struct DynamicAudioNormalizerVST_Program
 {
-	friend class DynamicAudioNormalizerVST;
-
-public:
-	DynamicAudioNormalizerVST_Program()
-	{
-		frameLenMsec       = 0.5;
-		filterSize         = 0.5;
-		peakValue          = 0.9444;
-		maxAmplification   = 0.4595;
-		targetRms          = 0.0;
-		compressFactor     = 0.0;
-		channelsCoupled    = 1.0;
-		enableDCCorrection = 0.0;
-
-		vst_strncpy(name, DEFAULT_NAME, kVstMaxProgNameLen);
-	}
-
-	~DynamicAudioNormalizerVST_Program()
-	{
-	}
-
-	uint32_t getFrameLen(void) const
-	{
-		return static_cast<uint32_t>(round(50.0 + (900.0 * frameLenMsec)));
-	}
-	
-	uint32_t getFilterSize(void) const
-	{
-		return 1U + (static_cast<uint32_t>(round(1.0 + (28.0 * filterSize))) * 2U);
-	}
-
-	double getPeakValue(void) const
-	{
-		return 0.1 + (0.9 * peakValue);
-	}
-
-	double getMaxAmplification(void) const
-	{
-		return 1.5 + (18.5 * maxAmplification);
-	}
-
-	double getTargetRms(void) const
-	{
-		return (targetRms > DBL_EPSILON) ? (0.1 + (0.9 * targetRms)) : 0.0;
-	}
-
-	double getCompressFactor(void) const
-	{
-		return (compressFactor > DBL_EPSILON) ? (1.0 + (29.0 * compressFactor)) : 0.0;
-	}
-
-	bool getChannelsCoupled(void) const
-	{
-		return channelsCoupled >= 0.5;
-	}
-
-	bool getEnableDCCorrection(void) const
-	{
-		return enableDCCorrection >= 0.5;
-	}
-
-private:
 	char name[kVstMaxProgNameLen + 1];
-
-	float frameLenMsec;
-	float filterSize;
-	float peakValue;
-	float maxAmplification;
-	float targetRms;
-	float compressFactor;
-	float channelsCoupled;
-	float enableDCCorrection;
+	float param[PARAMETER_COUNT];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -225,7 +207,7 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	p(new DynamicAudioNormalizerVST_PrivateData())
 {
 	static const VstInt32 uniqueId = CCONST('!','c','2','N');
-	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST() - A");
+	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST()");
 
 	setNumInputs(CHANNEL_COUNT);	// stereo in
 	setNumOutputs(CHANNEL_COUNT);	// stereo out
@@ -234,12 +216,17 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	canDoubleReplacing();			// supports double precision processing
 	noTail(false);					// does have Tail!
 
-	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST() - B");
+	p->programs = new DynamicAudioNormalizerVST_Program[PROGRAM_COUNT];
+	for(VstInt32 i = 0; i < PROGRAM_COUNT; i++)
+	{
+		vst_strncpy(p->programs[i].name, DEFAULT_NAME, kVstMaxProgNameLen);
+		for(VstInt32 j = 0; j < PARAMETER_COUNT; j++)
+		{
+			p->programs[i].param[j] = getParameterDefault(j);
+		}
+	}
 
 	setProgram(0);
-	p->programs = new DynamicAudioNormalizerVST_Program[PROGRAM_COUNT];
-
-	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST() - C");
 }
 
 DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
@@ -269,21 +256,25 @@ DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Program and Parameter Handling
+// Program Handling
 ///////////////////////////////////////////////////////////////////////////////
 
 void DynamicAudioNormalizerVST::setProgram(VstInt32 program)
 {
+	outputMessage("DynamicAudioNormalizerVST::setProgramName(%d)", program);
 	AudioEffectX::setProgram(std::min(PROGRAM_COUNT-1, std::max(0, program)));
 }
 
 void DynamicAudioNormalizerVST::setProgramName (char* name)
 {
+	outputMessage("DynamicAudioNormalizerVST::setProgramName()");
 	vst_strncpy(p->programs[curProgram].name, name, kVstMaxProgNameLen);
 }
 
 void DynamicAudioNormalizerVST::getProgramName (char* name)
 {
+	outputMessage("DynamicAudioNormalizerVST::getProgramName()");
+
 	if(strcmp(p->programs[curProgram].name, DEFAULT_NAME) == 0)
 	{
 		_snprintf_s(name, kVstMaxProgNameLen, _TRUNCATE, "Preset #%u", curProgram + 1);
@@ -296,6 +287,8 @@ void DynamicAudioNormalizerVST::getProgramName (char* name)
 
 bool DynamicAudioNormalizerVST::getProgramNameIndexed(VstInt32 category, VstInt32 index, char* text)
 {
+	outputMessage("DynamicAudioNormalizerVST::getProgramNameIndexed(%d)", index);
+
 	if ((index >= 0) && (index < PROGRAM_COUNT))
 	{
 		if (strcmp(p->programs[index].name, DEFAULT_NAME) == 0)
@@ -315,130 +308,116 @@ bool DynamicAudioNormalizerVST::getProgramNameIndexed(VstInt32 category, VstInt3
 	}
 }
 
-void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
-{
-	switch (index)
-	{
-		case 0: p->programs[curProgram].frameLenMsec = value;       break;
-		case 1: p->programs[curProgram].filterSize = value;         break;
-		case 2: p->programs[curProgram].peakValue = value;          break;
-		case 3: p->programs[curProgram].maxAmplification = value;   break;
-		case 4: p->programs[curProgram].targetRms = value;          break;
-		case 5: p->programs[curProgram].compressFactor = value;     break;
-		case 6: p->programs[curProgram].channelsCoupled = value;    break;
-		case 7: p->programs[curProgram].enableDCCorrection = value; break;
-	}
-}
+///////////////////////////////////////////////////////////////////////////////
+// Parameter Handling
+///////////////////////////////////////////////////////////////////////////////
 
-float DynamicAudioNormalizerVST::getParameter (VstInt32 index)
+static const struct
 {
-	switch (index)
-	{
-		case 0: return p->programs[curProgram].frameLenMsec;
-		case 1: return p->programs[curProgram].filterSize;
-		case 2: return p->programs[curProgram].peakValue;
-		case 3: return p->programs[curProgram].maxAmplification;
-		case 4: return p->programs[curProgram].targetRms;
-		case 5: return p->programs[curProgram].compressFactor;
-		case 6: return p->programs[curProgram].channelsCoupled;
-		case 7: return p->programs[curProgram].enableDCCorrection;
-	}
-
-	return 0.0;
+	const char *paramName;
+	const char *labelName;
+	const double minValue;
+	const double defValue;
+	const double maxValue;
+	const int contentType;
+	const bool canDisable;
 }
+PARAM_PROPERTIES[PARAMETER_COUNT] =
+{
+	{ "FrameLen", "MSec",   100.00, 500.00, 1000.00, PARAM_INTEGER, false },
+	{ "FltrSize", "Frames",   3.00,  31.00,  300.00, PARAM_INTEGER, false },
+	{ "PeakVal",  "%",       10.00,  95.00,  100.00, PARAM_REALVAL, false },
+	{ "MaxAmpl",  "x",        1.00,  10.00,   50.00, PARAM_REALVAL, false },
+	{ "TrgtRMS",  "%",        0.00,   0.00,  100.00, PARAM_REALVAL, true  },
+	{ "Compress", "sigma",    0.00,   0.00,   25.00, PARAM_REALVAL, true  },
+	{ "ChanCpld", "",         0.00,   0.00,    1.00, PARAM_BOOLEAN, false },
+	{ "DCCorrct", "",         0.00,   0.00,    1.00, PARAM_BOOLEAN, false }
+};
 
 void DynamicAudioNormalizerVST::getParameterName (VstInt32 index, char* label)
 {
-	static const char *NAMES[PARAMETER_COUNT] =
-	{
-		"FrameLen",
-		"FltrSize",
-		"PeakVal",
-		"MaxAmpl",
-		"TrgtRMS",
-		"Compress",
-		"ChanCpld",
-		"DCCorrct"
-	};
+	outputMessage("DynamicAudioNormalizerVST::getParameterName(%d)", index);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
-		vst_strncpy(label, NAMES[index], kVstMaxParamStrLen);
+		vst_strncpy(label, PARAM_PROPERTIES[index].paramName, kVstMaxParamStrLen);
 	}
 	else
 	{
 		vst_strncpy(label, "N/A", kVstMaxParamStrLen);
-	}
-}
-
-void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
-{
-	text[0] = '\0';
-
-	switch (index)
-	{
-	case 0:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%u", p->programs[curProgram].getFrameLen());
-		break;
-	case 1:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%u", p->programs[curProgram].getFilterSize());
-		break;
-	case 2:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", 100.0 * p->programs[curProgram].getPeakValue());
-		break;
-	case 3:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", p->programs[curProgram].getMaxAmplification());
-		break;
-	case 4:
-		if(const double targetRms = p->programs[curProgram].targetRms)
-		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", 100.0 * targetRms);
-		}
-		else
-		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "(OFF)");
-		}
-		break;
-	case 5:
-		if(const double compressFactor = p->programs[curProgram].getCompressFactor())
-		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.1f", compressFactor);
-		}
-		else
-		{
-			_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "(OFF)");
-		}
-		break;
-	case 6:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", p->programs[curProgram].getChannelsCoupled() ? "ON" : "OFF");
-		break;
-	case 7:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", p->programs[curProgram].getEnableDCCorrection() ? "ON" : "OFF");
-		break;
 	}
 }
 
 void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
 {
-	static const char *LABEL[PARAMETER_COUNT] =
-	{
-		"MSec",
-		"Frames",
-		"%",
-		"x",
-		"%",
-		"sigma",
-		"",
-		""
-	};
+	outputMessage("DynamicAudioNormalizerVST::getParameterLabel(%d)", index);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
-		vst_strncpy(label, LABEL[index], kVstMaxParamStrLen);
+		vst_strncpy(label, PARAM_PROPERTIES[index].labelName, kVstMaxParamStrLen);
 	}
 	else
 	{
 		vst_strncpy(label, "N/A", kVstMaxParamStrLen);
+	}
+}
+
+void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
+{
+	outputMessage("DynamicAudioNormalizerVST::setParameter(%d, %.2f)", index, value);
+
+	if ((index >= 0) && (index < PARAMETER_COUNT))
+	{
+		p->programs[curProgram].param[index] = value;
+	}
+}
+
+float DynamicAudioNormalizerVST::getParameter(VstInt32 index)
+{
+	outputMessage("DynamicAudioNormalizerVST::getParameter(%d)", index);
+
+	if ((index >= 0) && (index < PARAMETER_COUNT))
+	{
+		return p->programs[curProgram].param[index];
+	}
+
+	return -1.0;
+}
+
+double DynamicAudioNormalizerVST::getParameterValue(VstInt32 index)
+{
+	outputMessage("DynamicAudioNormalizerVST::getParameterValue(%d)", index);
+
+	if ((index >= 0) && (index < PARAMETER_COUNT))
+	{
+		
+		return param2value(PARAM_PROPERTIES[index].minValue, p->programs[curProgram].param[index], PARAM_PROPERTIES[index].maxValue, (PARAM_PROPERTIES[index].contentType != PARAM_REALVAL));
+	}
+
+	return -1.0;
+}
+
+float DynamicAudioNormalizerVST::getParameterDefault(VstInt32 index)
+{
+	outputMessage("DynamicAudioNormalizerVST::getParameterDefault(%d)", index);
+
+	if ((index >= 0) && (index < PARAMETER_COUNT))
+	{
+		
+		return value2param(PARAM_PROPERTIES[index].minValue, PARAM_PROPERTIES[index].defValue, PARAM_PROPERTIES[index].maxValue);
+	}
+
+	return -1.0;
+}
+
+void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
+{
+	outputMessage("DynamicAudioNormalizerVST::getParameterDisplay(%d)", index);
+
+	text[0] = '\0';
+	if ((index >= 0) && (index < PARAMETER_COUNT))
+	{
+		value2string(text, getParameterValue(index), PARAM_PROPERTIES[index].contentType, PARAM_PROPERTIES[index].canDisable);
 	}
 }
 
@@ -448,6 +427,8 @@ void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
 
 bool DynamicAudioNormalizerVST::getEffectName (char* name)
 {
+	outputMessage("DynamicAudioNormalizerVST::getEffectName()");
+
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
 	_snprintf_s(name, kVstMaxEffectNameLen, _TRUNCATE, "DynamicAudioNormalizer %u.%02u-%u", major, minor, patch);
@@ -456,6 +437,8 @@ bool DynamicAudioNormalizerVST::getEffectName (char* name)
 
 bool DynamicAudioNormalizerVST::getProductString (char* text)
 {
+	outputMessage("DynamicAudioNormalizerVST::getProductString()");
+
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
 	_snprintf_s(text, kVstMaxProductStrLen, _TRUNCATE, "DynamicAudioNormalizer_%u", (100U * major) + minor);
@@ -464,20 +447,25 @@ bool DynamicAudioNormalizerVST::getProductString (char* text)
 
 bool DynamicAudioNormalizerVST::getVendorString (char* text)
 {
-	vst_strncpy(text, "LoRd_MuldeR <mulder2@gmxde>", kVstMaxVendorStrLen);
+	outputMessage("DynamicAudioNormalizerVST::getVendorString()");
+
+	static const char *vendorName = "LoRd_MuldeR";
+	_snprintf_s(text, kVstMaxVendorStrLen, _TRUNCATE, "%s", vendorName);
 	return true;
 }
 
 VstInt32 DynamicAudioNormalizerVST::getVendorVersion ()
 { 
+	outputMessage("DynamicAudioNormalizerVST::getVendorVersion()");
+
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-
 	return (major * 1000U) + (minor * 10U) + patch;
 }
 
 VstPlugCategory DynamicAudioNormalizerVST::getPlugCategory(void)
 {
+	outputMessage("DynamicAudioNormalizerVST::getPlugCategory()");
 	return kPlugCategEffect;
 }
 
@@ -488,6 +476,12 @@ VstPlugCategory DynamicAudioNormalizerVST::getPlugCategory(void)
 void DynamicAudioNormalizerVST::open(void)
 {
 	outputMessage("DynamicAudioNormalizerVST::open()");
+
+	for(VstInt32 j = 0; j < PARAMETER_COUNT; j++)
+	{
+		setParameterAutomated(j, p->programs[curProgram].param[j]);
+	}
+
 }
 
 void DynamicAudioNormalizerVST::close(void)
@@ -611,14 +605,14 @@ bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
 		(
 			CHANNEL_COUNT,
 			sampleRate,
-			currentProg->getFrameLen(),
-			currentProg->getFilterSize(),
-			currentProg->getPeakValue(),
-			currentProg->getMaxAmplification(),
-			currentProg->getTargetRms(),
-			currentProg->getCompressFactor(),
-			currentProg->getChannelsCoupled(),
-			currentProg->getEnableDCCorrection()
+			value2integer(getParameterValue(0)),
+			value2oddnmbr(getParameterValue(1)),
+			getParameterValue(2) / 100.0,
+			getParameterValue(3),
+			getParameterValue(4) / 100.0,
+			getParameterValue(5),
+			value2boolean(getParameterValue(6)),
+			value2boolean(getParameterValue(7))
 		);
 	}
 	catch(...)
