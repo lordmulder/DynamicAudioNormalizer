@@ -159,8 +159,6 @@ private:
 
 	double *m_fadeFactors[3];
 
-	uint64_t m_stats[101];
-
 protected:
 	void processNextFrame(void);
 	void analyzeFrame(FrameData *frame);
@@ -206,19 +204,19 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_altBoundaryMode(altBoundaryMode),
 	m_logFile(logFile)
 {
-	LOG2_DBG("channels: %u",           channels);
-	LOG2_DBG("sampleRate: %u",         sampleRate);
-	LOG2_DBG("frameLenMsec: %u",       frameLenMsec);
-	LOG2_DBG("filterSize: %u",         filterSize);
-	LOG2_DBG("peakValue: %.4f",        peakValue);
-	LOG2_DBG("maxAmplification: %.4f", maxAmplification);
-	LOG2_DBG("targetRms: %.4f",        targetRms);
-	LOG2_DBG("compressFactor: %.4f",   compressFactor);
-	LOG2_DBG("channelsCoupled: %s",    channelsCoupled    ? "YES" : "NO");
-	LOG2_DBG("enableDCCorrection: %s", enableDCCorrection ? "YES" : "NO");
-	LOG2_DBG("altBoundaryMode: %s",    altBoundaryMode    ? "YES" : "NO");
-	LOG2_DBG("logFile: %p",            logFile);
-
+	// LOG2_DBG("channels: %u",           channels);
+	// LOG2_DBG("sampleRate: %u",         sampleRate);
+	// LOG2_DBG("frameLenMsec: %u",       frameLenMsec);
+	// LOG2_DBG("filterSize: %u",         filterSize);
+	// LOG2_DBG("peakValue: %.4f",        peakValue);
+	// LOG2_DBG("maxAmplification: %.4f", maxAmplification);
+	// LOG2_DBG("targetRms: %.4f",        targetRms);
+	// LOG2_DBG("compressFactor: %.4f",   compressFactor);
+	// LOG2_DBG("channelsCoupled: %s",    channelsCoupled    ? "YES" : "NO");
+	// LOG2_DBG("enableDCCorrection: %s", enableDCCorrection ? "YES" : "NO");
+	// LOG2_DBG("altBoundaryMode: %s",    altBoundaryMode    ? "YES" : "NO");
+	// LOG2_DBG("logFile: %p",            logFile);
+	
 	m_initialized = false;
 	m_flushBuffer = false;
 
@@ -254,11 +252,6 @@ MDynamicAudioNormalizer::~MDynamicAudioNormalizer(void)
 
 MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 {
-	//for(size_t i = 0; i <= 100; i++)
-	//{
-	//	LOG2_WRN("%u\t%I64u", i, m_stats[i]);
-	//}
-
 	LOG2_DBG("Processed %" PRIu64 " samples total, clipped %" PRIu64 " samples (%.2f%%).",
 		m_sampleCounterTotal,
 		m_sampleCounterClips,
@@ -415,7 +408,6 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 		m_compressThreshold [channel] = 0.0;
 	}
 
-	memset(&m_stats[0], 0, sizeof(uint64_t) * 101);
 	return true;
 }
 
@@ -899,9 +891,6 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, c
 			double *const dataPtr = frame->data(c);
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
-				const size_t index = LIMIT(size_t(0), static_cast<size_t>(round(abs(dataPtr[i]) * 100.0)), size_t(100));
-				m_stats[index]++;
-
 				const double localThresh = FADE(prevActualThresh, currActualThresh, currActualThresh, i, m_fadeFactors);
 				dataPtr[i] = copysign(BOUND(localThresh, fabs(dataPtr[i])), dataPtr[i]);
 			}

@@ -73,7 +73,7 @@ QtGui4.dll                    - Qt library, used to create the graphical user in
 README.html                   - The README file
 ```
 
-<small>**Note:** Standard binaries are *32-Bit* (x86), the *64-Bit* (AMD64/Intel64) versions can be found in the "x64" sub-directory.</small>
+<small>**Note:** Standard binaries are *32-Bit* (x86), though *64-Bit* (AMD64/Intel64) versions can be found in the "x64" sub-directory.</small>
 
 
 Command-Line Usage <a name="chap_cli"></a>

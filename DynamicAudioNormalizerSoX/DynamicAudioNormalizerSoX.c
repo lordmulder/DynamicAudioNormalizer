@@ -462,7 +462,7 @@ sox_effect_handler_t const * lsx_dynaudnorm_effect_fn(void)
 		"  -n          Disable channel coupling",
 		"  -c          Enable the DC bias correction",
 		"  -b          Use alternative boundary mode",
-		"  -s          Compress the input data",
+		"  -s <value>  Compress the input data",
 		"",
 		"Diagnostics:",
 		"  -l <file>   Create a log file",
