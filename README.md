@@ -481,11 +481,11 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
-### Version 2.05 (2014-09-??) ###
+### Version 2.05 (2014-09-10) ###
 * Significant overhaul of the *compression* (thresholding) function
-* Implemented [VST](http://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be used in any VST host
+* Implemented [VST](http://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be integrated in any VST host
 * Added *64-Bit* library and VST plug-in binaries to the Windows release packages
-* No longer use <tt>__declspec(thread)</tt>, because it can crash on Windows XP ([details](http://www.nynaeve.net/?p=187))
+* No longer use <tt>__declspec(thread)</tt>, because it can crash libraries on Windows XP ([details](http://www.nynaeve.net/?p=187))
 
 ### Version 2.04 (2014-08-25) ###
 * Added an optional input *compression* (thresholding) function
