@@ -313,6 +313,12 @@ static int processFiles(const Parameters &parameters, AudioIO *const sourceFile,
 		buffer[channel] = new double[FRAME_SIZE];
 	}
 	
+	//Some extra spacing in VERBOSE mode
+	if(parameters.verboseMode())
+	{
+		PRINT(TXT("\n"));
+	}
+
 	//Run normalizer now!
 	exitCode = processingLoop(normalizer, sourceFile, outputFile, buffer, channels, length);
 
@@ -325,6 +331,12 @@ static int processFiles(const Parameters &parameters, AudioIO *const sourceFile,
 		MY_DELETE_ARRAY(buffer[channel]);
 	}
 	MY_DELETE_ARRAY(buffer);
+
+	//Some extra spacing in VERBOSE mode
+	if(parameters.verboseMode())
+	{
+		PRINT(TXT("\n"));
+	}
 
 	//Return result
 	return exitCode;
