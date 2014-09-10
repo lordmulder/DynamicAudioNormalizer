@@ -28,20 +28,24 @@ QTDIR ?= /usr/include/qt4
 # Constants
 ##############################################################################
 
-API_VERSION  := 1
 PROGRAM_NAME := DynamicAudioNormalizerGUI
+
+ifndef API_VERSION
+   $(error API_VERSION variable is not set!)
+endif
 
 ##############################################################################
 # Qt Checks
 ##############################################################################
 
-MOC_CHECK = $(findstring Qt Meta Object Compiler,$(shell $(MOC) -v 2>&1))
-ifneq ($(MOC_CHECK),Qt Meta Object Compiler)
-   $(error Qt Meta Object Compiler not found. Please set MOC environment variable properly!)
-endif
-
-ifneq ($(notdir $(realpath $(QTDIR)/QtGui/QApplication)),QApplication)
-   $(error "QtGui/QApplication" not found in Qt include path. Please set QTDIR environment variable properly!)
+ifneq ($(MAKECMDGOALS),clean)
+   MOC_CHECK = $(findstring Qt Meta Object Compiler,$(shell $(MOC) -v 2>&1))
+   ifneq ($(MOC_CHECK),Qt Meta Object Compiler)
+      $(error Qt Meta Object Compiler not found. Please set MOC environment variable properly!)
+   endif
+   ifneq ($(notdir $(realpath $(QTDIR)/QtGui/QApplication)),QApplication)
+      $(error "QtGui/QApplication" not found in Qt include path. Please set QTDIR environment variable properly!)
+   endif
 endif
 
 ##############################################################################

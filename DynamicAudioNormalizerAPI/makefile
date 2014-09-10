@@ -26,8 +26,11 @@ SHELL=/bin/bash
 # Constants
 ##############################################################################
 
-API_VERSION  := 1
 LIBRARY_NAME := libDynamicAudioNormalizerAPI
+
+ifndef API_VERSION
+   $(error API_VERSION variable is not set!)
+endif
 
 ##############################################################################
 # Flags

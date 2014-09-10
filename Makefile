@@ -27,7 +27,6 @@ SHELL=/bin/bash
 # Constants
 ##############################################################################
 
-API_VERSION  := 1
 LIBRARY_NAME := DynamicAudioNormalizerAPI
 PROGRAM_NAME := DynamicAudioNormalizerCLI
 LOGVIEW_NAME := DynamicAudioNormalizerGUI
@@ -41,6 +40,9 @@ OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).tbz2)
 VER_MAJOR = $(shell sed -n 's/.*DYNAUDNORM_VERSION_MAJOR = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
 VER_MINOR = $(shell sed -n 's/.*DYNAUDNORM_VERSION_MINOR = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
 VER_PATCH = $(shell sed -n 's/.*DYNAUDNORM_VERSION_PATCH = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
+
+# API Version
+export API_VERSION := $(shell sed -n 's/.*define MDYNAMICAUDIONORMALIZER_CORE \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/include/DynamicAudioNormalizer.h)
 
 ##############################################################################
 # Rules
