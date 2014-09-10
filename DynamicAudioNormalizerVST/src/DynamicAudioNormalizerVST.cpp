@@ -116,24 +116,26 @@ static void showErrorMsg(const char *const text)
 	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST);
 }
 
-static double param2value(const double &min, const double &val, const double &max, const bool &forceInt)
+static double applyStepSize(const double &val, const double &step)
 {
-	const double range = max - min;
-	const double factr = std::min(1.0, std::max(0.0, val));
-	const double reslt = min + (factr * range);
-	return forceInt ? round(reslt) : reslt;
+	return (round(val / step) * step);
+}
+
+static double param2value(const double &min, const double &val, const double &max, const double &stepSize)
+{
+	const double offset = std::min(1.0, std::max(0.0, val)) * (max - min);
+	return min + ((stepSize > DBL_EPSILON) ? applyStepSize(offset, stepSize) : offset);
 }
 
 static float value2param(const double &min, const double &val, const double &max)
 {
-	const double range = max - min;
 	const double targt = std::min(max, std::max(min, double(val)));
-	return static_cast<float>((targt - min) / range);
+	return static_cast<float>((targt - min) / (max - min));
 }
 
-static void value2string(char *text, const double &val, const int &type, const bool &zeroDisables)
+static void value2string(char *text, const double &val, const double &min, const int &type, const bool &minDisable)
 {
-	if(zeroDisables && (type != PARAM_BOOLEAN) && (fabs(val) < DBL_EPSILON))
+	if(minDisable && (fabs(val - min) < DBL_EPSILON))
 	{
 		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "(OFF)");
 		return;
@@ -145,7 +147,7 @@ static void value2string(char *text, const double &val, const int &type, const b
 		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%.2f", val);
 		break;
 	case PARAM_INTEGER:
-		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%d", static_cast<int>(round(val)));
+		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%d", static_cast<int>(val));
 		break;
 	case PARAM_BOOLEAN:
 		_snprintf_s(text, kVstMaxParamStrLen, _TRUNCATE, "%s", (val >= 0.5) ? "ON" : "OFF");
@@ -156,8 +158,7 @@ static void value2string(char *text, const double &val, const int &type, const b
 }
 
 static uint32_t value2integer(const double &val) { return static_cast<uint32_t>(round(val)); }
-static uint32_t value2oddnmbr(const double &val) {return static_cast<uint32_t>((floor(val / 2.0) * 2.0) + 1.0); }
-static bool     value2boolean(const double &val)    { return (val >= 0.5); }
+static bool     value2boolean(const double &val) { return (val >= 0.5); }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Program Class
@@ -263,6 +264,7 @@ void DynamicAudioNormalizerVST::setProgram(VstInt32 program)
 {
 	outputMessage("DynamicAudioNormalizerVST::setProgramName(%d)", program);
 	AudioEffectX::setProgram(std::min(PROGRAM_COUNT-1, std::max(0, program)));
+	forceUpdateParameters();
 }
 
 void DynamicAudioNormalizerVST::setProgramName (char* name)
@@ -320,18 +322,19 @@ static const struct
 	const double defValue;
 	const double maxValue;
 	const int contentType;
-	const bool canDisable;
+	const bool minDisable;
+	const double stepSize;
 }
 PARAM_PROPERTIES[PARAMETER_COUNT] =
 {
-	{ "FrameLen", "MSec",   100.00, 500.00, 1000.00, PARAM_INTEGER, false },
-	{ "FltrSize", "Frames",   3.00,  31.00,  300.00, PARAM_INTEGER, false },
-	{ "PeakVal",  "%",       10.00,  95.00,  100.00, PARAM_REALVAL, false },
-	{ "MaxAmpl",  "x",        1.00,  10.00,   50.00, PARAM_REALVAL, false },
-	{ "TrgtRMS",  "%",        0.00,   0.00,  100.00, PARAM_REALVAL, true  },
-	{ "Compress", "sigma",    0.00,   0.00,   25.00, PARAM_REALVAL, true  },
-	{ "ChanCpld", "",         0.00,   0.00,    1.00, PARAM_BOOLEAN, false },
-	{ "DCCorrct", "",         0.00,   0.00,    1.00, PARAM_BOOLEAN, false }
+	{ "FrameLen", "MSec",   100.00, 500.00, 1000.00, PARAM_INTEGER, false, 1.00 },
+	{ "FltrSize", "Frames",   3.00,  31.00,   63.00, PARAM_INTEGER, false, 2.00 },
+	{ "PeakVal",  "%",       10.00,  95.00,  100.00, PARAM_REALVAL, false, 0.00 },
+	{ "MaxAmpl",  "x",        1.00,  10.00,   50.00, PARAM_REALVAL, false, 0.00 },
+	{ "TrgtRMS",  "%",        0.00,   0.00,  100.00, PARAM_REALVAL, true,  0.00 },
+	{ "Compress", "sigma",    0.00,   0.00,   25.00, PARAM_REALVAL, true,  0.00 },
+	{ "ChanCpld", "",         0.00,   1.00,    1.00, PARAM_BOOLEAN, false, 1.00 },
+	{ "DCCorrct", "",         0.00,   0.00,    1.00, PARAM_BOOLEAN, false, 1.00 }
 };
 
 void DynamicAudioNormalizerVST::getParameterName (VstInt32 index, char* label)
@@ -368,7 +371,7 @@ void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
-		p->programs[curProgram].param[index] = value;
+		p->programs[curProgram].param[index] = std::min(1.0f, std::max(0.0f, value));
 	}
 }
 
@@ -391,7 +394,7 @@ double DynamicAudioNormalizerVST::getParameterValue(VstInt32 index)
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
 		
-		return param2value(PARAM_PROPERTIES[index].minValue, p->programs[curProgram].param[index], PARAM_PROPERTIES[index].maxValue, (PARAM_PROPERTIES[index].contentType != PARAM_REALVAL));
+		return param2value(PARAM_PROPERTIES[index].minValue, p->programs[curProgram].param[index], PARAM_PROPERTIES[index].maxValue, PARAM_PROPERTIES[index].stepSize);
 	}
 
 	return -1.0;
@@ -417,7 +420,7 @@ void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
 	text[0] = '\0';
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
-		value2string(text, getParameterValue(index), PARAM_PROPERTIES[index].contentType, PARAM_PROPERTIES[index].canDisable);
+		value2string(text, getParameterValue(index), PARAM_PROPERTIES[index].minValue, PARAM_PROPERTIES[index].contentType, PARAM_PROPERTIES[index].minDisable);
 	}
 }
 
@@ -476,12 +479,7 @@ VstPlugCategory DynamicAudioNormalizerVST::getPlugCategory(void)
 void DynamicAudioNormalizerVST::open(void)
 {
 	outputMessage("DynamicAudioNormalizerVST::open()");
-
-	for(VstInt32 j = 0; j < PARAMETER_COUNT; j++)
-	{
-		setParameterAutomated(j, p->programs[curProgram].param[j]);
-	}
-
+	forceUpdateParameters();
 }
 
 void DynamicAudioNormalizerVST::close(void)
@@ -589,7 +587,7 @@ VstInt32 DynamicAudioNormalizerVST::getGetTailSize(void)
 // Internal Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
+bool DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
 {
 	if(p->instance)
 	{
@@ -606,7 +604,7 @@ bool  DynamicAudioNormalizerVST::createNewInstance(const uint32_t sampleRate)
 			CHANNEL_COUNT,
 			sampleRate,
 			value2integer(getParameterValue(0)),
-			value2oddnmbr(getParameterValue(1)),
+			value2integer(getParameterValue(1)),
 			getParameterValue(2) / 100.0,
 			getParameterValue(3),
 			getParameterValue(4) / 100.0,
@@ -746,6 +744,16 @@ void DynamicAudioNormalizerVST::writeOutputSamplesDbl(double *const *const outpu
 	else
 	{
 		showErrorMsg("Number of output samples exceeds output buffer size!");
+	}
+}
+
+void DynamicAudioNormalizerVST::forceUpdateParameters(void)
+{
+	for(VstInt32 i = 0; i < PARAMETER_COUNT; i++)
+	{
+		beginEdit(i);
+		setParameterAutomated(i, p->programs[curProgram].param[i]);
+		endEdit(i);
 	}
 }
 

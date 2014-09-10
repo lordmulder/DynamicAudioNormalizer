@@ -86,6 +86,7 @@ private:
 	void readInputSamplesDbl(const double *const *const inputs, const int64_t sampleCount);
 	void writeOutputSamplesFlt(float  *const *const outputs, const int64_t sampleCount, const int64_t outputSamples);
 	void writeOutputSamplesDbl(double *const *const outputs, const int64_t sampleCount, const int64_t outputSamples);
+	void forceUpdateParameters(void);
 
 	DynamicAudioNormalizerVST_PrivateData *const p;
 };
