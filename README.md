@@ -3,7 +3,9 @@ Dynamic Audio Normalizer
 
 <small>Created by LoRd_MuldeR <<mulder2@gmx>></tt> – Please check http://muldersoft.com/ for news and updates!</small>
 
-**Dynamic Audio Normalizer** is a library and a command-line tool for [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization). It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" parts of the audio while avoiding distortions or clipping the "loud" parts. In other words, the volume of the "quiet" and the "loud" parts will be *harmonized*.
+**Dynamic Audio Normalizer** is a library for *advanced* [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization) purposes. It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" sections of the audio while avoiding distortions or clipping the "loud" sections. In other words: The volume of the "quiet" and the "loud" sections will be *harmonized*, in the sense that the volume of each section is brought to the same level. Note, however, that the Dynamic Audio Normalizer achieves this goal *without* applying "dynamic range compressing" in the classical sense. It will retain 100% of the dynamic range *within* each section of the audio file.
+
+The *Dynamic Audio Normalizer* is available in the form of a small standalone command-line utility as well as in the form of an effect in the [SoX](http://sox.sourceforge.net/) audio processor. And, if you prefer a GUI, it can also integrate into your favourite DAW (digital audio workstation) in the form of a [VST](http://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in.
 
 ### Contents: ###
 1.  [How It Works](#chap_how)
