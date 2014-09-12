@@ -485,13 +485,25 @@ void DynamicAudioNormalizerVST::open(void)
 void DynamicAudioNormalizerVST::close(void)
 {
 	outputMessage("DynamicAudioNormalizerVST::close()");
+
+	if(p->instance)
+	{
+		outputMessage("ISANITY:  Host called close() after resume() *without* intermittent susped() call -> workaround actived!");
+		suspend();
+	}
 }
 
 void DynamicAudioNormalizerVST::resume(void)
 {
 	outputMessage("DynamicAudioNormalizerVST::resume()");
 
-	if (createNewInstance(static_cast<uint32_t>(round(getSampleRate()))))
+	if(p->instance)
+	{
+		outputMessage("ISANITY: Host called resume() repeatedly *without* intermittent susped() call -> workaround actived!");
+		suspend();
+	}
+
+	if(createNewInstance(static_cast<uint32_t>(round(getSampleRate()))))
 	{
 		int64_t delayInSamples;
 		if(p->instance->getInternalDelay(delayInSamples))
@@ -516,7 +528,7 @@ void DynamicAudioNormalizerVST::suspend(void)
 // Audio Processing
 ///////////////////////////////////////////////////////////////////////////////
 
-void DynamicAudioNormalizerVST::processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames)
+void DynamicAudioNormalizerVST::processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames)
 {
 	if(sampleFrames < 1)
 	{
@@ -525,8 +537,8 @@ void DynamicAudioNormalizerVST::processReplacing (float** inputs, float** output
 
 	if(!p->instance)
 	{
-		showErrorMsg("Dynamic Audio Normalizer instance not created yet!");
-		return;
+		outputMessage("ISANITY: Host called processReplacing() *before* resume() has been called -> workaround actived!");
+		resume();
 	}
 
 	updateBufferSize(sampleFrames);
@@ -551,8 +563,8 @@ void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double*
 
 	if(!p->instance)
 	{
-		showErrorMsg("Dynamic Audio Normalizer instance not created yet!");
-		return;
+		outputMessage("ISANITY: Host called processReplacing() *before* resume() has been called -> workaround actived!");
+		resume();
 	}
 
 	updateBufferSize(sampleFrames);

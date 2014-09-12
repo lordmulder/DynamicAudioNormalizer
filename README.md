@@ -153,11 +153,12 @@ The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host
 ### Supported VST Hosts ###
 
 Non-exhaustive list of VST hosts that have been tested to *work correctly* with the Dynamic Audio Normalizer VST plug-in:
-* [Acoustica](http://acondigital.com/products/acoustica-audio-editor/), by Acon AS → <span style="color:DarkGreen">VST support working</span> → completely free "basic" version available → **recommended!**
-* [GoldWave](http://www.goldwave.com/), by GoldWave Inc. → <span style="color:DarkGreen">VST support working</span> → free *evaluation* version available
-* [REAPER](http://www.reaper.fm/), by Cockos Inc → <span style="color:DarkGreen">VST support working</span> → free *evaluation* version available
-* [WaveLab](http://www.steinberg.net/en/products/wavelab/start.html), by Steinberg Media Technologies GmbH → <span style="color:DarkGreen">VST support working</span> → free *trial* version available
-* [Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro"), by Adobe Systems Inc. → <span style="color:DarkGreen">VST support working</span>
+* [Acoustica](http://acondigital.com/products/acoustica-audio-editor/), by Acon AS → <span style="color:SeaGreen">VST support working</span> → 100% free "basic" edition available → <span style="color:RoyalBlue ">**recommended!**</span>
+* [GoldWave](http://www.goldwave.com/), by GoldWave Inc. → <span style="color:SeaGreen">VST support working</span> → free *evaluation* version available
+* [REAPER](http://www.reaper.fm/), by Cockos Inc → <span style="color:SeaGreen">VST support working</span> → free *evaluation* version available
+* [WaveLab](http://www.steinberg.net/en/products/wavelab/start.html), by Steinberg Media Technologies GmbH → <span style="color:SeaGreen">VST support working</span> → free *trial* version available
+* [Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro"), by Adobe Systems Inc. → <span style="color:SeaGreen">VST support working</span>
+* [Sound Forge Pro](http://www.sonycreativesoftware.com/soundforgesoftware), by Sony (formerly Sonic Foundry) → <span style="color:SeaGreen">VST support working</span> → free *trial* version available
 
 ### Problematic VST Hosts ###
 
