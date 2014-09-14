@@ -698,6 +698,12 @@ The Dynamic Audio Normalizer can operate as a **plug-in** (effect) using the fol
   Copyright (C) 2006 Steinberg Media Technologies. All Rights Reserved.  
   <small>**VST PlugIn Interface Technology by Steinberg Media Technologies GmbH. VST is a trademark of Steinberg Media Technologies GmbH.**</small>
 
-<br>  
+The Dynamic Audio Normalizer **VST wrapper** (DynamicAudioNormalizerVST) incorporates the following *third-party* software:
+
+* [**Spooky Hash V2**](http://burtleburtle.net/bob/hash/spooky.html)  
+  Public domain noncryptographic hash function producing well-distributed 128-bit hash values
+  Created by Bob Jenkins. Public domain.
+
+<br>
 
 e.o.f.

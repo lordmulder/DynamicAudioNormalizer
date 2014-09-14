@@ -837,7 +837,7 @@ void DynamicAudioNormalizerVST::forceUpdateParameters(void)
 // Create Instance
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool g_initialized = false;
+static int8_t g_initialized = -1;
 static pthread_mutex_t g_createEffMutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void appendStr(wchar_t *buffer, const size_t &size, const wchar_t *const text, ...)
@@ -850,7 +850,7 @@ static void appendStr(wchar_t *buffer, const size_t &size, const wchar_t *const 
 	wcsncat_s(buffer, size, temp, _TRUNCATE);
 }
 
-static void showAboutScreen(const uint32_t & major, const uint32_t & minor, const uint32_t & patch, const char *const date, const char *const time, const char *const compiler, const char *const arch, const bool &debug)
+static bool showAboutScreen(const uint32_t & major, const uint32_t & minor, const uint32_t & patch, const char *const date, const char *const time, const char *const compiler, const char *const arch, const bool &debug)
 {
 	wchar_t text[1024] = { '\0' };
 	appendStr(text, 1024, L"Dynamic Audio Normalizer, VST Wrapper, Version %u.%02u-%u, %s\n", major, minor, patch, (debug ? L"DEBGU" : L"Release"));
@@ -864,12 +864,37 @@ static void showAboutScreen(const uint32_t & major, const uint32_t & minor, cons
 	appendStr(text, 1024, L"but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
 	appendStr(text, 1024, L"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n");
 	appendStr(text, 1024, L"Lesser General Public License for more details.\n\n");
-	appendStr(text, 1024, L"Please click 'OK' if you agree or click 'Cancel' to exit the application...\n");
+	appendStr(text, 1024, L"Please click 'OK' if you agree to the above notice or 'Cancel' otherwise...\n");
 
-	while(MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_TOPMOST | MB_APPLMODAL | MB_OKCANCEL | MB_DEFBUTTON2) != IDOK)
+	return (MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_TOPMOST | MB_TASKMODAL | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK);
+}
+
+static bool initializeCoreLibrary(void)
+{
+	MDynamicAudioNormalizer::setLogFunction(logFunction);
+
+	uint32_t major, minor, patch;
+	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
+	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
+
+	const char *date, *time, *compiler, *arch; bool debug;
+	MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
+
+	wchar_t appUuid[64];
+	if(getAppUuid(appUuid, 64))
 	{
-		FatalAppExitW(0, L"Application is going to exit on user request!");
+		const DWORD version = (1000u * major) + (10u * minor) + patch;
+		if(regValueGet(appUuid) != version)
+		{
+			if(!showAboutScreen(major, minor, patch, date, time, compiler, arch, debug))
+			{
+				return false;
+			}
+			regValueSet(appUuid, version);
+		}
 	}
+
+	return true;
 }
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
@@ -877,32 +902,15 @@ AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 	MY_CRITSEC_ENTER(g_createEffMutex);
 	AudioEffect *effectInstance = NULL;
 
-	if(!g_initialized)
+	if(g_initialized < 0)
 	{
-		MDynamicAudioNormalizer::setLogFunction(logFunction);
-
-		uint32_t major, minor, patch;
-		MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-		outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
-
-		const char *date, *time, *compiler, *arch; bool debug;
-		MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
-
-		wchar_t appUuid[64];
-		if(getAppUuid(appUuid, 64))
-		{
-			const DWORD version = (1000u * major) + (10u * minor) + patch;
-			if(regValueGet(appUuid) != version)
-			{
-				showAboutScreen(major, minor, patch, date, time, compiler, arch, debug);
-				regValueSet(appUuid, version);
-			}
-		}
-
-		g_initialized = true;
+		g_initialized = initializeCoreLibrary() ? 1 : 0;
 	}
 	
-	effectInstance = new DynamicAudioNormalizerVST(audioMaster);
+	if(g_initialized > 0)
+	{
+		effectInstance = new DynamicAudioNormalizerVST(audioMaster);
+	}
 	
 	MY_CRITSEC_LEAVE(g_createEffMutex);
 	return effectInstance;
