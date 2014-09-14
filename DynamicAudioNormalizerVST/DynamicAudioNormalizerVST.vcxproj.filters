@@ -33,6 +33,9 @@
     <ClCompile Include="src\DynamicAudioNormalizerVST.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Spooky.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\etc\vst_sdk\public.sdk\source\vst2.x\aeffeditor.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files\VST 2.x SDK</Filter>
     </ClInclude>
     <ClInclude Include="src\DynamicAudioNormalizerVST.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Spooky.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

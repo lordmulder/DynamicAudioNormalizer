@@ -36,16 +36,20 @@
 
 //Internal
 #include <Common.h>
+#include "Spooky.h"
 
 //Standard Library
 #include <cmath>
 #include <algorithm>
+#include <inttypes.h>
 
 //Win32 API
 #ifdef _WIN32
 #define NOMINMAX 1
 #define WIN32_LEAN_AND_MEAN 1
+#define PSAPI_VERSION 1
 #include <Windows.h>
+#include <Psapi.h>
 #endif
 
 //PThread
@@ -62,6 +66,9 @@ static const VstInt32 PROGRAM_COUNT   = 8;
 //Default
 static const char *DEFAULT_NAME = "#$!__DEFAULT__!$#";
 
+//Reg key
+static const wchar_t *REGISTRY_PATH = L"Software\\MuldeR\\DynAudNorm\\VST";
+
 //Critical Section
 static char g_loggingBuffer[1024];
 static pthread_mutex_t g_loggingMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -74,6 +81,14 @@ enum
 	PARAM_BOOLEAN = 2
 }
 param_type_t;
+
+//Seed values
+#ifdef _M_X64
+static const uint64_t SEED_VALU1 = 0xC11D908A35A625A5, SEED_VALU2 = 0x5E57D080BCD2EAED;
+#else
+static const uint64_t SEED_VALU1 = 0x24575239D116386B, SEED_VALU2 = 0xE03BDD5B975F47D0;
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -114,6 +129,55 @@ static void logFunction(const int logLevel, const char *const message)
 static void showErrorMsg(const char *const text)
 {
 	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST);
+}
+
+static DWORD regValueGet(const wchar_t *const name)
+{
+	DWORD result = 0; HKEY hKey = NULL;
+	if(RegCreateKeyExW(HKEY_CURRENT_USER, REGISTRY_PATH, 0, NULL, 0, KEY_READ, NULL, &hKey, NULL) == ERROR_SUCCESS)
+	{
+		DWORD type = 0, value = 0, size = sizeof(DWORD);
+		if(RegQueryValueExW(hKey, name, 0, &type, ((LPBYTE) &value), &size) == ERROR_SUCCESS)
+		{
+			if((type == REG_DWORD) && (size == sizeof(DWORD)))
+			{
+				result = value;
+			}
+		}
+		RegCloseKey(hKey);
+	}
+	return result;
+}
+
+static bool regValueSet(const wchar_t *const name, const DWORD &value)
+{
+	bool result = false; HKEY hKey = NULL;
+	if(RegCreateKeyExW(HKEY_CURRENT_USER, REGISTRY_PATH, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+	{
+		if(RegSetValueExW(hKey, name, 0, REG_DWORD, ((LPBYTE) &value), sizeof(DWORD)) == ERROR_SUCCESS)
+		{
+			result = true;
+		}
+		RegCloseKey(hKey);
+	}
+	return result;
+}
+
+static bool getAppUuid(wchar_t *const uuidOut, const size_t &size)
+{
+	if(size < 1)
+	{
+		return false;
+	}
+	wchar_t executableFilePath[512];
+	if(GetProcessImageFileNameW(GetCurrentProcess(), executableFilePath, 512) < 1)
+	{
+		wcsncpy_s(executableFilePath, 512, L"Lorem ipsum dolor sit amet, consetetur sadipscing elitr!", _TRUNCATE);
+	}
+	uint64_t hash1 = SEED_VALU1,  hash2 = SEED_VALU2;
+	hash128(executableFilePath, &hash1, &hash2);
+	_snwprintf_s(uuidOut, size, _TRUNCATE, L"{%016llX-%016llX}", hash1, hash2);
+	return true;
 }
 
 static double applyStepSize(const double &val, const double &step)
@@ -776,18 +840,65 @@ void DynamicAudioNormalizerVST::forceUpdateParameters(void)
 static bool g_initialized = false;
 static pthread_mutex_t g_createEffMutex = PTHREAD_MUTEX_INITIALIZER;
 
+static void appendStr(wchar_t *buffer, const size_t &size, const wchar_t *const text, ...)
+{
+	wchar_t temp[128];
+	va_list argList;
+	va_start(argList, text);
+	_vsnwprintf_s(temp, 128, _TRUNCATE, text, argList);
+	va_end(argList);
+	wcsncat_s(buffer, size, temp, _TRUNCATE);
+}
+
+static void showAboutScreen(const uint32_t & major, const uint32_t & minor, const uint32_t & patch, const char *const date, const char *const time, const char *const compiler, const char *const arch, const bool &debug)
+{
+	wchar_t text[1024] = { '\0' };
+	appendStr(text, 1024, L"Dynamic Audio Normalizer, VST Wrapper, Version %u.%02u-%u, %s\n", major, minor, patch, (debug ? L"DEBGU" : L"Release"));
+	appendStr(text, 1024, L"Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
+	appendStr(text, 1024, L"Built on %S at %S with %S for %S.\n\n", date, time, compiler, arch);
+	appendStr(text, 1024, L"This library is free software; you can redistribute it and/or\n");
+	appendStr(text, 1024, L"modify it under the terms of the GNU Lesser General Public\n");
+	appendStr(text, 1024, L"License as published by the Free Software Foundation; either\n");
+	appendStr(text, 1024, L"version 2.1 of the License, or (at your option) any later version.\n\n");
+	appendStr(text, 1024, L"This library is distributed in the hope that it will be useful,\n");
+	appendStr(text, 1024, L"but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
+	appendStr(text, 1024, L"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n");
+	appendStr(text, 1024, L"Lesser General Public License for more details.\n\n");
+	appendStr(text, 1024, L"Please click 'OK' if you agree or click 'Cancel' to exit the application...\n");
+
+	while(MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_TOPMOST | MB_APPLMODAL | MB_OKCANCEL | MB_DEFBUTTON2) != IDOK)
+	{
+		FatalAppExitW(0, L"Application is going to exit on user request!");
+	}
+}
+
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
 	MY_CRITSEC_ENTER(g_createEffMutex);
 	AudioEffect *effectInstance = NULL;
 
-	uint32_t major, minor, patch;
-	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
-	
 	if(!g_initialized)
 	{
 		MDynamicAudioNormalizer::setLogFunction(logFunction);
+
+		uint32_t major, minor, patch;
+		MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
+		outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
+
+		const char *date, *time, *compiler, *arch; bool debug;
+		MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
+
+		wchar_t appUuid[64];
+		if(getAppUuid(appUuid, 64))
+		{
+			const DWORD version = (1000u * major) + (10u * minor) + patch;
+			if(regValueGet(appUuid) != version)
+			{
+				showAboutScreen(major, minor, patch, date, time, compiler, arch, debug);
+				regValueSet(appUuid, version);
+			}
+		}
+
 		g_initialized = true;
 	}
 	
