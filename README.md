@@ -153,26 +153,62 @@ The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host
 ### Supported VST Hosts ###
 
 Non-exhaustive list of VST hosts that have been tested to *work correctly* with the Dynamic Audio Normalizer VST plug-in:
-* [Acoustica](http://acondigital.com/products/acoustica-audio-editor/), by Acon AS → <span style="color:SeaGreen">VST support working</span> → 100% free "basic" edition available → <span style="color:RoyalBlue ">**recommended!**</span>
-* [GoldWave](http://www.goldwave.com/), by GoldWave Inc. → <span style="color:SeaGreen">VST support working</span> → free *evaluation* version available
-* [REAPER](http://www.reaper.fm/), by Cockos Inc → <span style="color:SeaGreen">VST support working</span> → free *evaluation* version available
-* [WaveLab](http://www.steinberg.net/en/products/wavelab/start.html), by Steinberg Media Technologies GmbH → <span style="color:SeaGreen">VST support working</span> → free *trial* version available
-* [Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro"), by Adobe Systems Inc. → <span style="color:SeaGreen">VST support working</span>
-* [Sound Forge Pro](http://www.sonycreativesoftware.com/soundforgesoftware), by Sony (formerly Sonic Foundry) → <span style="color:SeaGreen">VST support working</span> → free *trial* version available
+
+* **[Acoustica](http://acondigital.com/products/acoustica-audio-editor/), by Acon AS**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; the "Basic" edition is Freeware &nbsp;|&nbsp; <span style="color:RoyalBlue ">**recommended!**</span>
+  
+  * **[Audacity (Nightly Build)](http://gaclrecords.org.uk/win-nightly/), v2.0.6 Alpha**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; OpenSource software (100% free) &nbsp;|&nbsp; <span style="color:FireBrick ">**pre-release version**</span>
+  *Note: Please make sure that "Buffer Delay Compensation" is enabled!*
+  
+  * **[GoldWave](http://www.goldwave.com/), by GoldWave Inc.**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $59 (lifetime license)
+  
+* **[REAPER](http://www.reaper.fm/), by Cockos Inc.**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $225 (full license)
+  
+* **[WaveLab](http://www.steinberg.net/en/products/wavelab/start.html), by Steinberg Media Technologies GmbH**
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $100 (for "Elements" edition)
+  
+* **[Audition CC](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro"), by Adobe Systems Inc.**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $20 per month ("single app")
+  
+* **[Sound Forge Pro](http://www.sonycreativesoftware.com/soundforgesoftware), by Sony (formerly Sonic Foundry)**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $400 (full license)
+
+*<u>Disclaimer:</u> There is absolutely **no** guarantee for the currentness and/or correctness of the above information!*
 
 ### Problematic VST Hosts ###
 
 List of VST hosts that have *known problems* and do **not** work correctly with VST plug-ins, such as the Dynamic Audio Normalizer:
-* [Audacity](http://audacity.sourceforge.net/) v2.0.5 → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated
-* [Waveosaur](http://www.wavosaur.com/) v1.1.0 → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated
-* [Ocenaudio](http://www.ocenaudio.com.br/) v2.0.9 → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + plug-in settings are displayed incorrectly
-* [WavePad](http://www.nch.com.au/wavepad/), by NCH Software → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
-* [Nero WaveEditor](http://www.nero.com/enu/downloads/) v12.5, by Nero AG → <span style="color:FireBrick">VST support broken</span> → application crashes when trying to load *any* VST plug-in
-* [AudioDope](http://www.audiodope.org/) v0.26 → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + plug-in settings are displayed incorrectly
-* [Dexster Audio Editor](http://www.dexster.net/) v4.3, by Softdiv Software → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
-* [AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v4, by CyberLink Corp → <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated *by a very large amount*
 
-*If you are the developer of one of these tools and you have fixed the problem in the meantime, then please let us know…*
+* **[Audacity](http://audacity.sourceforge.net/) v2.0.5**  
+  <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated → *fixed in Audacity v2.0.6+*
+  
+* **[Waveosaur](http://www.wavosaur.com/) v1.1.0**  
+  <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated
+  
+* **[Ocenaudio](http://www.ocenaudio.com.br/) v2.0.9**  
+  <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + some plug-in settings are displayed incorrectly
+  
+* **[WavePad](http://www.nch.com.au/wavepad/), by NCH Software**  
+  <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
+  
+* **[Nero WaveEditor](http://www.nero.com/enu/downloads/) v12.5, by Nero AG**  
+  <span style="color:FireBrick">VST support broken</span> → application crashes when trying to load *any* VST plug-in for some unknown reason
+  
+* **[AudioDope](http://www.audiodope.org/) v0.26**  
+  <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + plug-in settings are displayed incorrectly
+  
+* **[Dexster Audio Editor](http://www.dexster.net/) v4.3, by Softdiv Software**  
+  <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
+  
+* **[AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v4, by CyberLink Corp**  
+  <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated by a very large amount
+
+*<u>Disclaimer:</u> There is absolutely **no** guarantee for the currentness and/or correctness of the above information!*
+
+*If you are the developer of one of these tools and you fixed the problem already, then please let us know…*
 
 
 Configuration <a name="chap_cfg"></a>
