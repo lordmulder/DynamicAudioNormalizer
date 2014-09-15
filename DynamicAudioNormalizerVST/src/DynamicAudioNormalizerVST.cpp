@@ -326,8 +326,11 @@ DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 
 	if(p->tempSize > 0)
 	{
-		delete [] p->temp[0]; p->temp[0] = NULL;
-		delete [] p->temp[1]; p->temp[1] = NULL;
+		for(size_t i = 0; i < 2; i++)
+		{
+			delete [] (p->temp[i]);
+			p->temp[i] = NULL;
+		}
 		p->tempSize = 0;
 	}
 
@@ -728,20 +731,22 @@ void DynamicAudioNormalizerVST::updateBufferSize(const size_t requiredSize)
 {
 	if(p->tempSize < requiredSize)
 	{
-		if(p->tempSize > 0)
+		for(size_t i = 0; i < 2; i++)
 		{
-			delete [] p->temp[0];
-			delete [] p->temp[0];
-		}
-		try
-		{
-			p->temp[0] = new double[requiredSize];
-			p->temp[1] = new double[requiredSize];
-		}
-		catch(...)
-		{
-			showErrorMsg("Memory allocation has failed: Out of memory!");
-			_exit(0xC0000017);
+			if(p->tempSize > 0)
+			{
+				delete [] (p->temp[i]);
+			}
+			try
+			{
+				p->temp[i] = new double[requiredSize];
+			}
+			catch(...)
+			{
+				outputMessage("ERROR: Allocation of size %u failed!", (unsigned int)(sizeof(double) * requiredSize));
+				showErrorMsg("Memory allocation has failed: Out of memory!");
+				_exit(0xC0000017);
+			}
 		}
 		p->tempSize = requiredSize;
 	}
