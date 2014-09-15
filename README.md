@@ -520,6 +520,9 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
+### Version 2.06 (2014-??-??) ###
+* Security fix: Removed a potential "double free" crash in the VST wrapper code.
+
 ### Version 2.05 (2014-09-10) ###
 * Significant overhaul of the *compression* (thresholding) function
 * Implemented [VST](http://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be integrated in any VST host
