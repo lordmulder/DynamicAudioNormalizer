@@ -169,15 +169,35 @@ static bool getAppUuid(wchar_t *const uuidOut, const size_t &size)
 	{
 		return false;
 	}
+
 	wchar_t executableFilePath[512];
 	if(GetProcessImageFileNameW(GetCurrentProcess(), executableFilePath, 512) < 1)
 	{
 		wcsncpy_s(executableFilePath, 512, L"Lorem ipsum dolor sit amet, consetetur sadipscing elitr!", _TRUNCATE);
 	}
-	uint64_t hash1 = SEED_VALU1,  hash2 = SEED_VALU2;
+
+	uint64_t hash1 = SEED_VALU1, hash2 = SEED_VALU2;
 	hash128(executableFilePath, &hash1, &hash2);
+
 	_snwprintf_s(uuidOut, size, _TRUNCATE, L"{%016llX-%016llX}", hash1, hash2);
 	return true;
+}
+
+static VstInt32 getPlugUuid(void)
+{
+	uint32_t major, minor, patch;
+	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
+
+	wchar_t identifier[128];
+	_snwprintf_s(identifier, 128, _TRUNCATE, L"muldersoft.com::DynamicAudioNormalizerVST::%u.%02u.%u", major, minor, patch);
+
+	uint64_t hash1 = SEED_VALU1, hash2 = SEED_VALU2;
+	hash128(identifier, &hash1, &hash2);
+
+	const VstInt32 hash32_pt1 = static_cast<VstInt32>(((hash1 ^ hash2) & 0xFFFFFFFF00000000ui64) >> 32);
+	const VstInt32 hash32_pt2 = static_cast<VstInt32>((hash1 ^ hash2) & 0x00000000FFFFFFFFui64);
+	
+	return hash32_pt1 ^ hash32_pt2;
 }
 
 static double applyStepSize(const double &val, const double &step)
@@ -271,8 +291,8 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	AudioEffectX(audioMaster, PROGRAM_COUNT, PARAMETER_COUNT),
 	p(new DynamicAudioNormalizerVST_PrivateData())
 {
-	static const VstInt32 uniqueId = CCONST('!','c','2','N');
 	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST()");
+	const VstInt32 uniqueId = getPlugUuid();
 
 	setNumInputs(CHANNEL_COUNT);	// stereo in
 	setNumOutputs(CHANNEL_COUNT);	// stereo out
