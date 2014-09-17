@@ -116,6 +116,7 @@ private:
 	const uint32_t m_sampleRate;
 	const uint32_t m_frameLen;
 	const uint32_t m_filterSize;
+	const uint32_t m_delay;
 
 	const double m_peakValue;
 	const double m_maxAmplification;
@@ -195,6 +196,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_sampleRate(sampleRate),
 	m_frameLen(FRAME_SIZE(sampleRate, frameLenMsec)),
 	m_filterSize(LIMIT(3u, filterSize, 301u)),
+	m_delay(m_frameLen * m_filterSize),
 	m_peakValue(LIMIT(0.01, peakValue, 1.0)),
 	m_maxAmplification(LIMIT(1.0, maxAmplification, 100.0)),
 	m_targetRms(LIMIT(0.0, targetRms, 1.0)),
@@ -433,7 +435,7 @@ bool MDynamicAudioNormalizer_PrivateData::getInternalDelay(int64_t &delayInSampl
 		return false;
 	}
 
-	delayInSamples = m_frameLen * m_filterSize;
+	delayInSamples = m_delay; //m_frameLen * m_filterSize;
 	return true;
 }
 
@@ -489,6 +491,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 			inputPos         += copyLen;
 			inputSamplesLeft -= copyLen;
 			outputBufferLeft += copyLen;
+			m_delayedSamples += copyLen;
 		}
 
 		//Analyze next input frame, if we have enough input
@@ -521,15 +524,16 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 		}
 
 		//Write as many output samples as possible
-		while((outputBufferLeft > 0) && (m_buffOut->samplesLeftGet() > 0))
+		while((outputBufferLeft > 0) && (m_buffOut->samplesLeftGet() > 0) && (m_delayedSamples > m_delay))
 		{
 			bStop = false;
 
-			const uint32_t copyLen = std::min(outputBufferLeft, m_buffOut->samplesLeftGet());
+			const uint32_t copyLen = std::min(outputBufferLeft, std::min(m_buffOut->samplesLeftGet(), uint32_t(m_delayedSamples - m_delay)));
 			m_buffOut->getSamples(samplesInOut, outputPos, copyLen);
 
 			outputPos        += copyLen;
 			outputBufferLeft -= copyLen;
+			m_delayedSamples -= copyLen;
 
 			if((m_buffOut->samplesLeftGet() < 1) && (m_buffOut->samplesLeftPut() < 1))
 			{
@@ -540,17 +544,12 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 
 	outputSize = int64_t(outputPos);
 
-	if(outputSize < inputSize)
-	{
-		m_delayedSamples += (inputSize - outputSize);
-	}
-
 	if(inputSamplesLeft > 0)
 	{
 		LOG1_WRN("No all input samples could be processed -> discarding pending input!");
 		return false;
 	}
-
+	
 	return true;
 }
 

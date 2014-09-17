@@ -521,7 +521,8 @@ Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
 ### Version 2.06 (2014-??-??) ###
-* Security fix: Removed a potential "double free" crash in the VST wrapper code.
+* VST plug-in: Fixed potential audio corruptions due to inconsistent delays
+* Fixed a potential "double free" crash in the VST wrapper code
 
 ### Version 2.05 (2014-09-10) ###
 * Significant overhaul of the *compression* (thresholding) function
