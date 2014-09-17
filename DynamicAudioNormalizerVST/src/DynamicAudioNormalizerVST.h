@@ -84,8 +84,8 @@ private:
 	void updateBufferSize(const size_t requiredSize);
 	void readInputSamplesFlt(const float  *const *const inputs, const int64_t sampleCount);
 	void readInputSamplesDbl(const double *const *const inputs, const int64_t sampleCount);
-	void writeOutputSamplesFlt(float  *const *const outputs, const int64_t sampleCount, const int64_t outputSamples);
-	void writeOutputSamplesDbl(double *const *const outputs, const int64_t sampleCount, const int64_t outputSamples);
+	void writeOutputSamplesFlt(float  *const *const outputs, const int64_t requiredSamples, const int64_t availableSamples);
+	void writeOutputSamplesDbl(double *const *const outputs, const int64_t requiredSamples, const int64_t availableSamples);
 	void forceUpdateParameters(void);
 
 	DynamicAudioNormalizerVST_PrivateData *const p;

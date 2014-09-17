@@ -663,6 +663,7 @@ void DynamicAudioNormalizerVST::processReplacing(float** inputs, float** outputs
 		return;
 	}
 
+	//outputMessage("InputSamples/OutputSamples: %llu/%llu --> %llu", int64_t(sampleFrames), outputSamples, int64_t(sampleFrames) - outputSamples);
 	writeOutputSamplesFlt(outputs, sampleFrames, outputSamples);
 }
 
@@ -780,53 +781,53 @@ void DynamicAudioNormalizerVST::updateBufferSize(const size_t requiredSize)
 
 void DynamicAudioNormalizerVST::readInputSamplesFlt(const float *const *const inputs, const int64_t sampleCount)
 {
-	for(int64_t i = 0; i < sampleCount; i++)
+	for(size_t c = 0; c < 2; c++)
 	{
-		p->temp[0][i] = inputs[0][i];
-		p->temp[1][i] = inputs[1][i];
+		for(int64_t i = 0; i < sampleCount; i++)
+		{
+			p->temp[c][i] = inputs[c][i];
+		}
 	}
 }
 
 void DynamicAudioNormalizerVST::readInputSamplesDbl(const double *const *const inputs, const int64_t sampleCount)
 {
-	for(int64_t i = 0; i < sampleCount; i++)
+	for(size_t c = 0; c < 2; c++)
 	{
-		p->temp[0][i] = inputs[0][i];
-		p->temp[1][i] = inputs[1][i];
+		memcpy(&p->temp[c][0], &inputs[c][0], sizeof(double) * size_t(sampleCount));
 	}
 }
 
-void DynamicAudioNormalizerVST::writeOutputSamplesFlt(float *const *const outputs, const int64_t sampleCount, const int64_t outputSamples)
+void DynamicAudioNormalizerVST::writeOutputSamplesFlt(float *const *const outputs, const int64_t requiredSamples, const int64_t availableSamples)
 {
-	if(outputSamples == 0)
+	if(availableSamples == 0)
 	{
-		for(int64_t i = 0; i < sampleCount; i++)
+		for(size_t c = 0; c < 2; c++)
 		{
-			outputs[0][i] = 0.0f;
-			outputs[1][i] = 0.0f;
+			memset(&outputs[c][0], 0, sizeof(float) * size_t(requiredSamples));
 		}
 	}
-	else if(outputSamples < sampleCount)
+	else if(availableSamples < requiredSamples)
 	{
-		const int64_t offset = sampleCount - outputSamples;
-		int64_t pos0 = 0, pos1 = 0;
-		for(int64_t i = 0; i < offset; i++)
+		const int64_t offset = requiredSamples - availableSamples;
+		for(size_t c = 0; c < 2; c++)
 		{
-			outputs[0][pos0++] = 0.0f;
-			outputs[1][pos1++] = 0.0f;
-		}
-		for(int64_t i = 0; i < outputSamples; i++)
-		{
-			outputs[0][pos0++] = static_cast<float>(p->temp[0][i]);
-			outputs[1][pos1++] = static_cast<float>(p->temp[1][i]);
+			memset(&outputs[c][0], 0, sizeof(float) * size_t(offset));
+			float *outPtr = &outputs[c][offset];
+			for(int64_t i = 0; i < availableSamples; i++)
+			{
+				*(outPtr++) = static_cast<float>(p->temp[c][i]);
+			}
 		}
 	}
-	else if(outputSamples == sampleCount)
+	else if(availableSamples == requiredSamples)
 	{
-		for(int64_t i = 0; i < outputSamples; i++)
+		for(size_t c = 0; c < 2; c++)
 		{
-			outputs[0][i] = static_cast<float>(p->temp[0][i]);
-			outputs[1][i] = static_cast<float>(p->temp[1][i]);
+			for(int64_t i = 0; i < availableSamples; i++)
+			{
+				outputs[c][i] = static_cast<float>(p->temp[c][i]);
+			}
 		}
 	}
 	else
@@ -835,37 +836,29 @@ void DynamicAudioNormalizerVST::writeOutputSamplesFlt(float *const *const output
 	}
 }
 
-void DynamicAudioNormalizerVST::writeOutputSamplesDbl(double *const *const outputs, const int64_t sampleCount, const int64_t outputSamples)
+void DynamicAudioNormalizerVST::writeOutputSamplesDbl(double *const *const outputs, const int64_t requiredSamples, const int64_t availableSamples)
 {
-	if(outputSamples == 0)
+	if(availableSamples == 0)
 	{
-		for(int64_t i = 0; i < sampleCount; i++)
+		for(size_t c = 0; c < 2; c++)
 		{
-			outputs[0][i] = 0.0f;
-			outputs[1][i] = 0.0f;
+			memset(&outputs[c][0], 0, sizeof(double) * size_t(requiredSamples));
 		}
 	}
-	else if(outputSamples < sampleCount)
+	else if(availableSamples < requiredSamples)
 	{
-		const int64_t offset = sampleCount - outputSamples;
-		int64_t pos0 = 0, pos1 = 0;
-		for(int64_t i = 0; i < offset; i++)
+		const int64_t offset = requiredSamples - availableSamples;
+		for(size_t c = 0; c < 2; c++)
 		{
-			outputs[0][pos0++] = 0.0f;
-			outputs[1][pos1++] = 0.0f;
-		}
-		for(int64_t i = 0; i < outputSamples; i++)
-		{
-			outputs[0][pos0++] = p->temp[0][i];
-			outputs[1][pos1++] = p->temp[1][i];
+			memset(&outputs[c][0], 0, sizeof(double) * size_t(offset));
+			memcpy(&outputs[c][offset], &p->temp[c][0], sizeof(double) * size_t(availableSamples));
 		}
 	}
-	else if(outputSamples == sampleCount)
+	else if(availableSamples == requiredSamples)
 	{
-		for(int64_t i = 0; i < outputSamples; i++)
+		for(size_t c = 0; c < 2; c++)
 		{
-			outputs[0][i] = p->temp[0][i];
-			outputs[1][i] = p->temp[1][i];
+			memcpy(&outputs[c][0], &p->temp[c][0], sizeof(double) * size_t(availableSamples));
 		}
 	}
 	else
