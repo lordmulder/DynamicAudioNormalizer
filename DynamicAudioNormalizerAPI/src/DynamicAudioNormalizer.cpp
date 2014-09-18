@@ -524,11 +524,12 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 		}
 
 		//Write as many output samples as possible
-		while((outputBufferLeft > 0) && (m_buffOut->samplesLeftGet() > 0) && (m_delayedSamples > m_delay))
+		while((outputBufferLeft > 0) && (m_buffOut->samplesLeftGet() > 0) && (bFlush || (m_delayedSamples > m_delay)))
 		{
 			bStop = false;
 
-			const uint32_t copyLen = std::min(outputBufferLeft, std::min(m_buffOut->samplesLeftGet(), uint32_t(m_delayedSamples - m_delay)));
+			const uint32_t pending = bFlush ? UINT32_MAX : uint32_t(m_delayedSamples - m_delay);
+			const uint32_t copyLen = std::min(std::min(outputBufferLeft, m_buffOut->samplesLeftGet()), pending);
 			m_buffOut->getSamples(samplesInOut, outputPos, copyLen);
 
 			outputPos        += copyLen;
@@ -604,7 +605,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 	{
 		m_delayedSamples -= outputSize;
 	}
-
+	
 	return success;
 }
 
