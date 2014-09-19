@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <stdint.h>
+#include <algorithm>
 
 //Win32
 #define NOMINMAX 1
@@ -67,6 +68,9 @@ static int modify_samples(struct winampDSPModule*, short int*, int, int, int, in
 static winampDSPModule *getModule(int);
 static int sf(int);
 static bool showAboutScreen(const uint32_t&, const uint32_t&, const uint32_t&, const char *const, const char *const, const char *const, const char *const, const bool&, const bool &config);
+
+//Const
+static const size_t MAX_CHANNELS = 12;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Data
@@ -142,7 +146,7 @@ static void logFunction(const int logLevel, const char *const message)
 
 static void showErrorMsg(const char *const text)
 {
-	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST);
+	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST | MB_TASKMODAL);
 }
 
 static DWORD regValueGet(const wchar_t *const name)
@@ -177,11 +181,144 @@ static bool regValueSet(const wchar_t *const name, const DWORD &value)
 	return result;
 }
 
+static double *allocBuffer(size_t size)
+{
+	double *buffer = NULL;
+	try
+	{
+		buffer = new double[size];
+	}
+	catch(...)
+	{
+		outputMessage("[DynAudNorm] ERR: Allocation of size %u failed!", static_cast<unsigned int>(sizeof(double) * size));
+		showErrorMsg("Memory allocation has failed: Out of memory!");
+		_exit(0xC0000017);
+	}
+	return buffer;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Internal Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-/*TODO*/
+static MDynamicAudioNormalizer *g_instance = NULL;
+static size_t g_sampleBufferSize = 0;
+static double *g_sampleBuffer[MAX_CHANNELS];
+
+static void updateBufferSize(const int &numsamples)
+{
+	if(size_t(numsamples) > g_sampleBufferSize)
+	{
+		if(g_sampleBufferSize > 0)
+		{
+			for(int c = 0; c < MAX_CHANNELS; c++)
+			{
+				delete [] (g_sampleBuffer[c]);
+				g_sampleBuffer[c] = NULL;
+			}
+		}
+		for(int c = 0; c < MAX_CHANNELS; c++)
+		{
+			g_sampleBuffer[c] = allocBuffer(numsamples);
+		}
+		g_sampleBufferSize = numsamples;
+	}
+}
+
+static void deinterleave(const short int *const input, const int &numsamples, const int &bps, const int &nch)
+{
+	updateBufferSize(numsamples);
+
+	if(bps == 16)
+	{
+		const short int *ptr = input;
+		for(int i = 0; i < numsamples; i++)
+		{
+			for(int c = 0; c < nch; c++)
+			{
+				g_sampleBuffer[c][i] = std::min(1.0, std::max(-1.0, (double(*(ptr++)) / double(SHRT_MAX))));
+			}
+		}
+	}
+	else if(bps == 8)
+	{
+		const int8_t *ptr = reinterpret_cast<const int8_t*>(input);
+		for(int i = 0; i < numsamples; i++)
+		{
+			for(int c = 0; c < nch; c++)
+			{
+				g_sampleBuffer[c][i] = std::min(1.0, std::max(-1.0, (double(*(ptr++)) / double(INT8_MAX))));
+			}
+		}
+	}
+	else
+	{
+		showErrorMsg("Unsupported bit-depth detected!");
+	}
+}
+
+static void interleave(short int *const output, const int &numsamples, const int &bps, const int &nch)
+{
+	updateBufferSize(numsamples);
+
+	if(bps == 16)
+	{
+		short int *ptr = output;
+		for(int i = 0; i < numsamples; i++)
+		{
+			for(int c = 0; c < nch; c++)
+			{
+				*(ptr++) = static_cast<short int>(std::max(double(SHRT_MIN), std::min(double(SHRT_MAX), round(g_sampleBuffer[c][i] * double(SHRT_MAX)))));
+			}
+		}
+	}
+	else if(bps == 8)
+	{
+		int8_t *ptr = reinterpret_cast<int8_t*>(output);
+		for(int i = 0; i < numsamples; i++)
+		{
+			for(int c = 0; c < nch; c++)
+			{
+				*(ptr++) = static_cast<int8_t>(std::max(double(INT8_MIN), std::min(double(INT8_MAX), round(g_sampleBuffer[c][i] * double(INT8_MAX)))));
+			}
+		}
+	}
+	else
+	{
+		showErrorMsg("Unsupported bit-depth detected!");
+	}
+}
+
+static bool createNewInstance(const uint32_t sampleRate, const uint32_t channelCount)
+{
+	if(g_instance)
+	{
+		delete g_instance;
+		g_instance = NULL;
+	}
+
+	try
+	{
+		g_instance = new MDynamicAudioNormalizer
+		(
+			channelCount,
+			sampleRate
+		);
+	}
+	catch(...)
+	{
+		showErrorMsg("Failed to create Dynamic Audio Normalizer instance!");
+		return false;
+	}
+
+	if(!g_instance->initialize())
+	{
+		showErrorMsg("Dynamic Audio Normalizer initialization has failed!");
+		return false;
+	}
+
+	return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public Functions
@@ -203,32 +340,74 @@ static void config(struct winampDSPModule *this_mod)
 static int init(struct winampDSPModule *this_mod)
 {
 	outputMessage("WinampDSP::init(%p)", this_mod);
+
+	if(g_sampleBufferSize == 0)
+	{
+		for(int c = 0; c < MAX_CHANNELS; c++)
+		{
+			g_sampleBuffer[c] = allocBuffer(1024);
+		}
+		g_sampleBufferSize = 1024;
+	}
+
+	if(!createNewInstance(g_properties.sampleRate, g_properties.channels))
+	{
+		return 1;
+	}
+
 	return 0;
 }
 
 static void quit(struct winampDSPModule *this_mod)
 {
 	outputMessage("WinampDSP::quit(%p)", this_mod);
+
+	if(g_sampleBufferSize > 0)
+	{
+		for(int c = 0; c < MAX_CHANNELS; c++)
+		{
+			delete [] (g_sampleBuffer[c]);
+			g_sampleBuffer[c] = NULL;
+		}
+		g_sampleBufferSize = 0;
+	}
 }
 
 static int modify_samples(struct winampDSPModule *this_mod, short int *samples, int numsamples, int bps, int nch, int srate)
 {
+	if(numsamples < 1)
+	{
+		outputMessage("Sample count is zero or negative -> nothing to do!");
+		return 0;
+	}
+
+	if(nch > MAX_CHANNELS)
+	{
+		showErrorMsg("Maximum channel count has been exceeded!");
+		return 0;
+	}
+
 	if((g_properties.bitsPerSample != bps) || (g_properties.channels != nch) || (g_properties.sampleRate != srate))
 	{
 		outputMessage("WinampDSP::modify_samples(mod=%p, num=%d, bps=%d, nch=%d, srate=%d)", this_mod, numsamples, bps, nch, srate);
+
 		g_properties.bitsPerSample = bps;
 		g_properties.channels = nch;
 		g_properties.sampleRate = srate;
+
+		if(!createNewInstance(g_properties.sampleRate, g_properties.channels))
+		{
+			return 0; /*creating the new instance failed!*/
+		}
 	}
 
-	const int totalSamples = numsamples * nch;
+	deinterleave(samples, numsamples, bps, nch);
 
-	for(int i = 0; i < totalSamples; i++)
-	{
-		samples[i] /= 3;
-	}
+	int64_t outputSize;
+	g_instance->processInplace(g_sampleBuffer, numsamples, outputSize);
 
-	return numsamples;
+	interleave(samples, static_cast<int>(outputSize), bps, nch);
+	return static_cast<int>(outputSize);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
