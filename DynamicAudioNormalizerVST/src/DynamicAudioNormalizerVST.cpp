@@ -129,7 +129,7 @@ static void logFunction(const int logLevel, const char *const message)
 
 static void showErrorMsg(const char *const text)
 {
-	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST);
+	MessageBoxA(NULL, text, "Dynamic Audio Normalizer", MB_ICONSTOP | MB_TOPMOST | MB_TASKMODAL);
 }
 
 static DWORD regValueGet(const wchar_t *const name)
@@ -199,6 +199,22 @@ static VstInt32 getPlugUuid(void)
 	const VstInt32 hash32_pt2 = static_cast<VstInt32>((hash1 ^ hash2) & 0x00000000FFFFFFFFui64);
 	
 	return hash32_pt1 ^ hash32_pt2;
+}
+
+template <typename T> static T *allocBuffer(size_t size)
+{
+	T *buffer = NULL;
+	try
+	{
+		buffer = new T[size];
+	}
+	catch(...)
+	{
+		outputMessage("[DynAudNorm] ERR: Allocation of size %u failed!", static_cast<unsigned int>(sizeof(T) * size));
+		showErrorMsg("Memory allocation has failed: Out of memory!");
+		_exit(0xC0000017);
+	}
+	return buffer;
 }
 
 static double applyStepSize(const double &val, const double &step)
@@ -302,37 +318,19 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	canDoubleReplacing();			// supports double precision processing
 	noTail(false);					// does have Tail!
 
-	try
+	p->programs = allocBuffer<DynamicAudioNormalizerVST_Program>(PROGRAM_COUNT);
+	for(VstInt32 i = 0; i < PROGRAM_COUNT; i++)
 	{
-		p->programs = new DynamicAudioNormalizerVST_Program[PROGRAM_COUNT];
-		for(VstInt32 i = 0; i < PROGRAM_COUNT; i++)
+		vst_strncpy(p->programs[i].name, DEFAULT_NAME, kVstMaxProgNameLen);
+		for(VstInt32 j = 0; j < PARAMETER_COUNT; j++)
 		{
-			vst_strncpy(p->programs[i].name, DEFAULT_NAME, kVstMaxProgNameLen);
-			for(VstInt32 j = 0; j < PARAMETER_COUNT; j++)
-			{
-				p->programs[i].param[j] = getParameterDefault(j);
-			}
+			p->programs[i].param[j] = getParameterDefault(j);
 		}
-	}
-	catch(...)
-	{
-		outputMessage("[DynAudNorm] ERR: Allocation of program objects has failed!");
-		showErrorMsg("Memory allocation has failed: Out of memory!");
-		_exit(0xC0000017);
 	}
 
 	for(size_t i = 0; i < 2; i++)
 	{
-		try
-		{
-			p->temp[i] = new double[INITIAL_BUFFER_SIZE];
-		}
-		catch(...)
-		{
-			outputMessage("[DynAudNorm] ERR: Allocation of size %u failed!", (unsigned int)(sizeof(double) * INITIAL_BUFFER_SIZE));
-			showErrorMsg("Memory allocation has failed: Out of memory!");
-			_exit(0xC0000017);
-		}
+		p->temp[i] = allocBuffer<double>(INITIAL_BUFFER_SIZE);
 	}
 	
 	p->tempSize = INITIAL_BUFFER_SIZE;
@@ -766,7 +764,7 @@ void DynamicAudioNormalizerVST::updateBufferSize(const size_t requiredSize)
 			}
 			try
 			{
-				p->temp[i] = new double[requiredSize];
+				p->temp[i] = allocBuffer<double>(requiredSize);
 			}
 			catch(...)
 			{
