@@ -5,20 +5,21 @@ Dynamic Audio Normalizer
 
 **Dynamic Audio Normalizer** is a library for *advanced* [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization) purposes. It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" sections of the audio while avoiding distortions or clipping the "loud" sections. In other words: The volume of the "quiet" and the "loud" sections will be *harmonized*, in the sense that the volume of each section is brought to the same level. Note, however, that the Dynamic Audio Normalizer achieves this goal *without* applying "dynamic range compressing" in the classical sense. It will retain 100% of the dynamic range *within* each section of the audio file.
 
-The *Dynamic Audio Normalizer* is available in the form of a small standalone command-line utility as well as in the form of an effect in the [SoX](http://sox.sourceforge.net/) audio processor. And, if you prefer a GUI, it can also integrate into your favourite DAW (digital audio workstation) in the form of a [VST](http://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in.
+The *Dynamic Audio Normalizer* is available as a standalone command-line utility and as an effect in the [SoX](http://sox.sourceforge.net/) audio processor. Furthermore it can be integrated into your favourite DAW (digital audio workstation), as a [VST](http://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in, or into your favourite media player, as a [Winamp](http://www.winamp.com/) plug-in.
 
 ### Contents: ###
 1.  [How It Works](#chap_how)
 2.  [Package Contents](#chap_pkg)
 3.  [Command-Line Usage](#chap_cli)
 4.  [VST Plug-In Usage](#chap_vst)
-5.  [Configuration](#chap_cfg)
-6.  [API Documentation](#chap_api)
-7.  [Source Code](#chap_src)
-8.  [Changelog](#chap_log)
-9.  [Frequently Asked Questions](#chap_faq)
-10. [License Terms](#chap_lic)
-11. [Acknowledgement](#chap_ack)
+5.  [Winamp Plug-In Usage](#chap_wa5)
+6.  [Configuration](#chap_cfg)
+7.  [API Documentation](#chap_api)
+8.  [Source Code](#chap_src)
+9.  [Changelog](#chap_log)
+10.  [Frequently Asked Questions](#chap_faq)
+11. [License Terms](#chap_lic)
+12. [Acknowledgement](#chap_ack)
 
 
 How It Works<a name="chap_how"></a>
@@ -209,6 +210,12 @@ List of VST hosts that have *known problems* and do **not** work correctly with 
 *<u>Disclaimer:</u> There is absolutely **no** guarantee for the currentness and/or correctness of the above information!*
 
 *If you are the developer of one of these tools and you fixed the problem already, then please let us know…*
+
+
+Winamp Plug-In Usage<a name="chap_wa5"></a>
+-------------------------------------------------------------------------------
+
+**TODO**
 
 
 Configuration <a name="chap_cfg"></a>
@@ -521,8 +528,9 @@ Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
 ### Version 2.06 (2014-??-??) ###
-* VST plug-in: Fixed potential audio corruptions due to inconsistent delays
-* Fixed a potential "double free" crash in the VST wrapper code
+* Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used a Winamp plug-in
+* VST wrapper: Fixed potential audio corruptions due to inconsistent delays
+* Security fixed: Eliminated a potential "double free" crash in the VST wrapper code
 
 ### Version 2.05 (2014-09-10) ###
 * Significant overhaul of the *compression* (thresholding) function
@@ -680,7 +688,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Dynamic Audio Normalizer Plug-In Wrapper ###
 
-The Dynamic Audio Normalizer **plug-in** wrappers for *SoX* and *VST* are released under the *MIT/X11 License*.
+The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* are released under the *MIT/X11 License*.
 
 ```
 Dynamic Audio Normalizer - Audio Processing Utility
@@ -737,6 +745,10 @@ The Dynamic Audio Normalizer can operate as a **plug-in** (effect) using the fol
   Software interface that integrates software audio synthesizer and effect Plug-ins with audio editors and recording systems.  
   Copyright (C) 2006 Steinberg Media Technologies. All Rights Reserved.  
   <small>**VST PlugIn Interface Technology by Steinberg Media Technologies GmbH. VST is a trademark of Steinberg Media Technologies GmbH.**</small>
+
+  * [**Winamp**](http://www.winamp.com/)  
+  Popular media player for Windows, Android, and OS X that supports extensibility with plug-ins and skins.
+  Copyright (C) 1997-2013 Nullsoft, Inc. All Rights Reserved.  
 
 The Dynamic Audio Normalizer **VST wrapper** (DynamicAudioNormalizerVST) incorporates the following *third-party* software:
 
