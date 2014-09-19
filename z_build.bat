@@ -134,6 +134,8 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerGUI.exe" "%PACK_PATH%\%%c"
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c"
 	copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c\x64"
+	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerWA5.dll" "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerWA5.dll" "%PACK_PATH%\%%c\x64"
 
 	if "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\include"
