@@ -395,7 +395,7 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	m_flushBuffer = false;
 
 	m_buffSrc->reset();
-	m_buffSrc->reset();
+	m_buffOut->reset();
 
 	m_frameBuffer->reset();
 
@@ -403,11 +403,15 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	m_gainHistory_minimum ->clear();
 	m_gainHistory_smoothed->clear();
 
+	while(!m_loggingData_original->empty()) m_loggingData_original->pop();
+	while(!m_loggingData_minimum ->empty()) m_loggingData_minimum ->pop();
+	while(!m_loggingData_smoothed->empty()) m_loggingData_smoothed->pop();
+
 	for(uint32_t channel = 0; channel < m_channels; channel++)
 	{
 		m_dcCorrectionValue      [channel] = 0.0;
 		m_prevAmplificationFactor[channel] = 1.0;
-		m_compressThreshold [channel] = 0.0;
+		m_compressThreshold      [channel] = 0.0;
 	}
 
 	return true;
