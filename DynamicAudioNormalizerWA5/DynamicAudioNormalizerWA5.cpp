@@ -398,7 +398,8 @@ static bool createNewInstance(const uint32_t sampleRate, const uint32_t channelC
 	MY_CRITSEC_ENTER(g_positionMutex);
 	g_lastPosition = -1;
 	MY_CRITSEC_LEAVE(g_positionMutex);
-
+	
+	g_resetRequired = false;
 	return true;
 }
 
@@ -438,6 +439,9 @@ static int init(struct winampDSPModule *this_mod)
 		outputMessage("ERROR: Failed to create observer thread!");
 		return 1;
 	}
+
+	struct sched_param schedParams = { THREAD_PRIORITY_HIGHEST };
+	pthread_setschedparam(g_observerThread, SCHED_OTHER, &schedParams);
 
 	if(!createNewInstance(g_properties.sampleRate, g_properties.channels))
 	{
