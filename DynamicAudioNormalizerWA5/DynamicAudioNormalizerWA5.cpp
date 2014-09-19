@@ -66,7 +66,7 @@ static void quit(struct winampDSPModule*);
 static int modify_samples(struct winampDSPModule*, short int*, int, int, int, int);
 static winampDSPModule *getModule(int);
 static int sf(int);
-static bool showAboutScreen(const uint32_t&, const uint32_t&, const uint32_t&, const char *const, const char *const, const char *const, const char *const, const bool&);
+static bool showAboutScreen(const uint32_t&, const uint32_t&, const uint32_t&, const char *const, const char *const, const char *const, const char *const, const bool&, const bool &config);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Data
@@ -77,7 +77,7 @@ static char g_description[256] = { '\0' };
 static winampDSPHeader g_header =
 {
 	DSP_HDRVER + 1,
-	"Dynamic Audio Normalizer",
+	"Dynamic Audio Normalizer [" __DATE__ "]",
 	getModule,
 	sf
 };
@@ -91,6 +91,17 @@ static winampDSPModule g_module =
 	init,
 	modify_samples,
 	quit
+};
+
+static struct
+{
+	uint32_t sampleRate;
+	uint32_t bitsPerSample;
+	uint32_t channels;
+}
+g_properties =
+{
+	44100, 16, 2
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -170,7 +181,7 @@ static bool regValueSet(const wchar_t *const name, const DWORD &value)
 // Internal Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-
+/*TODO*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public Functions
@@ -178,29 +189,38 @@ static bool regValueSet(const wchar_t *const name, const DWORD &value)
 
 static void config(struct winampDSPModule *this_mod)
 {
+	outputMessage("WinampDSP::config(%p)", this_mod);
+
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
 
 	const char *date, *time, *compiler, *arch; bool debug;
 	MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
 
-	showAboutScreen(major, minor, patch, date, time, compiler, arch, debug);
+	showAboutScreen(major, minor, patch, date, time, compiler, arch, debug, true);
 }
 
 static int init(struct winampDSPModule *this_mod)
 {
-	MessageBoxW(NULL, L"init()", L"Dynamic Audio Normalizer", MB_TOPMOST | MB_TASKMODAL | MB_OKCANCEL | MB_DEFBUTTON2);
+	outputMessage("WinampDSP::init(%p)", this_mod);
 	return 0;
 }
 
 static void quit(struct winampDSPModule *this_mod)
 {
-	MessageBoxW(NULL, L"quit()", L"Dynamic Audio Normalizer", MB_TOPMOST | MB_TASKMODAL | MB_OKCANCEL | MB_DEFBUTTON2);
+	outputMessage("WinampDSP::quit(%p)", this_mod);
 }
 
 static int modify_samples(struct winampDSPModule *this_mod, short int *samples, int numsamples, int bps, int nch, int srate)
 {
+	if((g_properties.bitsPerSample != bps) || (g_properties.channels != nch) || (g_properties.sampleRate != srate))
+	{
+		outputMessage("WinampDSP::modify_samples(mod=%p, num=%d, bps=%d, nch=%d, srate=%d)", this_mod, numsamples, bps, nch, srate);
+		g_properties.bitsPerSample = bps;
+		g_properties.channels = nch;
+		g_properties.sampleRate = srate;
+	}
+
 	const int totalSamples = numsamples * nch;
 
 	for(int i = 0; i < totalSamples; i++)
@@ -228,7 +248,7 @@ static void appendStr(wchar_t *buffer, const size_t &size, const wchar_t *const 
 	wcsncat_s(buffer, size, temp, _TRUNCATE);
 }
 
-static bool showAboutScreen(const uint32_t & major, const uint32_t & minor, const uint32_t & patch, const char *const date, const char *const time, const char *const compiler, const char *const arch, const bool &debug)
+static bool showAboutScreen(const uint32_t &major, const uint32_t &minor, const uint32_t &patch, const char *const date, const char *const time, const char *const compiler, const char *const arch, const bool &debug, const bool &config)
 {
 	wchar_t text[1024] = { '\0' };
 	appendStr(text, 1024, L"Dynamic Audio Normalizer, Winamp Wrapper, Version %u.%02u-%u, %s\n", major, minor, patch, (debug ? L"DEBGU" : L"Release"));
@@ -241,10 +261,19 @@ static bool showAboutScreen(const uint32_t & major, const uint32_t & minor, cons
 	appendStr(text, 1024, L"This library is distributed in the hope that it will be useful,\n");
 	appendStr(text, 1024, L"but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
 	appendStr(text, 1024, L"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n");
-	appendStr(text, 1024, L"Lesser General Public License for more details.\n\n");
-	appendStr(text, 1024, L"Please click 'OK' if you agree to the above notice or 'Cancel' otherwise...\n");
+	appendStr(text, 1024, L"Lesser General Public License for more details.\n");
 
-	return (MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_TOPMOST | MB_TASKMODAL | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK);
+	if(config)
+	{
+		MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_TOPMOST | MB_TASKMODAL | MB_OK);
+		return true;
+	}
+	else
+	{
+		appendStr(text, 1024, L"\nPlease click 'OK' if you agree to the above notice or 'Cancel' otherwise...\n");
+		const int ret = MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_TOPMOST | MB_TASKMODAL | MB_OKCANCEL | MB_DEFBUTTON2);
+		return (ret == IDOK);
+	}
 }
 
 static bool initializeCoreLibrary(void)
@@ -263,7 +292,7 @@ static bool initializeCoreLibrary(void)
 		const char *date, *time, *compiler, *arch; bool debug;
 		MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
 
-		if(!showAboutScreen(major, minor, patch, date, time, compiler, arch, debug))
+		if(!showAboutScreen(major, minor, patch, date, time, compiler, arch, debug, false))
 		{
 			return false;
 		}
@@ -275,6 +304,8 @@ static bool initializeCoreLibrary(void)
 
 static winampDSPModule *getModule(int which)
 {
+	outputMessage("WinampDSP::getModule(%d)", which);
+
 	winampDSPModule *module = NULL;
 	MY_CRITSEC_ENTER(g_createEffMutex);
 
@@ -306,5 +337,6 @@ static int sf(int v)	/*Note: The "sf" function was copied 1:1 from the example c
 
 extern "C" DLL_EXPORT winampDSPHeader *winampDSPGetHeader2()
 {
+	outputMessage("WinampDSP::winampDSPGetHeader2()");
 	return &g_header;
 }
