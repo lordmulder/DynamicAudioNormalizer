@@ -32,7 +32,7 @@
 #include "DynamicAudioNormalizerVST.h"
 
 //Dynamic Audio Normalizer API
-#include "DynamicAudioNormalizer.h"
+#include <DynamicAudioNormalizer.h>
 
 //Internal
 #include <Common.h>
@@ -921,15 +921,15 @@ static bool initializeCoreLibrary(void)
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
 	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
 
-	const char *date, *time, *compiler, *arch; bool debug;
-	MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
-
 	wchar_t appUuid[64];
 	if(getAppUuid(appUuid, 64))
 	{
 		const DWORD version = (1000u * major) + (10u * minor) + patch;
 		if(regValueGet(appUuid) != version)
 		{
+			const char *date, *time, *compiler, *arch; bool debug;
+			MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
+
 			if(!showAboutScreen(major, minor, patch, date, time, compiler, arch, debug))
 			{
 				return false;
