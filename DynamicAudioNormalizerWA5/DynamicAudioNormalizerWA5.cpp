@@ -131,16 +131,16 @@ static void logFunction(const int logLevel, const char *const message)
 	switch (logLevel) 
 	{
 	case MDynamicAudioNormalizer::LOG_LEVEL_NFO:
-		outputMessage("[DynAudNorm] NFO: %s\n", message);
+		outputMessage("[DynAudNorm_WA5] NFO: %s\n", message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
-		outputMessage("[DynAudNorm] WRN: %s\n", message);
+		outputMessage("[DynAudNorm_WA5] WRN: %s\n", message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_ERR:
-		outputMessage("[DynAudNorm] ERR: %s\n", message);
+		outputMessage("[DynAudNorm_WA5] ERR: %s\n", message);
 		break;
 	default:
-		outputMessage("[DynAudNorm] DBG: %s\n", message);
+		outputMessage("[DynAudNorm_WA5] DBG: %s\n", message);
 		break;
 	}
 }
@@ -191,7 +191,7 @@ static double *allocBuffer(size_t size)
 	}
 	catch(...)
 	{
-		outputMessage("[DynAudNorm] ERR: Allocation of size %u failed!", static_cast<unsigned int>(sizeof(double) * size));
+		outputMessage("[DynAudNorm_WA5] ERR: Allocation of size %u failed!", static_cast<unsigned int>(sizeof(double) * size));
 		showErrorMsg("Memory allocation has failed: Out of memory!");
 		_exit(0xC0000017);
 	}
@@ -323,6 +323,42 @@ static bool createNewInstance(const uint32_t sampleRate, const uint32_t channelC
 	return true;
 }
 
+static bool detectWinampVersion(const HWND &hwndParent)
+{
+	unsigned long winampVersion      = 0;
+	unsigned long winampVersionMajor = 0;
+	unsigned long winampVersionMinor = 0;
+
+	if(SendMessageTimeout(hwndParent, WM_WA_IPC, 0, IPC_GETVERSION, SMTO_ABORTIFHUNG, 5000, &winampVersion))
+	{
+		if((winampVersion >= 0x5000) && (winampVersion <= 0xFFFFF))
+		{
+			winampVersionMajor = (winampVersion >> 0xC);
+			winampVersionMinor = (winampVersion & 0xFF);
+		}
+	}
+	else
+	{
+		winampVersion = 0xFFFFFFFF;
+	}
+
+	outputMessage("[DynAudNorm_WA5] Winamp version is: 0x%X (v%X.%02X)", winampVersion, winampVersionMajor, winampVersionMinor);
+
+	if(winampVersionMajor < 1)
+	{
+		showErrorMsg("Failed to detect Winamp version. Please use Winamp 5.0 or newer!");
+		return false;
+	}
+	
+	if(winampVersionMajor < 5)
+	{
+		showErrorMsg("Your Winamp version is too old. Please use Winamp 5.0 or newer!");
+		return false;
+	}
+
+	return true;
+}
+
 static bool checkTimestampContinuity(const HWND &hwndParent)
 {
 	bool discontinuityDetected = false;
@@ -354,7 +390,7 @@ static bool checkTimestampContinuity(const HWND &hwndParent)
 
 static void config(struct winampDSPModule *this_mod)
 {
-	outputMessage("WinampDSP::config(%p)", this_mod);
+	outputMessage("[DynAudNorm_WA5] WinampDSP::config(%p)", this_mod);
 
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
@@ -367,7 +403,8 @@ static void config(struct winampDSPModule *this_mod)
 
 static int init(struct winampDSPModule *this_mod)
 {
-	outputMessage("WinampDSP::init(%p)", this_mod);
+	outputMessage("[DynAudNorm_WA5] WinampDSP::init(%p)", this_mod);
+	detectWinampVersion(this_mod->hwndParent);
 
 	if(g_sampleBufferSize == 0)
 	{
@@ -388,7 +425,7 @@ static int init(struct winampDSPModule *this_mod)
 
 static void quit(struct winampDSPModule *this_mod)
 {
-	outputMessage("WinampDSP::quit(%p)", this_mod);
+	outputMessage("[DynAudNorm_WA5] WinampDSP::quit(%p)", this_mod);
 
 	if(g_sampleBufferSize > 0)
 	{
@@ -405,7 +442,7 @@ static int modify_samples(struct winampDSPModule *this_mod, short int *samples, 
 {
 	if(numsamples < 1)
 	{
-		outputMessage("Sample count is zero or negative -> nothing to do!");
+		outputMessage("[DynAudNorm_WA5] Sample count is zero or negative -> nothing to do!");
 		return 0;
 	}
 
@@ -417,7 +454,7 @@ static int modify_samples(struct winampDSPModule *this_mod, short int *samples, 
 
 	if((g_properties.bitsPerSample != bps) || (g_properties.channels != nch) || (g_properties.sampleRate != srate))
 	{
-		outputMessage("WinampDSP::modify_samples(mod=%p, num=%d, bps=%d, nch=%d, srate=%d)", this_mod, numsamples, bps, nch, srate);
+		outputMessage("[DynAudNorm_WA5] WinampDSP::modify_samples(mod=%p, num=%d, bps=%d, nch=%d, srate=%d)", this_mod, numsamples, bps, nch, srate);
 
 		g_properties.bitsPerSample = bps;
 		g_properties.channels = nch;
@@ -430,7 +467,7 @@ static int modify_samples(struct winampDSPModule *this_mod, short int *samples, 
 	}
 	else if(!checkTimestampContinuity(this_mod->hwndParent))
 	{
-		outputMessage("SEEK detected -> resetting!");
+		outputMessage("[DynAudNorm_WA5] SEEK detected -> resetting!");
 		g_instance->reset();
 	}
 
@@ -495,7 +532,7 @@ static bool initializeCoreLibrary(void)
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
 
-	outputMessage("Dynamic Audio Normalizer Winamp-Wrapper (v%u.%02u-%u)", major, minor, patch);
+	outputMessage("[DynAudNorm_WA5] Dynamic Audio Normalizer Winamp-Wrapper (v%u.%02u-%u)", major, minor, patch);
 	_snprintf_s(g_description, 256, _TRUNCATE, "Dynamic Audio Normalizer v%u.%02u-%u [by LoRd_MuldeR]", major, minor, patch);
 
 	const DWORD version = (1000u * major) + (10u * minor) + patch;
@@ -516,7 +553,7 @@ static bool initializeCoreLibrary(void)
 
 static winampDSPModule *getModule(int which)
 {
-	outputMessage("WinampDSP::getModule(%d)", which);
+	outputMessage("[DynAudNorm_WA5] WinampDSP::getModule(%d)", which);
 
 	winampDSPModule *module = NULL;
 	MY_CRITSEC_ENTER(g_createEffMutex);
@@ -549,6 +586,6 @@ static int sf(int v)	/*Note: The "sf" function was copied 1:1 from the example c
 
 extern "C" DLL_EXPORT winampDSPHeader *winampDSPGetHeader2()
 {
-	outputMessage("WinampDSP::winampDSPGetHeader2()");
+	outputMessage("[DynAudNorm_WA5] WinampDSP::winampDSPGetHeader2()");
 	return &g_header;
 }
