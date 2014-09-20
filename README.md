@@ -215,7 +215,20 @@ List of VST hosts that have *known problems* and do **not** work correctly with 
 Winamp Plug-In Usage<a name="chap_wa5"></a>
 -------------------------------------------------------------------------------
 
-**TODO**
+The Dynamic Audio Normalizer is also available in the form of a **DSP/Effect** plug-in for the popular [Winamp](http://www.winamp.com/), the popular media player created by Nullsoft. This way, the Dynamic Audio Normalizer can be applied to *real-time* audio playback easily.
+
+![FilterSize](img/WAPlugIn.png "Dynamic Audio Normalizer – Winamp Plug-In")  
+<small>**Figure 6:** The Winamp DSP/Effect plug-in (Winamp is Copyright © 1997-2013 Nullsoft, Inc).</small>
+
+### Install Instructions ###
+
+If you have **not** installed the *latest* version of Winamp 5.x yet, please update your Winamp installation first. You can download the *latest* version from [here](http://forums.winamp.com/showpost.php?p=2984799&postcount=2) or [here](http://www.videohelp.com/tools/Winamp). Older versions are generally *not* recommended! Once the *latest* version of Winamp 5.x is installed, simply copy the provided Winamp plug-in file <tt>DynamicAudioNormalizerWA5.dll</tt> into the sub-directory <tt>Plugins</tt>, which can be found inside your Winamp installation directory. Typically, Winamp is installed at <tt>C:\Program Files (x86)\Winamp</tt>, but that path may differ depending on what installation directory you have chosen. Assuming that Winamp was installed into the *default* directory, the plug-in DLL needs to be copied into <tt>C:\Program Files (x86)\Winamp\Plugins</tt>. If you have installed Winamp to a *different* directory, please adjust the path accordingly!
+
+Note that copying the plug-in DLL into the <tt>Plugins</tt> directory may require administrative privileges. That's because <tt>C:\Program Files (x86)</tt> is a protected system directory. Also note that the plug-in DLL **must** be *renamed* to <tt>dsp_dynaudnorm.dll</tt> in order to make Winmap recognize the DLL. Any other file name of your choice will work just as well, as long as it starts with the <tt>dsp_</tt> prefix. Once the plug-in DLL file is located at the correct place, e.g. <tt>C:\Program Files (x86)\Winamp\Plugins\dsp_dynaudnorm.dll</tt>, it should appear in the Winamp "Preferences" dialogue after the next restart. More specifically, you should find the "Dynamic Audio Normalizer" plug-in at the "Plug-ins" → "DSP/Effect" section. Simply select the desired plug-in from the list of available DSP/Effect plug-ins and it will be active from now on.
+
+### Limitations ###
+
+The Dynamic Audio Normalizer plug-in for Winamp does *not* provide a configuration dialogue yet, so always the *default* settings are used. This will be addressed in a futrure version.
 
 
 Configuration <a name="chap_cfg"></a>
@@ -242,7 +255,7 @@ While the default parameter of the Dynamic Audio Normalizer have been chosen to 
 Probably the most important parameter of the Dynamic Audio Normalizer is the "window size" of the Gaussian smoothing filter. It can be controlled with the **<tt>--gauss-size</tt>** option. The filter's window size is specified in *frames*, centered around the current frame. For the sake of simplicity, this must be an *odd* number. Consequently, the default value of **31** takes into account the current frame, as well as the *15* preceding frames and the *15* subsequent frames. Using a *larger* window results in a *stronger* smoothing effect and thus in *less* gain variation, i.e. slower gain adaptation. Conversely, using a *smaller* window results in a *weaker* smoothing effect and thus in *more* gain variation, i.e. faster gain adaptation. In other words, the more you *increase* this value, the more the Dynamic Audio Normalizer will behave like a "traditional" normalization filter. On the contrary, the more you *decrease* this value, the more the Dynamic Audio Normalizer will behave like a dynamic range compressor. The following graph illustrates the effect of different filter sizes – *11* (orange), *31* (green), and *61* (purple) frames – on the progression of the final filtered gain factor.
 
 ![FilterSize](img/FilterSize.png "Dynamic Audio Normalizer – Filter Size Effects")  
-<small>**Figure 6:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
+<small>**Figure 7:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
 
 ### Target Peak Magnitude <a name="chap_cfg.p"></a> ###
 
@@ -253,28 +266,28 @@ The target peak magnitude specifies the highest permissible magnitude level for 
 By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the <tt>n</tt>-th frame is defined as <tt>S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])</tt>, where <tt>s_max[n][k]</tt> denotes the highest magnitude sample in the <tt>k</tt>-th channel and <tt>C</tt> is the channel count. The gain factor for *all* channels is then derived from <tt>S_max[n]</tt>. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **<tt>--no-coupling</tt>** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel <tt>k</tt>, depending only on the individual channel's highest magnitude sample <tt>s_max[n][k]</tt>. This allows for harmonizing the volume of the different channels. The following wave view illustrates the effect of channel coupling: It shows an input file with *uneven* channel volumes (left), the same file after normalization with channel coupling *enabled* (center) and again after normalization with channel coupling *disabled* (right).
 
 ![Coupling](img/Coupling.png "Dynamic Audio Normalizer – Coupling Effects")  
-<small>**Figure 7** The effect of *channel coupling*.</small>
+<small>**Figure 8** The effect of *channel coupling*.</small>
 
 ### DC Bias Correction <a name="chap_cfg.c"></a> ###
 
 An audio signal (in the time domain) is a sequence of sample values. In the Dynamic Audio Normalizer these sample values are represented in the *-1.0* to *1.0* range, regardless of the original input format. Normally, the audio signal, or "waveform", should be centered around the *zero point*. That means if we calculate the *mean* value of all samples in a file, or in a single frame, then the result should be *0.0* or at least very close to that value. If, however, there is a significant deviation of the mean value from *0.0*, in either positive or negative direction, this is referred to as a [*DC bias*](http://en.wikipedia.org/wiki/DC_bias) or *DC offset*. Since a DC bias is clearly undesirable, the Dynamic Audio Normalizer provides optional *DC bias correction*, which can be enabled using the **<tt>--correct-dc</tt>** switch. With DC bias correction *enabled*, the Dynamic Audio Normalizer will determine the mean value, or "DC correction" offset, of each input frame and *subtract* that value from all of the frame's sample values – which ensures those samples are centered around *0.0* again. Also, in order to avoid "gaps" at the frame boundaries, the DC correction offset values will be interpolated smoothly between neighbouring frames. The following wave view illustrates the effect of DC bias correction: It shows an input file with positive DC bias (left), the same file after normalization with DC bias correction *disabled* (center) and again after normalization with DC bias correction *enabled* (right).
 
 ![DCCorrection](img/DCCorrection.png "Dynamic Audio Normalizer – DC Correction")  
-<small>**Figure 8:** The effect of *DC Bias Correction*.</small>
+<small>**Figure 9:** The effect of *DC Bias Correction*.</small>
  
 ### Maximum Gain Factor <a name="chap_cfg.m"></a> ###
 
 The Dynamic Audio Normalizer determines the maximum possible (local) gain factor for each input frame, i.e. the maximum gain factor that does *not* result in clipping or distortion. The maximum gain factor is determined by the frame's highest magnitude sample. However, the Dynamic Audio Normalizer *additionally* bounds the frame's maximum gain factor by a predetermined (global) *maximum gain factor*. This is done in order to avoid excessive gain factors in "silent" or almost silent frames. By default, the *maximum gain factor* is **10.0**, but it can be adjusted using the **<tt>--max-gain</tt>** switch. For most input files the default value should be sufficient and it usually is **not** recommended to increase this value. Though, for input files with an extremely low overall volume level, it may be necessary to allow even higher gain factors. Note, however, that the Dynamic Audio Normalizer does *not* simply apply a "hard" threshold (i.e. cut off values above the threshold). Instead, a "sigmoid" threshold function will be applied, as depicted in the following chart. This way, the gain factors will smoothly approach the threshold value, but *never* exceed that value.
 
 ![Threshold](img/Threshold.png "Dynamic Audio Normalizer – Threshold Function")  
-<small>**Figure 9:** The Gain Factor Threshold-Function.</small>
+<small>**Figure 10:** The Gain Factor Threshold-Function.</small>
 
 ### Target RMS Value <a name="chap_cfg.r"></a> ###
 
 By default, the Dynamic Audio Normalizer performs "peak" normalization. This means that the maximum local gain factor for each frame is defined (only) by the frame's highest magnitude sample. This way, the samples can be amplified as much as possible *without* exceeding the maximum signal level, i.e. *without* clipping. Optionally, however, the Dynamic Audio Normalizer can also take into account the frame's [*root mean square*](http://en.wikipedia.org/wiki/Root_mean_square), abbreviated RMS. In electrical engineering, the RMS is commonly used to determine the *power* of a time-varying signal. It is therefore considered that the RMS is a better approximation of the "perceived loudness" than just looking at the signal's peak magnitude. Consequently, by adjusting all frames to a *constant* RMS value, a *uniform* "perceived loudness" can be established. With the Dynamic Audio Normalizer, RMS processing can be enabled using the **<tt>--target-rms</tt>** switch. This specifies the desired RMS value, in the *0.0* to *1.0* range. There is **no** default value, because RMS processing is *disabled* by default. If a target RMS value has been specified, a frame's local gain factor is defined as the factor that would result in exactly *that* RMS value. Note, however, that the maximum local gain factor is still restricted by the frame's highest magnitude sample, in order to prevent clipping. The following chart shows the same file normalized *without* (green) and *with* (orange) RMS processing enabled.
 
 ![RMS](img/RMS.png "Dynamic Audio Normalizer – RMS Processing")  
-<small>**Figure 10:** Root Mean Square (RMS) processing example.</small>
+<small>**Figure 11:** Root Mean Square (RMS) processing example.</small>
 
 ### Frame Length <a name="chap_cfg.f"></a> ###
 
@@ -285,14 +298,14 @@ The Dynamic Audio Normalizer processes the input audio in small chunks, referred
 As explained before, the Dynamic Audio Normalizer takes into account a certain neighbourhood around each frame. This includes the *preceding* frames as well as the *subsequent* frames. However, for the "boundary" frames, located at the very beginning and at the very end of the audio file, **not** all neighbouring frames are available. In particular, for the *first* few frames in the audio file, the preceding frames are *not* known. And, similarly, for the *last* few frames in the audio file, the subsequent frames are *not* known. Thus, the question arises which gain factors should be assumed for the *missing* frames in the "boundary" region. The Dynamic Audio Normalizer implements two modes to deal with this situation. The *default* boundary mode assumes a gain factor of exactly *1.0* for the missing frames, resulting in a smooth "fade in" and "fade out" at the beginning and at the end of the file, respectively. The *alternative* boundary mode can be enabled by using the **<tt>--alt-boundary</tt>** switch. The latter mode assumes that the missing frames at the *beginning* of the file have the same gain factor as the very *first* available frame. It furthermore assumes that the missing frames at the *end* of the file have same gain factor as the very *last* frame. The following chart illustrates the difference between the *default* (green) and the *alternative* (red) boundary mode. Note hat, for simplicity's sake, a file containing *constant* volume white noise was used as input here.
 
 ![Boundary](img/Boundary.png "Dynamic Audio Normalizer - Boundary Modes")  
-<small>**Figure 11:** Default boundary mode vs. alternative boundary mode.</small>
+<small>**Figure 12:** Default boundary mode vs. alternative boundary mode.</small>
 
 ### Input Compression <a name="chap_cfg.s"></a> ###
 
 By default, the Dynamic Audio Normalizer does **not** apply "traditional" compression. This means that signal peaks will **not** be pruned and thus the *full* dynamic range will be retained within each local neighbourhood. However, in some cases it may be desirable to *combine* the Dynamic Audio Normalizer's normalization algorithm with a more "traditional" compression. For this purpose, the Dynamic Audio Normalizer provides an *optional* compression (thresholding) function. It is disabled by default and can be enabled by using the **<tt>--compress</tt>** switch. If (and only if) the compression feature is enabled, all input frames will be processed by a [*soft knee*](https://mdn.mozillademos.org/files/5113/WebAudioKnee.png) thresholding function *prior to* the actual normalization process. Put simply, the thresholding function is going to prune all samples whose magnitude exceeds a certain threshold value. However, the Dynamic Audio Normalizer does *not* simply apply a fixed threshold value. Instead, the threshold value will be adjusted for each individual frame. More specifically, the threshold for a specific input frame is defined as <tt>T = μ + (c · σ)</tt>, where **μ** is the *mean* of all sample magnitudes in the current frame, **σ** is the *standard deviation* of those sample magnitudes and **c** is the parameter controlled by the user. Note that, assuming the samples magnitudes are following (roughly) a [normal distribution](http://content.answcdn.com/main/content/img/barrons/accounting/New/images/normaldistribution2.jpg), about 68% of the sample values will be within the **μ ± σ** range, about 95% of the sample values will be within the **μ ± 2σ** range and more than 99% of the sample values will be within the **μ ± 3σ** range. Consequently, a parameter of **c = 2** will prune about 5% of the frame's highest magnitude samples, a parameter of **c = 3** will prune about 1% of the frame's highest magnitude samples, and so on. In general, *smaller* parameters result in *stronger* compression, and vice versa. Values below *3.0* are **not** recommended, because audible distortion may appear! The following waveform view illustrates the effect of the input compression feature: It shows the same input file *before* (upper view) and *after* (lower view) the thresholding function has been applied. Please note that, for the sake of clarity, the actual normalization process has been *disabled* in the following chart. Under normal circumstances, the normalization process is applied immediately after the thresholding function.
 
 ![Compression](img/Compression-1.png "Input Compression")
-<small>**Figure 12:** The effect of the input compression (thresholding) function.</small>
+<small>**Figure 13:** The effect of the input compression (thresholding) function.</small>
 
 ### Write Log File <a name="chap_cfg.l"></a> ###
 
@@ -311,7 +324,7 @@ CHANNEL_COUNT:2
 The log file can be displayed as a graphical chart using, for example, the *Log Viewer* application (DynamicAudioNormalizerGUI) that is included with the Dynamic Audio Normalizer:
 
 ![LogViewer](img/LogViewer.png "Dynamic Audio Normalizer - Log Viewer")  
-<small>**Figure 13:** Dynamic Audio Normalizer - Log Viewer.</small>
+<small>**Figure 14:** Dynamic Audio Normalizer - Log Viewer.</small>
 
 
 API Documentation <a name="chap_api"></a>
@@ -528,9 +541,11 @@ Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
 ### Version 2.06 (2014-??-??) ###
-* Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used a Winamp plug-in
-* VST wrapper: Fixed potential audio corruptions due to inconsistent delays
-* Security fixed: Eliminated a potential "double free" crash in the VST wrapper code
+* Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used as Winamp plug-in
+* VST wrapper: Fixed potential audio corruptions due to the occasional insertion of "silent" samples
+* VST wrapper: Fixed a potential "double free" crash in the VST wrapper code
+* Core library: Fixed <tt>reset()</tt> API to actually work as expected (some state was *not* cleared before)
+* Core library: Make sure the number of delayed samples remains *constant* throughout the process
 
 ### Version 2.05 (2014-09-10) ###
 * Significant overhaul of the *compression* (thresholding) function
@@ -592,7 +607,7 @@ A traditional [*audio compressor*](http://en.wikipedia.org/wiki/Dynamic_range_co
 The following waveform view shows an audio signal prior to dynamic range compression (left), after the compression step (center) and after the subsequent amplification step (right). It can be seen that the original audio had a *large* dynamic range, with each drumbeat causing a significant peak. It can also be seen how those peeks have been *eliminated* for the most part after the compression. This makes the drum sound much *less* catchy! Last but not least, it can be seen that the final amplified audio now appears much "louder" than the original, but the dynamics are mostly gone…
 
 ![Compression](img/Compression-2.png "Dynamic Range Compression")  
-<small>**Figure 14:** Example of dynamic range compression.</small>
+<small>**Figure 15:** Example of dynamic range compression.</small>
 
 In contrast, the Dynamic Audio Normalizer also implements dynamic range compression *of some sort*, but it does **not** prune signal peaks above a *fixed* threshold. Actually it does **not** prune any signal peaks at all! Furthermore, it does **not** amplify the samples by a *fixed* gain factor. Instead, an "optimal" gain factor will be chosen for each *frame*. And, since a frame's gain factor is bounded by the highest magnitude sample within that frame, **100%** of the dynamic range will be preserved *within* each frame! The Dynamic Audio Normalizer only performs a "dynamic range compression" in the sense that the gain factors are *dynamically* adjusted over time, allowing "quieter" frames to get a stronger amplification than "louder" frames. This means that the volume differences between the "quiet" and the "loud" parts of an audio recording will be *harmonized* – but still the *full* dynamic range is being preserved within each of these parts. Finally, the Gaussian filter applied by the Dynamic Audio Normalizer ensures that any changes of the gain factor between neighbouring frames will be smooth and seamlessly, avoiding noticeable "jumps" of the audio volume.
 
