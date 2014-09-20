@@ -95,6 +95,12 @@ static inline double POW2(const double &value)
 #define BOOLIFY(X) ((X) ? "YES" : "NO")
 #define POW2(X) ((X)*(X))
 
+#define CLEAR_QUEUE(X) do \
+{ \
+	while(!(X).empty()) (X).pop(); \
+} \
+while(0)
+
 ///////////////////////////////////////////////////////////////////////////////
 // MDynamicAudioNormalizer_PrivateData
 ///////////////////////////////////////////////////////////////////////////////
@@ -399,19 +405,19 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 
 	m_frameBuffer->reset();
 
-	m_gainHistory_original->clear();
-	m_gainHistory_minimum ->clear();
-	m_gainHistory_smoothed->clear();
-
-	while(!m_loggingData_original->empty()) m_loggingData_original->pop();
-	while(!m_loggingData_minimum ->empty()) m_loggingData_minimum ->pop();
-	while(!m_loggingData_smoothed->empty()) m_loggingData_smoothed->pop();
-
-	for(uint32_t channel = 0; channel < m_channels; channel++)
+	for(uint32_t c = 0; c < m_channels; c++)
 	{
-		m_dcCorrectionValue      [channel] = 0.0;
-		m_prevAmplificationFactor[channel] = 1.0;
-		m_compressThreshold      [channel] = 0.0;
+		m_gainHistory_original[c].clear();
+		m_gainHistory_minimum [c].clear();
+		m_gainHistory_smoothed[c].clear();
+
+		CLEAR_QUEUE(m_loggingData_original[c]);
+		CLEAR_QUEUE(m_loggingData_minimum [c]);
+		CLEAR_QUEUE(m_loggingData_smoothed[c]);
+
+		m_dcCorrectionValue      [c] = 0.0;
+		m_prevAmplificationFactor[c] = 1.0;
+		m_compressThreshold      [c] = 0.0;
 	}
 
 	return true;
@@ -697,7 +703,7 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 		{
 			const double amplificationFactor = FADE(m_prevAmplificationFactor[c], currAmplificationFactor, nextAmplificationFactor, i, m_fadeFactors);
 			dataPtr[i] *= amplificationFactor;
-			LOG_VALUE(amplificationFactor, m_prevAmplificationFactor[channel], currAmplificationFactor, nextAmplificationFactor, channel, i);
+			LOG_VALUE(amplificationFactor, m_prevAmplificationFactor[c], currAmplificationFactor, nextAmplificationFactor, c, i);
 			if(fabs(dataPtr[i]) > m_peakValue)
 			{
 				m_sampleCounterClips++;
