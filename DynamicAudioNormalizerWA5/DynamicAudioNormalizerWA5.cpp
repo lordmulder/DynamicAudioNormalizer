@@ -327,7 +327,7 @@ static bool checkTimestampContinuity(const HWND &hwndParent)
 {
 	bool discontinuityDetected = false;
 	long int currentPos;
-	if(SendMessageTimeout(hwndParent, WM_WA_IPC, 0, IPC_GETOUTPUTTIME, SMTO_ABORTIFHUNG, 100, reinterpret_cast<unsigned long*>(&currentPos)))
+	if(SendMessageTimeout(hwndParent, WM_WA_IPC, 0, IPC_GETOUTPUTTIME, SMTO_ABORTIFHUNG, 150, reinterpret_cast<unsigned long*>(&currentPos)))
 	{
 		if(currentPos >= 0)
 		{
@@ -344,10 +344,6 @@ static bool checkTimestampContinuity(const HWND &hwndParent)
 			}
 			g_lastPosition = currentPos;
 		}
-	}
-	else
-	{
-		outputMessage("SendMessage IPC_GETOUTPUTTIME failed!");
 	}
 	return (!discontinuityDetected);
 }
