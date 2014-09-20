@@ -199,89 +199,13 @@ static double *allocBuffer(size_t size)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Position Observer
-///////////////////////////////////////////////////////////////////////////////
-
-static pthread_t g_observerThread = { NULL, 0 };
-static pthread_mutex_t g_positionMutex = PTHREAD_MUTEX_INITIALIZER;
-static long g_lastPosition = -1;
-static volatile bool g_resetRequired = false;
-static volatile bool g_observerAlive = false;
-static volatile bool g_winampPlaying = false;
-
-static void observerThreadCheckPosition(const long &currentPos)
-{
-	MY_CRITSEC_ENTER(g_positionMutex);
-	if(currentPos >= 0)
-	{
-		if(g_lastPosition >= 0)
-		{
-			if((currentPos > g_lastPosition) && ((currentPos - g_lastPosition) > 512))
-			{
-				g_resetRequired = true;
-			}
-			else if((currentPos < g_lastPosition) && ((g_lastPosition - currentPos) > 32))
-			{
-				g_resetRequired = true;
-			}
-		}
-		g_lastPosition = currentPos;
-	}
-	MY_CRITSEC_LEAVE(g_positionMutex);
-}
-
-static void observerThreadCheckPlaying(const long &status)
-{
-	if(status == 1)
-	{
-		g_winampPlaying = true;
-	}
-	else if(status == 0)
-	{
-		if(g_winampPlaying)
-		{
-			g_resetRequired = true;
-		}
-		g_winampPlaying = false;
-	}
-}
-
-static void *observerThreadMain(void *param)
-{
-	while(g_observerAlive)
-	{
-		if(g_module.hwndParent != NULL)
-		{
-			long result;
-			if(SendMessageTimeout(g_module.hwndParent, WM_WA_IPC, 0, IPC_ISPLAYING, SMTO_ABORTIFHUNG, 1000, reinterpret_cast<unsigned long*>(&result)))
-			{
-				observerThreadCheckPlaying(result);
-			}
-			else
-			{
-				continue;
-			}
-			if(SendMessageTimeout(g_module.hwndParent, WM_WA_IPC, 0, IPC_GETOUTPUTTIME, SMTO_ABORTIFHUNG, 1000, reinterpret_cast<unsigned long*>(&result)))
-			{
-				observerThreadCheckPosition(result);
-			}
-			else
-			{
-				continue;
-			}
-		}
-		Sleep(1);
-	}
-	return NULL;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Internal Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 static MDynamicAudioNormalizer *g_instance = NULL;
 static size_t g_sampleBufferSize = 0;
 static double *g_sampleBuffer[MAX_CHANNELS];
+static long g_lastPosition = -1;
 
 static void updateBufferSize(const int &numsamples)
 {
@@ -395,12 +319,37 @@ static bool createNewInstance(const uint32_t sampleRate, const uint32_t channelC
 		return false;
 	}
 
-	MY_CRITSEC_ENTER(g_positionMutex);
 	g_lastPosition = -1;
-	MY_CRITSEC_LEAVE(g_positionMutex);
-	
-	g_resetRequired = false;
 	return true;
+}
+
+static bool checkTimestampContinuity(const HWND &hwndParent)
+{
+	bool discontinuityDetected = false;
+	long int currentPos;
+	if(SendMessageTimeout(hwndParent, WM_WA_IPC, 0, IPC_GETOUTPUTTIME, SMTO_ABORTIFHUNG, 100, reinterpret_cast<unsigned long*>(&currentPos)))
+	{
+		if(currentPos >= 0)
+		{
+			if(g_lastPosition >= 0)
+			{
+				if((currentPos > g_lastPosition) && ((currentPos - g_lastPosition) > 512))
+				{
+					discontinuityDetected = true;
+				}
+				else if((currentPos < g_lastPosition) && ((g_lastPosition - currentPos) > 32))
+				{
+					discontinuityDetected = true;
+				}
+			}
+			g_lastPosition = currentPos;
+		}
+	}
+	else
+	{
+		outputMessage("SendMessage IPC_GETOUTPUTTIME failed!");
+	}
+	return (!discontinuityDetected);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -433,16 +382,6 @@ static int init(struct winampDSPModule *this_mod)
 		g_sampleBufferSize = 1024;
 	}
 
-	g_observerAlive = true;
-	if(pthread_create(&g_observerThread, NULL, observerThreadMain, NULL) != 0)
-	{
-		outputMessage("ERROR: Failed to create observer thread!");
-		return 1;
-	}
-
-	struct sched_param schedParams = { THREAD_PRIORITY_HIGHEST };
-	pthread_setschedparam(g_observerThread, SCHED_OTHER, &schedParams);
-
 	if(!createNewInstance(g_properties.sampleRate, g_properties.channels))
 	{
 		return 1;
@@ -454,12 +393,6 @@ static int init(struct winampDSPModule *this_mod)
 static void quit(struct winampDSPModule *this_mod)
 {
 	outputMessage("WinampDSP::quit(%p)", this_mod);
-
-	g_observerAlive = false;
-	if(pthread_join(g_observerThread, NULL) != 0)
-	{
-		outputMessage("ERROR: Failed to join observer thread!");
-	}
 
 	if(g_sampleBufferSize > 0)
 	{
@@ -499,11 +432,10 @@ static int modify_samples(struct winampDSPModule *this_mod, short int *samples, 
 			return 0; /*creating the new instance failed!*/
 		}
 	}
-	else if(g_resetRequired)
+	else if(!checkTimestampContinuity(this_mod->hwndParent))
 	{
 		outputMessage("SEEK detected -> resetting!");
 		g_instance->reset();
-		g_resetRequired = false;
 	}
 
 	deinterleave(samples, numsamples, bps, nch);
