@@ -113,16 +113,16 @@ static void logFunction(const int logLevel, const char *const message)
 	switch (logLevel) 
 	{
 	case MDynamicAudioNormalizer::LOG_LEVEL_NFO:
-		outputMessage("[DynAudNorm] NFO: %s\n", message);
+		outputMessage("[DynAudNorm_VST] NFO: %s\n", message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
-		outputMessage("[DynAudNorm] WRN: %s\n", message);
+		outputMessage("[DynAudNorm_VST] WRN: %s\n", message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_ERR:
-		outputMessage("[DynAudNorm] ERR: %s\n", message);
+		outputMessage("[DynAudNorm_VST] ERR: %s\n", message);
 		break;
 	default:
-		outputMessage("[DynAudNorm] DBG: %s\n", message);
+		outputMessage("[DynAudNorm_VST] DBG: %s\n", message);
 		break;
 	}
 }
@@ -210,7 +210,7 @@ template <typename T> static T *allocBuffer(size_t size)
 	}
 	catch(...)
 	{
-		outputMessage("[DynAudNorm] ERR: Allocation of size %u failed!", static_cast<unsigned int>(sizeof(T) * size));
+		outputMessage("[DynAudNorm_VST] ERR: Allocation of size %u failed!", static_cast<unsigned int>(sizeof(T) * size));
 		showErrorMsg("Memory allocation has failed: Out of memory!");
 		_exit(0xC0000017);
 	}
@@ -308,7 +308,7 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 	AudioEffectX(audioMaster, PROGRAM_COUNT, PARAMETER_COUNT),
 	p(new DynamicAudioNormalizerVST_PrivateData())
 {
-	outputMessage("DynamicAudioNormalizerVST::DynamicAudioNormalizerVST()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::DynamicAudioNormalizerVST()");
 	const VstInt32 uniqueId = getPlugUuid();
 
 	setNumInputs(CHANNEL_COUNT);	// stereo in
@@ -339,7 +339,7 @@ DynamicAudioNormalizerVST::DynamicAudioNormalizerVST(audioMasterCallback audioMa
 
 DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 {
-	outputMessage("DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()");
 
 	if(p->instance)
 	{
@@ -372,20 +372,20 @@ DynamicAudioNormalizerVST::~DynamicAudioNormalizerVST()
 
 void DynamicAudioNormalizerVST::setProgram(VstInt32 program)
 {
-	outputMessage("DynamicAudioNormalizerVST::setProgramName(%d)", program);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::setProgramName(%d)", program);
 	AudioEffectX::setProgram(std::min(PROGRAM_COUNT-1, std::max(0, program)));
 	forceUpdateParameters();
 }
 
 void DynamicAudioNormalizerVST::setProgramName (char* name)
 {
-	outputMessage("DynamicAudioNormalizerVST::setProgramName()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::setProgramName()");
 	vst_strncpy(p->programs[curProgram].name, name, kVstMaxProgNameLen);
 }
 
 void DynamicAudioNormalizerVST::getProgramName (char* name)
 {
-	outputMessage("DynamicAudioNormalizerVST::getProgramName()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getProgramName()");
 
 	if(strcmp(p->programs[curProgram].name, DEFAULT_NAME) == 0)
 	{
@@ -399,7 +399,7 @@ void DynamicAudioNormalizerVST::getProgramName (char* name)
 
 bool DynamicAudioNormalizerVST::getProgramNameIndexed(VstInt32 category, VstInt32 index, char* text)
 {
-	outputMessage("DynamicAudioNormalizerVST::getProgramNameIndexed(%d)", index);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getProgramNameIndexed(%d)", index);
 
 	if ((index >= 0) && (index < PROGRAM_COUNT))
 	{
@@ -449,7 +449,7 @@ PARAM_PROPERTIES[PARAMETER_COUNT] =
 
 void DynamicAudioNormalizerVST::getParameterName (VstInt32 index, char* label)
 {
-	outputMessage("DynamicAudioNormalizerVST::getParameterName(%d)", index);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getParameterName(%d)", index);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
@@ -463,7 +463,7 @@ void DynamicAudioNormalizerVST::getParameterName (VstInt32 index, char* label)
 
 void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
 {
-	outputMessage("DynamicAudioNormalizerVST::getParameterLabel(%d)", index);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getParameterLabel(%d)", index);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
@@ -477,7 +477,7 @@ void DynamicAudioNormalizerVST::getParameterLabel (VstInt32 index, char* label)
 
 void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
 {
-	outputMessage("DynamicAudioNormalizerVST::setParameter(%d, %.2f)", index, value);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::setParameter(%d, %.2f)", index, value);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
@@ -487,7 +487,7 @@ void DynamicAudioNormalizerVST::setParameter (VstInt32 index, float value)
 
 float DynamicAudioNormalizerVST::getParameter(VstInt32 index)
 {
-	outputMessage("DynamicAudioNormalizerVST::getParameter(%d)", index);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getParameter(%d)", index);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
@@ -499,7 +499,7 @@ float DynamicAudioNormalizerVST::getParameter(VstInt32 index)
 
 double DynamicAudioNormalizerVST::getParameterValue(VstInt32 index)
 {
-	outputMessage("DynamicAudioNormalizerVST::getParameterValue(%d)", index);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getParameterValue(%d)", index);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
@@ -512,7 +512,7 @@ double DynamicAudioNormalizerVST::getParameterValue(VstInt32 index)
 
 float DynamicAudioNormalizerVST::getParameterDefault(VstInt32 index)
 {
-	outputMessage("DynamicAudioNormalizerVST::getParameterDefault(%d)", index);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getParameterDefault(%d)", index);
 
 	if ((index >= 0) && (index < PARAMETER_COUNT))
 	{
@@ -525,7 +525,7 @@ float DynamicAudioNormalizerVST::getParameterDefault(VstInt32 index)
 
 void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
 {
-	outputMessage("DynamicAudioNormalizerVST::getParameterDisplay(%d)", index);
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getParameterDisplay(%d)", index);
 
 	text[0] = '\0';
 	if ((index >= 0) && (index < PARAMETER_COUNT))
@@ -540,7 +540,7 @@ void DynamicAudioNormalizerVST::getParameterDisplay(VstInt32 index, char* text)
 
 bool DynamicAudioNormalizerVST::getEffectName (char* name)
 {
-	outputMessage("DynamicAudioNormalizerVST::getEffectName()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getEffectName()");
 
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
@@ -550,7 +550,7 @@ bool DynamicAudioNormalizerVST::getEffectName (char* name)
 
 bool DynamicAudioNormalizerVST::getProductString (char* text)
 {
-	outputMessage("DynamicAudioNormalizerVST::getProductString()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getProductString()");
 
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
@@ -560,7 +560,7 @@ bool DynamicAudioNormalizerVST::getProductString (char* text)
 
 bool DynamicAudioNormalizerVST::getVendorString (char* text)
 {
-	outputMessage("DynamicAudioNormalizerVST::getVendorString()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getVendorString()");
 
 	static const char *vendorName = "LoRd_MuldeR";
 	_snprintf_s(text, kVstMaxVendorStrLen, _TRUNCATE, "%s", vendorName);
@@ -569,7 +569,7 @@ bool DynamicAudioNormalizerVST::getVendorString (char* text)
 
 VstInt32 DynamicAudioNormalizerVST::getVendorVersion ()
 { 
-	outputMessage("DynamicAudioNormalizerVST::getVendorVersion()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getVendorVersion()");
 
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
@@ -578,7 +578,7 @@ VstInt32 DynamicAudioNormalizerVST::getVendorVersion ()
 
 VstPlugCategory DynamicAudioNormalizerVST::getPlugCategory(void)
 {
-	outputMessage("DynamicAudioNormalizerVST::getPlugCategory()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getPlugCategory()");
 	return kPlugCategEffect;
 }
 
@@ -588,28 +588,28 @@ VstPlugCategory DynamicAudioNormalizerVST::getPlugCategory(void)
 
 void DynamicAudioNormalizerVST::open(void)
 {
-	outputMessage("DynamicAudioNormalizerVST::open()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::open()");
 	forceUpdateParameters();
 }
 
 void DynamicAudioNormalizerVST::close(void)
 {
-	outputMessage("DynamicAudioNormalizerVST::close()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::close()");
 
 	if(p->instance)
 	{
-		outputMessage("ISANITY:  Host called close() after resume() *without* intermittent susped() call -> workaround actived!");
+		outputMessage("[DynAudNorm_VST] ISANITY:  Host called close() after resume() *without* intermittent susped() call -> workaround actived!");
 		suspend();
 	}
 }
 
 void DynamicAudioNormalizerVST::resume(void)
 {
-	outputMessage("DynamicAudioNormalizerVST::resume()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::resume()");
 
 	if(p->instance)
 	{
-		outputMessage("ISANITY: Host called resume() repeatedly *without* intermittent susped() call -> workaround actived!");
+		outputMessage("[DynAudNorm_VST] ISANITY: Host called resume() repeatedly *without* intermittent susped() call -> workaround actived!");
 		suspend();
 	}
 
@@ -625,7 +625,7 @@ void DynamicAudioNormalizerVST::resume(void)
 
 void DynamicAudioNormalizerVST::suspend(void)
 {
-	outputMessage("DynamicAudioNormalizerVST::suspend()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::suspend()");
 
 	if(p->instance)
 	{
@@ -647,7 +647,7 @@ void DynamicAudioNormalizerVST::processReplacing(float** inputs, float** outputs
 
 	if(!p->instance)
 	{
-		outputMessage("ISANITY: Host called processReplacing() *before* resume() has been called -> workaround actived!");
+		outputMessage("[DynAudNorm_VST] ISANITY: Host called processReplacing() *before* resume() has been called -> workaround actived!");
 		resume();
 	}
 
@@ -674,7 +674,7 @@ void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double*
 
 	if(!p->instance)
 	{
-		outputMessage("ISANITY: Host called processReplacing() *before* resume() has been called -> workaround actived!");
+		outputMessage("[DynAudNorm_VST] ISANITY: Host called processReplacing() *before* resume() has been called -> workaround actived!");
 		resume();
 	}
 
@@ -693,7 +693,7 @@ void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double*
 
 VstInt32 DynamicAudioNormalizerVST::getGetTailSize(void)
 {
-	outputMessage("DynamicAudioNormalizerVST::getGetTailSize()");
+	outputMessage("[DynAudNorm_VST] DynamicAudioNormalizerVST::getGetTailSize()");
 
 	if(p->instance)
 	{
@@ -755,7 +755,7 @@ void DynamicAudioNormalizerVST::updateBufferSize(const size_t requiredSize)
 {
 	if(p->tempSize < requiredSize)
 	{
-		outputMessage("[DynAudNorm] WRN: Increasing internal buffer size: %u -> %u", ((unsigned int)p->tempSize), ((unsigned int)requiredSize));
+		outputMessage("[DynAudNorm_VST] WRN: Increasing internal buffer size: %u -> %u", ((unsigned int)p->tempSize), ((unsigned int)requiredSize));
 		for(size_t i = 0; i < 2; i++)
 		{
 			if(p->tempSize > 0)
@@ -768,7 +768,7 @@ void DynamicAudioNormalizerVST::updateBufferSize(const size_t requiredSize)
 			}
 			catch(...)
 			{
-				outputMessage("[DynAudNorm] ERR: Allocation of size %u failed!", (unsigned int)(sizeof(double) * requiredSize));
+				outputMessage("[DynAudNorm_VST] ERR: Allocation of size %u failed!", (unsigned int)(sizeof(double) * requiredSize));
 				showErrorMsg("Memory allocation has failed: Out of memory!");
 				_exit(0xC0000017);
 			}
@@ -917,7 +917,7 @@ static bool initializeCoreLibrary(void)
 
 	uint32_t major, minor, patch;
 	MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-	outputMessage("Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
+	outputMessage("[DynAudNorm_VST] Dynamic Audio Normalizer VST-Wrapper (v%u.%02u-%u)", major, minor, patch);
 
 	wchar_t appUuid[64];
 	if(getAppUuid(appUuid, 64))
