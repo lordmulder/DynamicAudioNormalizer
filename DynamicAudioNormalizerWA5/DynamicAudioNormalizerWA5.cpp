@@ -205,7 +205,8 @@ static double *allocBuffer(size_t size)
 static MDynamicAudioNormalizer *g_instance = NULL;
 static size_t g_sampleBufferSize = 0;
 static double *g_sampleBuffer[MAX_CHANNELS];
-static long g_lastPosition = -1;
+static long int g_lastPosition = -1;
+static DWORD g_lastTickNmbr = -1;
 
 static void updateBufferSize(const int &numsamples)
 {
@@ -367,17 +368,26 @@ static bool checkTimestampContinuity(const HWND &hwndParent)
 	{
 		if(currentPos >= 0)
 		{
+			const DWORD tickNumber = GetTickCount();
 			if(g_lastPosition >= 0)
 			{
-				if((currentPos > g_lastPosition) && ((currentPos - g_lastPosition) > 512))
+				if(currentPos > g_lastPosition)
 				{
-					discontinuityDetected = true;
+					const long int tickDelta = static_cast<long int>((tickNumber > g_lastTickNmbr) ? (tickNumber - g_lastTickNmbr) : 0UL);
+					if((currentPos - g_lastPosition) > (125L + tickDelta))
+					{
+						discontinuityDetected = true;
+					}
 				}
-				else if((currentPos < g_lastPosition) && ((g_lastPosition - currentPos) > 32))
+				else if(currentPos < g_lastPosition)
 				{
-					discontinuityDetected = true;
+					if((g_lastPosition - currentPos) > 32)
+					{
+						discontinuityDetected = true;
+					}
 				}
 			}
+			g_lastTickNmbr = tickNumber;
 			g_lastPosition = currentPos;
 		}
 	}
