@@ -156,13 +156,13 @@ The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host
 Non-exhaustive list of VST hosts that have been tested to *work correctly* with the Dynamic Audio Normalizer VST plug-in:
 
 * **[Acoustica](http://acondigital.com/products/acoustica-audio-editor/), by Acon AS**  
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; the "Basic" edition is Freeware &nbsp;|&nbsp; <span style="color:RoyalBlue ">**recommended!**</span>
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; unrestricted Freeware edition available &nbsp;|&nbsp; <span style="color:GoldenRod">**recommended!**</span>
   
-  * **[Audacity (Nightly Build)](http://gaclrecords.org.uk/win-nightly/), v2.0.6 Alpha**  
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; OpenSource software (100% free) &nbsp;|&nbsp; <span style="color:FireBrick ">**pre-release version**</span>
-  *Note: Please make sure that "Buffer Delay Compensation" is enabled!*
+* **[Audacity](http://sourceforge.net/projects/audacity/files/audacity/) v2.0.6+, by Audacity Team**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free/libre OpenSource software &nbsp;|&nbsp; <span style="color:GoldenRod">**recommended!**</span>
+  *Please see [**here**](http://wiki.audacityteam.org/wiki/VST_Plug-ins) for install instructions. Also make sure that the new "Buffer Delay Compensation" option is enabled!*
   
-  * **[GoldWave](http://www.goldwave.com/), by GoldWave Inc.**  
+* **[GoldWave](http://www.goldwave.com/), by GoldWave Inc.**  
   <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $59 (lifetime license)
   
 * **[REAPER](http://www.reaper.fm/), by Cockos Inc.**  
@@ -183,7 +183,7 @@ Non-exhaustive list of VST hosts that have been tested to *work correctly* with 
 
 List of VST hosts that have *known problems* and do **not** work correctly with VST plug-ins, such as the Dynamic Audio Normalizer:
 
-* **[Audacity](http://audacity.sourceforge.net/) v2.0.5**  
+* **[Audacity](http://audacity.sourceforge.net/) v2.0.5 (and older)**  
   <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated → *fixed in Audacity v2.0.6+*
   
 * **[Waveosaur](http://www.wavosaur.com/) v1.1.0**  
