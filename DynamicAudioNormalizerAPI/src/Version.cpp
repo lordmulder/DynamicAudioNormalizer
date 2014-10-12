@@ -23,8 +23,8 @@
 
 //Version info
 const unsigned int DYNAUDNORM_VERSION_MAJOR = 2;
-const unsigned int DYNAUDNORM_VERSION_MINOR = 6;
-const unsigned int DYNAUDNORM_VERSION_PATCH = 6;
+const unsigned int DYNAUDNORM_VERSION_MINOR = 7;
+const unsigned int DYNAUDNORM_VERSION_PATCH = 0;
 
 //Build date/time
 const char* DYNAUDNORM_BUILD_DATE = __DATE__;
@@ -33,10 +33,16 @@ const char* DYNAUDNORM_BUILD_TIME = __TIME__;
 //Compiler detection
 //Compiler detection
 #if defined(__INTEL_COMPILER)
-	#if (__INTEL_COMPILER >= 1300)
-		const char *DYNAUDNORM_COMPILER = "ICL 13." LAMEXP_MAKE_STR(__INTEL_COMPILER_BUILD_DATE);
+	#if (__INTEL_COMPILER >= 1600)
+		const char *DYNAUDNORM_COMPILER = "ICL 16.x";
+	#elif (__INTEL_COMPILER >= 1500)
+		const char *DYNAUDNORM_COMPILER = "ICL 15.x";
+	#elif (__INTEL_COMPILER >= 1400)
+		const char *DYNAUDNORM_COMPILER = "ICL 14.x";
+	#elif (__INTEL_COMPILER >= 1300)
+		const char *DYNAUDNORM_COMPILER = "ICL 13.x";
 	#elif (__INTEL_COMPILER >= 1200)
-		const char *DYNAUDNORM_COMPILER = "ICL 12." LAMEXP_MAKE_STR(__INTEL_COMPILER_BUILD_DATE);
+		const char *DYNAUDNORM_COMPILER = "ICL 12.x";
 	#elif (__INTEL_COMPILER >= 1100)
 		const char *DYNAUDNORM_COMPILER = "ICL 11.x";
 	#elif (__INTEL_COMPILER >= 1000)
