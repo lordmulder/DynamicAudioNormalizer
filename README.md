@@ -542,6 +542,9 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
+### Version 2.07 (2014-10-??) ###
+* Fixed a bug that caused the progression of the gain values to be less "smooth" than it ought to be
+
 ### Version 2.06 (2014-09-22) ###
 * Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used as Winamp plug-in
 * VST wrapper: Fixed potential audio corruptions due to the occasional insertion of "silent" samples

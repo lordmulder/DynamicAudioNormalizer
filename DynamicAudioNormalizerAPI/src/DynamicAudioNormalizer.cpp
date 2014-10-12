@@ -76,9 +76,9 @@ static inline double UPDATE_VALUE(const double &NEW, const double &OLD, const do
 	return (aggressiveness * NEW) + ((1.0 - aggressiveness) * OLD);
 }
 
-static inline double FADE(const double &prev, const double &curr, const double &next, const uint32_t &pos, const double *const fadeFactors[3])
+static inline double FADE(const double &prev, const double &next, const uint32_t &pos, const double *const fadeFactors[2])
 {
-	return (fadeFactors[0][pos] * prev) + (fadeFactors[1][pos] * curr) + (fadeFactors[2][pos] * next);
+	return (fadeFactors[0][pos] * prev) + (fadeFactors[1][pos] * next);
 }
 
 static inline double BOUND(const double &threshold, const double &val)
@@ -164,7 +164,7 @@ private:
 	double *m_dcCorrectionValue;
 	double *m_compressThreshold;
 
-	double *m_fadeFactors[3];
+	double *m_fadeFactors[2];
 
 protected:
 	void processNextFrame(void);
@@ -181,7 +181,7 @@ protected:
 	void writeLogFile(void);
 	void printParameters(void);
 	
-	static void precalculateFadeFactors(double *fadeFactors[3], const uint32_t frameLen);
+	static void precalculateFadeFactors(double *fadeFactors[2], const uint32_t frameLen);
 	static double setupCompressThresh(const double &dThreshold);
 };
 
@@ -250,7 +250,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_dcCorrectionValue = NULL;
 	m_compressThreshold = NULL;
 
-	m_fadeFactors[0] = m_fadeFactors[1] = m_fadeFactors[2] = NULL;
+	m_fadeFactors[0] = m_fadeFactors[1] = NULL;
 }
 
 MDynamicAudioNormalizer::~MDynamicAudioNormalizer(void)
@@ -288,7 +288,6 @@ MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 
 	MY_DELETE_ARRAY(m_fadeFactors[0]);
 	MY_DELETE_ARRAY(m_fadeFactors[1]);
-	MY_DELETE_ARRAY(m_fadeFactors[2]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -359,7 +358,6 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 
 	m_fadeFactors[0] = new double[m_frameLen];
 	m_fadeFactors[1] = new double[m_frameLen];
-	m_fadeFactors[2] = new double[m_frameLen];
 	
 	precalculateFadeFactors(m_fadeFactors, m_frameLen);
 	printParameters();
@@ -694,14 +692,12 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 		}
 
 		double *const dataPtr = frame->data(c);
-
 		const double currAmplificationFactor = m_gainHistory_smoothed[c].front();
 		m_gainHistory_smoothed[c].pop_front();
-		const double nextAmplificationFactor = m_gainHistory_smoothed[c].empty() ? currAmplificationFactor : m_gainHistory_smoothed[c].front();
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			const double amplificationFactor = FADE(m_prevAmplificationFactor[c], currAmplificationFactor, nextAmplificationFactor, i, m_fadeFactors);
+			const double amplificationFactor = FADE(m_prevAmplificationFactor[c], currAmplificationFactor, i, m_fadeFactors);
 			dataPtr[i] *= amplificationFactor;
 			LOG_VALUE(amplificationFactor, m_prevAmplificationFactor[c], currAmplificationFactor, nextAmplificationFactor, c, i);
 			if(fabs(dataPtr[i]) > m_peakValue)
@@ -878,7 +874,7 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, 
 
 		for(uint32_t i = 0; i < m_frameLen; i++)
 		{
-			dataPtr[i] -= FADE(prevValue, m_dcCorrectionValue[c], m_dcCorrectionValue[c], i, m_fadeFactors);
+			dataPtr[i] -= FADE(prevValue, m_dcCorrectionValue[c], i, m_fadeFactors);
 		}
 	}
 }
@@ -901,7 +897,7 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, c
 			double *const dataPtr = frame->data(c);
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
-				const double localThresh = FADE(prevActualThresh, currActualThresh, currActualThresh, i, m_fadeFactors);
+				const double localThresh = FADE(prevActualThresh, currActualThresh, i, m_fadeFactors);
 				dataPtr[i] = copysign(BOUND(localThresh, fabs(dataPtr[i])), dataPtr[i]);
 			}
 		}
@@ -922,7 +918,7 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, c
 			double *const dataPtr = frame->data(c);
 			for(uint32_t i = 0; i < m_frameLen; i++)
 			{
-				const double localThresh = FADE(prevActualThresh, currActualThresh, currActualThresh, i, m_fadeFactors);
+				const double localThresh = FADE(prevActualThresh, currActualThresh, i, m_fadeFactors);
 				dataPtr[i] = copysign(BOUND(localThresh, fabs(dataPtr[i])), dataPtr[i]);
 			}
 		}
@@ -993,30 +989,20 @@ void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 // Static Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[3], const uint32_t frameLen)
+void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[2], const uint32_t frameLen)
 {
-	assert((frameLen % 2) == 0);
+	assert((frameLen > 0) && ((frameLen % 2) == 0));
+	const double dStepSize = 1.0 / double(frameLen);
 
-	const uint32_t frameFadeDiv2 = frameLen / 2U;
-	const double frameFadeStep = 0.5 / double(frameFadeDiv2);
-
-	for(uint32_t pos = 0; pos < frameFadeDiv2; pos++)
+	for(uint32_t pos = 0; pos < frameLen; pos++)
 	{
-		fadeFactors[0][pos] = 0.5 - (frameFadeStep * double(pos));
-		fadeFactors[2][pos] = 0.0;
-		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
+		fadeFactors[0][pos] = 1.0 - (dStepSize * double(pos + 1U));
+		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos];
 	}
 
-	for(uint32_t pos = frameFadeDiv2; pos < frameLen; pos++)
-	{
-		fadeFactors[2][pos] = frameFadeStep * double(pos % frameFadeDiv2);
-		fadeFactors[0][pos] = 0.0;
-		fadeFactors[1][pos] = 1.0 - fadeFactors[0][pos] - fadeFactors[2][pos];
-	}
-
-	//for(uint32_t pos = 0; pos < m_frameLen; pos++)
+	//for(uint32_t pos = 0; pos < frameLen; pos++)
 	//{
-	//	LOG_DBG(TXT("%.8f %.8f %.8f"), fadeFactors[0][pos], fadeFactors[1][pos], fadeFactors[2][pos]);
+	//	LOG2_DBG("%.8f %.8f %.8f", fadeFactors[0][pos], fadeFactors[1][pos], fadeFactors[0][pos] + fadeFactors[1][pos]);
 	//}
 }
 
