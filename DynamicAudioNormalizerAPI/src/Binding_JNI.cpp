@@ -60,7 +60,6 @@ while(0) \
 #define JAVA_FIND_CLASS(VAR,NAME) do \
 { \
 	(VAR) = env->FindClass((NAME)); \
-	JAVA_CHECK_EXCEPTION(); \
 	if((VAR) == NULL) return JNI_FALSE; \
 } \
 while(0)
@@ -68,7 +67,6 @@ while(0)
 #define JAVA_GET_METHOD(VAR,CLASS,NAME,ARGS) do \
 { \
 	(VAR) = env->GetMethodID((CLASS), (NAME), (ARGS)); \
-	JAVA_CHECK_EXCEPTION(); \
 	if((VAR) == NULL) return JNI_FALSE; \
 } \
 while(0)
@@ -77,12 +75,10 @@ while(0)
 { \
 	jstring _key = env->NewStringUTF((KEY)); \
 	jstring _val = env->NewStringUTF((VAL)); \
-	JAVA_CHECK_EXCEPTION(); \
 	\
 	if(_key && _val) \
 	{ \
 		jobject _ret = env->CallObjectMethod((MAP), putMethod, _key, _val); \
-		JAVA_CHECK_EXCEPTION(); \
 		if(_ret) env->DeleteLocalRef(_ret); \
 	} \
 	\
@@ -95,7 +91,7 @@ while(0)
 // Logging  Function
 ///////////////////////////////////////////////////////////////////////////////
 
-static jboolean javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference, jmethodID loggerMethod)
+static void javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference, jmethodID loggerMethod)
 {
 	MY_CRITSEC_ENTER(g_javaLock);
 	if(g_javaLoggingHandler)
@@ -105,15 +101,10 @@ static jboolean javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference
 	g_javaLoggingMethod = loggerMethod;
 	g_javaLoggingHandler = loggerGlobalReference;
 	MY_CRITSEC_LEAVE(g_javaLock);
-
-	JAVA_CHECK_EXCEPTION();
-	return JNI_TRUE;
 }
 
-static jboolean javaLogMessage(JNIEnv *env, const int &level, const char *const message)
+static void javaLogMessage(JNIEnv *env, const int &level, const char *const message)
 {
-	bool success = JNI_FALSE;
-
 	MY_CRITSEC_ENTER(g_javaLock);
 	if(g_javaLoggingHandler && g_javaLoggingMethod)
 	{
@@ -122,115 +113,130 @@ static jboolean javaLogMessage(JNIEnv *env, const int &level, const char *const 
 		{
 			env->CallVoidMethod(g_javaLoggingHandler, g_javaLoggingMethod, level, text);
 			env->DeleteLocalRef(text);
-			success = JNI_TRUE;
 		}
 	}
 	MY_CRITSEC_LEAVE(g_javaLock);
-
-	JAVA_CHECK_EXCEPTION();
-	return success;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // JNI Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C"
+static jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo_Impl(JNIEnv *env, jclass, jintArray versionInfo)
 {
-	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo(JNIEnv *env, jclass, jintArray versionInfo)
+	if(versionInfo == NULL)
 	{
-		if(versionInfo == NULL)
-		{
-			return JNI_FALSE;
-		}
-
-		if(env->GetArrayLength(versionInfo) == 3)
-		{
-			if(jint *versionInfoElements = env->GetIntArrayElements(versionInfo, JNI_FALSE))
-			{
-				uint32_t major, minor, patch;
-				MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-			
-				versionInfoElements[0] = (int32_t) std::min(major, uint32_t(INT32_MAX));
-				versionInfoElements[1] = (int32_t) std::min(minor, uint32_t(INT32_MAX));
-				versionInfoElements[2] = (int32_t) std::min(patch, uint32_t(INT32_MAX));
-
-				env->ReleaseIntArrayElements(versionInfo, versionInfoElements, 0);
-
-				JAVA_CHECK_EXCEPTION();
-				return JNI_TRUE;
-			}
-		}
-
-		JAVA_CHECK_EXCEPTION();
 		return JNI_FALSE;
 	}
 
-	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo(JNIEnv *env, jclass, jobject buildInfo)
+	if(env->GetArrayLength(versionInfo) == 3)
 	{
-		if(buildInfo == NULL)
+		if(jint *versionInfoElements = env->GetIntArrayElements(versionInfo, JNI_FALSE))
 		{
-			return JNI_FALSE;
+			uint32_t major, minor, patch;
+			MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
+			
+			versionInfoElements[0] = (int32_t) std::min(major, uint32_t(INT32_MAX));
+			versionInfoElements[1] = (int32_t) std::min(minor, uint32_t(INT32_MAX));
+			versionInfoElements[2] = (int32_t) std::min(patch, uint32_t(INT32_MAX));
+
+			env->ReleaseIntArrayElements(versionInfo, versionInfoElements, 0);
+			return JNI_TRUE;
 		}
+	}
 
-		jclass mapClass = NULL;
-		jmethodID putMethod = NULL, clearMethod = NULL;
+	return JNI_FALSE;
+}
 
-		JAVA_FIND_CLASS(mapClass, "java/util/Map");
-		JAVA_GET_METHOD(putMethod, mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-		JAVA_GET_METHOD(clearMethod, mapClass, "clear", "()V");
+static jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo_Impl(JNIEnv *env, jclass, jobject buildInfo)
+{
+	if(buildInfo == NULL)
+	{
+		return JNI_FALSE;
+	}
 
-		if(!env->IsInstanceOf(buildInfo, mapClass))
-		{
-			return JNI_FALSE;
-		}
+	jclass mapClass = NULL;
+	jmethodID putMethod = NULL, clearMethod = NULL;
 
-		env->CallVoidMethod(buildInfo, clearMethod);
-		JAVA_CHECK_EXCEPTION();
+	JAVA_FIND_CLASS(mapClass, "java/util/Map");
+	JAVA_GET_METHOD(putMethod, mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+	JAVA_GET_METHOD(clearMethod, mapClass, "clear", "()V");
 
-		const char *date, *time, *compiler, *arch;
-		bool debug;
-		MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
+	if(!env->IsInstanceOf(buildInfo, mapClass))
+	{
+		return JNI_FALSE;
+	}
 
-		JAVA_MAP_PUT(buildInfo, "BuildDate",    date);
-		JAVA_MAP_PUT(buildInfo, "BuildTime",    time);
-		JAVA_MAP_PUT(buildInfo, "Compiler",     compiler);
-		JAVA_MAP_PUT(buildInfo, "Architecture", arch);
-		JAVA_MAP_PUT(buildInfo, "DebugBuild",   debug ? "Yes" : "No");
+	env->CallVoidMethod(buildInfo, clearMethod);
 
-		env->DeleteLocalRef(mapClass);
+	const char *date, *time, *compiler, *arch;
+	bool debug;
+	MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
+
+	JAVA_MAP_PUT(buildInfo, "BuildDate",    date);
+	JAVA_MAP_PUT(buildInfo, "BuildTime",    time);
+	JAVA_MAP_PUT(buildInfo, "Compiler",     compiler);
+	JAVA_MAP_PUT(buildInfo, "Architecture", arch);
+	JAVA_MAP_PUT(buildInfo, "DebugBuild",   debug ? "Yes" : "No");
+
+	env->DeleteLocalRef(mapClass);
 		
-		JAVA_CHECK_EXCEPTION();
+	return JNI_TRUE;
+}
+
+static jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler_Impl(JNIEnv *env, jclass, jobject loggerObject)
+{
+	if(loggerObject == NULL)
+	{
+		javaSetLoggingHandler(env, NULL, NULL);
 		return JNI_TRUE;
 	}
 
-	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler(JNIEnv *env, jclass, jobject loggerObject)
+	jclass loggerClass = NULL;
+	jmethodID logMethod = NULL;
+
+	JAVA_FIND_CLASS(loggerClass, "DynamicAudioNormalizer/JDynamicAudioNormalizer$Logger");
+	JAVA_GET_METHOD(logMethod, loggerClass, "log", "(ILjava/lang/String;)V");
+
+	if(!env->IsInstanceOf(loggerObject, loggerClass))
 	{
-		if(loggerObject == NULL)
-		{
-			return javaSetLoggingHandler(env, NULL, NULL);
-		}
-
-		jclass loggerClass = NULL;
-		jmethodID logMethod = NULL;
-
-		JAVA_FIND_CLASS(loggerClass, "DynamicAudioNormalizer/JDynamicAudioNormalizer$Logger");
-		JAVA_GET_METHOD(logMethod, loggerClass, "log", "(ILjava/lang/String;)V");
-
-		if(!env->IsInstanceOf(loggerObject, loggerClass))
-		{
-			return JNI_FALSE;
-		}
-
-		jobject globalReference = env->NewGlobalRef(loggerObject);
-		JAVA_CHECK_EXCEPTION();
-
-		if(globalReference)
-		{
-			return javaSetLoggingHandler(env, globalReference, logMethod);
-		}
-
-		JAVA_CHECK_EXCEPTION();
 		return JNI_FALSE;
+	}
+
+	jobject globalReference = env->NewGlobalRef(loggerObject);
+	if(globalReference)
+	{
+		javaSetLoggingHandler(env, globalReference, logMethod);
+		return JNI_TRUE;
+	}
+
+	return JNI_FALSE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// JNI Entry Points
+///////////////////////////////////////////////////////////////////////////////
+
+extern "C"
+{
+	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo(JNIEnv *env, jclass clazz, jintArray versionInfo)
+	{
+		const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo_Impl(env, clazz, versionInfo);
+		JAVA_CHECK_EXCEPTION();
+		return ret;
+	}
+
+	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo(JNIEnv *env, jclass clazz, jobject buildInfo)
+	{
+		const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo_Impl(env, clazz, buildInfo);
+		JAVA_CHECK_EXCEPTION();
+		return ret;
+	}
+
+	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler(JNIEnv *env, jclass clazz, jobject loggerObject)
+	{
+		const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler_Impl(env, clazz, loggerObject);
+		JAVA_CHECK_EXCEPTION();
+		return ret;
 	}
 }
