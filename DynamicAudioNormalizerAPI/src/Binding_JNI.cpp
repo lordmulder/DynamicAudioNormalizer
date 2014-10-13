@@ -29,6 +29,20 @@
 #include <DynamicAudioNormalizer_JDynamicAudioNormalizer_Error.h>
 #include <DynamicAudioNormalizer_JDynamicAudioNormalizer_NativeAPI.h>
 
+//PThread
+#if defined(_WIN32) && defined(_MT)
+#define PTW32_STATIC_LIB 1
+#endif
+#include <pthread.h>
+
+//Internal
+#include <Common.h>
+
+//Globals
+static pthread_mutex_t g_javaLock = PTHREAD_MUTEX_INITIALIZER;
+static jobject g_javaLoggingHandler = NULL;
+static jmethodID g_javaLoggingMethod = NULL;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,6 +92,46 @@ while(0)
 while(0)
 
 ///////////////////////////////////////////////////////////////////////////////
+// Logging  Function
+///////////////////////////////////////////////////////////////////////////////
+
+static jboolean javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference, jmethodID loggerMethod)
+{
+	MY_CRITSEC_ENTER(g_javaLock);
+	if(g_javaLoggingHandler)
+	{
+		env->DeleteGlobalRef(g_javaLoggingHandler);
+	}
+	g_javaLoggingMethod = loggerMethod;
+	g_javaLoggingHandler = loggerGlobalReference;
+	MY_CRITSEC_LEAVE(g_javaLock);
+
+	JAVA_CHECK_EXCEPTION();
+	return JNI_TRUE;
+}
+
+static jboolean javaLogMessage(JNIEnv *env, const int &level, const char *const message)
+{
+	bool success = JNI_FALSE;
+
+	MY_CRITSEC_ENTER(g_javaLock);
+	if(g_javaLoggingHandler && g_javaLoggingMethod)
+	{
+		jstring text = env->NewStringUTF(message);
+		if(text)
+		{
+			env->CallVoidMethod(g_javaLoggingHandler, g_javaLoggingMethod, level, text);
+			env->DeleteLocalRef(text);
+			success = JNI_TRUE;
+		}
+	}
+	MY_CRITSEC_LEAVE(g_javaLock);
+
+	JAVA_CHECK_EXCEPTION();
+	return success;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // JNI Functions
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +139,11 @@ extern "C"
 {
 	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo(JNIEnv *env, jclass, jintArray versionInfo)
 	{
+		if(versionInfo == NULL)
+		{
+			return JNI_FALSE;
+		}
+
 		if(env->GetArrayLength(versionInfo) == 3)
 		{
 			if(jint *versionInfoElements = env->GetIntArrayElements(versionInfo, JNI_FALSE))
@@ -97,15 +156,23 @@ extern "C"
 				versionInfoElements[2] = (int32_t) std::min(patch, uint32_t(INT32_MAX));
 
 				env->ReleaseIntArrayElements(versionInfo, versionInfoElements, 0);
+
+				JAVA_CHECK_EXCEPTION();
 				return JNI_TRUE;
 			}
 		}
 
+		JAVA_CHECK_EXCEPTION();
 		return JNI_FALSE;
 	}
 
 	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo(JNIEnv *env, jclass, jobject buildInfo)
 	{
+		if(buildInfo == NULL)
+		{
+			return JNI_FALSE;
+		}
+
 		jclass mapClass = NULL;
 		jmethodID putMethod = NULL, clearMethod = NULL;
 
@@ -132,6 +199,38 @@ extern "C"
 		JAVA_MAP_PUT(buildInfo, "DebugBuild",   debug ? "Yes" : "No");
 
 		env->DeleteLocalRef(mapClass);
+		
+		JAVA_CHECK_EXCEPTION();
 		return JNI_TRUE;
+	}
+
+	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler(JNIEnv *env, jclass, jobject loggerObject)
+	{
+		if(loggerObject == NULL)
+		{
+			return javaSetLoggingHandler(env, NULL, NULL);
+		}
+
+		jclass loggerClass = NULL;
+		jmethodID logMethod = NULL;
+
+		JAVA_FIND_CLASS(loggerClass, "DynamicAudioNormalizer/JDynamicAudioNormalizer$Logger");
+		JAVA_GET_METHOD(logMethod, loggerClass, "log", "(ILjava/lang/String;)V");
+
+		if(!env->IsInstanceOf(loggerObject, loggerClass))
+		{
+			return JNI_FALSE;
+		}
+
+		jobject globalReference = env->NewGlobalRef(loggerObject);
+		JAVA_CHECK_EXCEPTION();
+
+		if(globalReference)
+		{
+			return javaSetLoggingHandler(env, globalReference, logMethod);
+		}
+
+		JAVA_CHECK_EXCEPTION();
+		return JNI_FALSE;
 	}
 }

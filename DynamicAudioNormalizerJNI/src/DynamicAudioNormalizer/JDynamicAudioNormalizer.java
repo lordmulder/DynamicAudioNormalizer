@@ -45,6 +45,15 @@ public class JDynamicAudioNormalizer
 	}
 
 	//------------------------------------------------------------------------------------------------
+	// Logging interface
+	//------------------------------------------------------------------------------------------------
+	
+	public static abstract class Logger
+	{
+		public abstract void log(final int level, final String message);
+	}
+	
+	//------------------------------------------------------------------------------------------------
 	// Initialization
 	//------------------------------------------------------------------------------------------------
 
@@ -68,8 +77,9 @@ public class JDynamicAudioNormalizer
 	
 	private static class NativeAPI
 	{
-		private native static boolean getVersionInfo(int versionInfo[]);
-		private native static boolean getBuildInfo(Map<String,String> buildInfo);
+		private native static boolean getVersionInfo(final int versionInfo[]);
+		private native static boolean getBuildInfo(final Map<String,String> buildInfo);
+		private native static boolean setLoggingHandler(final Logger logger);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -118,6 +128,23 @@ public class JDynamicAudioNormalizer
 		return buildInfo;
 	}
 	
+	static void setLoggingHandler(final Logger logger)
+	{
+		try
+		{
+			if(!NativeAPI.setLoggingHandler(logger))
+			{
+				throw new RuntimeException("Failed to setup new logging handler!");
+			}
+		}
+		catch(UnsatisfiedLinkError e)
+		{
+			System.err.println(e.getMessage());
+			System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
+			throw new Error("Failed to call native function!");
+		}
+	}
+	
 	//------------------------------------------------------------------------------------------------
 	// Test Functions
 	//------------------------------------------------------------------------------------------------
@@ -126,6 +153,14 @@ public class JDynamicAudioNormalizer
 	{
 		System.out.println("DynamicAudioNormalizer JNI Tester\n");
 	
+		// setLogger()
+		setLoggingHandler(new Logger()
+		{
+			public void log(int level, String message) {
+				System.err.println("[JDynAudNorm] " + message);
+			}
+		});
+		
 		// getVersionInfo()
 		final int[] versionInfo = JDynamicAudioNormalizer.getVersionInfo();
 		System.out.println("Library Version: " + versionInfo[0] + "." + versionInfo[1] + "-" + versionInfo[2]);
