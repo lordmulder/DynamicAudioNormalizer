@@ -31,6 +31,22 @@ JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_0
 JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler
   (JNIEnv *, jclass, jobject);
 
+/*
+ * Class:     DynamicAudioNormalizer_JDynamicAudioNormalizer_NativeAPI
+ * Method:    createInstance
+ * Signature: (IIIIDDDDZZZ)I
+ */
+JNIEXPORT jint JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_createInstance
+  (JNIEnv *, jclass, jint, jint, jint, jint, jdouble, jdouble, jdouble, jdouble, jboolean, jboolean, jboolean);
+
+/*
+ * Class:     DynamicAudioNormalizer_JDynamicAudioNormalizer_NativeAPI
+ * Method:    destroyInstance
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_destroyInstance
+  (JNIEnv *, jclass, jint);
+
 #ifdef __cplusplus
 }
 #endif

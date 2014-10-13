@@ -77,16 +77,21 @@ public class JDynamicAudioNormalizer
 	
 	private static class NativeAPI
 	{
+		//Static Functions
 		private native static boolean getVersionInfo(final int versionInfo[]);
 		private native static boolean getBuildInfo(final Map<String,String> buildInfo);
 		private native static boolean setLoggingHandler(final Logger logger);
+
+		//Create or Destroy Instance
+		private native static int createInstance(final int channels, final int sampleRate, final int frameLenMsec, final int filterSize, final double peakValue, final double maxAmplification, final double targetRms, final double compressFactor, final boolean channelsCoupled, final boolean enableDCCorrection, final boolean altBoundaryMode);
+		private native static boolean destroyInstance(final int handle);
 	}
 
 	//------------------------------------------------------------------------------------------------
 	// Public API
 	//------------------------------------------------------------------------------------------------
 
-	static int[] getVersionInfo()
+	static synchronized int[] getVersionInfo()
 	{
 		int[] versionInfo = new int[3];
 		
@@ -94,7 +99,7 @@ public class JDynamicAudioNormalizer
 		{
 			if(!NativeAPI.getVersionInfo(versionInfo))
 			{
-				throw new RuntimeException("Failed to retrieve version info from native library!");
+				throw new Error("Failed to retrieve version info from native library!");
 			}
 		}
 		catch(UnsatisfiedLinkError e)
@@ -107,7 +112,7 @@ public class JDynamicAudioNormalizer
 		return versionInfo;
 	}
 	
-	static Map<String,String> getBuildInfo()
+	static synchronized Map<String,String> getBuildInfo()
 	{
 		Map<String,String> buildInfo = new HashMap<String, String>();
 		
@@ -115,7 +120,7 @@ public class JDynamicAudioNormalizer
 		{
 			if(!NativeAPI.getBuildInfo(buildInfo))
 			{
-				throw new RuntimeException("Failed to retrieve build info from native library!");
+				throw new Error("Failed to retrieve build info from native library!");
 			}
 		}
 		catch(UnsatisfiedLinkError e)
@@ -128,13 +133,13 @@ public class JDynamicAudioNormalizer
 		return buildInfo;
 	}
 	
-	static void setLoggingHandler(final Logger logger)
+	static synchronized void setLoggingHandler(final Logger logger)
 	{
 		try
 		{
 			if(!NativeAPI.setLoggingHandler(logger))
 			{
-				throw new RuntimeException("Failed to setup new logging handler!");
+				throw new Error("Failed to setup new logging handler!");
 			}
 		}
 		catch(UnsatisfiedLinkError e)
@@ -146,13 +151,62 @@ public class JDynamicAudioNormalizer
 	}
 	
 	//------------------------------------------------------------------------------------------------
+	// Constructor and Finalizer
+	//------------------------------------------------------------------------------------------------
+
+	private int m_instance = -1;
+	
+	JDynamicAudioNormalizer(final int channels, final int sampleRate, final int frameLenMsec, final int filterSize, final double peakValue, final double maxAmplification, final double targetRms, final double compressFactor, final boolean channelsCoupled, final boolean enableDCCorrection, final boolean altBoundaryMode)
+	{
+		try
+		{
+			m_instance = NativeAPI.createInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+			if(m_instance < 0)
+			{
+				throw new Error("Failed to create native DynamicAudioNormalizer instance!");
+			}
+		}
+		catch(UnsatisfiedLinkError e)
+		{
+			System.err.println(e.getMessage());
+			System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
+			throw new Error("Failed to call native function!");
+		}
+	}
+	
+	public synchronized void release()
+	{
+		if(m_instance >= 0)
+		{
+			try
+			{
+				final int instanceTmp = m_instance;
+				m_instance = -1;
+				if(!NativeAPI.destroyInstance(instanceTmp))
+				{
+					throw new Error("Failed to destroy native DynamicAudioNormalizer instance!");
+				}
+			}
+			catch(UnsatisfiedLinkError e)
+			{
+				System.err.println(e.getMessage());
+				System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
+				throw new Error("Failed to call native function!");
+			}
+		}
+	}
+	
+	protected synchronized void finalize()
+	{
+		release();
+	}
+	
+	//------------------------------------------------------------------------------------------------
 	// Test Functions
 	//------------------------------------------------------------------------------------------------
 	
-	public static void main(String[] args)
+	private static void selfTest()
 	{
-		System.out.println("DynamicAudioNormalizer JNI Tester\n");
-	
 		// setLogger()
 		setLoggingHandler(new Logger()
 		{
@@ -173,7 +227,25 @@ public class JDynamicAudioNormalizer
 		}
 		System.out.println();
 		
-		// Completed
-		System.out.println("Completed.");
+		// Constructor
+		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+		
+		// Release
+		instance.release();
+	}
+	
+	public static void main(String[] args)
+	{
+		System.out.println("DynamicAudioNormalizer JNI Tester\n");
+		
+		try
+		{
+			selfTest();
+			System.out.println("Completed successfully.");
+		}
+		catch(Exception e)
+		{
+			System.err.println("SOMETHING WENT WRONG !!!");
+		}
 	}
 }

@@ -39,20 +39,18 @@
 #include <Common.h>
 
 //Globals
-static pthread_mutex_t g_javaLock = PTHREAD_MUTEX_INITIALIZER;
-static jobject g_javaLoggingHandler = NULL;
-static jmethodID g_javaLoggingMethod = NULL;
+static pthread_mutex_t g_javaLock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-#define JAVA_CHECK_EXCEPTION() do \
+#define JAVA_CHECK_EXCEPTION(ERR) do \
 { \
 	if(env->ExceptionCheck()) \
 	{ \
 		env->ExceptionClear(); \
-		return JNI_FALSE; \
+		return (ERR); \
 	} \
 } \
 while(0) \
@@ -91,19 +89,11 @@ while(0)
 // Logging  Function
 ///////////////////////////////////////////////////////////////////////////////
 
-static void javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference, jmethodID loggerMethod)
-{
-	MY_CRITSEC_ENTER(g_javaLock);
-	if(g_javaLoggingHandler)
-	{
-		env->DeleteGlobalRef(g_javaLoggingHandler);
-	}
-	g_javaLoggingMethod = loggerMethod;
-	g_javaLoggingHandler = loggerGlobalReference;
-	MY_CRITSEC_LEAVE(g_javaLock);
-}
+static jobject g_javaLoggingHandler = NULL;
+static jmethodID g_javaLoggingMethod = NULL;
+static JavaVM *g_javaLoggingJVM = NULL;
 
-static void javaLogMessage(JNIEnv *env, const int &level, const char *const message)
+static void javaLogMessageHelper(JNIEnv *env, const int &level, const char *const message)
 {
 	MY_CRITSEC_ENTER(g_javaLock);
 	if(g_javaLoggingHandler && g_javaLoggingMethod)
@@ -116,6 +106,122 @@ static void javaLogMessage(JNIEnv *env, const int &level, const char *const mess
 		}
 	}
 	MY_CRITSEC_LEAVE(g_javaLock);
+}
+
+static void javaLogMessage(const int logLevel, const char *const message)
+{
+	JNIEnv *env = NULL;
+	if(g_javaLoggingJVM->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK)
+	{
+		javaLogMessageHelper(env, logLevel, message);
+		env->ExceptionClear();
+	}
+}
+
+static void javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference, jmethodID loggerMethod)
+{
+	MY_CRITSEC_ENTER(g_javaLock);
+	if(g_javaLoggingHandler)
+	{
+		env->DeleteGlobalRef(g_javaLoggingHandler);
+		g_javaLoggingHandler = NULL;
+	}
+	if(env->GetJavaVM(&g_javaLoggingJVM) == 0)
+	{
+		g_javaLoggingHandler = loggerGlobalReference;
+		g_javaLoggingMethod = loggerMethod;
+		MDynamicAudioNormalizer::setLogFunction(javaLogMessage);
+	}
+	MY_CRITSEC_LEAVE(g_javaLock);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Instance Handling
+///////////////////////////////////////////////////////////////////////////////
+
+static const size_t MAX_INSTANCES = 256;
+static MDynamicAudioNormalizer *g_instances[MAX_INSTANCES];
+static size_t g_instanceCounter = 0;
+static int g_instanceNextHandleValue = 0;
+
+static int javaCreateNewInstance(const jint &channels, const jint &sampleRate, const jint &frameLenMsec, const jint &filterSize, const jdouble &peakValue, const jdouble &maxAmplification, const jdouble &targetRms, const jdouble &compressFactor, const jboolean &channelsCoupled, const jboolean &enableDCCorrection, const jboolean &altBoundaryMode)
+{
+	MY_CRITSEC_ENTER(g_javaLock);
+	
+	if(g_instanceCounter >= MAX_INSTANCES)
+	{
+		MY_CRITSEC_LEAVE(g_javaLock);
+		return -1;
+	}
+
+	if(g_instanceCounter == 0)
+	{
+		memset(g_instances, 0, MAX_INSTANCES * sizeof(MDynamicAudioNormalizer*));
+	}
+
+	MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, (channelsCoupled != 0), (enableDCCorrection != 0), (altBoundaryMode != 0));
+	if(!instance->initialize())
+	{
+		delete instance;
+		MY_CRITSEC_LEAVE(g_javaLock);
+		return -1;
+	}
+
+	while(g_instances[g_instanceNextHandleValue] != NULL)
+	{
+		g_instanceNextHandleValue = ((g_instanceNextHandleValue + 1) % MAX_INSTANCES);
+	}
+
+	const int handleValue = g_instanceNextHandleValue;
+	g_instances[g_instanceNextHandleValue] = instance;
+	g_instanceCounter++;
+
+	MY_CRITSEC_LEAVE(g_javaLock);
+	return handleValue;
+}
+
+static MDynamicAudioNormalizer *javaGetInstance(const jint &handleValue)
+{
+	MY_CRITSEC_ENTER(g_javaLock);
+	
+	if(g_instanceCounter < 1)
+	{
+		MY_CRITSEC_LEAVE(g_javaLock);
+		return NULL;
+	}
+
+	MDynamicAudioNormalizer *instance = NULL;
+	if((handleValue >= 0) && (handleValue < MAX_INSTANCES))
+	{
+		instance = g_instances[handleValue];
+	}
+
+	MY_CRITSEC_LEAVE(g_javaLock);
+	return instance;
+}
+
+static jboolean javaDestroyInstance(const jint &handleValue)
+{
+	MY_CRITSEC_ENTER(g_javaLock);
+	
+	if(g_instanceCounter < 1)
+	{
+		MY_CRITSEC_LEAVE(g_javaLock);
+		return JNI_FALSE;
+	}
+
+	if(g_instances[handleValue] == NULL)
+	{
+		MY_CRITSEC_LEAVE(g_javaLock);
+		return JNI_FALSE;
+	}
+	
+	delete g_instances[handleValue];
+	g_instances[handleValue] = NULL;
+	g_instanceCounter--;
+
+	MY_CRITSEC_LEAVE(g_javaLock);
+	return JNI_TRUE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -213,6 +319,24 @@ static jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_0002
 	return JNI_FALSE;
 }
 
+static jint JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_createInstance_Impl(JNIEnv *env, jclass, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
+{
+	if((channels > 0) && (sampleRate > 0) && (frameLenMsec > 0) & (filterSize > 0))
+	{
+		return javaCreateNewInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+	}
+	return -1;
+}
+
+static jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_destroyInstance_Impl(JNIEnv *env, jclass, jint instance)
+{
+	if((instance >= 0) && (instance < MAX_INSTANCES))
+	{
+		return javaDestroyInstance(instance);
+	}
+	return JNI_FALSE;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // JNI Entry Points
 ///////////////////////////////////////////////////////////////////////////////
@@ -221,22 +345,71 @@ extern "C"
 {
 	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo(JNIEnv *env, jclass clazz, jintArray versionInfo)
 	{
-		const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo_Impl(env, clazz, versionInfo);
-		JAVA_CHECK_EXCEPTION();
-		return ret;
+		try
+		{
+			const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo_Impl(env, clazz, versionInfo);
+			JAVA_CHECK_EXCEPTION(JNI_FALSE);
+			return ret;
+		}
+		catch(...)
+		{
+			return JNI_FALSE;
+		}
 	}
 
 	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo(JNIEnv *env, jclass clazz, jobject buildInfo)
 	{
-		const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo_Impl(env, clazz, buildInfo);
-		JAVA_CHECK_EXCEPTION();
-		return ret;
+		try
+		{
+			const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo_Impl(env, clazz, buildInfo);
+			JAVA_CHECK_EXCEPTION(JNI_FALSE);
+			return ret;
+		}
+		catch(...)
+		{
+			return JNI_FALSE;
+		}
 	}
 
 	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler(JNIEnv *env, jclass clazz, jobject loggerObject)
 	{
-		const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler_Impl(env, clazz, loggerObject);
-		JAVA_CHECK_EXCEPTION();
-		return ret;
+		try
+		{
+			const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler_Impl(env, clazz, loggerObject);
+			JAVA_CHECK_EXCEPTION(JNI_FALSE);
+			return ret;
+		}
+		catch(...)
+		{
+			return JNI_FALSE;
+		}
+	}
+
+	JNIEXPORT jint JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_createInstance(JNIEnv *env, jclass clazz, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
+	{
+		try
+		{
+			const jint ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_createInstance_Impl(env, clazz, channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+			JAVA_CHECK_EXCEPTION(-1);
+			return ret;
+		}
+		catch(...)
+		{
+			return -1;
+		}
+	}
+
+	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_destroyInstance(JNIEnv *env, jclass clazz, jint instance)
+	{
+		try
+		{
+			const jboolean ret = Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_destroyInstance_Impl(env, clazz, instance);
+			JAVA_CHECK_EXCEPTION(JNI_FALSE);
+			return ret;
+		}
+		catch(...)
+		{
+			return JNI_FALSE;
+		}
 	}
 }
