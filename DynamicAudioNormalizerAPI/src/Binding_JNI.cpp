@@ -29,6 +29,58 @@
 #include <DynamicAudioNormalizer_JDynamicAudioNormalizer_Error.h>
 #include <DynamicAudioNormalizer_JDynamicAudioNormalizer_NativeAPI.h>
 
+///////////////////////////////////////////////////////////////////////////////
+// Utility Functions
+///////////////////////////////////////////////////////////////////////////////
+
+#define JAVA_CHECK_EXCEPTION() do \
+{ \
+	if(env->ExceptionCheck()) \
+	{ \
+		env->ExceptionClear(); \
+		return JNI_FALSE; \
+	} \
+} \
+while(0) \
+
+#define JAVA_FIND_CLASS(VAR,NAME) do \
+{ \
+	(VAR) = env->FindClass((NAME)); \
+	JAVA_CHECK_EXCEPTION(); \
+	if((VAR) == NULL) return JNI_FALSE; \
+} \
+while(0)
+
+#define JAVA_GET_METHOD(VAR,CLASS,NAME,ARGS) do \
+{ \
+	(VAR) = env->GetMethodID((CLASS), (NAME), (ARGS)); \
+	JAVA_CHECK_EXCEPTION(); \
+	if((VAR) == NULL) return JNI_FALSE; \
+} \
+while(0)
+
+#define JAVA_MAP_PUT(MAP,KEY,VAL) do \
+{ \
+	jstring _key = env->NewStringUTF((KEY)); \
+	jstring _val = env->NewStringUTF((VAL)); \
+	JAVA_CHECK_EXCEPTION(); \
+	\
+	if(_key && _val) \
+	{ \
+		jobject _ret = env->CallObjectMethod((MAP), putMethod, _key, _val); \
+		JAVA_CHECK_EXCEPTION(); \
+		if(_ret) env->DeleteLocalRef(_ret); \
+	} \
+	\
+	if(_key) env->DeleteLocalRef(_key); \
+	if(_val) env->DeleteLocalRef(_val); \
+} \
+while(0)
+
+///////////////////////////////////////////////////////////////////////////////
+// JNI Functions
+///////////////////////////////////////////////////////////////////////////////
+
 extern "C"
 {
 	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo(JNIEnv *env, jclass, jintArray versionInfo)
@@ -50,5 +102,36 @@ extern "C"
 		}
 
 		return JNI_FALSE;
+	}
+
+	JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo(JNIEnv *env, jclass, jobject buildInfo)
+	{
+		jclass mapClass = NULL;
+		jmethodID putMethod = NULL, clearMethod = NULL;
+
+		JAVA_FIND_CLASS(mapClass, "java/util/Map");
+		JAVA_GET_METHOD(putMethod, mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+		JAVA_GET_METHOD(clearMethod, mapClass, "clear", "()V");
+
+		if(!env->IsInstanceOf(buildInfo, mapClass))
+		{
+			return JNI_FALSE;
+		}
+
+		env->CallVoidMethod(buildInfo, clearMethod);
+		JAVA_CHECK_EXCEPTION();
+
+		const char *date, *time, *compiler, *arch;
+		bool debug;
+		MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
+
+		JAVA_MAP_PUT(buildInfo, "BuildDate",    date);
+		JAVA_MAP_PUT(buildInfo, "BuildTime",    time);
+		JAVA_MAP_PUT(buildInfo, "Compiler",     compiler);
+		JAVA_MAP_PUT(buildInfo, "Architecture", arch);
+		JAVA_MAP_PUT(buildInfo, "DebugBuild",   debug ? "Yes" : "No");
+
+		env->DeleteLocalRef(mapClass);
+		return JNI_TRUE;
 	}
 }

@@ -25,6 +25,9 @@
 
 package DynamicAudioNormalizer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class JDynamicAudioNormalizer
 {
 	//------------------------------------------------------------------------------------------------
@@ -66,6 +69,7 @@ public class JDynamicAudioNormalizer
 	private static class NativeAPI
 	{
 		private native static boolean getVersionInfo(int versionInfo[]);
+		private native static boolean getBuildInfo(Map<String,String> buildInfo);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -93,6 +97,27 @@ public class JDynamicAudioNormalizer
 		return versionInfo;
 	}
 	
+	static Map<String,String> getBuildInfo()
+	{
+		Map<String,String> buildInfo = new HashMap<String, String>();
+		
+		try
+		{
+			if(!NativeAPI.getBuildInfo(buildInfo))
+			{
+				throw new RuntimeException("Failed to retrieve build info from native library!");
+			}
+		}
+		catch(UnsatisfiedLinkError e)
+		{
+			System.err.println(e.getMessage());
+			System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
+			throw new Error("Failed to call native function!");
+		}
+		
+		return buildInfo;
+	}
+	
 	//------------------------------------------------------------------------------------------------
 	// Test Functions
 	//------------------------------------------------------------------------------------------------
@@ -101,7 +126,19 @@ public class JDynamicAudioNormalizer
 	{
 		System.out.println("DynamicAudioNormalizer JNI Tester\n");
 	
-		int[] versionInfo = JDynamicAudioNormalizer.getVersionInfo();
+		// getVersionInfo()
+		final int[] versionInfo = JDynamicAudioNormalizer.getVersionInfo();
 		System.out.println("Library Version: " + versionInfo[0] + "." + versionInfo[1] + "-" + versionInfo[2]);
+		
+		// getBuildInfo()
+		final Map<String,String> buildInfo = JDynamicAudioNormalizer.getBuildInfo();
+		for(final String key : buildInfo.keySet())
+		{
+			System.out.println("Build Info: " + key + "=" + buildInfo.get(key));
+		}
+		System.out.println();
+		
+		// Completed
+		System.out.println("Completed.");
 	}
 }

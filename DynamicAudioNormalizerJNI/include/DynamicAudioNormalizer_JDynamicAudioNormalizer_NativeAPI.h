@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo
   (JNIEnv *, jclass, jintArray);
 
+/*
+ * Class:     DynamicAudioNormalizer_JDynamicAudioNormalizer_NativeAPI
+ * Method:    getBuildInfo
+ * Signature: (Ljava/util/Map;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_DynamicAudioNormalizer_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo
+  (JNIEnv *, jclass, jobject);
+
 #ifdef __cplusplus
 }
 #endif
