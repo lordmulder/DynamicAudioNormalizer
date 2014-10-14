@@ -26,7 +26,9 @@
 package DynamicAudioNormalizer;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 public class JDynamicAudioNormalizer
 {
@@ -104,18 +106,21 @@ public class JDynamicAudioNormalizer
 
 	static synchronized int[] getVersionInfo()
 	{
+		boolean success = false;
 		int[] versionInfo = new int[3];
 		
 		try
 		{
-			if(!NativeAPI.getVersionInfo(versionInfo))
-			{
-				throw new Error("Failed to retrieve version info from native library!");
-			}
+			success = NativeAPI.getVersionInfo(versionInfo);
 		}
 		catch(Throwable e)
 		{
 			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}
+
+		if(!success)
+		{
+			throw new Error("Failed to retrieve version info from native library!");
 		}
 		
 		return versionInfo;
@@ -123,18 +128,21 @@ public class JDynamicAudioNormalizer
 	
 	static synchronized Map<String,String> getBuildInfo()
 	{
+		boolean success = false;
 		Map<String,String> buildInfo = new HashMap<String, String>();
 		
 		try
 		{
-			if(!NativeAPI.getBuildInfo(buildInfo))
-			{
-				throw new Error("Failed to retrieve build info from native library!");
-			}
+			success = NativeAPI.getBuildInfo(buildInfo);
 		}
 		catch(Throwable e)
 		{
 			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}
+
+		if(!success)
+		{
+			throw new Error("Failed to retrieve build info from native library!");
 		}
 		
 		return buildInfo;
@@ -142,16 +150,20 @@ public class JDynamicAudioNormalizer
 	
 	static synchronized void setLoggingHandler(final Logger logger)
 	{
+		boolean success = false;
+		
 		try
 		{
-			if(!NativeAPI.setLoggingHandler(logger))
-			{
-				throw new Error("Failed to setup new logging handler!");
-			}
+			success = NativeAPI.setLoggingHandler(logger);
 		}
 		catch(Throwable e)
 		{
 			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}
+		
+		if(!success)
+		{
+			throw new Error("Failed to setup new logging handler!");
 		}
 	}
 	
@@ -166,15 +178,16 @@ public class JDynamicAudioNormalizer
 		try
 		{
 			m_instance = NativeAPI.createInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
-			if(m_instance < 0)
-			{
-				throw new Error("Failed to create native DynamicAudioNormalizer instance!");
-			}
 			System.out.println("Handle value: " + m_instance);
 		}
 		catch(Throwable e)
 		{
 			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}
+
+		if(m_instance < 0)
+		{
+			throw new Error("Failed to create native DynamicAudioNormalizer instance!");
 		}
 	}
 	
@@ -182,18 +195,21 @@ public class JDynamicAudioNormalizer
 	{
 		if(m_instance >= 0)
 		{
+			boolean success = false;
 			try
 			{
 				final int instanceTmp = m_instance;
 				m_instance = -1;
-				if(!NativeAPI.destroyInstance(instanceTmp))
-				{
-					throw new Error("Failed to destroy native DynamicAudioNormalizer instance!");
-				}
+				success = NativeAPI.destroyInstance(instanceTmp);
 			}
 			catch(Throwable e)
 			{
 				handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+			}
+			
+			if(!success)
+			{
+				throw new Error("Failed to destroy native DynamicAudioNormalizer instance!");
 			}
 		}
 	}
@@ -230,13 +246,22 @@ public class JDynamicAudioNormalizer
 		System.out.println();
 		
 		//Create instances
-		for(int i = 0; i < 99999; i++)
+		for(int i = 0; i < 999; i++)
 		{
+			Queue<JDynamicAudioNormalizer> instances = new LinkedList<JDynamicAudioNormalizer>();
+
 			// Constructor
-			JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+			for(int k = 0; k < 32; k++)
+			{
+				JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+				instances.add(instance);
+			}
 			
 			// Release
-			instance.release();
+			while(!instances.isEmpty())
+			{
+				instances.poll().release();
+			}
 		}
 	}
 	

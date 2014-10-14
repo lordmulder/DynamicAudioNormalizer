@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <map>
+#include <queue>
 
 //JNI
 #include <DynamicAudioNormalizer_JDynamicAudioNormalizer.h>
@@ -87,19 +88,6 @@ while(0)
 } \
 while(0)
 
-#define INC_VAL(VAL, MAX_VAL) do \
-{ \
-	if((VAL) < (MAX_VAL)) \
-	{ \
-		(VAL)++; \
-	} \
-	else \
-	{ \
-		(VAL) = 0; \
-	} \
-} \
-while(0)
-
 ///////////////////////////////////////////////////////////////////////////////
 // Logging  Function
 ///////////////////////////////////////////////////////////////////////////////
@@ -156,22 +144,26 @@ static void javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference, jm
 
 static jint g_instanceNextHandleValue = 0;
 static std::map<jint, MDynamicAudioNormalizer*> g_instances;
+static std::queue<jint> g_pendingHandles;
 
 static int javaCreateHandle(MDynamicAudioNormalizer *const instance)
 {
 	MY_CRITSEC_ENTER(g_javaLock);
 	
 	jint handleValue = -1;
-	if(g_instances.size() < SHRT_MAX)
+	if(!g_pendingHandles.empty())
 	{
-		while(g_instances.find(g_instanceNextHandleValue) != g_instances.end())
-		{
-			INC_VAL(g_instanceNextHandleValue, SHRT_MAX);
-		}
+		handleValue = g_pendingHandles.front();
+		g_pendingHandles.pop();
+	}
+	else if(g_instanceNextHandleValue < SHRT_MAX)
+	{
+		handleValue = g_instanceNextHandleValue++;
+	}
 
-		handleValue = g_instanceNextHandleValue;
+	if(handleValue >= 0)
+	{
 		g_instances.insert(std::pair<jint, MDynamicAudioNormalizer*>(handleValue, instance));
-		INC_VAL(g_instanceNextHandleValue, SHRT_MAX);
 	}
 
 	MY_CRITSEC_LEAVE(g_javaLock);
@@ -185,6 +177,7 @@ static void javaCloseHandle(const jint &handleValue)
 	if(g_instances.find(handleValue) != g_instances.end())
 	{
 		g_instances.erase(handleValue);
+		g_pendingHandles.push(handleValue);
 	}
 
 	MY_CRITSEC_LEAVE(g_javaLock);
