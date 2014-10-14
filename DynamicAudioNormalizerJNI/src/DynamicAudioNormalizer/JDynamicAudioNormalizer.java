@@ -44,6 +44,19 @@ public class JDynamicAudioNormalizer
 		}
 	}
 
+	private static void handleError(final Throwable e, final String message)
+	{
+		try
+		{
+			System.err.println(String.format("ERROR: %s\n%s: \"%s\"\n", message, e.getClass().getName(), e.getMessage()));
+		}
+		catch(Throwable e2)
+		{
+			/*discard any error that may occur inside the error handler*/
+		}
+		throw new Error(message);
+	}
+	
 	//------------------------------------------------------------------------------------------------
 	// Logging interface
 	//------------------------------------------------------------------------------------------------
@@ -63,11 +76,9 @@ public class JDynamicAudioNormalizer
 		{
 			System.loadLibrary("DynamicAudioNormalizerAPI"); // Load native library at runtime
 		}
-		catch(UnsatisfiedLinkError e)
+		catch(Throwable e)
 		{
-			System.err.println(e.getMessage());
-			System.err.println("ERROR: Failed to load native DynamicAudioNormalizerAPI library!\n");
-			throw new Error("Failed to load DynamicAudioNormalizerAPI library");
+			handleError(e, "Failed to load native DynamicAudioNormalizerAPI library!");
 		}
 	}
 
@@ -102,11 +113,9 @@ public class JDynamicAudioNormalizer
 				throw new Error("Failed to retrieve version info from native library!");
 			}
 		}
-		catch(UnsatisfiedLinkError e)
+		catch(Throwable e)
 		{
-			System.err.println(e.getMessage());
-			System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
-			throw new Error("Failed to call native function!");
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
 		}
 		
 		return versionInfo;
@@ -123,11 +132,9 @@ public class JDynamicAudioNormalizer
 				throw new Error("Failed to retrieve build info from native library!");
 			}
 		}
-		catch(UnsatisfiedLinkError e)
+		catch(Throwable e)
 		{
-			System.err.println(e.getMessage());
-			System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
-			throw new Error("Failed to call native function!");
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
 		}
 		
 		return buildInfo;
@@ -142,11 +149,9 @@ public class JDynamicAudioNormalizer
 				throw new Error("Failed to setup new logging handler!");
 			}
 		}
-		catch(UnsatisfiedLinkError e)
+		catch(Throwable e)
 		{
-			System.err.println(e.getMessage());
-			System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
-			throw new Error("Failed to call native function!");
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
 		}
 	}
 	
@@ -165,12 +170,11 @@ public class JDynamicAudioNormalizer
 			{
 				throw new Error("Failed to create native DynamicAudioNormalizer instance!");
 			}
+			System.out.println("Handle value: " + m_instance);
 		}
-		catch(UnsatisfiedLinkError e)
+		catch(Throwable e)
 		{
-			System.err.println(e.getMessage());
-			System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
-			throw new Error("Failed to call native function!");
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
 		}
 	}
 	
@@ -187,11 +191,9 @@ public class JDynamicAudioNormalizer
 					throw new Error("Failed to destroy native DynamicAudioNormalizer instance!");
 				}
 			}
-			catch(UnsatisfiedLinkError e)
+			catch(Throwable e)
 			{
-				System.err.println(e.getMessage());
-				System.err.println("ERROR: Failed to call native DynamicAudioNormalizerAPI function!\n");
-				throw new Error("Failed to call native function!");
+				handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
 			}
 		}
 	}
@@ -227,11 +229,15 @@ public class JDynamicAudioNormalizer
 		}
 		System.out.println();
 		
-		// Constructor
-		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
-		
-		// Release
-		instance.release();
+		//Create instances
+		for(int i = 0; i < 99999; i++)
+		{
+			// Constructor
+			JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+			
+			// Release
+			instance.release();
+		}
 	}
 	
 	public static void main(String[] args)
