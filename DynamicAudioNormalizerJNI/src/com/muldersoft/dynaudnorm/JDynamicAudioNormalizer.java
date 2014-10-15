@@ -23,7 +23,7 @@
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
 
-package DynamicAudioNormalizer;
+package com.muldersoft.dynaudnorm;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -104,7 +104,7 @@ public class JDynamicAudioNormalizer
 	// Public API
 	//------------------------------------------------------------------------------------------------
 
-	static synchronized int[] getVersionInfo()
+	public static synchronized int[] getVersionInfo()
 	{
 		boolean success = false;
 		int[] versionInfo = new int[3];
@@ -126,7 +126,7 @@ public class JDynamicAudioNormalizer
 		return versionInfo;
 	}
 	
-	static synchronized Map<String,String> getBuildInfo()
+	public static synchronized Map<String,String> getBuildInfo()
 	{
 		boolean success = false;
 		Map<String,String> buildInfo = new HashMap<String, String>();
@@ -148,7 +148,7 @@ public class JDynamicAudioNormalizer
 		return buildInfo;
 	}
 	
-	static synchronized void setLoggingHandler(final Logger logger)
+	public static synchronized void setLoggingHandler(final Logger logger)
 	{
 		boolean success = false;
 		
@@ -173,7 +173,7 @@ public class JDynamicAudioNormalizer
 
 	private int m_instance = -1;
 	
-	JDynamicAudioNormalizer(final int channels, final int sampleRate, final int frameLenMsec, final int filterSize, final double peakValue, final double maxAmplification, final double targetRms, final double compressFactor, final boolean channelsCoupled, final boolean enableDCCorrection, final boolean altBoundaryMode)
+	public JDynamicAudioNormalizer(final int channels, final int sampleRate, final int frameLenMsec, final int filterSize, final double peakValue, final double maxAmplification, final double targetRms, final double compressFactor, final boolean channelsCoupled, final boolean enableDCCorrection, final boolean altBoundaryMode)
 	{
 		try
 		{
@@ -217,66 +217,5 @@ public class JDynamicAudioNormalizer
 	protected synchronized void finalize()
 	{
 		release();
-	}
-	
-	//------------------------------------------------------------------------------------------------
-	// Test Functions
-	//------------------------------------------------------------------------------------------------
-	
-	private static void selfTest()
-	{
-		// setLogger()
-		setLoggingHandler(new Logger()
-		{
-			public void log(int level, String message) {
-				System.err.println("[JDynAudNorm] " + message);
-			}
-		});
-		
-		// getVersionInfo()
-		final int[] versionInfo = JDynamicAudioNormalizer.getVersionInfo();
-		System.out.println("Library Version: " + versionInfo[0] + "." + versionInfo[1] + "-" + versionInfo[2]);
-		
-		// getBuildInfo()
-		final Map<String,String> buildInfo = JDynamicAudioNormalizer.getBuildInfo();
-		for(final String key : buildInfo.keySet())
-		{
-			System.out.println("Build Info: " + key + "=" + buildInfo.get(key));
-		}
-		System.out.println();
-		
-		//Create instances
-		for(int i = 0; i < 999; i++)
-		{
-			Queue<JDynamicAudioNormalizer> instances = new LinkedList<JDynamicAudioNormalizer>();
-
-			// Constructor
-			for(int k = 0; k < 32; k++)
-			{
-				JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
-				instances.add(instance);
-			}
-			
-			// Release
-			while(!instances.isEmpty())
-			{
-				instances.poll().release();
-			}
-		}
-	}
-	
-	public static void main(String[] args)
-	{
-		System.out.println("DynamicAudioNormalizer JNI Tester\n");
-		
-		try
-		{
-			selfTest();
-			System.out.println("Completed successfully.");
-		}
-		catch(Exception e)
-		{
-			System.err.println("SOMETHING WENT WRONG !!!");
-		}
 	}
 }

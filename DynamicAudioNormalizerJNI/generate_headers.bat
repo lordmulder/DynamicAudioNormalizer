@@ -6,6 +6,6 @@ if not exist "%JDK_PATH%\bin\javah.exe" (
 )
 
 mkdir "%~dp0\include" 2> NUL
-"%JDK_PATH%\bin\javah.exe" -d "%~dp0\include" -cp "%~dp0\bin" DynamicAudioNormalizer.JDynamicAudioNormalizer
+"%JDK_PATH%\bin\javah.exe" -d "%~dp0\include" -cp "%~dp0\bin" com.muldersoft.dynaudnorm.JDynamicAudioNormalizer
 
 pause
