@@ -22,7 +22,7 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
-JDK_PATH ?= /usr/lib/jvm/default
+JDK_PATH ?= $(shell update-java-alternatives -l | grep -oE '[^[:space:]]+$$')
 
 ##############################################################################
 # Constants
