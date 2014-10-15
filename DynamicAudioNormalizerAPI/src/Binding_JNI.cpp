@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <map>
 #include <queue>
+#include <climits>
 
 //JNI
 #include <DynamicAudioNormalizer_JDynamicAudioNormalizer.h>
@@ -42,7 +43,7 @@
 #include <Common.h>
 
 //Globals
-static pthread_mutex_t g_javaLock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
+static pthread_mutex_t g_javaLock = PTHREAD_MUTEX_INITIALIZER;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions

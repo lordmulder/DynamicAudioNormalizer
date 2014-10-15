@@ -44,7 +44,7 @@ ifneq ($(MAKECMDGOALS),clean)
       $(error Qt Meta Object Compiler not found. Please set MOC environment variable properly!)
    endif
    ifneq ($(notdir $(realpath $(QTDIR)/QtGui/QApplication)),QApplication)
-      $(error "QtGui/QApplication" not found in Qt include path. Please set QTDIR environment variable properly!)
+      $(error File "QtGui/QApplication" not found in Qt include path. Please set QTDIR environment variable properly!)
    endif
 endif
 

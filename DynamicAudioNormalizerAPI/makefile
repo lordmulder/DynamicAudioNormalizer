@@ -22,6 +22,8 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
+JDK_PATH ?= /usr/lib/jvm/default
+
 ##############################################################################
 # Constants
 ##############################################################################
@@ -30,6 +32,16 @@ LIBRARY_NAME := libDynamicAudioNormalizerAPI
 
 ifndef API_VERSION
    $(error API_VERSION variable is not set!)
+endif
+
+##############################################################################
+# JDK Checks
+##############################################################################
+
+ifneq ($(MAKECMDGOALS),clean)
+   ifneq ($(notdir $(realpath $(JDK_PATH)/include/jni.h)),jni.h)
+      $(error File "include/jni.h" not found in JDK path. Please set JDK_PATH environment variable properly!)
+   endif
 endif
 
 ##############################################################################
@@ -58,6 +70,9 @@ CXXFLAGS += -DMDYNAMICAUDIONORMALIZER_EXPORTS
 CXXFLAGS += -I./src
 CXXFLAGS += -I./include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
+CXXFLAGS += -I../DynamicAudioNormalizerJNI/include
+CXXFLAGS += -I$(JDK_PATH)/include
+CXXFLAGS += -I$(JDK_PATH)/include/linux
 
 ##############################################################################
 # Rules
