@@ -25,9 +25,18 @@
 
 package com.muldersoft.dynaudnorm.test;
 
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,10 +46,86 @@ import org.junit.runners.MethodSorters;
 
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer;
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer.Logger;
+import com.sun.media.sound.WaveFileReader;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DynamicAudioNormalizerTest
 {
+	//------------------------------------------------------------------------------------------------
+	// Wave Reader
+	//------------------------------------------------------------------------------------------------
+
+	static class Reader
+	{
+		private final WaveFileReader audioReader;
+		private final AudioInputStream audioInputStream;
+
+		final int channels;
+		final int sampleRate;
+		
+		private byte [] tempBuffer = null; 
+		
+		public Reader(final String fileName) throws UnsupportedAudioFileException, IOException
+		{
+			audioReader = new WaveFileReader();
+			audioInputStream = audioReader.getAudioInputStream(new File(fileName));
+			
+			AudioFormat inputFormat = audioInputStream.getFormat();
+			if(inputFormat.getSampleSizeInBits() != 16)
+			{
+				throw new IOException("Unssuported format. Only 16-Bit is supported!");
+			}
+
+			channels = inputFormat.getChannels();
+			sampleRate = Math.round(inputFormat.getSampleRate());
+		}
+		
+		public int read(double [][] buffer) throws IOException
+		{
+			if(buffer.length < channels)
+			{
+				throw new IOException("Output array dimension is too small for channel count!");
+			}
+			
+			final int requiredBuffSize =  buffer[0].length * channels * 2;
+			if((tempBuffer == null) || (tempBuffer.length < requiredBuffSize))
+			{
+				tempBuffer = new byte[requiredBuffSize];
+			}
+
+			final int readSize = audioInputStream.read(tempBuffer, 0, requiredBuffSize);
+			if(readSize > 2 * channels)
+			{
+				final int sampleCount = readSize / (2 * channels);
+				ByteBuffer byteWrapper = ByteBuffer.wrap(tempBuffer);
+				for(int i = 0; i < sampleCount; i++)
+				{
+					for(int c = 0; c < channels; c++)
+					{
+						buffer[c][i] = ((double)byteWrapper.getShort()) / ((double)Short.MAX_VALUE);
+					}
+				}
+				return sampleCount;
+			}
+			
+			return 0;
+		}
+		
+		public int getChannels()
+		{
+			return channels;
+		}
+
+		public int sampleRate()
+		{
+			return sampleRate;
+		}
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	// Test Functions
+	//------------------------------------------------------------------------------------------------
+
 	@Before
 	public void setUp()
 	{
@@ -86,7 +171,7 @@ public class DynamicAudioNormalizerTest
 	@Test
 	public void test4_ConstructorAndRelease()
 	{
-		for(int i = 0; i < 99; i++)
+		for(int i = 0; i < 8; i++)
 		{
 			Queue<JDynamicAudioNormalizer> instances = new LinkedList<JDynamicAudioNormalizer>();
 
@@ -101,6 +186,42 @@ public class DynamicAudioNormalizerTest
 			while(!instances.isEmpty())
 			{
 				instances.poll().release();
+			}
+		}
+	}
+	
+	@Test
+	public void test5_ProcessWaveFile()
+	{
+		Reader reader = null;
+		try
+		{
+			reader = new Reader("E:\\Images\\WhaleOnThis.wav");
+		}
+		catch (Exception e)
+		{
+			fail("Failed to open ionput audio file!");
+		}
+		
+		double [][] sampleBuffer = new double[reader.getChannels()][4096];
+		for(;;)
+		{
+			try
+			{
+				final int sampleCount = reader.read(sampleBuffer);
+				if(sampleCount > 0)
+				{
+					for(int i = 0; i < sampleCount; i++)
+					{
+						System.out.println(sampleBuffer[0][i]);
+					}
+					continue;
+				}
+				break;
+			}
+			catch (IOException e)
+			{
+				break;
 			}
 		}
 	}
