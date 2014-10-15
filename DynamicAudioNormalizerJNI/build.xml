@@ -1,0 +1,17 @@
+<project name="JDynamicAudioNormalizer" default="deploy">
+	<target name="clean">
+		<delete dir="bin"/>
+	</target>
+	<target name="compile" depends="clean">
+		<mkdir dir="bin"/>
+		<javac target="1.6" srcdir="src" destdir="bin" includeantruntime="false" />
+    </target>
+    <target name="deploy" depends="clean,compile" description="create a Jar file for the application">
+        <mkdir dir="dist"/>
+        <delete file="dist/DynamicAudioNormalizer.jar" />
+        <jar destfile="dist/DynamicAudioNormalizer.jar">
+            <fileset dir="bin" includes="**/*.class"/>
+            <manifest />
+        </jar>
+    </target>
+</project>

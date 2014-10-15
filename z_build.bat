@@ -10,6 +10,8 @@ set "PDOC_PATH=C:\Program Files (x86)\Pandoc"
 set "QT_SOURCE=C:\Qt\4.8.6"
 set "QT_SHARED=C:\Qt\4.8.6-Shared"
 set "QT_STATIC=C:\Qt\4.8.6-Static"
+set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_05"
+set "ANT1_PATH=C:\Program Files (x86)\Eclipse\plugins\org.apache.ant_1.9.2.v201404171502"
 
 REM ###############################################
 REM # DO NOT MODIFY ANY LINES BELOW THIS LINE !!! #
@@ -20,6 +22,8 @@ REM // Setup environment
 REM ///////////////////////////////////////////////////////////////////////////
 set "QTDIR=%QT_SOURCE%"
 call "%MSVC_PATH%\vcvarsall.bat" x86
+set "JAVA_HOME=%JDK8_PATH%"
+set "ANT_HOME=%ANT1_PATH%"
 set "PATH=%QTDIR%\bin;%PATH%"
 
 REM ///////////////////////////////////////////////////////////////////////////
@@ -55,6 +59,14 @@ if not exist "%QT_SHARED%\bin\QtCore4.dll" (
 )
 if not exist "%QT_STATIC%\lib\QtCore.lib" (
 	echo Qt *static* libraries could not be found. Please check your QT_STATIC var^^!
+	goto BuildError
+)
+if not exist "%JDK8_PATH%\include\jni.h" (
+	echo JNI header files could not be found. Please check your JDK8_PATH var^^!
+	goto BuildError
+)
+if not exist "%ANT1_PATH%\lib\ant.jar" (
+	echo Ant library file could not be found. Please check your ANT1_PATH var^^!
 	goto BuildError
 )
 
@@ -115,6 +127,8 @@ for %%c in (DLL, Static) do (
 	)
 )
 
+call "%ANT1_PATH%\bin\ant.bat" -buildfile "%~dp0\DynamicAudioNormalizerJNI\build.xml"
+
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Copy program files
 REM ///////////////////////////////////////////////////////////////////////////
@@ -146,6 +160,7 @@ for %%c in (DLL, Static) do (
 		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\x64"
 		
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\include"
+		copy "%~dp0\DynamicAudioNormalizerJNI\dist\*.jar"                "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\pthread\lib\Win32\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\pthread\lib\x64\.\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c\x64"
