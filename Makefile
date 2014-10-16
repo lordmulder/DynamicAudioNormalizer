@@ -30,6 +30,7 @@ SHELL=/bin/bash
 LIBRARY_NAME := DynamicAudioNormalizerAPI
 PROGRAM_NAME := DynamicAudioNormalizerCLI
 LOGVIEW_NAME := DynamicAudioNormalizerGUI
+JNIWRAP_NAME := DynamicAudioNormalizerJNI
 BUILD_DATE   := $(shell date -Idate)
 BUILD_TIME   := $(shell date +%H:%M:%S)
 BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
@@ -48,10 +49,10 @@ export API_VERSION := $(shell sed -n 's/.*define MDYNAMICAUDIONORMALIZER_CORE \(
 # Rules
 ##############################################################################
 
-BUILD_PROJECTS = $(addprefix DynamicAudioNormalizer,API CLI GUI)
+BUILD_PROJECTS = $(addprefix DynamicAudioNormalizer,API CLI GUI JNI)
 CLEAN_PROJECTS = $(addprefix Clean,$(BUILD_PROJECTS))
 
-.PHONY: all clean $(BUILD_PROJECTS) $(CLEAN_PROJECTS) DeployBinaries CreateTagFile
+.PHONY: all clean $(BUILD_PROJECTS) $(CLEAN_PROJECTS) DeployBinaries CopyAllBinaries CreateDocuments CreateTagFile
 
 all: $(BUILD_PROJECTS) DeployBinaries
 	@$(ECHO) "\n\e[1;32mComplete.\e[0m\n"
@@ -89,19 +90,10 @@ $(BUILD_PROJECTS):
 # Deploy
 #-------------------------------------------------------------
 
-DeployBinaries: CreateTagFile
+DeployBinaries: CopyAllBinaries CreateDocuments CreateTagFile
 	@$(ECHO) "\n\e[1;34m-----------------------------------------------------------------------------\e[0m"
 	@$(ECHO) "\e[1;34mDeploy\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
-	rm -rf $(TARGET_PATH)
-	mkdir -p $(TARGET_PATH)/img
-	mv -f $(BUILD_TAG) $(TARGET_PATH)/BUILD_TAG
-	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME) $(TARGET_PATH)
-	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH)
-	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).so $(TARGET_PATH)
-	cp ./LICENSE-*.html $(TARGET_PATH)
-	pandoc --from markdown_github+header_attributes --to html5 --standalone -H ./img/Style.inc ./README.md --output $(TARGET_PATH)/README.html
-	cp ./img/*.png $(TARGET_PATH)/img
 	rm -f $(OUTPUT_FILE)
 	pushd $(TARGET_PATH) ; tar -vcjf $(OUTPUT_FILE) * ; popd
 
@@ -127,3 +119,26 @@ CreateTagFile:
 	echo "but WITHOUT ANY WARRANTY; without even the implied warranty of" >> $(BUILD_TAG)
 	echo "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU" >> $(BUILD_TAG)
 	echo "Lesser General Public License for more details." >> $(BUILD_TAG)
+	mkdir -p $(TARGET_PATH)
+	mv -f $(BUILD_TAG) $(TARGET_PATH)/BUILD_TAG
+
+CopyAllBinaries:
+	@$(ECHO) "\n\e[1;34m-----------------------------------------------------------------------------\e[0m"
+	@$(ECHO) "\e[1;34mCopy Binaries\e[0m"
+	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
+	rm -rf $(TARGET_PATH) 
+	mkdir -p $(TARGET_PATH)
+	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME) $(TARGET_PATH)
+	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH)
+	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).so $(TARGET_PATH)
+	cp $(JNIWRAP_NAME)/out/$(JNIWRAP_NAME).jar $(TARGET_PATH)
+	cp ./LICENSE-*.html $(TARGET_PATH)
+
+CreateDocuments:
+	@$(ECHO) "\n\e[1;34m-----------------------------------------------------------------------------\e[0m"
+	@$(ECHO) "\e[1;34mCreate Documents\e[0m"
+	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
+	mkdir -p $(TARGET_PATH)/img
+	pandoc --from markdown_github+header_attributes --to html5 --standalone -H ./img/Style.inc ./README.md --output $(TARGET_PATH)/README.html
+	cp ./img/*.png $(TARGET_PATH)/img
+
