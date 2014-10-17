@@ -111,6 +111,38 @@ extern "C"
 		return 0;
 	}
 
+	int MDYNAMICAUDIONORMALIZER_FUNCTION(getConfiguration)(MDynamicAudioNormalizer_Handle *handle, uint32_t *channels, uint32_t *sampleRate, uint32_t *frameLen, uint32_t *filterSize)
+	{
+		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		{
+			try
+			{
+				return instance->getConfiguration((*channels), (*sampleRate), (*frameLen), (*filterSize)) ? 1 : 0;
+			}
+			catch(...)
+			{
+				return 0;
+			}
+		}
+		return 0;
+	}
+
+	int MDYNAMICAUDIONORMALIZER_FUNCTION(getInternalDelay)(MDynamicAudioNormalizer_Handle *handle, int64_t *delayInSamples)
+	{
+		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		{
+			try
+			{
+				return instance->getInternalDelay(*delayInSamples) ? 1 : 0;
+			}
+			catch(...)
+			{
+				return 0;
+			}
+		}
+		return 0;
+	}
+
 	MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) *MDYNAMICAUDIONORMALIZER_FUNCTION(setLogFunction)(MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) *const logFunction)
 	{
 		return MDynamicAudioNormalizer::setLogFunction(logFunction);

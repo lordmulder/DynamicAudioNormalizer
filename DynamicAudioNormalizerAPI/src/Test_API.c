@@ -26,6 +26,8 @@ static void API_Test(void)
 	MDynamicAudioNormalizer_Handle *handle = MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, 1, 0, 0, NULL);
 	if(handle)
 	{
+		uint32_t channels, sampleRate, frameLen, filterSize;
+		MDYNAMICAUDIONORMALIZER_FUNCTION(getConfiguration)(handle, &channels, &sampleRate, &frameLen, &filterSize);
 		MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(&handle);
 	}
 }
