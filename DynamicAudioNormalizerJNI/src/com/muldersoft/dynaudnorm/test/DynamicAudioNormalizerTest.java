@@ -27,16 +27,17 @@ package com.muldersoft.dynaudnorm.test;
 
 import static org.junit.Assert.fail;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -46,79 +47,114 @@ import org.junit.runners.MethodSorters;
 
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer;
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer.Logger;
-import com.sun.media.sound.WaveFileReader;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DynamicAudioNormalizerTest
 {
 	//------------------------------------------------------------------------------------------------
-	// Wave Reader
+	// PCM File Reader
 	//------------------------------------------------------------------------------------------------
 
-	static class Reader
+	static class PCMFileReader
 	{
-		private final WaveFileReader audioReader;
-		private final AudioInputStream audioInputStream;
-
-		final int channels;
-		final int sampleRate;
+		private static final int FRAME_SIZE = 4;
+		private final BufferedInputStream inputStream;
+		private byte [] tempBuffer = null;
 		
-		private byte [] tempBuffer = null; 
-		
-		public Reader(final String fileName) throws UnsupportedAudioFileException, IOException
+		public PCMFileReader(final String fileName) throws IOException
 		{
-			audioReader = new WaveFileReader();
-			audioInputStream = audioReader.getAudioInputStream(new File(fileName));
-			
-			AudioFormat inputFormat = audioInputStream.getFormat();
-			if(inputFormat.getSampleSizeInBits() != 16)
-			{
-				throw new IOException("Unssuported format. Only 16-Bit is supported!");
-			}
-
-			channels = inputFormat.getChannels();
-			sampleRate = Math.round(inputFormat.getSampleRate());
+			inputStream = new BufferedInputStream(new FileInputStream(new File(fileName)));
 		}
 		
 		public int read(double [][] buffer) throws IOException
 		{
-			if(buffer.length < channels)
+			if(buffer.length != 2)
 			{
-				throw new IOException("Output array dimension is too small for channel count!");
+				throw new RuntimeException("Output array dimension must be two!");
 			}
 			
-			final int requiredBuffSize =  buffer[0].length * channels * 2;
-			if((tempBuffer == null) || (tempBuffer.length < requiredBuffSize))
+			final int maxReadSize = buffer[0].length * FRAME_SIZE;
+			if((tempBuffer == null) || (tempBuffer.length < maxReadSize))
 			{
-				tempBuffer = new byte[requiredBuffSize];
+				tempBuffer = new byte[maxReadSize];
 			}
-
-			final int readSize = audioInputStream.read(tempBuffer, 0, requiredBuffSize);
-			if(readSize > 2 * channels)
+			
+			final int sampleCount = inputStream.read(tempBuffer, 0, maxReadSize) / FRAME_SIZE;
+			
+			if(sampleCount > 0)
 			{
-				final int sampleCount = readSize / (2 * channels);
-				ByteBuffer byteWrapper = ByteBuffer.wrap(tempBuffer);
+				ByteBuffer byteBuffer = ByteBuffer.wrap(tempBuffer);
+				byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 				for(int i = 0; i < sampleCount; i++)
 				{
-					for(int c = 0; c < channels; c++)
+					for(int c = 0; c < 2; c++)
 					{
-						buffer[c][i] = ((double)byteWrapper.getShort()) / ((double)Short.MAX_VALUE);
+						buffer[c][i] = ShortToDouble(byteBuffer.getShort());
 					}
 				}
-				return sampleCount;
 			}
 			
-			return 0;
+			return sampleCount;
 		}
 		
-		public int getChannels()
+		private double ShortToDouble(final short x)
 		{
-			return channels;
+			return ((double)x) / ((double)Short.MAX_VALUE);
 		}
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	// PCM File Writer
+	//------------------------------------------------------------------------------------------------
 
-		public int sampleRate()
+	static class PCMFileWriter
+	{
+		private static final int FRAME_SIZE = 4;
+		private final BufferedOutputStream outputStream;
+		private byte [] tempBuffer = null;
+		
+		public PCMFileWriter(final String fileName) throws IOException
 		{
-			return sampleRate;
+			outputStream = new BufferedOutputStream(new FileOutputStream(new File(fileName)));
+		}
+		
+		public void write(double [][] buffer, final int sampleCount) throws IOException
+		{
+			if(buffer.length != 2)
+			{
+				throw new IOException("Input array dimension must be two!");
+			}
+			
+			final int writeSize = sampleCount * FRAME_SIZE;
+			if((tempBuffer == null) || (tempBuffer.length < writeSize))
+			{
+				tempBuffer = new byte[writeSize];
+			}
+			
+			if(sampleCount > 0)
+			{
+				ByteBuffer byteBuffer = ByteBuffer.wrap(tempBuffer);
+				byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+				for(int i = 0; i < sampleCount; i++)
+				{
+					for(int c = 0; c < 2; c++)
+					{
+						byteBuffer.putShort(doubleToShort(buffer[c][i]));
+					}
+				}
+			}
+			
+			outputStream.write(tempBuffer, 0, writeSize);
+		}
+		
+		private short doubleToShort(final double x)
+		{
+			return (short) Math.round(Math.max(-1.0,  Math.min(1.0, x)) * ((double)Short.MAX_VALUE));
+		}
+		
+		public void flush() throws IOException
+		{
+			outputStream.flush();
 		}
 	}
 	
@@ -171,7 +207,7 @@ public class DynamicAudioNormalizerTest
 	@Test
 	public void test4_ConstructorAndRelease()
 	{
-		for(int i = 0; i < 8; i++)
+		for(int i = 0; i < 128; i++)
 		{
 			Queue<JDynamicAudioNormalizer> instances = new LinkedList<JDynamicAudioNormalizer>();
 
@@ -191,37 +227,71 @@ public class DynamicAudioNormalizerTest
 	}
 	
 	@Test
-	public void test5_ProcessWaveFile()
+	public void test5_ProcessAudioFile()
 	{
-		Reader reader = null;
+		PCMFileReader reader = null;
 		try
 		{
-			reader = new Reader("E:\\Images\\WhaleOnThis.wav");
+			reader = new PCMFileReader("Input.pcm");
 		}
 		catch (Exception e)
 		{
 			fail("Failed to open ionput audio file!");
 		}
 		
-		double [][] sampleBuffer = new double[reader.getChannels()][4096];
+		PCMFileWriter writer = null;
+		try
+		{
+			writer = new PCMFileWriter("Output.pcm");
+		}
+		catch (Exception e)
+		{
+			fail("Failed to open ionput audio file!");
+		}
+		
+		double [][] sampleBuffer = new double[2][4096];
+		
 		for(;;)
 		{
+			int sampleCount = 0;
 			try
 			{
-				final int sampleCount = reader.read(sampleBuffer);
-				if(sampleCount > 0)
-				{
-					for(int i = 0; i < sampleCount; i++)
-					{
-						System.out.println(sampleBuffer[0][i]);
-					}
-					continue;
-				}
-				break;
+				sampleCount = reader.read(sampleBuffer);
 			}
-			catch (IOException e)
+			catch(IOException e)
 			{
-				break;
+				fail("Failed to read from input file!");
+			}
+			
+			if(sampleCount > 0)
+			{
+				for(int i = 0; i < sampleCount; i++)
+				{
+					sampleBuffer[0][i] = sampleBuffer[0][i] * 0.666;
+					sampleBuffer[1][i] = sampleBuffer[1][i] * 1.333;
+				}
+				
+				try
+				{
+					writer.write(sampleBuffer, sampleCount);
+				}
+				catch (IOException e)
+				{
+					fail("Failed to write to output file!");
+				}
+			}
+
+			if(sampleCount < sampleBuffer[0].length)
+			{
+				try
+				{
+					writer.flush();
+				}
+				catch (IOException e)
+				{
+					fail("Failed to write to output file!");
+				}
+				break; /*EOF reached*/
 			}
 		}
 	}

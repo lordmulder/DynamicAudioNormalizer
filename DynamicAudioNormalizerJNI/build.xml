@@ -11,10 +11,14 @@
 	</target>
 	<target name="deploy" depends="clean,compile" description="create a Jar file for the application">
 		<mkdir dir="out"/>
-		<delete file="out/DynamicAudioNormalizerJNI.jar" />
+		<delete file="out/DynamicAudioNormalizerJNI.jar"/>
 		<jar destfile="out/DynamicAudioNormalizerJNI.jar">
 			<fileset dir="bin" includes="**/*.class"/>
-			<manifest />
+			<fileset dir="../" includes="LICENSE-*"/>
+			<manifest>
+				<attribute name="Built-By" value="LoRd_MudeR &lt;mulder2@gmx.de&gt;"/>
+				<attribute name="Main-Class" value="com.muldersoft.dynaudnorm.JDynamicAudioNormalizer"/>
+			</manifest>
 		</jar>
 	</target>
 </project>

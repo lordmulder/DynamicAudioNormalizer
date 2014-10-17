@@ -10,8 +10,8 @@ set "PDOC_PATH=C:\Program Files (x86)\Pandoc"
 set "QT_SOURCE=C:\Qt\4.8.6"
 set "QT_SHARED=C:\Qt\4.8.6-Shared"
 set "QT_STATIC=C:\Qt\4.8.6-Static"
-set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_05"
-set "ANT1_PATH=C:\Program Files (x86)\Eclipse\plugins\org.apache.ant_1.9.2.v201404171502"
+set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_25"
+set "ANT1_PATH=C:\Eclipse\plugins\org.apache.ant_1.9.2.v201404171502"
 
 REM ###############################################
 REM # DO NOT MODIFY ANY LINES BELOW THIS LINE !!! #
@@ -160,7 +160,7 @@ for %%c in (DLL, Static) do (
 		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\x64"
 		
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\include"
-		copy "%~dp0\DynamicAudioNormalizerJNI\dist\*.jar"                "%PACK_PATH%\%%c"
+		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\pthread\lib\Win32\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\pthread\lib\x64\.\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c\x64"
