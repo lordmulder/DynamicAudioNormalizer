@@ -543,6 +543,7 @@ Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
 ### Version 2.07 (2014-10-??) ###
+* Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can now be called from Java applications
 * Fixed a bug that caused the progression of the gain values to be less "smooth" than it ought to be
 
 ### Version 2.06 (2014-09-22) ###
