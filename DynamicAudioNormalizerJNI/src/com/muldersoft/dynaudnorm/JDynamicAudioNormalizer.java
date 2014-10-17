@@ -104,8 +104,11 @@ public class JDynamicAudioNormalizer
 		//Create or Destroy Instance
 		private native int createInstance(final int channels, final int sampleRate, final int frameLenMsec, final int filterSize, final double peakValue, final double maxAmplification, final double targetRms, final double compressFactor, final boolean channelsCoupled, final boolean enableDCCorrection, final boolean altBoundaryMode);
 		private native boolean destroyInstance(final int handle);
+		
+		//Processing Functions
+		private native long processInplace(final int handle, final double [][] samplesInOut, final long inputSize);
 	}
-
+	
 	//------------------------------------------------------------------------------------------------
 	// Public API
 	//------------------------------------------------------------------------------------------------
@@ -223,6 +226,35 @@ public class JDynamicAudioNormalizer
 	protected synchronized void finalize()
 	{
 		release();
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	// Processing Functions
+	//------------------------------------------------------------------------------------------------
+
+	public synchronized long processInplace(final double [][] samplesInOut, final long inputSize)
+	{
+		if(m_instance < 0)
+		{
+			throw new Error("Native DynamicAudioNormalizer not created yet!");
+		}
+
+		long outputSize = 0;
+		try
+		{
+			outputSize = NativeAPI_r7.getInstance().processInplace(m_instance, samplesInOut, inputSize);
+		}
+		catch(Throwable e)
+		{
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}	
+		
+		if(outputSize < 0)
+		{
+			throw new Error("Failed to process the audio samples inplace!");
+		}
+
+		return outputSize;
 	}
 	
 	//------------------------------------------------------------------------------------------------

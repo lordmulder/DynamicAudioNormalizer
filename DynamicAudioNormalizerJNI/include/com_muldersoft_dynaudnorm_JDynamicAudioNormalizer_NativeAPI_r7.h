@@ -47,6 +47,14 @@ JNIEXPORT jint JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00
 JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_destroyInstance
   (JNIEnv *, jobject, jint);
 
+/*
+ * Class:     com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI_r7
+ * Method:    processInplace
+ * Signature: (I[[DJ)J
+ */
+JNIEXPORT jlong JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_processInplace
+  (JNIEnv *, jobject, jint, jobjectArray, jlong);
+
 #ifdef __cplusplus
 }
 #endif

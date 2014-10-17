@@ -178,12 +178,23 @@ public class JDynamicAudioNormalizerTest
 	@Test
 	public void test1_SetLoggingHandler()
 	{
-		JDynamicAudioNormalizer.setLoggingHandler(new Logger()
-		{
-			public void log(int level, String message) {
-				System.err.println("[JDynAudNorm] " + message);
+		JDynamicAudioNormalizer.setLoggingHandler
+		(
+			new Logger()
+			{
+				public void log(final int level, final String message)
+				{
+					String label = "???";
+					switch(level)
+					{
+						case 0: label = "DBG"; break;
+						case 1: label = "WRN"; break;
+						case 2: label = "ERR"; break;
+					}
+					System.err.printf("[JDynAudNorm][%s] %s\n", label, message);
+				}
 			}
-		});
+		);
 		System.out.println("Message handler installed successfully.");
 	}
 
@@ -191,7 +202,7 @@ public class JDynamicAudioNormalizerTest
 	public void test2_GetVersionInfo()
 	{
 		final int[] versionInfo = JDynamicAudioNormalizer.getVersionInfo();
-		System.out.println("Library Version: " + versionInfo[0] + "." + versionInfo[1] + "-" + versionInfo[2]);
+		System.out.printf("Library Version: %d.%02d-%d\n", versionInfo[0], versionInfo[1], versionInfo[2]);
 	}
 	
 	@Test
@@ -207,7 +218,7 @@ public class JDynamicAudioNormalizerTest
 	@Test
 	public void test4_ConstructorAndRelease()
 	{
-		for(int i = 0; i < 128; i++)
+		for(int i = 0; i < 3; i++)
 		{
 			Queue<JDynamicAudioNormalizer> instances = new LinkedList<JDynamicAudioNormalizer>();
 
@@ -250,6 +261,7 @@ public class JDynamicAudioNormalizerTest
 		}
 		
 		double [][] sampleBuffer = new double[2][4096];
+		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
 		
 		for(;;)
 		{
@@ -265,12 +277,7 @@ public class JDynamicAudioNormalizerTest
 			
 			if(sampleCount > 0)
 			{
-				for(int i = 0; i < sampleCount; i++)
-				{
-					sampleBuffer[0][i] = sampleBuffer[0][i] * 0.666;
-					sampleBuffer[1][i] = sampleBuffer[1][i] * 1.333;
-				}
-				
+				instance.processInplace(sampleBuffer, sampleCount);
 				try
 				{
 					writer.write(sampleBuffer, sampleCount);

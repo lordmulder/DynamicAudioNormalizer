@@ -89,6 +89,7 @@ public:
 	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize);
 	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
+	bool getConfiguration(uint32_t &channels, uint32_t &sampleRate, uint32_t &frameLen, uint32_t &filterSize);
 	bool getInternalDelay(int64_t &delayInSamples);
 
 	/*Type definitions*/

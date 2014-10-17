@@ -115,6 +115,7 @@ public:
 	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush);
 	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
+	bool getConfiguration(uint32_t &channels, uint32_t &sampleRate, uint32_t &frameLen, uint32_t &filterSize);
 	bool getInternalDelay(int64_t &delayInSamples);
 
 private:
@@ -354,7 +355,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 
 	m_dcCorrectionValue       = new double[m_channels];
 	m_prevAmplificationFactor = new double[m_channels];
-	m_compressThreshold  = new double[m_channels];
+	m_compressThreshold       = new double[m_channels];
 
 	m_fadeFactors[0] = new double[m_frameLen];
 	m_fadeFactors[1] = new double[m_frameLen];
@@ -421,6 +422,19 @@ bool MDynamicAudioNormalizer_PrivateData::reset(void)
 	return true;
 }
 
+bool MDynamicAudioNormalizer::getConfiguration(uint32_t &channels, uint32_t &sampleRate, uint32_t &frameLen, uint32_t &filterSize)
+{
+	try
+	{
+		return p->getConfiguration(channels, sampleRate, frameLen, filterSize);
+	}
+	catch(std::exception &e)
+	{
+		LOG1_ERR(e.what());
+		return false;
+	}
+}
+
 bool MDynamicAudioNormalizer::getInternalDelay(int64_t &delayInSamples)
 {
 	try
@@ -432,6 +446,23 @@ bool MDynamicAudioNormalizer::getInternalDelay(int64_t &delayInSamples)
 		LOG1_ERR(e.what());
 		return false;
 	}
+}
+
+bool MDynamicAudioNormalizer_PrivateData::getConfiguration(uint32_t &channels, uint32_t &sampleRate, uint32_t &frameLen, uint32_t &filterSize)
+{
+	//Check audio normalizer status
+	if(!m_initialized)
+	{
+		LOG1_ERR("Not initialized yet. Must call initialize() first!");
+		return false;
+	}
+
+	channels = m_channels;
+	sampleRate = m_sampleRate;
+	frameLen = m_frameLen;
+	filterSize = m_filterSize;
+
+	return true;
 }
 
 bool MDynamicAudioNormalizer_PrivateData::getInternalDelay(int64_t &delayInSamples)
