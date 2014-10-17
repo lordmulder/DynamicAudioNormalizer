@@ -28,11 +28,19 @@
 #include <queue>
 #include <climits>
 
+//Generate the JNI header file name
+#define JAVA_HDRNAME_GLUE1(X,Y) <##X##_r##Y##.h>
+#define JAVA_HDRNAME_GLUE2(X,Y) JAVA_HDRNAME_GLUE1(X,Y)
+#define JAVA_HDRNAME(X) JAVA_HDRNAME_GLUE2(X, MDYNAMICAUDIONORMALIZER_CORE)
+
+//Generate JNI export names and corresponding helper functions
+#define JAVA_FUNCTION_GLUE1(X,Y,Z) X##Y##_##Z
+#define JAVA_FUNCTION_GLUE2(X,Y,Z) JAVA_FUNCTION_GLUE1(X,Y,Z)
+#define JAVA_FUNCTION(X) JAVA_FUNCTION_GLUE2(Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r, MDYNAMICAUDIONORMALIZER_CORE, X)
+#define JAVA_FUNCIMPL(X) JAVA_FUNCTION_GLUE2(Impl_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r, MDYNAMICAUDIONORMALIZER_CORE, X)
+
 //JNI Headers
-#include <com_muldersoft_dynaudnorm_JDynamicAudioNormalizer.h>
-#include <com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_Error.h>
-#include <com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_Logger.h>
-#include <com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI.h>
+#include JAVA_HDRNAME(com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI)
 
 //PThread
 #if defined(_WIN32) && defined(_MT)
@@ -212,7 +220,7 @@ static MDynamicAudioNormalizer *javaHandleToInstance(const jint &handleValue)
 // JNI Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo_Impl(JNIEnv *env, jclass, jintArray versionInfo)
+static jboolean JAVA_FUNCIMPL(getVersionInfo)(JNIEnv *env, jintArray versionInfo)
 {
 	if(versionInfo == NULL)
 	{
@@ -238,7 +246,7 @@ static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_0
 	return JNI_FALSE;
 }
 
-static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo_Impl(JNIEnv *env, jclass, jobject buildInfo)
+static jboolean JAVA_FUNCIMPL(getBuildInfo)(JNIEnv *env, jobject buildInfo)
 {
 	if(buildInfo == NULL)
 	{
@@ -274,7 +282,7 @@ static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_0
 	return JNI_TRUE;
 }
 
-static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler_Impl(JNIEnv *env, jclass, jobject loggerObject)
+static jboolean JAVA_FUNCIMPL(setLoggingHandler)(JNIEnv *env, jobject loggerObject)
 {
 	if(loggerObject == NULL)
 	{
@@ -301,7 +309,7 @@ static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_0
 	return JNI_FALSE;
 }
 
-static jint JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_createInstance_Impl(JNIEnv *env, jclass, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
+static jint JAVA_FUNCIMPL(createInstance)(JNIEnv *env, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
 {
 	if((channels > 0) && (sampleRate > 0) && (frameLenMsec > 0) & (filterSize > 0))
 	{
@@ -324,7 +332,7 @@ static jint JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024
 	return -1;
 }
 
-static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_destroyInstance_Impl(JNIEnv *env, jclass, jint handle)
+static jboolean JAVA_FUNCIMPL(destroyInstance)(JNIEnv *env, jint handle)
 {
 	if(MDynamicAudioNormalizer *instance = javaHandleToInstance(handle))
 	{
@@ -342,11 +350,11 @@ static jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_0
 
 extern "C"
 {
-	JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo(JNIEnv *env, jclass clazz, jintArray versionInfo)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getVersionInfo)(JNIEnv *env, jobject, jintArray versionInfo)
 	{
 		try
 		{
-			return Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_getVersionInfo_Impl(env, clazz, versionInfo);
+			return JAVA_FUNCIMPL(getVersionInfo)(env, versionInfo);
 		}
 		catch(std::exception e)
 		{
@@ -358,11 +366,11 @@ extern "C"
 		}
 	}
 
-	JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo(JNIEnv *env, jclass clazz, jobject buildInfo)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getBuildInfo)(JNIEnv *env, jobject, jobject buildInfo)
 	{
 		try
 		{
-			return Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_getBuildInfo_Impl(env, clazz, buildInfo);
+			return JAVA_FUNCIMPL(getBuildInfo)(env, buildInfo);
 		}
 		catch(std::exception e)
 		{
@@ -374,11 +382,11 @@ extern "C"
 		}
 	}
 
-	JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler(JNIEnv *env, jclass clazz, jobject loggerObject)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(setLoggingHandler)(JNIEnv *env, jobject, jobject loggerObject)
 	{
 		try
 		{
-			return Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_setLoggingHandler_Impl(env, clazz, loggerObject);
+			return JAVA_FUNCIMPL(setLoggingHandler)(env, loggerObject);
 		}
 		catch(std::exception e)
 		{
@@ -390,11 +398,11 @@ extern "C"
 		}
 	}
 
-	JNIEXPORT jint JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_createInstance(JNIEnv *env, jclass clazz, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
+	JNIEXPORT jint JNICALL JAVA_FUNCTION(createInstance)(JNIEnv *env, jobject, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
 	{
 		try
 		{
-			return Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_createInstance_Impl(env, clazz, channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+			return JAVA_FUNCIMPL(createInstance)(env, channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
 		}
 		catch(std::exception e)
 		{
@@ -406,11 +414,11 @@ extern "C"
 		}
 	}
 
-	JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_destroyInstance(JNIEnv *env, jclass clazz, jint instance)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(destroyInstance)(JNIEnv *env, jobject, jint instance)
 	{
 		try
 		{
-			return Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_destroyInstance_Impl(env, clazz, instance);
+			return JAVA_FUNCIMPL(destroyInstance)(env, instance);
 		}
 		catch(std::exception e)
 		{

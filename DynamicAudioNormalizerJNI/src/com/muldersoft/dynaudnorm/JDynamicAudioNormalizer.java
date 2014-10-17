@@ -48,7 +48,7 @@ public class JDynamicAudioNormalizer
 	{
 		if(e.getClass() == Error.class)
 		{
-			throw (Error) e;
+			throw (Error) e; /*pass through our own exceptions*/
 		}
 		else
 		{
@@ -69,22 +69,22 @@ public class JDynamicAudioNormalizer
 	// Native API
 	//------------------------------------------------------------------------------------------------
 	
-	private static class NativeAPI
+	private static class NativeAPI_r7
 	{
-		static NativeAPI nativeAPI = null;
+		static NativeAPI_r7 nativeAPI = null;
 		
 		//Singelton
-		public static synchronized NativeAPI getInstance()
+		public static synchronized NativeAPI_r7 getInstance()
 		{
 			if(nativeAPI == null)
 			{
-				nativeAPI = new NativeAPI();
+				nativeAPI = new NativeAPI_r7();
 			}
 			return nativeAPI;
 		}
 		
 		//Constructor
-		private NativeAPI()
+		private NativeAPI_r7()
 		{
 			try
 			{
@@ -117,7 +117,7 @@ public class JDynamicAudioNormalizer
 		
 		try
 		{
-			success = NativeAPI.getInstance().getVersionInfo(versionInfo);
+			success = NativeAPI_r7.getInstance().getVersionInfo(versionInfo);
 		}
 		catch(Throwable e)
 		{
@@ -139,7 +139,7 @@ public class JDynamicAudioNormalizer
 		
 		try
 		{
-			success = NativeAPI.getInstance().getBuildInfo(buildInfo);
+			success = NativeAPI_r7.getInstance().getBuildInfo(buildInfo);
 		}
 		catch(Throwable e)
 		{
@@ -160,7 +160,7 @@ public class JDynamicAudioNormalizer
 		
 		try
 		{
-			success = NativeAPI.getInstance().setLoggingHandler(logger);
+			success = NativeAPI_r7.getInstance().setLoggingHandler(logger);
 		}
 		catch(Throwable e)
 		{
@@ -183,7 +183,7 @@ public class JDynamicAudioNormalizer
 	{
 		try
 		{
-			m_instance = NativeAPI.getInstance().createInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+			m_instance = NativeAPI_r7.getInstance().createInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
 			System.out.println("Handle value: " + m_instance);
 		}
 		catch(Throwable e)
@@ -206,7 +206,7 @@ public class JDynamicAudioNormalizer
 			{
 				final int instanceTmp = m_instance;
 				m_instance = -1;
-				success = NativeAPI.getInstance().destroyInstance(instanceTmp);
+				success = NativeAPI_r7.getInstance().destroyInstance(instanceTmp);
 			}
 			catch(Throwable e)
 			{
@@ -231,24 +231,30 @@ public class JDynamicAudioNormalizer
 
 	public static void main(String [] args)
 	{
-		int [] ver= { 0, 0, 0 };
+		int [] ver = null;
 		try
 		{
 			ver = getVersionInfo();
 		}
 		catch(Throwable e)
 		{
-			System.out.println("ERROR: " + e.getMessage());
-			System.out.println();
+			System.out.printf("\nERROR: %s\n\n", e.getMessage());
 		}
 		
-		System.out.printf("===========================================================================\n");
-		System.out.printf("Dynamic Audio Normalizer, Version %d.%02d-%d\n", ver[0], ver[1], ver[2]);
-		System.out.printf("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
-		System.out.printf("\n");
-		System.out.printf("This program is free software: you can redistribute it and/or modify\n");
-		System.out.printf("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n");
-		System.out.printf("Note that this program is distributed with ABSOLUTELY NO WARRANTY.\n");
-		System.out.printf("===========================================================================\n");
+		System.out.println("===========================================================================");
+		if(ver != null)
+		{
+			System.out.printf("Dynamic Audio Normalizer, Version %d.%02d-%d\n", ver[0], ver[1], ver[2]);
+		}
+		else
+		{
+			System.out.println("Dynamic Audio Normalizer, Unknown Version");
+		}
+		System.out.println("Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.");
+		System.out.println();
+		System.out.println("This program is free software: you can redistribute it and/or modify");
+		System.out.println("it under the terms of the GNU General Public License <http://www.gnu.org/>.");
+		System.out.println("Note that this program is distributed with ABSOLUTELY NO WARRANTY.");
+		System.out.println("===========================================================================");
 	}
 }

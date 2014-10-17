@@ -49,7 +49,7 @@ import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer;
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer.Logger;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class DynamicAudioNormalizerTest
+public class JDynamicAudioNormalizerTest
 {
 	//------------------------------------------------------------------------------------------------
 	// PCM File Reader
