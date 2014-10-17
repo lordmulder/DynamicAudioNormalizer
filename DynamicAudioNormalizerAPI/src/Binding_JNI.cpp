@@ -93,10 +93,29 @@ while(0)
 	if(jclass runtimeError = env->FindClass("java/lang/Error")) \
 	{ \
 		env->ThrowNew(runtimeError, (TEXT)); \
+		env->DeleteLocalRef(runtimeError); \
+	} \
+	else \
+	{ \
+		abort(); \
 	} \
 	return (RET); \
 } \
 while(0)
+
+#define JAVA_TRY_CATCH(FUNC_NAME, RET, ...) \
+	try \
+	{ \
+		return JAVA_FUNCIMPL(FUNC_NAME)(__VA_ARGS__); \
+	} \
+	catch(std::exception e) \
+	{ \
+		JAVA_THROW_EXCEPTION(e.what(), (RET)); \
+	} \
+	catch(...) \
+	{ \
+		JAVA_THROW_EXCEPTION("An unknown C++ exception has occurred!", (RET)); \
+	}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Logging  Function
@@ -352,81 +371,26 @@ extern "C"
 {
 	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getVersionInfo)(JNIEnv *env, jobject, jintArray versionInfo)
 	{
-		try
-		{
-			return JAVA_FUNCIMPL(getVersionInfo)(env, versionInfo);
-		}
-		catch(std::exception e)
-		{
-			JAVA_THROW_EXCEPTION(e.what(), JNI_FALSE);
-		}
-		catch(...)
-		{
-			JAVA_THROW_EXCEPTION("An unknown C++ exception has occurred!", JNI_FALSE);
-		}
+		JAVA_TRY_CATCH(getVersionInfo, JNI_FALSE, env, versionInfo)
 	}
 
 	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getBuildInfo)(JNIEnv *env, jobject, jobject buildInfo)
 	{
-		try
-		{
-			return JAVA_FUNCIMPL(getBuildInfo)(env, buildInfo);
-		}
-		catch(std::exception e)
-		{
-			JAVA_THROW_EXCEPTION(e.what(), JNI_FALSE);
-		}
-		catch(...)
-		{
-			JAVA_THROW_EXCEPTION("An unknown C++ exception has occurred!", JNI_FALSE);
-		}
+		JAVA_TRY_CATCH(getBuildInfo, JNI_FALSE, env, buildInfo)
 	}
 
 	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(setLoggingHandler)(JNIEnv *env, jobject, jobject loggerObject)
 	{
-		try
-		{
-			return JAVA_FUNCIMPL(setLoggingHandler)(env, loggerObject);
-		}
-		catch(std::exception e)
-		{
-			JAVA_THROW_EXCEPTION(e.what(), JNI_FALSE);
-		}
-		catch(...)
-		{
-			JAVA_THROW_EXCEPTION("An unknown C++ exception has occurred!", JNI_FALSE);
-		}
+		JAVA_TRY_CATCH(setLoggingHandler, JNI_FALSE, env, loggerObject)
 	}
 
 	JNIEXPORT jint JNICALL JAVA_FUNCTION(createInstance)(JNIEnv *env, jobject, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
 	{
-		try
-		{
-			return JAVA_FUNCIMPL(createInstance)(env, channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
-		}
-		catch(std::exception e)
-		{
-			JAVA_THROW_EXCEPTION(e.what(), -1);
-		}
-		catch(...)
-		{
-			JAVA_THROW_EXCEPTION("An unknown C++ exception has occurred!", -1);
-		}
+		JAVA_TRY_CATCH(createInstance, -1, env, channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode)
 	}
 
 	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(destroyInstance)(JNIEnv *env, jobject, jint instance)
 	{
-		try
-		{
-			return JAVA_FUNCIMPL(destroyInstance)(env, instance);
-		}
-		catch(std::exception e)
-		{
-			JAVA_THROW_EXCEPTION(e.what(), JNI_FALSE);
-		}
-		catch(...)
-		{
-			JAVA_THROW_EXCEPTION("An unknown C++ exception has occurred!", JNI_FALSE);
-		}
+		JAVA_TRY_CATCH(destroyInstance, JNI_FALSE, env, instance)
 	}
 }

@@ -52,7 +52,7 @@ public class JDynamicAudioNormalizer
 		}
 		else
 		{
-			throw new Error(message);
+			throw new Error(String.format("%s [Reason: %s, Message: \"%s\"]", message, e.getClass().getName(), e.getMessage()));
 		}
 	}
 
