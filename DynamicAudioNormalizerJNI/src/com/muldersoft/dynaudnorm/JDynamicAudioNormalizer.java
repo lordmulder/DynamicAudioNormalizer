@@ -107,6 +107,10 @@ public class JDynamicAudioNormalizer
 		
 		//Processing Functions
 		private native long processInplace(final int handle, final double [][] samplesInOut, final long inputSize);
+		private native long flushBuffer(final int handle, final double [][] samplesOut);
+		
+		//Other Functions
+		private native boolean getConfiguration(final int handle, final Map<String,Integer> buildInfo);
 	}
 	
 	//------------------------------------------------------------------------------------------------
@@ -187,7 +191,6 @@ public class JDynamicAudioNormalizer
 		try
 		{
 			m_instance = NativeAPI_r7.getInstance().createInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
-			System.out.println("Handle value: " + m_instance);
 		}
 		catch(Throwable e)
 		{
@@ -236,7 +239,7 @@ public class JDynamicAudioNormalizer
 	{
 		if(m_instance < 0)
 		{
-			throw new Error("Native DynamicAudioNormalizer not created yet!");
+			throw new Error("Native DynamicAudioNormalizer object not created yet!");
 		}
 
 		long outputSize = 0;
@@ -255,6 +258,62 @@ public class JDynamicAudioNormalizer
 		}
 
 		return outputSize;
+	}
+	
+	public synchronized long flushBuffer(final double [][] samplesOut)
+	{
+		if(m_instance < 0)
+		{
+			throw new Error("Native DynamicAudioNormalizer object not created yet!");
+		}
+
+		long outputSize = 0;
+		try
+		{
+			outputSize = NativeAPI_r7.getInstance().flushBuffer(m_instance, samplesOut);
+		}
+		catch(Throwable e)
+		{
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}	
+		
+		if(outputSize < 0)
+		{
+			throw new Error("Failed to flush samples from buffer!");
+		}
+
+		return outputSize;
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	// Other Functions
+	//------------------------------------------------------------------------------------------------
+
+	public synchronized Map<String,Integer> getConfiguration()
+	{
+		if(m_instance < 0)
+		{
+			throw new Error("Native DynamicAudioNormalizer object not created yet!");
+		}
+		
+		boolean success = false;
+		Map<String,Integer> configuration = new HashMap<String,Integer>();
+		
+		try
+		{
+			success = NativeAPI_r7.getInstance().getConfiguration(m_instance, configuration);
+		}
+		catch(Throwable e)
+		{
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}
+
+		if(!success)
+		{
+			throw new Error("Failed to retrieve DynamicAudioNormalizerAPI configuration!");
+		}
+		
+		return configuration;
 	}
 	
 	//------------------------------------------------------------------------------------------------

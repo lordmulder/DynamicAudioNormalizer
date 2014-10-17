@@ -78,10 +78,36 @@ while(0)
 } \
 while(0)
 
-#define JAVA_MAP_PUT(MAP,KEY,VAL) do \
+#define JAVA_GET_METHOD_STATIC(VAR,CLASS,NAME,ARGS,RET) do \
+{ \
+	(VAR) = env->GetStaticMethodID((CLASS), (NAME), (ARGS)); \
+	if((VAR) == NULL) \
+	{ \
+		return (RET); \
+	} \
+} \
+while(0)
+
+#define JAVA_MAP_PUT_STRING(MAP,KEY,VAL) do \
 { \
 	jstring _key = env->NewStringUTF((KEY)); \
 	jstring _val = env->NewStringUTF((VAL)); \
+	\
+	if(_key && _val) \
+	{ \
+		jobject _ret = env->CallObjectMethod((MAP), putMethod, _key, _val); \
+		if(_ret) env->DeleteLocalRef(_ret); \
+	} \
+	\
+	if(_key) env->DeleteLocalRef(_key); \
+	if(_val) env->DeleteLocalRef(_val); \
+} \
+while(0)
+
+#define JAVA_MAP_PUT_INTEGER(MAP,KEY,VAL) do \
+{ \
+	jstring _key = env->NewStringUTF((KEY)); \
+	jobject _val = javaNewInteger(env, (VAL)); \
 	\
 	if(_key && _val) \
 	{ \
@@ -122,6 +148,21 @@ while(0)
 	{ \
 		JAVA_THROW_EXCEPTION("An unknown C++ exception has occurred!", (RET)); \
 	}
+
+///////////////////////////////////////////////////////////////////////////////
+// Create Boxed Type
+///////////////////////////////////////////////////////////////////////////////
+
+jobject javaNewInteger(JNIEnv *env, const jint &value)
+{
+	jclass integerClass;
+	jmethodID valueOfMethod;
+	JAVA_FIND_CLASS(integerClass, "java/lang/Integer", NULL);
+	JAVA_GET_METHOD_STATIC(valueOfMethod, integerClass, "valueOf", "(I)Ljava/lang/Integer;", NULL);
+	jobject const integerObj = env->CallStaticObjectMethod(integerClass, valueOfMethod, value);
+	env->DeleteLocalRef(integerClass);
+	return integerObj;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Logging  Function
@@ -245,19 +286,53 @@ static MDynamicAudioNormalizer *javaHandleToInstance(const jint &handleValue)
 // 2D Array Support
 ///////////////////////////////////////////////////////////////////////////////
 
-static jboolean javaGet2DArrayElements(JNIEnv *const env, const jobjectArray outerArray, const jsize &count, double **arrayElementsOut)
+static jboolean javaRelease2DArrayElements(JNIEnv *const env, jobjectArray const outerArray, const jsize &countOuter, double **const arrayElements)
 {
 	jclass doubleArrayClass;
 	JAVA_FIND_CLASS(doubleArrayClass, "[D", JNI_FALSE);
 	jboolean success = JNI_TRUE;
 
-	for(jsize c = 0; c < count; c++)
+	for(jsize c = 0; c < countOuter; c++)
 	{
+		if(arrayElements[c])
+		{
+			jobject innerArray = env->GetObjectArrayElement(outerArray, jsize(c));
+			if(innerArray)
+			{
+				if(env->IsInstanceOf(innerArray, doubleArrayClass))
+				{
+					env->ReleaseDoubleArrayElements(static_cast<jdoubleArray>(innerArray), arrayElements[c], 0);
+				}
+				else
+				{
+					success = JNI_FALSE; /*element is not a double array*/
+				}
+				env->DeleteLocalRef(innerArray);
+			}
+			arrayElements[c] = NULL;
+		}
+	}
+
+	env->DeleteLocalRef(doubleArrayClass);
+	return success;
+}
+
+static jboolean javaGet2DArrayElements(JNIEnv *const env, const jobjectArray outerArray, const jsize &countOuter, double **arrayElementsOut, jsize &countInnerOut)
+{
+	jclass doubleArrayClass;
+	JAVA_FIND_CLASS(doubleArrayClass, "[D", JNI_FALSE);
+	countInnerOut =  LONG_MAX;
+	jboolean success = JNI_TRUE;
+
+	for(jsize c = 0; c < countOuter; c++)
+	{
+		arrayElementsOut[c] = NULL;
 		jobject innerArray = env->GetObjectArrayElement(outerArray, jsize(c));
 		if(innerArray)
 		{
 			if(env->IsInstanceOf(innerArray, doubleArrayClass))
 			{
+				countInnerOut = std::min(countInnerOut, env->GetArrayLength(static_cast<jdoubleArray>(innerArray)));
 				if(!(arrayElementsOut[c] = env->GetDoubleArrayElements(static_cast<jdoubleArray>(innerArray), NULL)))
 				{
 					success = JNI_FALSE; /*failed to get the array elements*/
@@ -271,33 +346,11 @@ static jboolean javaGet2DArrayElements(JNIEnv *const env, const jobjectArray out
 		}
 	}
 
-	env->DeleteLocalRef(doubleArrayClass);
-	return success;
-}
-
-static jboolean javaRelease2DArrayElements(JNIEnv *const env, jobjectArray const outerArray, const jsize &count, double *const *const arrayElements)
-{
-	jclass doubleArrayClass;
-	JAVA_FIND_CLASS(doubleArrayClass, "[D", JNI_FALSE);
-	jboolean success = JNI_TRUE;
-
-	for(jsize c = 0; c < count; c++)
+	if(!success)
 	{
-		jobject innerArray = env->GetObjectArrayElement(outerArray, jsize(c));
-		if(innerArray)
-		{
-			if(env->IsInstanceOf(innerArray, doubleArrayClass))
-			{
-				env->ReleaseDoubleArrayElements(static_cast<jdoubleArray>(innerArray), arrayElements[c], 0);
-			}
-			else
-			{
-				success = JNI_FALSE; /*element is not a double array*/
-			}
-			env->DeleteLocalRef(innerArray);
-		}
+		javaRelease2DArrayElements(env, outerArray, countOuter, arrayElementsOut);
 	}
-
+	
 	env->DeleteLocalRef(doubleArrayClass);
 	return success;
 }
@@ -357,14 +410,13 @@ static jboolean JAVA_FUNCIMPL(getBuildInfo)(JNIEnv *const env, jobject const bui
 	bool debug;
 	MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
 
-	JAVA_MAP_PUT(buildInfo, "BuildDate",    date);
-	JAVA_MAP_PUT(buildInfo, "BuildTime",    time);
-	JAVA_MAP_PUT(buildInfo, "Compiler",     compiler);
-	JAVA_MAP_PUT(buildInfo, "Architecture", arch);
-	JAVA_MAP_PUT(buildInfo, "DebugBuild",   debug ? "Yes" : "No");
+	JAVA_MAP_PUT_STRING(buildInfo, "BuildDate",    date);
+	JAVA_MAP_PUT_STRING(buildInfo, "BuildTime",    time);
+	JAVA_MAP_PUT_STRING(buildInfo, "Compiler",     compiler);
+	JAVA_MAP_PUT_STRING(buildInfo, "Architecture", arch);
+	JAVA_MAP_PUT_STRING(buildInfo, "DebugBuild",   debug ? "Yes" : "No");
 
 	env->DeleteLocalRef(mapClass);
-		
 	return JNI_TRUE;
 }
 
@@ -430,10 +482,8 @@ static jboolean JAVA_FUNCIMPL(destroyInstance)(JNIEnv *const env, const jint &ha
 	return JNI_FALSE;
 }
 
-JNIEXPORT jlong JAVA_FUNCIMPL(processInplace)(JNIEnv *const env, const jint &handle, jobjectArray const samplesInOut, const jlong &inputSize)
+static jlong JAVA_FUNCIMPL(processInplace)(JNIEnv *const env, const jint &handle, jobjectArray const samplesInOut, const jlong &inputSize)
 {
-	javaLogMessage(0, "processInplace() called!");
-
 	if((handle < 0) || (samplesInOut == NULL) || (inputSize < 1))
 	{
 		return -1; /*invalid parameters detected*/
@@ -457,13 +507,14 @@ JNIEXPORT jlong JAVA_FUNCIMPL(processInplace)(JNIEnv *const env, const jint &han
 	}
 
 	double **arrayElements = (double**) alloca(sizeof(double*) * channels);
-	if(!javaGet2DArrayElements(env, samplesInOut, channels, arrayElements))
+	jsize arrayLength = 0;
+	if(!javaGet2DArrayElements(env, samplesInOut, channels, arrayElements, arrayLength))
 	{
 		return -1; /*failed to retrieve the array elements*/
 	}
 
-	int64_t outputSize;
-	const bool success = instance->processInplace(arrayElements, inputSize, outputSize);
+	int64_t outputSize = 0;
+	const bool success = instance->processInplace(arrayElements, std::min(inputSize, jlong(arrayLength)), outputSize);
 
 	if(!javaRelease2DArrayElements(env, samplesInOut, channels, arrayElements))
 	{
@@ -471,6 +522,97 @@ JNIEXPORT jlong JAVA_FUNCIMPL(processInplace)(JNIEnv *const env, const jint &han
 	}
 
 	return success ? outputSize : (-1);
+}
+
+static jlong JAVA_FUNCIMPL(flushBuffer)(JNIEnv *const env, const jint &handle, jobjectArray const samplesOut)
+{
+	if((handle < 0) || (samplesOut == NULL))
+	{
+		return -1; /*invalid parameters detected*/
+	}
+	
+	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	if(instance == NULL)
+	{
+		return -1; /*invalid handle value*/
+	}
+
+	uint32_t channels, sampleRate, frameLen, filterSize;
+	if(!instance->getConfiguration(channels, sampleRate, frameLen, filterSize))
+	{
+		return -1; /*unable to get configuration*/
+	}
+
+	if(env->GetArrayLength(samplesOut) < jint(channels))
+	{
+		return -1; /*array diemnsion is too small*/
+	}
+
+	double **arrayElements = (double**) alloca(sizeof(double*) * channels);
+	jsize arrayLength = 0;
+	if(!javaGet2DArrayElements(env, samplesOut, channels, arrayElements, arrayLength))
+	{
+		return -1; /*failed to retrieve the array elements*/
+	}
+
+	int64_t outputSize = 0;
+	const bool success = instance->flushBuffer(arrayElements, arrayLength, outputSize);
+
+	if(!javaRelease2DArrayElements(env, samplesOut, channels, arrayElements))
+	{
+		return -1; /*failed to release the array elements*/
+	}
+
+	return success ? outputSize : (-1);
+}
+
+static jboolean JAVA_FUNCIMPL(getConfiguration)(JNIEnv *const env, const jint &handle, jobject const configuration)
+{
+	if((handle < 0) || (configuration == NULL))
+	{
+		return JNI_FALSE;
+	}
+
+	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	if(instance == NULL)
+	{
+		return -1; /*invalid handle value*/
+	}
+
+	jclass mapClass = NULL;
+	jmethodID putMethod = NULL, clearMethod = NULL;
+
+	JAVA_FIND_CLASS(mapClass, "java/util/Map", JNI_FALSE);
+	JAVA_GET_METHOD(putMethod, mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", JNI_FALSE);
+	JAVA_GET_METHOD(clearMethod, mapClass, "clear", "()V", JNI_FALSE);
+
+	if(!env->IsInstanceOf(configuration, mapClass))
+	{
+		return JNI_FALSE;
+	}
+
+	env->CallVoidMethod(configuration, clearMethod);
+
+	int64_t delayedSamples;
+	if(!instance->getInternalDelay(delayedSamples))
+	{
+		return JNI_FALSE;
+	}
+
+	uint32_t channels, sampleRate, frameLen, filterSize;
+	if(!instance->getConfiguration(channels, sampleRate, frameLen, filterSize))
+	{
+		return JNI_FALSE;
+	}
+
+	JAVA_MAP_PUT_INTEGER(configuration, "channelCount",   static_cast<jint>(channels));
+	JAVA_MAP_PUT_INTEGER(configuration, "sampleRate",     static_cast<jint>(sampleRate));
+	JAVA_MAP_PUT_INTEGER(configuration, "frameLen",       static_cast<jint>(frameLen));
+	JAVA_MAP_PUT_INTEGER(configuration, "filterSize",     static_cast<jint>(filterSize));
+	JAVA_MAP_PUT_INTEGER(configuration, "delayedSamples", static_cast<jint>(delayedSamples));
+
+	env->DeleteLocalRef(mapClass);
+	return JNI_TRUE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -507,5 +649,15 @@ extern "C"
 	JNIEXPORT jlong JNICALL JAVA_FUNCTION(processInplace)(JNIEnv *env, jobject, jint handle, jobjectArray samplesInOut, jlong inputSize)
 	{
 		JAVA_TRY_CATCH(processInplace, -1, env, handle, samplesInOut, inputSize)
+	}
+
+	JNIEXPORT jlong JNICALL JAVA_FUNCTION(flushBuffer)(JNIEnv *env, jobject, jint handle, jobjectArray samplesOut)
+	{
+		JAVA_TRY_CATCH(flushBuffer, -1, env, handle, samplesOut)
+	}
+
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getConfiguration)(JNIEnv *env, jobject, jint handle, jobject configuration)
+	{
+		JAVA_TRY_CATCH(getConfiguration, JNI_FALSE, env, handle, configuration)
 	}
 }

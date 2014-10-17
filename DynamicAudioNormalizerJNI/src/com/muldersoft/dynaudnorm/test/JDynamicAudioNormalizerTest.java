@@ -97,7 +97,12 @@ public class JDynamicAudioNormalizerTest
 			return sampleCount;
 		}
 		
-		private double ShortToDouble(final short x)
+		public void close() throws IOException
+		{
+			inputStream.close();
+		}
+		
+		private static double ShortToDouble(final short x)
 		{
 			return ((double)x) / ((double)Short.MAX_VALUE);
 		}
@@ -147,14 +152,19 @@ public class JDynamicAudioNormalizerTest
 			outputStream.write(tempBuffer, 0, writeSize);
 		}
 		
-		private short doubleToShort(final double x)
-		{
-			return (short) Math.round(Math.max(-1.0,  Math.min(1.0, x)) * ((double)Short.MAX_VALUE));
-		}
-		
 		public void flush() throws IOException
 		{
 			outputStream.flush();
+		}
+		
+		public void close() throws IOException
+		{
+			outputStream.close();
+		}
+
+		private static short doubleToShort(final double x)
+		{
+			return (short) Math.round(Math.max(-1.0,  Math.min(1.0, x)) * ((double)Short.MAX_VALUE));
 		}
 	}
 	
@@ -216,9 +226,21 @@ public class JDynamicAudioNormalizerTest
 	}
 	
 	@Test
-	public void test4_ConstructorAndRelease()
+	public void test4_GetConfiguration()
 	{
-		for(int i = 0; i < 3; i++)
+		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+		final Map<String,Integer> buildInfo = instance.getConfiguration();
+		for(final String key : buildInfo.keySet())
+		{
+			System.out.println("Configuration: " + key + "=" + buildInfo.get(key));
+		}
+		instance.release();
+	}
+	
+	@Test
+	public void test5_ConstructorAndRelease()
+	{
+		for(int i = 0; i < 512; i++)
 		{
 			Queue<JDynamicAudioNormalizer> instances = new LinkedList<JDynamicAudioNormalizer>();
 
@@ -238,8 +260,10 @@ public class JDynamicAudioNormalizerTest
 	}
 	
 	@Test
-	public void test5_ProcessAudioFile()
+	public void test6_ProcessAudioFile()
 	{
+		//Open input and output files
+		System.out.println("Opening input and out files...");
 		PCMFileReader reader = null;
 		try
 		{
@@ -263,6 +287,8 @@ public class JDynamicAudioNormalizerTest
 		double [][] sampleBuffer = new double[2][4096];
 		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
 		
+		//Process samples
+		System.out.println("Processing input samples...");
 		for(;;)
 		{
 			int sampleCount = 0;
@@ -277,14 +303,17 @@ public class JDynamicAudioNormalizerTest
 			
 			if(sampleCount > 0)
 			{
-				instance.processInplace(sampleBuffer, sampleCount);
-				try
+				final long outputSamples = instance.processInplace(sampleBuffer, sampleCount);
+				if(outputSamples > 0)
 				{
-					writer.write(sampleBuffer, sampleCount);
-				}
-				catch (IOException e)
-				{
-					fail("Failed to write to output file!");
+					try
+					{
+						writer.write(sampleBuffer, (int) outputSamples);
+					}
+					catch (IOException e)
+					{
+						fail("Failed to write to output file!");
+					}
 				}
 			}
 
@@ -301,5 +330,49 @@ public class JDynamicAudioNormalizerTest
 				break; /*EOF reached*/
 			}
 		}
+		
+		//Flush pending samples
+		System.out.println("Flushing remaining samples...");
+		for(;;)
+		{
+			final long outputSamples = instance.flushBuffer(sampleBuffer);
+			if(outputSamples > 0)
+			{
+				try
+				{
+					writer.write(sampleBuffer, (int) outputSamples);
+				}
+				catch (IOException e)
+				{
+					fail("Failed to write to output file!");
+				}
+			}
+			else
+			{
+				try
+				{
+					writer.flush();
+				}
+				catch (IOException e)
+				{
+					fail("Failed to write to output file!");
+				}
+				break; /*No more samples*/
+			}
+		}
+		
+		//Close input and output
+		try
+		{
+			reader.close();
+		}
+		catch(IOException e)
+		{
+			fail("Failed to close the files!");
+		}
+		
+		//Finished
+		instance.release();
+		System.out.println("Completed.");
 	}
 }

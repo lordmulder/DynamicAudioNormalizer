@@ -55,6 +55,22 @@ JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalize
 JNIEXPORT jlong JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_processInplace
   (JNIEnv *, jobject, jint, jobjectArray, jlong);
 
+/*
+ * Class:     com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI_r7
+ * Method:    flushBuffer
+ * Signature: (I[[D)J
+ */
+JNIEXPORT jlong JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_flushBuffer
+  (JNIEnv *, jobject, jint, jobjectArray);
+
+/*
+ * Class:     com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI_r7
+ * Method:    getConfiguration
+ * Signature: (ILjava/util/Map;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_getConfiguration
+  (JNIEnv *, jobject, jint, jobject);
+
 #ifdef __cplusplus
 }
 #endif
