@@ -29,7 +29,7 @@
 #include <climits>
 
 //Generate the JNI header file name
-#define JAVA_HDRNAME_GLUE1(X,Y) <##X##_r##Y##.h>
+#define JAVA_HDRNAME_GLUE1(X,Y) <X##_r##Y.h>
 #define JAVA_HDRNAME_GLUE2(X,Y) JAVA_HDRNAME_GLUE1(X,Y)
 #define JAVA_HDRNAME(X) JAVA_HDRNAME_GLUE2(X, MDYNAMICAUDIONORMALIZER_CORE)
 
@@ -321,7 +321,7 @@ static jboolean javaGet2DArrayElements(JNIEnv *const env, const jobjectArray out
 {
 	jclass doubleArrayClass;
 	JAVA_FIND_CLASS(doubleArrayClass, "[D", JNI_FALSE);
-	countInnerOut =  LONG_MAX;
+	countInnerOut =  INT32_MAX;
 	jboolean success = JNI_TRUE;
 
 	for(jsize c = 0; c < countOuter; c++)
