@@ -332,28 +332,31 @@ The log file can be displayed as a graphical chart using, for example, the *Log 
 API Documentation <a name="chap_api"></a>
 -------------------------------------------------------------------------------
 
-This chapter describes the **MDynamicAudioNormalizer** class, as defined in the <tt>DynamicAudioNormalizer.h</tt> header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
+This chapter describes the **MDynamicAudioNormalizer** application programming interface (API), as defined in the <tt>DynamicAudioNormalizer.h</tt> header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
 
-Please note that all methods of the MDynamicAudioNormalizer class are [*reentrant*](http://en.wikipedia.org/wiki/Reentrancy_%28computing%29), but **not** thread-safe! This means that it *is* safe to use the MDynamicAudioNormalizer class in *multi-threaded* applications, but only as long as each thread uses its own separate MDynamicAudioNormalizer instance. In other words, it is strictly forbidden to call the *same* MDynamicAudioNormalizer instance concurrently from *different* threads, but it is perfectly fine to call *different* MDynamicAudioNormalizer instances concurrently from *different* threads (provided that each thread will access *only* its "own" instance). If the *same* MDynamicAudioNormalizer instance needs to be accessed by *different* threads, then the application is responsible for *serializing* all calls to that MDynamicAudioNormalizer instance, e.g. by means of a Mutex. Otherwise, it will result in *undefined behaviour*!
+Note that all methods of the <tt>MDynamicAudioNormalizer</tt> class are [*reentrant*](http://en.wikipedia.org/wiki/Reentrancy_%28computing%29), but **not** thread-safe! This means that it *is* safe to use the MDynamicAudioNormalizer class in *multi-threaded* applications, but only as long as each thread uses its own separate MDynamicAudioNormalizer instance. In other words, it is strictly forbidden to call the *same* MDynamicAudioNormalizer instance concurrently from *different* threads, but it is perfectly fine to call *different* MDynamicAudioNormalizer instances concurrently from *different* threads (provided that each thread will access *only* its "own" instance). If the *same* MDynamicAudioNormalizer instance needs to be accessed by *different* threads, then the application is responsible for *serializing* all calls to that MDynamicAudioNormalizer instance, e.g. by means of a Mutex. Otherwise, it will result in *undefined behaviour*!
 
-Also note that C++ applications can access the MDynamicAudioNormalizer class directly, while C applications can **not**. For pure C applications, the Dynamic Audio Normalizer library provides wrapper functions around the MDynamicAudioNormalizer class. Those wrapper functions are equivalent to the corresponding methods of the MDynamicAudioNormalizer class, except that you need to pass a "handle" value as an *additional* argument. Each MDynamicAudioNormalizer instance created trough the C API will have its own distinct but *opaque* handle value.
+Also note that the "native" MDynamicAudioNormalizer application programming interface (API) is provided in the form of a [*C++*](http://en.wikipedia.org/wiki/C%2B%2B) class, which means that C++ applications can (and should) use the MDynamicAudioNormalizer class directly. In addition to that, [bindings](http://en.wikipedia.org/wiki/Language_binding) for various other languages (C, Java and Pascal) are provided. The [*C*](http://en.wikipedia.org/wiki/C_%28programming_language%29) API is provided in the same header file as the C++ API. There is one C wrapper function for each method of the "native" C++ class. These wrapper functions provide the exactly same functionality as the corresponding C++ methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) needs to be passed to each non-static function, in order to distinguished multiple MDynamicAudioNormalizer instances. The <tt>createInstance()</tt> and <tt>destroyInstance()</tt> functions, which only exist in the C API, replace the C++ constructor and destructor, respectively. Furthermore, the [*Java*](http://en.wikipedia.org/wiki/Java_%28programming_language%29) API is based on [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) and provided in the form of a [JAR](http://en.wikipedia.org/wiki/JAR_%28file_format%29) file, which contains the <tt>JDynamicAudioNormalizer</tt> Java class. The Java class provides methods which are equivalent to the methods of the "native" C++ class. Note that all required JNI calls are handled *transparently* by the JDynamicAudioNormalizer class, so *no* special measures are needed. Last but not least, the *[Pascal](http://en.wikipedia.org/wiki/Pascal_%28programming_language%29)/[Delphi](http://en.wikipedia.org/wiki/Delphi_%28programming_language%29)* API is built on top of the C API. It is provided in the form of a Pascal (.pas) file, which contains the <tt>TDynamicAudioNormalizer</tt> Object Pascal class. Similar to the Java class, the Object Pascal class provides methods which are equivalent to the methods of the "native" C++ class. Note that all calls to the "native" library are handled *transparently* by the TDynamicAudioNormalizer class, so again *no* special measures are needed.
 
-#### Synopsis: ####
+#### Quick Start Guide: ####
 1. Create a new *MDynamicAudioNormalizer* instance.
 2. Call <tt>initialize()</tt> in order to initialize the MDynamicAudioNormalizer instance.
 3. Call <tt>processInplace()</tt> in a loop, until all input samples have been processed.
 4. Call <tt>flushBuffer()</tt> in a loop, until all pending output samples have been flushed.
 5. Destroy the *MDynamicAudioNormalizer* instance.
 
-#### Functions: ####
+#### Function Reference: ####
 * [MDynamicAudioNormalizer – Constructor](#chap_api.constructor)
 * [MDynamicAudioNormalizer – Destructor](#chap_api.destructor)
 * [MDynamicAudioNormalizer::initialize()](#chap_api.initialize)
 * [MDynamicAudioNormalizer::processInplace()](#chap_api.processInplace)
 * [MDynamicAudioNormalizer::flushBuffer()](#chap_api.flushBuffer)
-* [MDynamicAudioNormalizer::getVersionInfo()](#chap_api.getVersionInfo)
-* [MDynamicAudioNormalizer::getBuildInfo()](#chap_api.getBuildInfo)
-* [MDynamicAudioNormalizer::setLogFunction()](#chap_api.setLogFunction)
+* [MDynamicAudioNormalizer::reset()](#chap_api.reset)
+* [MDynamicAudioNormalizer::getConfiguration()](#chap_api.getConfiguration)
+* [MDynamicAudioNormalizer::getInternalDelay()](#chap_api.getInternalDelay)
+* [MDynamicAudioNormalizer::getVersionInfo()](#chap_api.getVersionInfo) [static]
+* [MDynamicAudioNormalizer::getBuildInfo()](#chap_api.getBuildInfo) [static]
+* [MDynamicAudioNormalizer::setLogFunction()](#chap_api.setLogFunction) [static]
 
 ### MDynamicAudioNormalizer::MDynamicAudioNormalizer() <a name="chap_api.constructor"></a> ###
 ```
@@ -450,10 +453,49 @@ This function can be called at the end of the process, after all input samples h
 
 ### MDynamicAudioNormalizer::reset()<a name="chap_api.reset"></a> ###
 ```
-void reset(void);
+bool reset(void);
 ```
 
 Resets the internal state of the *MDynamicAudioNormalizer* instance. It normally is **not** required to call this function at all! The only exception is when you want to process *multiple* independent audio files with the *same* normalizer instance. In the latter case, call <tt>reset()</tt> *after* all samples of the <tt>n</tt>-th audio file have been processed and *before* processing the first sample of the <tt>(n+1)</tt>-th audio file. Also do *not* forget to flush the pending samples of the <tt>n</tt>-th file from the internal buffer *before* calling <tt>reset()</tt>; those samples would be lost permanently otherwise!
+
+**Return value:**
+* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
+
+### MDynamicAudioNormalizer::getConfiguration()<a name="chap_api.getConfiguration"></a> ###
+```
+bool getConfiguration(
+	uint32_t &channels,
+	uint32_t &sampleRate,
+	uint32_t &frameLen,
+	uint32_t &filterSize
+);
+```
+
+This is a convenience function to retrieve the current configuration of an existing *MDynamicAudioNormalizer* instance.
+
+**Parameters:**
+* *channels*: Receives the number of channels that was set in the constructor.
+* *sampleRate*: Receives the sampling rate, in Hertz, that was set in the constructor.
+* *frameLen*: Receives the current frame length, in samples (**not** milliseconds).
+* *filterSize*: Receives the Gaussian filter size, in frames, that was set in the constructor.
+
+**Return value:**
+* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
+
+### MDynamicAudioNormalizer::getInternalDelay()<a name="chap_api.getInternalDelay"></a> ###
+```
+bool getInternalDelay(
+	int64_t &delayInSamples,
+);
+```
+
+This function can be used to determine the internal delay of the *MDynamicAudioNormalizer* instance. The internal delay is the (maximum) number of samples, per channel, that will be buffered internally. The <tt>processInplace()</tt> function will **not** return any output samples, until (at least) *this* number of input samples have been processed. It also specifies the (maximum) number of samples that can be – and should be – flushed from the internal buffer, at the end of the process, using the <tt>flushBuffer()</tt> function.
+
+**Parameters:**
+* *delayInSamples*: Receives the size of the internal buffer, in samples (per channel).
+
+**Return value:**
+* Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
 ### MDynamicAudioNormalizer::getVersionInfo() [static]<a name="chap_api.getVersionInfo"></a> ###
 ```
@@ -543,7 +585,9 @@ Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
 ### Version 2.07 (2014-10-??) ###
-* Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can now be called from Java applications
+* Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can be used in Java-based  applications
+* Implemented [Pascal](http://en.wikipedia.org/wiki/Object_Pascal) API → Dynamic Audio Normalizer can be used in Pascal/Delphi applications
+* Added new <tt>getConfiguration()</tt> API, which can be used to get the current configuration
 * Fixed a bug that caused the progression of the gain values to be less "smooth" than it ought to be
 
 ### Version 2.06 (2014-09-22) ###
