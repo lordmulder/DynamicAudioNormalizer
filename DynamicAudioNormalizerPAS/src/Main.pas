@@ -42,6 +42,7 @@ type
     procedure ButtonExitClick(Sender: TObject);
     procedure ButtonTest2Click(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
+    procedure FormCreate(Sender: TObject);
   private
     procedure StartStopTest(const start: boolean);
     procedure UpdateProgress;
@@ -58,6 +59,27 @@ uses
   DynamicAudioNormalizer;
 
 {$R *.dfm}
+
+//-----------------------------------------------------------------------------
+// Log Callback
+//-----------------------------------------------------------------------------
+
+{WARNING: This function must use 'cdecl' calling convention!}
+
+procedure loggingHandler(const level: LongInt; const text: PAnsiChar); cdecl;
+var
+  tag: String;
+begin
+  case level of
+    0: tag := 'DBG';
+    1: tag := 'WRN';
+    2: tag := 'ERR';
+  else
+    tag := '???';
+  end;
+
+  WriteLn(Format('[DynAudNorm][%s] %s', [tag, text]));
+end;
 
 //-----------------------------------------------------------------------------
 // Helper Functions
@@ -100,6 +122,11 @@ end;
 //-----------------------------------------------------------------------------
 // Misc Functions
 //-----------------------------------------------------------------------------
+
+procedure TDynamicAudioNormalizerTestApp.FormCreate(Sender: TObject);
+begin
+  TDynamicAudioNormalizer.SetLogFunction(@loggingHandler);
+end;
 
 procedure TDynamicAudioNormalizerTestApp.ButtonExitClick(Sender: TObject);
 begin
@@ -264,12 +291,11 @@ begin
 
   {============================ CLOSE ============================}
 
+  FreeAndNil(normalizer);
   FlushFileBuffers(outputFile);
 
   CloseHandle(inputFile);
   CloseHandle(outputFile);
-
-  FreeAndNil(normalizer);
 
   WriteLn('Done.'#10);
   StartStopTest(False);

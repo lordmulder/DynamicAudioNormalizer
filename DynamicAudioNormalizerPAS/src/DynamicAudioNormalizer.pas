@@ -28,25 +28,28 @@ unit DynamicAudioNormalizer;
 interface
 
 uses
-  SysUtils, Dialogs;
+  SysUtils;
 
 type
   TDoubleArray = array of Double;
 
 type
-  TLoggingFunction = procedure(const level: LongInt; const text: PAnsiChar);
+  TLoggingFunction = procedure(const level: LongInt; const text: PAnsiChar); cdecl;
   PLoggingFunction = ^TLoggingFunction;
 
 type
   TDynamicAudioNormalizer = class(TObject)
   public
+    //Constructor & Destructor
     constructor Create(const channels: LongWord; const sampleRate: LongWord; const frameLenMsec: LongWord; const filterSize: LongWord; const peakValue: Double; const maxAmplification: Double; const targetRms: Double; const compressFactor: Double; const channelsCoupled: Boolean; const enableDCCorrection: Boolean; const altBoundaryMode: Boolean);
     destructor Destroy; override;
-
+    //Processing Functions
     function ProcessInplace(samplesInOut: Array of TDoubleArray; const sampleCount: Int64): Int64;
     function FlushBuffer(samplesOut: Array of TDoubleArray): Int64;
-
+    //Utility Functions
     procedure GetConfiguration(var channels: LongWord; var sampleRate: LongWord; var frameLen: LongWord; var filterSize: LongWord);
+    //Static Functions
+    class function SetLogFunction(const logFunction: PLoggingFunction): PLoggingFunction;
   private
     instance: Pointer;
   end;
@@ -66,14 +69,23 @@ procedure DynAudNorm_DestroyInstance(var handle: Pointer); cdecl; external Dynam
 function  DynAudNorm_ProcessInplace(const handle: Pointer; const samplesInOut: Pointer; const inputSize: Int64; var outputSize: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'processInplace' + DynamicAudioNormalizerTag);
 function  DynAudNorm_FlushBuffer(const handle: Pointer; const samplesOut: Pointer; const bufferSize: Int64; var outputSize: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'flushBuffer' + DynamicAudioNormalizerTag);
 function  DynAudNorm_GetConfiguration(const handle: Pointer; var channels: LongWord; var sampleRate: LongWord; var frameLen: LongWord; var filterSize: LongWord): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'getConfiguration' + DynamicAudioNormalizerTag);
+function  DynAudNorm_SetLogFunction(const logFunction: PLoggingFunction): PLoggingFunction; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'setLogFunction' + DynamicAudioNormalizerTag);
 
 {
 function  reset(MDynamicAudioNormalizer_Handle *handle): LongBool;
 function  getInternalDelay(MDynamicAudioNormalizer_Handle *handle, int64_t *delayInSamples): LongBool;
 procedure getVersionInfo(LongWord *major, LongWord *minor,LongWord *patch);
 procedure getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, int *debug);
-function  setLogFunction(LogFunction) *const logFunction): Pointer;
 }
+
+//-----------------------------------------------------------------------------
+// Logging
+//-----------------------------------------------------------------------------
+
+class function TDynamicAudioNormalizer.SetLogFunction(const logFunction: PLoggingFunction): PLoggingFunction;
+begin
+  Result := DynAudNorm_SetLogFunction(logFunction);
+end;
 
 //-----------------------------------------------------------------------------
 // Constructor & Destructor
