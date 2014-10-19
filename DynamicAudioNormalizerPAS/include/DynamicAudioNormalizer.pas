@@ -23,9 +23,15 @@
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
 
+// *******************************************************************************
+// NOTE: This code was developed and tested with Borland Delphi 7.1 Professional
+// *******************************************************************************
+
 unit DynamicAudioNormalizer;
 
+//=============================================================================
 interface
+//=============================================================================
 
 uses
   SysUtils;
@@ -46,41 +52,60 @@ type
     //Processing Functions
     function ProcessInplace(samplesInOut: Array of TDoubleArray; const sampleCount: Int64): Int64;
     function FlushBuffer(samplesOut: Array of TDoubleArray): Int64;
+    procedure Reset;
     //Utility Functions
     procedure GetConfiguration(var channels: LongWord; var sampleRate: LongWord; var frameLen: LongWord; var filterSize: LongWord);
+    function GetInternalDelay: Int64;
     //Static Functions
     class function SetLogFunction(const logFunction: PLoggingFunction): PLoggingFunction;
+    class procedure GetVersionInfo(var major: LongWord; var minor: LongWord; var patch: LongWord);
+    class procedure GetBuildInfo(var date: PAnsiChar; var time: PAnsiChar; var compiler: PAnsiChar; var arch: PAnsiChar; var debug: LongBool);
   private
     instance: Pointer;
   end;
 
+//=============================================================================
 implementation
-
-//-----------------------------------------------------------------------------
-// Native Functions
-//-----------------------------------------------------------------------------
+//=============================================================================
 
 const DynamicAudioNormalizerTag = '_r7';
 const DynamicAudioNormalizerDLL = 'DynamicAudioNormalizerAPI.dll';
 const DynamicAudioNormalizerPre = 'MDynamicAudioNormalizer_';
+
+//-----------------------------------------------------------------------------
+// Native Functions
+//-----------------------------------------------------------------------------
 
 function  DynAudNorm_CreateInstance(const channels: LongWord; const sampleRate: LongWord; const frameLenMsec: LongWord; const filterSize: LongWord; const peakValue: Double; const maxAmplification: Double; const targetRms: Double; const compressFactor: Double; const channelsCoupled: LongBool; const enableDCCorrection: LongBool; const altBoundaryMode: LongBool; const logFile: Pointer): Pointer; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'createInstance' + DynamicAudioNormalizerTag);
 procedure DynAudNorm_DestroyInstance(var handle: Pointer); cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'destroyInstance' + DynamicAudioNormalizerTag);
 function  DynAudNorm_ProcessInplace(const handle: Pointer; const samplesInOut: Pointer; const inputSize: Int64; var outputSize: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'processInplace' + DynamicAudioNormalizerTag);
 function  DynAudNorm_FlushBuffer(const handle: Pointer; const samplesOut: Pointer; const bufferSize: Int64; var outputSize: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'flushBuffer' + DynamicAudioNormalizerTag);
 function  DynAudNorm_GetConfiguration(const handle: Pointer; var channels: LongWord; var sampleRate: LongWord; var frameLen: LongWord; var filterSize: LongWord): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'getConfiguration' + DynamicAudioNormalizerTag);
+function  DynAudNorm_Reset(const handle: Pointer): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'reset' + DynamicAudioNormalizerTag);
+function  DynAudNorm_GetInternalDelay(const handle: Pointer; var delayInSamples: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'getInternalDelay' + DynamicAudioNormalizerTag);
 function  DynAudNorm_SetLogFunction(const logFunction: PLoggingFunction): PLoggingFunction; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'setLogFunction' + DynamicAudioNormalizerTag);
-
-{
-function  reset(MDynamicAudioNormalizer_Handle *handle): LongBool;
-function  getInternalDelay(MDynamicAudioNormalizer_Handle *handle, int64_t *delayInSamples): LongBool;
-procedure getVersionInfo(LongWord *major, LongWord *minor,LongWord *patch);
-procedure getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, int *debug);
-}
+function  DynAudNorm_GetVersionInfo(var major: LongWord; var minor: LongWord; var patch: LongWord): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'getVersionInfo' + DynamicAudioNormalizerTag);
+function  DynAudNorm_GetBuildInfo(var date: PAnsiChar; var time: PAnsiChar; var compiler: PAnsiChar; var arch: PAnsiChar; var debug: LongBool): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'getBuildInfo' + DynamicAudioNormalizerTag);
 
 //-----------------------------------------------------------------------------
-// Logging
+// Static Functions
 //-----------------------------------------------------------------------------
+
+class procedure TDynamicAudioNormalizer.GetVersionInfo(var major: LongWord; var minor: LongWord; var patch: LongWord);
+begin
+  if not DynAudNorm_GetVersionInfo(major, minor, patch) then
+  begin
+    Raise Exception.Create('Failed to retrieve library version info!');
+  end;
+end;
+
+class procedure TDynamicAudioNormalizer.GetBuildInfo(var date: PAnsiChar; var time: PAnsiChar; var compiler: PAnsiChar; var arch: PAnsiChar; var debug: LongBool);
+begin
+  if not DynAudNorm_GetBuildInfo(date, time, compiler, arch, debug) then
+  begin
+    Raise Exception.Create('Failed to retrieve library build configuration!');
+  end;
+end;
 
 class function TDynamicAudioNormalizer.SetLogFunction(const logFunction: PLoggingFunction): PLoggingFunction;
 begin
@@ -114,7 +139,7 @@ begin
 end;
 
 //-----------------------------------------------------------------------------
-// ProcessingFunctions
+// Processing Functions
 //-----------------------------------------------------------------------------
 
 function TDynamicAudioNormalizer.ProcessInplace(samplesInOut: Array of TDoubleArray; const sampleCount: Int64): Int64;
@@ -191,6 +216,23 @@ begin
   Result := outputSize;
 end;
 
+procedure  TDynamicAudioNormalizer.Reset;
+begin
+  if not Assigned(instance) then
+  begin
+    Raise Exception.Create('Native instance not created yet!');
+  end;
+
+  if not DynAudNorm_Reset(instance) then
+  begin
+    Raise Exception.Create('Failed to reset DynamicAudioNormalizer instance!');
+  end;
+end;
+
+//-----------------------------------------------------------------------------
+// Utility Functions
+//-----------------------------------------------------------------------------
+
 procedure TDynamicAudioNormalizer.GetConfiguration(var channels: LongWord; var sampleRate: LongWord; var frameLen: LongWord; var filterSize: LongWord);
 begin
   if not Assigned(instance) then
@@ -199,6 +241,19 @@ begin
   end;
 
   if not DynAudNorm_GetConfiguration(instance, channels, sampleRate, frameLen, filterSize) then
+  begin
+    Raise Exception.Create('Failed to get current configuration!');
+  end;
+end;
+
+function TDynamicAudioNormalizer.GetInternalDelay: Int64;
+begin
+  if not Assigned(instance) then
+  begin
+    Raise Exception.Create('Native instance not created yet!');
+  end;
+
+  if not DynAudNorm_GetInternalDelay(instance, Result) then
   begin
     Raise Exception.Create('Failed to get current configuration!');
   end;

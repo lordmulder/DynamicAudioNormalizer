@@ -160,7 +160,8 @@ for %%c in (DLL, Static) do (
 		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\x64"
 		
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\include"
-		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                "%PACK_PATH%\%%c"
+		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"             "%PACK_PATH%\%%c\include"
+		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                 "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\pthread\lib\Win32\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c"
 		copy "%~dp0\etc\pthread\lib\x64\.\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c\x64"

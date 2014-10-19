@@ -29,7 +29,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, AppEvnts, Math, ComCtrls;
+  Dialogs, StdCtrls, AppEvnts, Math, ComCtrls, XPMan;
 
 type
   TDynamicAudioNormalizerTestApp = class(TForm)
@@ -38,6 +38,7 @@ type
     ButtonTest2: TButton;
     ApplicationEvents1: TApplicationEvents;
     ProgressBar1: TProgressBar;
+    XPManifest1: TXPManifest;
     procedure ButtonTest1Click(Sender: TObject);
     procedure ButtonExitClick(Sender: TObject);
     procedure ButtonTest2Click(Sender: TObject);
@@ -89,7 +90,7 @@ procedure TDynamicAudioNormalizerTestApp.UpdateProgress;
 begin
   if ProgressBar1.Position < ProgressBar1.Max then
   begin
-    ProgressBar1.StepIt;
+    ProgressBar1.StepBy(1);
   end else
   begin
     ProgressBar1.Position := 0;
@@ -124,7 +125,17 @@ end;
 //-----------------------------------------------------------------------------
 
 procedure TDynamicAudioNormalizerTestApp.FormCreate(Sender: TObject);
+var
+  major, minor, patch: LongWord;
+  date, time, compiler, arch: PAnsiChar;
+  debug: LongBool;
 begin
+  TDynamicAudioNormalizer.GetVersionInfo(major, minor, patch);
+  WriteLn(Format('Library Version: %s', [StringReplace(Format('%u.%02u-%u', [major, minor, patch]), ' ', '0', [rfReplaceAll])]));
+
+  TDynamicAudioNormalizer.GetBuildInfo(date, time, compiler, arch, debug);
+  WriteLn(Format('Build: Date=%s; Time=%s; Compiler=%s; Arch=%s; Debug=%s'#10, [date, time, compiler, arch, BoolToStr(debug)]));
+
   TDynamicAudioNormalizer.SetLogFunction(@loggingHandler);
 end;
 
@@ -180,6 +191,7 @@ procedure TDynamicAudioNormalizerTestApp.ButtonTest2Click(Sender: TObject);
 const
   frameSize = 4096;
   channelCount = 2;
+  MAX_SHORT: Double = 32767.0;
 var
   samples: Array of TDoubleArray;
   buffer: array[0..((channelCount*frameSize)-1)] of SmallInt;
@@ -193,7 +205,6 @@ begin
   {============================ SETUP ============================}
 
   SetLength(samples, channelCount, frameSize);
-  normalizer := TDynamicAudioNormalizer.Create(channelCount, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, True, False, False);
 
   WriteLn('Open I/O files...');
   inputFile  := CreateFile('Input.pcm',  GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, 0, 0);
@@ -203,6 +214,10 @@ begin
   begin
     Raise Exception.Create('Failed to open input/output files!');
   end;
+
+  WriteLn('Creating normalizer instance...');
+  normalizer := TDynamicAudioNormalizer.Create(channelCount, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, True, False, False);
+  WriteLn('Internal delay: ' + IntToStr(normalizer.GetInternalDelay));
 
   {=========================== PROCESS ===========================}
 
@@ -223,7 +238,7 @@ begin
       begin
         for j := 0 to (channelCount-1) do
         begin
-          samples[j][i] := buffer[k] / 32767.0;
+          samples[j][i] := buffer[k] / MAX_SHORT;
           k := k + 1;
         end;
       end;
@@ -239,7 +254,7 @@ begin
       begin
         for j := 0 to (channelCount-1) do
         begin
-          buffer[k] := SmallInt(Round(Max(-1.0,Min(1.0,samples[j][i])) * 32767.0));
+          buffer[k] := SmallInt(Round(Max(-1.0,Min(1.0,samples[j][i])) * MAX_SHORT));
           k := k + 1;
         end;
       end;
@@ -271,7 +286,7 @@ begin
       begin
         for j := 0 to (channelCount-1) do
         begin
-          buffer[k] := SmallInt(Round(Max(-1.0,Min(1.0,samples[j][i])) * 32767.0));
+          buffer[k] := SmallInt(Round(Max(-1.0,Min(1.0,samples[j][i])) * MAX_SHORT));
           k := k + 1;
         end;
       end;
@@ -286,10 +301,15 @@ begin
       Break; {No more samples left}
     end;
 
-    if q mod 16 = 0 then UpdateProgress;
+    if q mod 64 = 0 then UpdateProgress;
   end;
 
   {============================ CLOSE ============================}
+
+  WriteLn('Shutting down...');
+  normalizer.Reset(); {Just to make sure that the Reset() function works}
+
+  {============================ RESET ============================}
 
   FreeAndNil(normalizer);
   FlushFileBuffers(outputFile);

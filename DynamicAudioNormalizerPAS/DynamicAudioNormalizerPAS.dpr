@@ -28,13 +28,13 @@ program DynamicAudioNormalizerPAS;
 uses
   Forms,
   Main in 'src\Main.pas' {DynamicAudioNormalizerTestApp},
-  DynamicAudioNormalizer in 'src\DynamicAudioNormalizer.pas';
+  DynamicAudioNormalizer in 'include\DynamicAudioNormalizer.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
-  Application.Title := 'Dynamic Audio Normalizer';
+  Application.Title := 'Dynamic Audio Normalizer Testbed';
   Application.CreateForm(TDynamicAudioNormalizerTestApp, DynamicAudioNormalizerTestApp);
   Application.Run;
 end.

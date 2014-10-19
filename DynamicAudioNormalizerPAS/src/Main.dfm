@@ -3,7 +3,7 @@ object DynamicAudioNormalizerTestApp: TDynamicAudioNormalizerTestApp
   Top = 301
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  Caption = 'DynamicAudioNormalizerTestApp'
+  Caption = 'DynAudNorm Testbed'
   ClientHeight = 145
   ClientWidth = 267
   Color = clBtnFace
@@ -54,6 +54,10 @@ object DynamicAudioNormalizerTestApp: TDynamicAudioNormalizerTestApp
   object ApplicationEvents1: TApplicationEvents
     OnException = ApplicationEvents1Exception
     Left = 8
-    Top = 8
+    Top = 72
+  end
+  object XPManifest1: TXPManifest
+    Left = 40
+    Top = 72
   end
 end
