@@ -1,8 +1,13 @@
+*.exe
+*.dll
 *.opensdf
 *.sdf
 *.suo
 *.user
+*.dcu
+*.ddp
 *.local.*
+*.~*
 /bin
 /doc
 /DynamicAudioNormalizerGUI/tmp
@@ -15,3 +20,4 @@
 /DynamicAudioNormalizerJNI/.settings
 /DynamicAudioNormalizerJNI/bin
 /DynamicAudioNormalizerJNI/out
+
