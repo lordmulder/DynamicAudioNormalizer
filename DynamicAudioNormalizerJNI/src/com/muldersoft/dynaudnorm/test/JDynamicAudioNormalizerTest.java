@@ -159,6 +159,7 @@ public class JDynamicAudioNormalizerTest
 		
 		public void close() throws IOException
 		{
+			flush();
 			outputStream.close();
 		}
 
@@ -319,14 +320,6 @@ public class JDynamicAudioNormalizerTest
 
 			if(sampleCount < sampleBuffer[0].length)
 			{
-				try
-				{
-					writer.flush();
-				}
-				catch (IOException e)
-				{
-					fail("Failed to write to output file!");
-				}
 				break; /*EOF reached*/
 			}
 		}
@@ -349,14 +342,6 @@ public class JDynamicAudioNormalizerTest
 			}
 			else
 			{
-				try
-				{
-					writer.flush();
-				}
-				catch (IOException e)
-				{
-					fail("Failed to write to output file!");
-				}
 				break; /*No more samples*/
 			}
 		}
@@ -365,10 +350,11 @@ public class JDynamicAudioNormalizerTest
 		try
 		{
 			reader.close();
+			writer.close();
 		}
 		catch(IOException e)
 		{
-			fail("Failed to close the files!");
+			fail("Failed to close/flush the files!");
 		}
 		
 		//Finished
