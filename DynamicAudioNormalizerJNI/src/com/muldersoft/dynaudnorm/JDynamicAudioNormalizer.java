@@ -28,6 +28,8 @@ package com.muldersoft.dynaudnorm;
 import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JDynamicAudioNormalizer implements Closeable
 {
@@ -72,17 +74,41 @@ public class JDynamicAudioNormalizer implements Closeable
 			return nativeAPI;
 		}
 		
-		//Constructor
+		//Load native library at runtime
 		private NativeAPI_r7()
 		{
 			try
 			{
-				System.loadLibrary("DynamicAudioNormalizerAPI"); // Load native library at runtime
+				final int coreVersion = getCoreVersion();
+				System.loadLibrary((coreVersion > 0) ? String.format("DynamicAudioNormalizerAPI-%d", coreVersion) : "DynamicAudioNormalizerAPI");
 			}
 			catch(Throwable e)
 			{
 				handleError(e, "Failed to load native DynamicAudioNormalizerAPI library!");
 			}
+		}
+		
+		//Detect the library "core" version
+		private int getCoreVersion()
+		{
+			int coreVersion = -1;
+			try
+			{
+				if(!System.getProperty("os.name").toLowerCase().startsWith("win"))
+				{
+					final Pattern pattern = Pattern.compile(".+\\$NativeAPI_r(\\d+)$");
+					final Matcher matcher = pattern.matcher(this.getClass().getName());
+					if(matcher.matches())
+					{
+						coreVersion = Integer.parseInt(matcher.group(1));
+					}
+				}
+			}
+			catch(Throwable e)
+			{
+				handleError(e, "Failed to determine DynamicAudioNormalizerAPI core version!");
+			}
+			return coreVersion;
 		}
 		
 		//Static Functions
