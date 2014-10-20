@@ -32,6 +32,7 @@
 #include <unordered_map>
 #define MAP_TYPE std::unordered_map
 #else
+#pragma message "C++11 support *not* enabled"
 #include <map>
 #define MAP_TYPE std::map
 #endif

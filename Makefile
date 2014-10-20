@@ -31,6 +31,7 @@ LIBRARY_NAME := DynamicAudioNormalizerAPI
 PROGRAM_NAME := DynamicAudioNormalizerCLI
 LOGVIEW_NAME := DynamicAudioNormalizerGUI
 JNIWRAP_NAME := DynamicAudioNormalizerJNI
+PASWRAP_NAME := DynamicAudioNormalizerPAS
 BUILD_DATE   := $(shell date -Idate)
 BUILD_TIME   := $(shell date +%H:%M:%S)
 BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
@@ -127,11 +128,13 @@ CopyAllBinaries:
 	@$(ECHO) "\e[1;34mCopy Binaries\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
 	rm -rf $(TARGET_PATH) 
-	mkdir -p $(TARGET_PATH)
+	mkdir -p $(TARGET_PATH)/include
 	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME) $(TARGET_PATH)
 	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH)
 	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).so $(TARGET_PATH)
 	cp $(JNIWRAP_NAME)/out/$(JNIWRAP_NAME).jar $(TARGET_PATH)
+	cp $(LIBRARY_NAME)/include/*.h $(TARGET_PATH)/include
+	cp $(PASWRAP_NAME)/include/*.pas $(TARGET_PATH)/include
 	cp ./LICENSE-*.html $(TARGET_PATH)
 
 CreateDocuments:

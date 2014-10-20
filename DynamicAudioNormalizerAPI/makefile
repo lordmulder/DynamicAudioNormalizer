@@ -63,6 +63,7 @@ else
    endif
 endif
 
+CXXFLAGS += -std=gnu++11
 CXXFLAGS += -fPIC
 CXXFLAGS += -fvisibility=hidden
 CXXFLAGS += -DMDYNAMICAUDIONORMALIZER_EXPORTS
