@@ -65,11 +65,27 @@ JNIEXPORT jlong JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_0
 
 /*
  * Class:     com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI_r7
+ * Method:    reset
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_reset
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI_r7
  * Method:    getConfiguration
  * Signature: (ILjava/util/Map;)Z
  */
 JNIEXPORT jboolean JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_getConfiguration
   (JNIEnv *, jobject, jint, jobject);
+
+/*
+ * Class:     com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_NativeAPI_r7
+ * Method:    getInternalDelay
+ * Signature: (I)J
+ */
+JNIEXPORT jlong JNICALL Java_com_muldersoft_dynaudnorm_JDynamicAudioNormalizer_00024NativeAPI_1r7_getInternalDelay
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

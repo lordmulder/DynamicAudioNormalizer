@@ -24,9 +24,17 @@
 //StdLib
 #include <algorithm>
 #include <stdexcept>
-#include <map>
 #include <queue>
 #include <climits>
+
+//C++11 support
+#if (__cplusplus >= 201100L) || (defined(_MSC_VER) && (_MSC_VER > 1600))
+#include <unordered_map>
+#define MAP_TYPE std::unordered_map
+#else
+#include <map>
+#define MAP_TYPE std::map
+#endif
 
 //Generate the JNI header file name
 #define JAVA_HDRNAME_GLUE1(X,Y) <X##_r##Y.h>
@@ -227,25 +235,26 @@ static void javaSetLoggingHandler(JNIEnv *env, jobject loggerGlobalReference)
 // Instance Handling
 ///////////////////////////////////////////////////////////////////////////////
 
-static jint g_instanceNextHandleValue = 0;
-static std::map<jint, MDynamicAudioNormalizer*> g_instances;
-static std::queue<jint> g_pendingHandles;
+#define MY_RANDOMIZE(X) ((X) = ((((X) * 1103515245) + 12345) & INT32_MAX))
+static jint g_nextHandleValue = 0x49A887DC;
+static MAP_TYPE<jint, MDynamicAudioNormalizer*> g_instances;
 
-static int javaCreateHandle(MDynamicAudioNormalizer *const instance)
+static jint javaCreateHandle(MDynamicAudioNormalizer *const instance)
 {
 	MY_CRITSEC_ENTER(g_javaLock);
-	
-	jint handleValue = -1;
-	if(!g_pendingHandles.empty())
-	{
-		handleValue = g_pendingHandles.front();
-		g_pendingHandles.pop();
-	}
-	else if(g_instanceNextHandleValue < SHRT_MAX)
-	{
-		handleValue = g_instanceNextHandleValue++;
-	}
 
+	jint handleValue = MY_RANDOMIZE(g_nextHandleValue);
+	uint32_t retryCounter = 0;
+	while((handleValue <= 0) || (g_instances.find(handleValue) != g_instances.end()))
+	{
+		if(++retryCounter >= INT32_MAX)
+		{
+			handleValue = -1;
+			break;
+		}
+		handleValue = MY_RANDOMIZE(g_nextHandleValue);
+	}
+	
 	if(handleValue >= 0)
 	{
 		g_instances.insert(std::pair<jint, MDynamicAudioNormalizer*>(handleValue, instance));
@@ -255,20 +264,7 @@ static int javaCreateHandle(MDynamicAudioNormalizer *const instance)
 	return handleValue;
 }
 
-static void javaCloseHandle(const jint &handleValue)
-{
-	MY_CRITSEC_ENTER(g_javaLock);
-	
-	if(g_instances.find(handleValue) != g_instances.end())
-	{
-		g_instances.erase(handleValue);
-		g_pendingHandles.push(handleValue);
-	}
-
-	MY_CRITSEC_LEAVE(g_javaLock);
-}
-
-static MDynamicAudioNormalizer *javaHandleToInstance(const jint &handleValue)
+static MDynamicAudioNormalizer *javaHandleToInstance(const jint &handleValue, const bool remove = false)
 {
 	MY_CRITSEC_ENTER(g_javaLock);
 	
@@ -276,6 +272,10 @@ static MDynamicAudioNormalizer *javaHandleToInstance(const jint &handleValue)
 	if(g_instances.find(handleValue) != g_instances.end())
 	{
 		instance = g_instances[handleValue];
+		if(remove)
+		{
+			g_instances.erase(handleValue);
+		}
 	}
 
 	MY_CRITSEC_LEAVE(g_javaLock);
@@ -472,9 +472,8 @@ static jint JAVA_FUNCIMPL(createInstance)(JNIEnv *const env, const jint &channel
 
 static jboolean JAVA_FUNCIMPL(destroyInstance)(JNIEnv *const env, const jint &handle)
 {
-	if(MDynamicAudioNormalizer *instance = javaHandleToInstance(handle))
+	if(MDynamicAudioNormalizer *instance = javaHandleToInstance(handle, true))
 	{
-		javaCloseHandle(handle);
 		delete instance;
 		return JNI_TRUE;
 	}
@@ -566,6 +565,22 @@ static jlong JAVA_FUNCIMPL(flushBuffer)(JNIEnv *const env, const jint &handle, j
 	return success ? outputSize : (-1);
 }
 
+static jboolean JAVA_FUNCIMPL(reset)(JNIEnv *const env, const jint &handle)
+{
+	if(handle < 0)
+	{
+		return JNI_FALSE;
+	}
+
+	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	if(instance == NULL)
+	{
+		return JNI_FALSE; /*invalid handle value*/
+	}
+
+	return instance->reset() ? JNI_TRUE : JNI_FALSE;
+}
+
 static jboolean JAVA_FUNCIMPL(getConfiguration)(JNIEnv *const env, const jint &handle, jobject const configuration)
 {
 	if((handle < 0) || (configuration == NULL))
@@ -576,7 +591,7 @@ static jboolean JAVA_FUNCIMPL(getConfiguration)(JNIEnv *const env, const jint &h
 	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
-		return -1; /*invalid handle value*/
+		return JNI_FALSE; /*invalid handle value*/
 	}
 
 	jclass mapClass = NULL;
@@ -593,12 +608,6 @@ static jboolean JAVA_FUNCIMPL(getConfiguration)(JNIEnv *const env, const jint &h
 
 	env->CallVoidMethod(configuration, clearMethod);
 
-	int64_t delayedSamples;
-	if(!instance->getInternalDelay(delayedSamples))
-	{
-		return JNI_FALSE;
-	}
-
 	uint32_t channels, sampleRate, frameLen, filterSize;
 	if(!instance->getConfiguration(channels, sampleRate, frameLen, filterSize))
 	{
@@ -609,10 +618,31 @@ static jboolean JAVA_FUNCIMPL(getConfiguration)(JNIEnv *const env, const jint &h
 	JAVA_MAP_PUT_INTEGER(configuration, "sampleRate",     static_cast<jint>(sampleRate));
 	JAVA_MAP_PUT_INTEGER(configuration, "frameLen",       static_cast<jint>(frameLen));
 	JAVA_MAP_PUT_INTEGER(configuration, "filterSize",     static_cast<jint>(filterSize));
-	JAVA_MAP_PUT_INTEGER(configuration, "delayedSamples", static_cast<jint>(delayedSamples));
 
 	env->DeleteLocalRef(mapClass);
 	return JNI_TRUE;
+}
+
+static jlong JAVA_FUNCIMPL(getInternalDelay)(JNIEnv *const env, const jint &handle)
+{
+	if(handle < 0)
+	{
+		return -1;
+	}
+
+	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	if(instance == NULL)
+	{
+		return -1; /*invalid handle value*/
+	}
+
+	jlong delayInSamples = 0;
+	if(!instance->getInternalDelay(delayInSamples))
+	{
+		delayInSamples = -1;
+	}
+
+	return delayInSamples;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -656,8 +686,18 @@ extern "C"
 		JAVA_TRY_CATCH(flushBuffer, -1, env, handle, samplesOut)
 	}
 
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(reset)(JNIEnv *env, jobject, jint handle)
+	{
+		JAVA_TRY_CATCH(reset, JNI_FALSE, env, handle)
+	}
+
 	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getConfiguration)(JNIEnv *env, jobject, jint handle, jobject configuration)
 	{
 		JAVA_TRY_CATCH(getConfiguration, JNI_FALSE, env, handle, configuration)
+	}
+
+	JNIEXPORT jlong JNICALL JAVA_FUNCTION(getInternalDelay)(JNIEnv *env, jobject, jint handle)
+	{
+		JAVA_TRY_CATCH(getInternalDelay, -1, env, handle)
 	}
 }

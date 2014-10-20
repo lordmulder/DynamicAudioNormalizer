@@ -176,18 +176,17 @@ public class JDynamicAudioNormalizerTest
 	@Before
 	public void setUp()
 	{
-		System.out.println("============================= TEST BEGIN =============================");
+		System.out.println("\n============================= TEST BEGIN =============================");
 	}
 	
 	@After
 	public void shutDown()
 	{
-		System.out.println("============================= TEST DONE! =============================");
-		System.out.println();
+		System.out.println("============================= TEST DONE! =============================\n");
 	}
 
 	@Test
-	public void test1_SetLoggingHandler()
+	public void test1_setLoggingHandler()
 	{
 		JDynamicAudioNormalizer.setLoggingHandler
 		(
@@ -210,14 +209,14 @@ public class JDynamicAudioNormalizerTest
 	}
 
 	@Test
-	public void test2_GetVersionInfo()
+	public void test2_getVersionInfo()
 	{
 		final int[] versionInfo = JDynamicAudioNormalizer.getVersionInfo();
 		System.out.printf("Library Version: %d.%02d-%d\n", versionInfo[0], versionInfo[1], versionInfo[2]);
 	}
 	
 	@Test
-	public void test3_GetBuildInfo()
+	public void test3_getBuildInfo()
 	{
 		final Map<String,String> buildInfo = JDynamicAudioNormalizer.getBuildInfo();
 		for(final String key : buildInfo.keySet())
@@ -227,41 +226,59 @@ public class JDynamicAudioNormalizerTest
 	}
 	
 	@Test
-	public void test4_GetConfiguration()
+	public void test4_getConfiguration()
 	{
 		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
 		final Map<String,Integer> buildInfo = instance.getConfiguration();
 		for(final String key : buildInfo.keySet())
 		{
-			System.out.println("Configuration: " + key + "=" + buildInfo.get(key));
+			System.out.printf("Configuration: %s=%s\n", key, buildInfo.get(key));
 		}
-		instance.release();
+		instance.close();
 	}
 	
 	@Test
-	public void test5_ConstructorAndRelease()
+	public void test5_getInternalDelay()
 	{
-		for(int i = 0; i < 512; i++)
+		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+		final long delayedSamples = instance.getInternalDelay();
+		System.out.printf("Delayed Samples: %d\n", delayedSamples);
+		instance.close();
+	}
+	
+	@Test
+	@SuppressWarnings("deprecation")
+	public void test6_constructorAndRelease()
+	{
+		final int MAX_ROUNDS = 512;
+		final int MAX_INSTANCES = 56;
+		
+		for(int i = 0; i < MAX_ROUNDS; i++)
 		{
+			System.out.println("--------------------------------------------------------------------------");
+			System.out.printf("Round %d of %d\n", i+1, MAX_ROUNDS);
+			System.out.println("--------------------------------------------------------------------------");
+
 			Queue<JDynamicAudioNormalizer> instances = new LinkedList<JDynamicAudioNormalizer>();
 
 			// Constructor
-			for(int k = 0; k < 32; k++)
+			for(int k = 0; k < MAX_INSTANCES; k++)
 			{
 				JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+				System.out.printf("Handle: %08X\n", instance.getHandle());
 				instances.add(instance);
 			}
 			
 			// Release
 			while(!instances.isEmpty())
 			{
-				instances.poll().release();
+				instances.poll().close();
 			}
 		}
 	}
 	
 	@Test
-	public void test6_ProcessAudioFile()
+	public void test7_processAudioFile()
 	{
 		//Open input and output files
 		System.out.println("Opening input and out files...");
@@ -346,7 +363,12 @@ public class JDynamicAudioNormalizerTest
 			}
 		}
 		
+		//Reset
+		System.out.println("Resetting normalizer instance...");
+		instance.reset(); /*This is NOT normally required, but we do it here to test the reset() API*/
+
 		//Close input and output
+		System.out.println("Shutting down...");
 		try
 		{
 			reader.close();
@@ -358,7 +380,7 @@ public class JDynamicAudioNormalizerTest
 		}
 		
 		//Finished
-		instance.release();
+		instance.close();
 		System.out.println("Completed.");
 	}
 }

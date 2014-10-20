@@ -25,10 +25,11 @@
 
 package com.muldersoft.dynaudnorm;
 
+import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JDynamicAudioNormalizer
+public class JDynamicAudioNormalizer implements Closeable
 {
 	//------------------------------------------------------------------------------------------------
 	// Exception class
@@ -41,18 +42,6 @@ public class JDynamicAudioNormalizer
 		public Error(String string)
 		{
 			super(string);
-		}
-	}
-	
-	private static void handleError(final Throwable e, final String message)
-	{
-		if(e.getClass() == Error.class)
-		{
-			throw (Error) e; /*pass through our own exceptions*/
-		}
-		else
-		{
-			throw new Error(String.format("%s [Reason: %s, Message: \"%s\"]", message, e.getClass().getName(), e.getMessage()));
 		}
 	}
 
@@ -108,13 +97,15 @@ public class JDynamicAudioNormalizer
 		//Processing Functions
 		private native long processInplace(final int handle, final double [][] samplesInOut, final long inputSize);
 		private native long flushBuffer(final int handle, final double [][] samplesOut);
+		private native boolean reset(final int handle);
 		
 		//Other Functions
 		private native boolean getConfiguration(final int handle, final Map<String,Integer> buildInfo);
+		private native long getInternalDelay(final int handle);
 	}
 	
 	//------------------------------------------------------------------------------------------------
-	// Public API
+	// Static Functions
 	//------------------------------------------------------------------------------------------------
 
 	public static synchronized int[] getVersionInfo()
@@ -181,7 +172,7 @@ public class JDynamicAudioNormalizer
 	}
 	
 	//------------------------------------------------------------------------------------------------
-	// Constructor and Finalizer
+	// Constructor, Close() and Finalizer
 	//------------------------------------------------------------------------------------------------
 
 	private int m_instance = -1;
@@ -203,16 +194,21 @@ public class JDynamicAudioNormalizer
 		}
 	}
 	
-	public synchronized void release()
+	public synchronized void close()
 	{
 		if(m_instance >= 0)
 		{
 			boolean success = false;
 			try
 			{
-				final int instanceTmp = m_instance;
-				m_instance = -1;
-				success = NativeAPI_r7.getInstance().destroyInstance(instanceTmp);
+				try
+				{
+					success = NativeAPI_r7.getInstance().destroyInstance(m_instance);
+				}
+				finally
+				{
+					m_instance = -1;
+				}
 			}
 			catch(Throwable e)
 			{
@@ -228,7 +224,7 @@ public class JDynamicAudioNormalizer
 	
 	protected synchronized void finalize()
 	{
-		release();
+		close();
 	}
 	
 	//------------------------------------------------------------------------------------------------
@@ -237,10 +233,7 @@ public class JDynamicAudioNormalizer
 
 	public synchronized long processInplace(final double [][] samplesInOut, final long inputSize)
 	{
-		if(m_instance < 0)
-		{
-			throw new Error("Native DynamicAudioNormalizer object not created yet!");
-		}
+		checkInstance(); /*make sure we are properly initialized*/
 
 		long outputSize = 0;
 		try
@@ -262,10 +255,7 @@ public class JDynamicAudioNormalizer
 	
 	public synchronized long flushBuffer(final double [][] samplesOut)
 	{
-		if(m_instance < 0)
-		{
-			throw new Error("Native DynamicAudioNormalizer object not created yet!");
-		}
+		checkInstance(); /*make sure we are properly initialized*/
 
 		long outputSize = 0;
 		try
@@ -285,16 +275,33 @@ public class JDynamicAudioNormalizer
 		return outputSize;
 	}
 	
+	public synchronized void reset()
+	{
+		checkInstance(); /*make sure we are properly initialized*/
+
+		boolean success = false;
+		try
+		{
+			success = NativeAPI_r7.getInstance().reset(m_instance);
+		}
+		catch(Throwable e)
+		{
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}	
+		
+		if(!success)
+		{
+			throw new Error("Failed to reset DynamicAudioNormalizerAPI instance!");
+		}
+	}
+	
 	//------------------------------------------------------------------------------------------------
 	// Other Functions
 	//------------------------------------------------------------------------------------------------
 
 	public synchronized Map<String,Integer> getConfiguration()
 	{
-		if(m_instance < 0)
-		{
-			throw new Error("Native DynamicAudioNormalizer object not created yet!");
-		}
+		checkInstance(); /*make sure we are properly initialized*/
 		
 		boolean success = false;
 		Map<String,Integer> configuration = new HashMap<String,Integer>();
@@ -316,6 +323,57 @@ public class JDynamicAudioNormalizer
 		return configuration;
 	}
 	
+	public synchronized long getInternalDelay()
+	{
+		checkInstance(); /*make sure we are properly initialized*/
+		
+		long internalDelay = -1;
+		try
+		{
+			internalDelay = NativeAPI_r7.getInstance().getInternalDelay(m_instance);
+		}
+		catch(Throwable e)
+		{
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}
+
+		if(internalDelay < 0)
+		{
+			throw new Error("Failed to retrieve DynamicAudioNormalizerAPI internal delay!");
+		}
+		
+		return internalDelay;
+	}
+	
+	@Deprecated
+	public synchronized int getHandle()
+	{
+		return m_instance;
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	// Internal functions
+	//------------------------------------------------------------------------------------------------
+
+	private static void handleError(final Throwable e, final String message)
+	{
+		if(e.getClass() == Error.class)
+		{
+			throw (Error) e; /*pass through our own exceptions*/
+		}
+		else
+		{
+			throw new Error(String.format("%s [Reason: %s, Message: \"%s\"]", message, e.getClass().getName(), e.getMessage()));
+		}
+	}
+
+	private void checkInstance()
+	{
+		if(m_instance < 0)
+		{
+			throw new Error("Native DynamicAudioNormalizer object not created yet or released already!");
+		}
+	}
 	//------------------------------------------------------------------------------------------------
 	// Main
 	//------------------------------------------------------------------------------------------------
