@@ -27,28 +27,21 @@
 
 #include <stdexcept>
 #include <vector>
+#include <pthread.h>
+#include <Common.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace DynamicAudioNormalizer
-{
-	public ref struct Error: public System::Exception
-	{
-	public:
-		Error(const char* message) : Exception(gcnew String(message)) {}
-	};
-}
-
-class PinnedArray2D
+private class PinnedArray2D
 {
 public:
 	PinnedArray2D(array<double,2> ^managedArray)
 	{
 		if(managedArray->Rank != 2)
 		{
-			throw gcnew DynamicAudioNormalizer::Error("Managed array is not a 2D array!");
+			throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Managed array is not a 2D array!");
 		}
 
 		m_dimOuter = managedArray->GetLength(0);
@@ -101,7 +94,7 @@ private:
 	} \
 	catch(...) \
 	{ \
-		throw gcnew DynamicAudioNormalizer::Error("Unhandeled exception in native MDynamicAudioNormalizer function!"); \
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Unhandeled exception in native MDynamicAudioNormalizer function!"); \
 	} \
 } \
 while(0)
@@ -114,10 +107,53 @@ while(0)
 	} \
 	catch(...) \
 	{ \
-		throw gcnew DynamicAudioNormalizer::Error("Unhandeled exception in native MDynamicAudioNormalizer function!"); \
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Unhandeled exception in native MDynamicAudioNormalizer function!"); \
 	} \
 } \
 while(0)
+
+///////////////////////////////////////////////////////////////////////////////
+// Logging
+///////////////////////////////////////////////////////////////////////////////
+
+static GCHandle g_dotNetlogger;
+static pthread_mutex_t g_dotNetLock = PTHREAD_MUTEX_INITIALIZER;
+
+static void dotNetLoggingHandler(const int logLevel, const char *const message)
+{
+	MY_CRITSEC_ENTER(g_dotNetLock);
+	try
+	{
+		if(g_dotNetlogger.IsAllocated)
+		{
+			reinterpret_cast<DynamicAudioNormalizer::DynamicAudioNormalizerNET_Logger^>(g_dotNetlogger.Target)->Invoke(logLevel, gcnew String(message));
+		}
+	}
+	catch(...)
+	{
+		/*ignore exception*/
+	}
+	MY_CRITSEC_LEAVE(g_dotNetLock);
+}
+
+void DynamicAudioNormalizer::DynamicAudioNormalizerNET::setLogger(DynamicAudioNormalizerNET_Logger ^logger)
+{
+	MY_CRITSEC_ENTER(g_dotNetLock);
+	try
+	{
+		if(g_dotNetlogger.IsAllocated)
+		{
+			g_dotNetlogger.Free();
+		}
+		g_dotNetlogger = GCHandle::Alloc(logger, GCHandleType::Normal);
+		MDynamicAudioNormalizer::setLogFunction(dotNetLoggingHandler);
+	}
+	catch(...)
+	{
+		/*ignore exception*/
+	}
+	MY_CRITSEC_LEAVE(g_dotNetLock);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor & Destructor
@@ -131,7 +167,7 @@ static MDynamicAudioNormalizer *createNewInstance(const uint32_t &channels, cons
 	}
 	catch(...)
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Creation of native MDynamicAudioNormalizer instance has failed!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Creation of native MDynamicAudioNormalizer instance has failed!");
 	}
 }
 
@@ -146,12 +182,12 @@ DynamicAudioNormalizer::DynamicAudioNormalizerNET::DynamicAudioNormalizerNET(con
 	}
 	catch(...)
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Initialization of native MDynamicAudioNormalizer instance has failed!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Initialization of native MDynamicAudioNormalizer instance has failed!");
 	}
 	
 	if(!initialized)
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Initialization of native MDynamicAudioNormalizer instance has failed!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Initialization of native MDynamicAudioNormalizer instance has failed!");
 	}
 }
 
@@ -181,19 +217,19 @@ int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_processInplace(arra
 	uint32_t channels, sampleRate, frameLen, filterSize;
 	if(!m_instace->getConfiguration(channels, sampleRate, frameLen, filterSize))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Failed to retrieve configuration of native MDynamicAudioNormalizer instance!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to retrieve configuration of native MDynamicAudioNormalizer instance!");
 	}
 
 	PinnedArray2D samplesInOutPinned(samplesInOut);
 	if((samplesInOutPinned.dimOuter() != channels) || (samplesInOutPinned.dimInner() < inputSize))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
 	}
 
 	int64_t outputSize = -1;
 	if(!m_instace->processInplace(samplesInOutPinned.data(), inputSize, outputSize))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Native MDynamicAudioNormalizer instance failed to process samples in-place!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Native MDynamicAudioNormalizer instance failed to process samples in-place!");
 	}
 
 	return outputSize;
@@ -209,19 +245,19 @@ int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_flushBuffer(array<d
 	uint32_t channels, sampleRate, frameLen, filterSize;
 	if(!m_instace->getConfiguration(channels, sampleRate, frameLen, filterSize))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Failed to retrieve configuration of native MDynamicAudioNormalizer instance!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to retrieve configuration of native MDynamicAudioNormalizer instance!");
 	}
 
 	PinnedArray2D samplesOutPinned(samplesOut);
 	if((samplesOutPinned.dimOuter() != channels) || (samplesOutPinned.dimInner() < 1))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
 	}
 
 	int64_t outputSize = -1;
 	if(!m_instace->flushBuffer(samplesOutPinned.data(), samplesOutPinned.dimInner(), outputSize))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Native MDynamicAudioNormalizer instance failed to flush the buffer!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Native MDynamicAudioNormalizer instance failed to flush the buffer!");
 	}
 
 	return outputSize;
@@ -236,7 +272,7 @@ void DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_reset(void)
 {
 	if(!m_instace->reset())
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Failed to reset the native MDynamicAudioNormalizer instance!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to reset the native MDynamicAudioNormalizer instance!");
 	}
 }
 
@@ -258,7 +294,7 @@ void DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_getConfiguration([Out]
 
 	if(!m_instace->getConfiguration(*channelsPtr, *sampleRatePtr, *frameLenPtr, *filterSizePtr))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Failed to get configuration of native MDynamicAudioNormalizer instance!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to get configuration of native MDynamicAudioNormalizer instance!");
 	}
 }
 
@@ -273,7 +309,7 @@ int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_getInternalDelay(vo
 
 	if(!m_instace->getInternalDelay(delayInSamples))
 	{
-		throw gcnew DynamicAudioNormalizer::Error("Failed to get internal delay of MDynamicAudioNormalizer instance!");
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to get internal delay of MDynamicAudioNormalizer instance!");
 	}
 
 	return delayInSamples;

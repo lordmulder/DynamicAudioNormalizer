@@ -32,11 +32,22 @@ using namespace System::Runtime::InteropServices;
 
 namespace DynamicAudioNormalizer
 {
+	public delegate void DynamicAudioNormalizerNET_Logger(int, String^);
+
+	public ref struct DynamicAudioNormalizerNET_Error: public System::Exception
+	{
+	public:
+		DynamicAudioNormalizerNET_Error(const char* message) : Exception(gcnew String(message)) {}
+	};
+
 	public ref class DynamicAudioNormalizerNET
 	{
 	public:
 		DynamicAudioNormalizerNET(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressFactor, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode);
 		~DynamicAudioNormalizerNET(void);
+
+		//Logging
+		static void setLogger(DynamicAudioNormalizerNET_Logger ^test);
 
 		//Processing
 		int64_t processInplace(array<double,2> ^samplesInOut, const int64_t inputSize);
@@ -55,6 +66,7 @@ namespace DynamicAudioNormalizer
 		void p_getConfiguration([Out] uint32_t %channels, [Out] uint32_t %sampleRate, [Out] uint32_t %frameLen, [Out] uint32_t %filterSize);
 		int64_t p_getInternalDelay(void);
 
+		static DynamicAudioNormalizerNET_Logger ^m_logger;
 		MDynamicAudioNormalizer *const m_instace;
 	};
 }
