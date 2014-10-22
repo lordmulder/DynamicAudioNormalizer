@@ -26,20 +26,35 @@
 #pragma once
 
 using namespace System;
+using namespace System::Runtime::InteropServices;
 
 #include <DynamicAudioNormalizer.h>
 
-namespace DynamicAudioNormalizerNET
+namespace DynamicAudioNormalizer
 {
-	public ref class CDynamicAudioNormalizer
+	public ref class DynamicAudioNormalizerNET
 	{
 	public:
-		CDynamicAudioNormalizer(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressFactor, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode);
-		~CDynamicAudioNormalizer(void);
+		DynamicAudioNormalizerNET(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressFactor, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode);
+		~DynamicAudioNormalizerNET(void);
 
-		bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize);
+		//Processing
+		int64_t processInplace(array<double,2> ^samplesInOut, const int64_t inputSize);
+		int64_t flushBuffer(array<double,2> ^samplesInOut);
+		void reset(void);
+		
+		//Information
+		void getConfiguration([Out] uint32_t %channels, [Out] uint32_t %sampleRate, [Out] uint32_t %frameLen, [Out] uint32_t %filterSize);
+		int64_t getInternalDelay(void);
 
 	private:
+		int64_t p_processInplace(array<double,2> ^samplesInOut, const int64_t inputSize);
+		int64_t p_flushBuffer(array<double,2> ^samplesInOut);
+		void p_reset(void);
+
+		void p_getConfiguration([Out] uint32_t %channels, [Out] uint32_t %sampleRate, [Out] uint32_t %frameLen, [Out] uint32_t %filterSize);
+		int64_t p_getInternalDelay(void);
+
 		MDynamicAudioNormalizer *const m_instace;
 	};
 }

@@ -164,7 +164,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerAPI\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies />
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -179,7 +179,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerAPI\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>
       </AdditionalDependencies>
       <SubSystem>Console</SubSystem>
@@ -195,7 +195,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerAPI\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>
       </AdditionalDependencies>
       <SubSystem>Console</SubSystem>
@@ -211,7 +211,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerAPI\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>
       </AdditionalDependencies>
       <SubSystem>Console</SubSystem>
@@ -223,12 +223,6 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="app.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="app.ico" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssemblyInfo.cpp" />
