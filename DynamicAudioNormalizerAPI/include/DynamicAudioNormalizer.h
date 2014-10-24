@@ -97,7 +97,7 @@ public:
 	enum { LOG_LEVEL_NFO = 0, LOG_LEVEL_WRN = 1, LOG_LEVEL_ERR = 2 };
 
 	/*Static functions*/
-	static void getVersionInfo(uint32_t &major, uint32_t &minor,uint32_t &patch);
+	static void getVersionInfo(uint32_t &major, uint32_t &minor, uint32_t &patch);
 	static void getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug);
 	static LogFunction *setLogFunction(LogFunction *const logFunction);
 
