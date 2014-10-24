@@ -156,8 +156,10 @@ for %%c in (DLL, Static) do (
 		
 		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c"
 		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerNET.dll" "%PACK_PATH%\%%c"
 		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c\x64"
 		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerNET.dll" "%PACK_PATH%\%%c\x64"
 		
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\include"
 		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"             "%PACK_PATH%\%%c\include"

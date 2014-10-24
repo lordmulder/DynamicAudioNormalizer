@@ -35,9 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-static void INIT_ARRAY_2D(T *basePtr, T **outPtr, const size_t dimOuter , const size_t dimInner)
+static void INIT_ARRAY_2D(T *basePtr, T **outPtr, const int64_t dimOuter , const int64_t dimInner)
 {
-	for(size_t i = 0; i < dimOuter; i++)
+	for(int64_t i = 0; i < dimOuter; i++)
 	{
 		outPtr[i] = basePtr;
 		basePtr += dimInner;
@@ -45,9 +45,9 @@ static void INIT_ARRAY_2D(T *basePtr, T **outPtr, const size_t dimOuter , const 
 }
 
 #define PIN_ARRAY_2D(ARRAY, TYPE) \
-	const size_t ARRAY##_dimOuter = ARRAY->GetLength(0); \
-	const size_t ARRAY##_dimInner = ARRAY->GetLength(1); \
-	TYPE **ARRAY##_ptr = (TYPE**) alloca(sizeof(TYPE*) * ARRAY##_dimOuter); \
+	const int64_t ARRAY##_dimOuter = ARRAY->GetLongLength(0); \
+	const int64_t ARRAY##_dimInner = ARRAY->GetLongLength(1); \
+	TYPE **ARRAY##_ptr = (TYPE**) alloca(sizeof(TYPE*) * ((size_t) ARRAY##_dimOuter)); \
 	pin_ptr<TYPE> ARRAY##_pinned = &ARRAY[0,0]; \
 	INIT_ARRAY_2D<TYPE>(ARRAY##_pinned, ARRAY##_ptr, ARRAY##_dimOuter, ARRAY##_dimInner)
 
