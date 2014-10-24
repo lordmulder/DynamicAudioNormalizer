@@ -27,8 +27,9 @@
 
 #include <stdexcept>
 #include <vector>
-#include <pthread.h>
 #include <Common.h>
+
+using namespace System::Threading;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Functions
@@ -81,24 +82,60 @@ while(0)
 // Logging Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-static GCHandle g_dotNetlogger;
-static pthread_mutex_t g_dotNetLock = PTHREAD_MUTEX_INITIALIZER;
+namespace DynamicAudioNormalizer
+{
+	private ref class Lock
+	{
+	public:
+		Lock(Object ^ object)
+		:
+			m_object(object)
+		{
+			Monitor::Enter(m_object);
+		}
+
+		~Lock()
+		{
+			Monitor::Exit(m_object);
+		}
+
+	private:
+		Object ^m_object;
+	};
+
+	private ref class LoggingSupport
+	{
+	public:
+		static void log(const int &logLevel, const char *const message)
+		{
+			Lock lock(m_mutex);
+			if(m_handler != nullptr)
+			{
+				try
+				{
+					m_handler->Invoke(logLevel, gcnew String(message));
+				}
+				catch(...)
+				{
+				}
+			}
+		}
+		
+		static void setHandler(DynamicAudioNormalizerNET_Logger ^handler)
+		{
+			Lock lock(m_mutex);
+			m_handler = handler;
+		}
+
+	private:
+		static DynamicAudioNormalizerNET_Logger ^m_handler = nullptr;
+		static Object^ m_mutex = gcnew Object();
+	};
+}
 
 static void dotNetLoggingHandler(const int logLevel, const char *const message)
 {
-	MY_CRITSEC_ENTER(g_dotNetLock);
-	try
-	{
-		if(g_dotNetlogger.IsAllocated)
-		{
-			reinterpret_cast<DynamicAudioNormalizer::DynamicAudioNormalizerNET_Logger^>(g_dotNetlogger.Target)->Invoke(logLevel, gcnew String(message));
-		}
-	}
-	catch(...)
-	{
-		/*ignore exception*/
-	}
-	MY_CRITSEC_LEAVE(g_dotNetLock);
+	DynamicAudioNormalizer::LoggingSupport::log(logLevel, message);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,21 +144,8 @@ static void dotNetLoggingHandler(const int logLevel, const char *const message)
 
 void DynamicAudioNormalizer::DynamicAudioNormalizerNET::setLogger(DynamicAudioNormalizerNET_Logger ^logger)
 {
-	MY_CRITSEC_ENTER(g_dotNetLock);
-	try
-	{
-		if(g_dotNetlogger.IsAllocated)
-		{
-			g_dotNetlogger.Free();
-		}
-		g_dotNetlogger = GCHandle::Alloc(logger, GCHandleType::Normal);
-		MDynamicAudioNormalizer::setLogFunction(dotNetLoggingHandler);
-	}
-	catch(...)
-	{
-		/*ignore exception*/
-	}
-	MY_CRITSEC_LEAVE(g_dotNetLock);
+	LoggingSupport::setHandler(logger);
+	MDynamicAudioNormalizer::setLogFunction(dotNetLoggingHandler);
 }
 
 void DynamicAudioNormalizer::DynamicAudioNormalizerNET::getVersionInfo([Out] uint32_t %major, [Out] uint32_t %minor, [Out] uint32_t %patch)

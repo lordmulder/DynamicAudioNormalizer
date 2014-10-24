@@ -29,6 +29,12 @@ using namespace System::Runtime::CompilerServices;
 using namespace System::Runtime::InteropServices;
 using namespace System::Security::Permissions;
 
+#include <DynamicAudioNormalizer.h>
+
+#define CORE_VERSION_MAKE_STR1(X) #X
+#define CORE_VERSION_MAKE_STR2(X) CORE_VERSION_MAKE_STR1(X)
+#define CORE_VERSION CORE_VERSION_MAKE_STR2(MDYNAMICAUDIONORMALIZER_CORE)
+
 //
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
@@ -53,8 +59,8 @@ using namespace System::Security::Permissions;
 //
 // You can specify all the value or you can default the Revision and Build Numbers
 // by using the '*' as shown below:
-
-[assembly:AssemblyVersionAttribute("1.0.*")];
+//
+[assembly:AssemblyVersionAttribute(CORE_VERSION ".0.*")];
 
 [assembly:ComVisible(false)];
 
