@@ -45,8 +45,11 @@ namespace DynamicAudioNormalizer
 	public:
 		DynamicAudioNormalizerNET(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressFactor, const bool channelsCoupled, const bool enableDCCorrection, const bool altBoundaryMode);
 		~DynamicAudioNormalizerNET(void);
+		!DynamicAudioNormalizerNET(void);
 
-		//Logging
+		//Static
+		static void getVersionInfo([Out] uint32_t %major, [Out] uint32_t %minor, [Out] uint32_t %patch);
+		static void getBuildInfo([Out] String ^%date, [Out] String ^%time, [Out] String ^%compiler, [Out] String ^%arch, [Out] bool %debug);
 		static void setLogger(DynamicAudioNormalizerNET_Logger ^test);
 
 		//Processing
@@ -54,7 +57,7 @@ namespace DynamicAudioNormalizer
 		int64_t flushBuffer(array<double,2> ^samplesInOut);
 		void reset(void);
 		
-		//Information
+		//Other
 		void getConfiguration([Out] uint32_t %channels, [Out] uint32_t %sampleRate, [Out] uint32_t %frameLen, [Out] uint32_t %filterSize);
 		int64_t getInternalDelay(void);
 

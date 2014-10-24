@@ -34,57 +34,22 @@
 // Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-private class PinnedArray2D
+template<class T>
+static void INIT_ARRAY_2D(T *basePtr, T **outPtr, const size_t dimOuter , const size_t dimInner)
 {
-public:
-	PinnedArray2D(array<double,2> ^managedArray)
+	for(size_t i = 0; i < dimOuter; i++)
 	{
-		if(managedArray->Rank != 2)
-		{
-			throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Managed array is not a 2D array!");
-		}
-
-		m_dimOuter = managedArray->GetLength(0);
-		m_dimInner = managedArray->GetLength(1);
-
-		m_handle = GCHandle::Alloc(managedArray, GCHandleType::Pinned);
-		m_ptr = new double*[m_dimOuter];
-		double *basePointer = reinterpret_cast<double*>(m_handle.AddrOfPinnedObject().ToPointer());
-
-		for(size_t d = 0; d < m_dimOuter; d++)
-		{
-			m_ptr[d] = basePointer;
-			basePointer += m_dimInner;
-		}
+		outPtr[i] = basePtr;
+		basePtr += dimInner;
 	}
+}
 
-	~PinnedArray2D(void)
-	{
-		delete [] m_ptr;
-		m_handle.Free();
-	}
-
-	inline double **data(void)
-	{
-		return m_ptr;
-	}
-
-	inline const size_t &dimOuter(void) const
-	{
-		return m_dimOuter;
-	}
-
-	inline const size_t &dimInner(void) const
-	{
-		return m_dimInner;
-	}
-
-private:
-	GCHandle m_handle;
-	double **m_ptr;
-	size_t m_dimOuter;
-	size_t m_dimInner;
-};
+#define PIN_ARRAY_2D(ARRAY, TYPE) \
+	const size_t ARRAY##_dimOuter = ARRAY->GetLength(0); \
+	const size_t ARRAY##_dimInner = ARRAY->GetLength(1); \
+	TYPE **ARRAY##_ptr = (TYPE**) alloca(sizeof(TYPE*) * ARRAY##_dimOuter); \
+	pin_ptr<TYPE> ARRAY##_pinned = &ARRAY[0,0]; \
+	INIT_ARRAY_2D<TYPE>(ARRAY##_pinned, ARRAY##_ptr, ARRAY##_dimOuter, ARRAY##_dimInner)
 
 #define TRY_CATCH(FUNC, ...) do \
 { \
@@ -113,7 +78,7 @@ while(0)
 while(0)
 
 ///////////////////////////////////////////////////////////////////////////////
-// Logging
+// Logging Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 static GCHandle g_dotNetlogger;
@@ -136,6 +101,10 @@ static void dotNetLoggingHandler(const int logLevel, const char *const message)
 	MY_CRITSEC_LEAVE(g_dotNetLock);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Static Functions
+///////////////////////////////////////////////////////////////////////////////
+
 void DynamicAudioNormalizer::DynamicAudioNormalizerNET::setLogger(DynamicAudioNormalizerNET_Logger ^logger)
 {
 	MY_CRITSEC_ENTER(g_dotNetLock);
@@ -153,6 +122,27 @@ void DynamicAudioNormalizer::DynamicAudioNormalizerNET::setLogger(DynamicAudioNo
 		/*ignore exception*/
 	}
 	MY_CRITSEC_LEAVE(g_dotNetLock);
+}
+
+void DynamicAudioNormalizer::DynamicAudioNormalizerNET::getVersionInfo([Out] uint32_t %major, [Out] uint32_t %minor, [Out] uint32_t %patch)
+{
+	pin_ptr<uint32_t> majorPtr = &major;
+	pin_ptr<uint32_t> minorPtr = &minor;
+	pin_ptr<uint32_t> patchPtr = &patch;
+
+	MDynamicAudioNormalizer::getVersionInfo(*majorPtr, *minorPtr, *patchPtr);
+}
+
+void DynamicAudioNormalizer::DynamicAudioNormalizerNET::getBuildInfo([Out] String ^%date, [Out] String ^%time, [Out] String ^%compiler, [Out] String ^%arch, [Out] bool %debug)
+{
+	const char *datePtr, *timePtr, *compilerPtr, *archPtr; bool debugRef;
+	MDynamicAudioNormalizer::getBuildInfo(&datePtr, &timePtr, &compilerPtr, &archPtr, debugRef);
+
+	date = gcnew String(datePtr);
+	time = gcnew String(timePtr);
+	compiler = gcnew String(compilerPtr);
+	arch = gcnew String(archPtr);
+	debug = debugRef;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -193,8 +183,15 @@ DynamicAudioNormalizer::DynamicAudioNormalizerNET::DynamicAudioNormalizerNET(con
 
 DynamicAudioNormalizer::DynamicAudioNormalizerNET::~DynamicAudioNormalizerNET(void)
 {
+	this->!DynamicAudioNormalizerNET();
+	GC::SuppressFinalize(this);
+}
+
+DynamicAudioNormalizer::DynamicAudioNormalizerNET::!DynamicAudioNormalizerNET(void)
+{
 	try
 	{
+
 		delete m_instace;
 	}
 	catch(...)
@@ -220,14 +217,14 @@ int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_processInplace(arra
 		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to retrieve configuration of native MDynamicAudioNormalizer instance!");
 	}
 
-	PinnedArray2D samplesInOutPinned(samplesInOut);
-	if((samplesInOutPinned.dimOuter() != channels) || (samplesInOutPinned.dimInner() < inputSize))
+	PIN_ARRAY_2D(samplesInOut, double);
+	if((samplesInOut_dimOuter != channels) || (samplesInOut_dimInner < inputSize))
 	{
 		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
 	}
 
 	int64_t outputSize = -1;
-	if(!m_instace->processInplace(samplesInOutPinned.data(), inputSize, outputSize))
+	if(!m_instace->processInplace(samplesInOut_ptr, inputSize, outputSize))
 	{
 		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Native MDynamicAudioNormalizer instance failed to process samples in-place!");
 	}
@@ -248,14 +245,14 @@ int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_flushBuffer(array<d
 		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to retrieve configuration of native MDynamicAudioNormalizer instance!");
 	}
 
-	PinnedArray2D samplesOutPinned(samplesOut);
-	if((samplesOutPinned.dimOuter() != channels) || (samplesOutPinned.dimInner() < 1))
+	PIN_ARRAY_2D(samplesOut, double);
+	if((samplesOut_dimOuter != channels) || (samplesOut_dimInner < 1))
 	{
 		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
 	}
 
 	int64_t outputSize = -1;
-	if(!m_instace->flushBuffer(samplesOutPinned.data(), samplesOutPinned.dimInner(), outputSize))
+	if(!m_instace->flushBuffer(samplesOut_ptr, samplesOut_dimInner, outputSize))
 	{
 		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Native MDynamicAudioNormalizer instance failed to flush the buffer!");
 	}
@@ -277,7 +274,7 @@ void DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_reset(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Information
+// Other Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 void DynamicAudioNormalizer::DynamicAudioNormalizerNET::getConfiguration([Out] uint32_t %channels, [Out] uint32_t %sampleRate, [Out] uint32_t %frameLen, [Out] uint32_t %filterSize)

@@ -1,4 +1,29 @@
-﻿using System;
+﻿//////////////////////////////////////////////////////////////////////////////////
+// Dynamic Audio Normalizer - Microsoft.NET Wrapper
+// Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// http://opensource.org/licenses/MIT
+//////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +32,7 @@ using System.Reflection;
 
 using DynamicAudioNormalizer;
 
-namespace DynamicAudioNormalizerTest
+namespace DynamicAudioNormalizer_Example
 {
     class SampleReader : IDisposable
     {
@@ -27,7 +52,7 @@ namespace DynamicAudioNormalizerTest
                 {
                     try
                     {
-                        samplesOut[c, i] = (double)m_reader.ReadInt16() / 32767.0;
+                        samplesOut[c, i] = (double) m_reader.ReadInt16() / 32767.0;
                     }
                     catch(EndOfStreamException)
                     {
@@ -81,17 +106,26 @@ namespace DynamicAudioNormalizerTest
         {
             try
             {
+                String version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                Console.WriteLine("DynamicAudioNormalizer.NET Example Program [{0}]\n", version);
                 runTest();
+                GC.WaitForPendingFinalizers();
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + e.GetType() + ": " + e.Message + "\n");
+                Console.WriteLine("\nFAILURE!!!\n\n" + e.GetType() + ": " + e.Message + "\n");
             }
         }
 
         private static void runTest()
         {
-            Console.WriteLine("DynamicAudioNormalizer.NET Tester [" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "]\n");
+            uint major, minor, patch;
+            DynamicAudioNormalizerNET.getVersionInfo(out major, out minor, out patch);
+            Console.WriteLine("Library Version {0}.{1}-{2}", major.ToString(), minor.ToString("D2"), minor, patch.ToString());
+
+            String date, time, compiler, arch; bool debug;
+            DynamicAudioNormalizerNET.getBuildInfo(out date, out time, out compiler, out arch, out debug);
+            Console.WriteLine("Date: {0}, Time: {1}, Compiler: {2}, Arch: {3}, {4}", date, time, compiler, arch, debug ? "DEBUG" : "Release");
 
             DynamicAudioNormalizerNET.setLogger(delegate(int level, String message)
             {
@@ -112,13 +146,13 @@ namespace DynamicAudioNormalizerTest
                     {
                         uint channels, sampleRate, frameLen, filterSize;
                         instance.getConfiguration(out channels, out sampleRate, out frameLen, out filterSize);
-                        Console.WriteLine("channels: " + channels);
-                        Console.WriteLine("sampleRate: " + sampleRate);
-                        Console.WriteLine("frameLen: " + frameLen);
-                        Console.WriteLine("filterSize: " + filterSize);
+                        Console.WriteLine("channels: " + channels.ToString());
+                        Console.WriteLine("sampleRate: " + sampleRate.ToString());
+                        Console.WriteLine("frameLen: " + frameLen.ToString());
+                        Console.WriteLine("filterSize: " + filterSize.ToString());
 
                         long internalDelay = instance.getInternalDelay();
-                        Console.WriteLine("internalDelay: " + internalDelay);
+                        Console.WriteLine("internalDelay: " + internalDelay.ToString());
 
                         process(reader, writer, instance);
                     }
