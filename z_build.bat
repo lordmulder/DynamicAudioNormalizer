@@ -197,9 +197,11 @@ REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
 	attrib +R "%PACK_PATH%\%%c\*.exe"
 	attrib +R "%PACK_PATH%\%%c\*.html"
-	if "%%c"=="DLL" (
-		attrib +R "%PACK_PATH%\%%c\*.dll"
-	)
+	attrib +R "%PACK_PATH%\%%c\*.dll"
+	attrib +R "%PACK_PATH%\%%c\*.jar"
+	attrib +R "%PACK_PATH%\%%c\*.lib"
+	attrib +R "%PACK_PATH%\%%c\x64\*.dll"
+	attrib +R "%PACK_PATH%\%%c\x64\*.lib"
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
