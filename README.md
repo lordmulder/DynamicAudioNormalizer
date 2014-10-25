@@ -5,7 +5,7 @@ Dynamic Audio Normalizer
 
 **Dynamic Audio Normalizer** is a library for *advanced* [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization) purposes. It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" sections of the audio while avoiding distortions or clipping the "loud" sections. In other words: The volume of the "quiet" and the "loud" sections will be *harmonized*, in the sense that the volume of each section is brought to the same level. Note, however, that the Dynamic Audio Normalizer achieves this goal *without* applying "dynamic range compressing" in the classical sense. It will retain 100% of the dynamic range *within* each section of the audio file.
 
-The *Dynamic Audio Normalizer* is available as a small standalone [command-line](http://en.wikipedia.org/wiki/Command-line_interface) utility and also as an effect in the [SoX](http://sox.sourceforge.net/) audio processor application. Furthermore, it can be integrated into your favourite DAW (digital audio workstation), as a [VST](http://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in, or into your favourite media player, as a [Winamp](http://www.winamp.com/) plug-in. Last but not least, the "core" library can be integrated into custom applications easily, thanks to a straightforward [API](http://en.wikipedia.org/wiki/Application_programming_interface) (application programming interface). While the "native" API is written in *C++*, language [bindings](http://en.wikipedia.org/wiki/Language_binding) for *C*, *Java/JNI* and *Pascal/Delphi* are provided.
+The *Dynamic Audio Normalizer* is available as a small standalone [command-line](http://en.wikipedia.org/wiki/Command-line_interface) utility and also as an effect in the [SoX](http://sox.sourceforge.net/) audio processor application. Furthermore, it can be integrated into your favourite DAW (digital audio workstation), as a [VST](http://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in, or into your favourite media player, as a [Winamp](http://www.winamp.com/) plug-in. Last but not least, the "core" library can be integrated into custom applications easily, thanks to a straightforward [API](http://en.wikipedia.org/wiki/Application_programming_interface) (application programming interface). The "native" API is written in *C++*, but language [bindings](http://en.wikipedia.org/wiki/Language_binding) for *C99*, *Microsoft.NET*, *Java* and *Pascal* are provided.
 
 ### Contents: ###
 1.  [How It Works](#chap_how)
@@ -66,6 +66,9 @@ DynamicAudioNormalizerSoX.exe - SoX binary with included Dynamic Audio Normalize
 DynamicAudioNormalizerAPI.dll - Dynamic Audio Normalizer core library
 DynamicAudioNormalizerVST.dll - Dynamic Audio Normalizer VST wrapper library
 DynamicAudioNormalizerAPI.lib - Import library for the Dynamic Audio Normalizer library
+DynamicAudioNormalizerNET.dll - .NET wrapper for the Dynamic Audio Normalizer library
+DynamicAudioNormalizerJNI.jar - Java wrapper for the Dynamic Audio Normalizer library
+DynamicAudioNormalizer.pas    - Pascal wrapper for the Dynamic Audio Normalizer library
 DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
 msvcp120.dll                  - Visual C++ 2013 runtime library
 msvcr120.dll                  - Visual C++ 2013 runtime library
@@ -334,18 +337,38 @@ API Documentation <a name="chap_api"></a>
 
 This chapter describes the **MDynamicAudioNormalizer** application programming interface (API), as defined in the <tt>DynamicAudioNormalizer.h</tt> header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
 
-Note that all methods of the <tt>MDynamicAudioNormalizer</tt> class are [*reentrant*](http://en.wikipedia.org/wiki/Reentrancy_%28computing%29), but **not** thread-safe! This means that it *is* safe to use the MDynamicAudioNormalizer class in *multi-threaded* applications, but only as long as each thread uses its own separate MDynamicAudioNormalizer instance. In other words, it is strictly forbidden to call the *same* MDynamicAudioNormalizer instance concurrently from *different* threads, but it is perfectly fine to call *different* MDynamicAudioNormalizer instances concurrently from *different* threads (provided that each thread will access *only* its "own" instance). If the *same* MDynamicAudioNormalizer instance needs to be accessed by *different* threads, then the application is responsible for *serializing* all calls to that MDynamicAudioNormalizer instance, e.g. by means of a Mutex. Otherwise, it will result in *undefined behaviour*!
+#### Thread Safety: ####
 
-Also note that the "native" MDynamicAudioNormalizer application programming interface (API) is provided in the form of a [*C++*](http://en.wikipedia.org/wiki/C%2B%2B) class, which means that C++ applications can (and should) use the MDynamicAudioNormalizer class directly. In addition to that, [bindings](http://en.wikipedia.org/wiki/Language_binding) for various other programming languages are provided. The [*C*](http://en.wikipedia.org/wiki/C_%28programming_language%29) API is provided in the same header file as the C++ API. There is one C wrapper function for each method of the "native" C++ class. These wrapper functions provide the exactly same functionality as the corresponding C++ methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) needs to be passed to each non-static function, in order to distinguished multiple MDynamicAudioNormalizer instances. The <tt>createInstance()</tt> and <tt>destroyInstance()</tt> functions, which only exist in the C API, replace the C++ constructor and destructor, respectively. Furthermore, the [*Java*](http://en.wikipedia.org/wiki/Java_%28programming_language%29) API is based on [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) and provided in the form of a [JAR](http://en.wikipedia.org/wiki/JAR_%28file_format%29) file, which contains the <tt>JDynamicAudioNormalizer</tt> Java class. The Java class provides methods which are equivalent to the methods of the "native" C++ class. Note that all required JNI calls are handled *transparently* by the JDynamicAudioNormalizer class, so *no* special measures are needed. Last but not least, the *[Pascal](http://en.wikipedia.org/wiki/Pascal_%28programming_language%29)/[Delphi](http://en.wikipedia.org/wiki/Delphi_%28programming_language%29)* API is built on top of the C API. It is provided in the form of a Pascal (.pas) file, which contains the <tt>TDynamicAudioNormalizer</tt> Object Pascal class. Similar to the Java class, the Object Pascal class provides methods which are equivalent to the methods of the "native" C++ class. Note that all calls to the "native" library are handled *transparently* by the TDynamicAudioNormalizer class, so again *no* special measures are needed.
+Note that all methods of the <tt>MDynamicAudioNormalizer</tt> class are [*reentrant*](http://en.wikipedia.org/wiki/Reentrancy_%28computing%29), but **not** thread-safe! This means that it *is* safe to use the MDynamicAudioNormalizer class in *multi-threaded* applications, but *only* as long as each thread uses its own separate MDynamicAudioNormalizer instance. In other words, it is *strictly forbidden* to call the *same* MDynamicAudioNormalizer instance *concurrently* from *different* threads. But it *is* admissible to call *different* MDynamicAudioNormalizer instances *concurrently* from *different* threads, provided that each thread will access *only* its own instance. If the *same* MDynamicAudioNormalizer instance needs to be accessed by *different* threads, then the calling *application* is responsible for *serializing* all calls to that MDynamicAudioNormalizer instance, e.g. by means of a Mutex. Otherwise, **undefined behaviour** follows!
+
+#### Language Bindings: ####
+
+Also note that the "native" MDynamicAudioNormalizer application programming interface (API) is provided in the form of a [*C++*](http://en.wikipedia.org/wiki/C%2B%2B) class, which means that *C++* applications can (and should) use the MDynamicAudioNormalizer class directly. In addition to that, [bindings](http://en.wikipedia.org/wiki/Language_binding) for various other programming languages are provided. The [*C99*](http://en.wikipedia.org/wiki/C99) API is provided in the same header file as the *C++* API. There is one *C*-based "wrapper" function for each method of the native *C++* class. These wrapper functions provide the exactly same functionality as the corresponding *C++* methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) needs to be passed around, in order to identify the MDynamicAudioNormalizer instance. The <tt>createInstance()</tt> and <tt>destroyInstance()</tt> functions exist in the *C*-based API only. They replace the *C++* constructor and destructor, respectively.
+
+Furthermore, language bindings for the [*Microsoft.NET*]() platform (*C#*, *VisualBasic.NET*, etc.) as well as for the *[Java](http://en.wikipedia.org/wiki/Java_%28programming_language%29) Runtime Environment* and for [*Object Pascal*](http://en.wikipedia.org/wiki/Object_Pascal) (*Delphi 7.0* or later) are provided. For each of these languages, a suitable "wrapper" class is provided, which exposes the exactly same functions as the native C++ class. Any method call to one of those wrapper classes will be forwarded, *internally*, to the corresponding native method of to the underlying C++ class. Note, however, that any calls to the native Dynamic Audio Normalizer library are handled *transparently* by the individual wrapper class, which means that the application developer will **not** have to worry about interoperability issues. In particular, the wrapper class will take care, *automatically*, of data type mappings as well as of managing the native MDynamicAudioNormalizer instances.
+
+Summary on language bindings:
+
+* *C++* Application → Use the native <tt>MDynamicAudioNormalizer</tt> C++ class *directly*, provided by the <tt>DynamicAudioNormalizerAPI.dll</tt> library, corresponding header file is <tt>DynamicAudioNormalizerAPI.h</tt>
+* *C99*-based Application → Use the C99-based wrapper functions, also provided by the <tt>DynamicAudioNormalizerAPI.dll</tt> library, corresponding header file is <tt>DynamicAudioNormalizerAPI.h</tt>
+* *Microsoft.NET*-based Application → Use the <tt>DynamicAudioNormalizerNET</tt> [C++/CLI](http://en.wikipedia.org/wiki/C%2B%2B/CLI) wrapper class, provided by the <tt>DynamicAudioNormalizerNET.dll</tt> assembly, requires <tt>DynamicAudioNormalizerAPI.dll</tt> at runtime
+* *Java*-based Application → Use the <tt>JDynamicAudioNormalizer</tt> [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) wrapper class, provided by the <tt>DynamicAudioNormalizerJNI.jar</tt> package, requires <tt>DynamicAudioNormalizerAPI.dll</tt> at runtime
+* *Pascal*/*Delphi*-based Application → Use the <tt>TDynamicAudioNormalizer</tt> Object Pascal wrapper class, provided by the <tt>DynamicAudioNormalizer.pas</tt> file, requires <tt>DynamicAudioNormalizerAPI.dll</tt> at runtime
 
 #### Quick Start Guide: ####
+
+The following listing summarizes the steps that an application needs to follow when using the API:
+
 1. Create a new *MDynamicAudioNormalizer* instance.
-2. Call <tt>initialize()</tt> in order to initialize the MDynamicAudioNormalizer instance.
-3. Call <tt>processInplace()</tt> in a loop, until all input samples have been processed.
-4. Call <tt>flushBuffer()</tt> in a loop, until all pending output samples have been flushed.
+2. Call the <tt>initialize()</tt> method, *once*, in order to initialize the MDynamicAudioNormalizer instance.
+3. Call the <tt>processInplace()</tt> method, *in a loop*, until all input samples have been processed.
+4. Call the <tt>flushBuffer()</tt> method, *in a loop*, until all the pending output samples have been flushed.
 5. Destroy the *MDynamicAudioNormalizer* instance.
 
+*Note:* The Dynamic Audio Normalizer library processes audio samples, but it does **not** provide any audio I/O capabilities. Reading or writing the audio samples from or to an audio file is up to the application. A library like [libsndfile](http://www.mega-nerd.com/libsndfile/) may be helpful.
+
 #### Function Reference: ####
+
 * [MDynamicAudioNormalizer – Constructor](#chap_api.constructor)
 * [MDynamicAudioNormalizer – Destructor](#chap_api.destructor)
 * [MDynamicAudioNormalizer::initialize()](#chap_api.initialize)
@@ -585,10 +608,11 @@ Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
 ### Version 2.07 (2014-10-??) ###
-* Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can be used in Java-based  applications
-* Implemented [Pascal](http://en.wikipedia.org/wiki/Object_Pascal) API → Dynamic Audio Normalizer can be used in Pascal/Delphi applications
-* Added new <tt>getConfiguration()</tt> API, which can be used to get the current configuration
-* Fixed a bug that caused the progression of the gain values to be less "smooth" than it ought to be
+* Implemented [.NET](http://en.wikipedia.org/wiki/.NET_Framework) API → Dynamic Audio Normalizer can be used in, e .g., *C#*-based applications
+* Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can be used in *Java*-based  applications
+* Implemented [Pascal](http://en.wikipedia.org/wiki/Object_Pascal) API → Dynamic Audio Normalizer can be used in *Pascal*-based applications
+* Core library: Added new <tt>getConfiguration()</tt> API to retrieve the *active* configuration params
+* Core library: Fixed a bug that caused the gain factors to *not* progress as "smoothly" as intended
 
 ### Version 2.06 (2014-09-22) ###
 * Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used as Winamp plug-in
