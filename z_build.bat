@@ -192,32 +192,6 @@ for %%c in (DLL, Static) do (
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
-REM // Attributes
-REM ///////////////////////////////////////////////////////////////////////////
-for %%c in (DLL, Static) do (
-	attrib +R "%PACK_PATH%\%%c\*.exe"
-	attrib +R "%PACK_PATH%\%%c\*.html"
-	attrib +R "%PACK_PATH%\%%c\*.dll"
-	attrib +R "%PACK_PATH%\%%c\*.jar"
-	attrib +R "%PACK_PATH%\%%c\*.lib"
-	attrib +R "%PACK_PATH%\%%c\x64\*.dll"
-	attrib +R "%PACK_PATH%\%%c\x64\*.lib"
-)
-
-REM ///////////////////////////////////////////////////////////////////////////
-REM // Generate outfile name
-REM ///////////////////////////////////////////////////////////////////////////
-mkdir "%~dp0\out" 2> NUL
-set "OUT_NAME=DynamicAudioNormalizer.%ISO_DATE%"
-:CheckOutName
-for %%c in (DLL, Static) do (
-	if exist "%~dp0\out\%OUT_NAME%.%%c.zip" (
-		set "OUT_NAME=%OUT_NAME%.new"
-		goto CheckOutName
-	)
-)
-
-REM ///////////////////////////////////////////////////////////////////////////
 REM // Create version tag
 REM ///////////////////////////////////////////////////////////////////////////
 echo Dynamic Audio Normalizer >                                                                      "%PACK_PATH%\BUILD_TAG"
@@ -237,6 +211,29 @@ echo This library is distributed in the hope that it will be useful, >>         
 echo but WITHOUT ANY WARRANTY; without even the implied warranty of >>                               "%PACK_PATH%\BUILD_TAG"
 echo MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU >>                            "%PACK_PATH%\BUILD_TAG"
 echo Lesser General Public License for more details. >>                                              "%PACK_PATH%\BUILD_TAG"
+
+REM ///////////////////////////////////////////////////////////////////////////
+REM // Attributes
+REM ///////////////////////////////////////////////////////////////////////////
+for %%c in (DLL, Static) do (
+	attrib +R "%PACK_PATH%\%%c\*"
+	attrib +R "%PACK_PATH%\%%c\x64\*"
+	attrib +R "%PACK_PATH%\%%c\include\*"
+	attrib +R "%PACK_PATH%\%%c\img\*"
+)
+
+REM ///////////////////////////////////////////////////////////////////////////
+REM // Generate outfile name
+REM ///////////////////////////////////////////////////////////////////////////
+mkdir "%~dp0\out" 2> NUL
+set "OUT_NAME=DynamicAudioNormalizer.%ISO_DATE%"
+:CheckOutName
+for %%c in (DLL, Static) do (
+	if exist "%~dp0\out\%OUT_NAME%.%%c.zip" (
+		set "OUT_NAME=%OUT_NAME%.new"
+		goto CheckOutName
+	)
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Build the package
