@@ -588,21 +588,27 @@ void LogFunction(
 Source Code <a name="chap_src"></a>
 -------------------------------------------------------------------------------
 
-The source code of the Dynamic Audio Normalizer is available from one of the official [Git](http://git-scm.com/) repository mirrors:
+The source code of the Dynamic Audio Normalizer is available from one of the official [**Git**](http://git-scm.com/) repository mirrors:
 * <tt>https://github.com/lordmulder/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
 * <tt>https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
 * <tt>https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
 * <tt>https://git.assembla.com/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://www.assembla.com/code/dynamicaudionormalizer/git/nodes))
+* <tt>https://muldersoft.codebasehq.com/dynamicaudionormalizer/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://muldersoft.codebasehq.com/changelog/dynamicaudionormalizer/dynamicaudionormalizer))
 
 ### Supported build environments: ###
 * Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
-* Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.04.1 LTS*](http://releases.ubuntu.com/14.04.1/)
+* Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.10*](https://ubuntu-mate.org/download/)
 
 ### Build prerequisites: ###
-* [*libsndfile*](http://www.mega-nerd.com/libsndfile/) is required for building the command-line program
-* [*Qt 4.x*](http://qt-project.org/) is required for building the log viewer program
-* [*VST SDK v2.4*](http://www.steinberg.de/en/company/developer.html) is required for building the VST plug-in (it is still included in the current v3.x SDK!)
-* [*Pandoc*](http://johnmacfarlane.net/pandoc/) is required for generating the documentation (HTML)
+* [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
+* [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
+* [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
+* [*Ant*](http://ant.apache.org/), by Apache Software Foundation, is required for building the JNI bindings (recommended version: 1.9.x)
+* [*Java Develpment Kit (JDK)*](http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html), by Oracle, is required for building the JNI bindings (recommended version: JDK 8)
+* [*VST SDK v2.4*](http://www.steinberg.de/en/company/developer.html), by Steinberg GmbH, is required for building the VST plug-in (it's still included in the VST 3.x SDK!)
+* [*Winamp SDK*](http://forums.winamp.com/showthread.php?t=252090), by Nullsoft Inc, is required for building the Winamp plug-in (recommended version: 5.55)
+* [*Pandoc*](http://johnmacfarlane.net/pandoc/), by  John MacFarlane, is required for generating the HTML documentation
+* [*UPX*](http://upx.sourceforge.net/), by Markus Franz Xaver Johannes Oberhumer et al., is required for "packing" the libraries/executables
 
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
