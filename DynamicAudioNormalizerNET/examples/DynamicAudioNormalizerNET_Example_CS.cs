@@ -107,7 +107,7 @@ namespace DynamicAudioNormalizer_Example
             try
             {
                 String version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                Console.WriteLine("DynamicAudioNormalizer.NET Example Program [{0}]\n", version);
+                Console.WriteLine("DynamicAudioNormalizer.NET C# Example [{0}]\n", version);
                 runTest();
                 GC.WaitForPendingFinalizers();
             }

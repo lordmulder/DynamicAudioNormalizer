@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("DynamicAudioNormalizer.NET Example")]
 [assembly: AssemblyDescription("DynamicAudioNormalizer.NET Example")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("FSF")]
 [assembly: AssemblyProduct("DynamicAudioNormalizer.NET")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCopyright("Copyright © LoRd_MuldeR 2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
