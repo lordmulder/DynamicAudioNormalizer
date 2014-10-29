@@ -594,6 +594,7 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 * <tt>https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git</tt> &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
 * <tt>https://git.assembla.com/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://www.assembla.com/code/dynamicaudionormalizer/git/nodes))
 * <tt>https://muldersoft.codebasehq.com/dynamicaudionormalizer/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://muldersoft.codebasehq.com/changelog/dynamicaudionormalizer/dynamicaudionormalizer))
+* <tt>https://repo.or.cz/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](http://repo.or.cz/w/DynamicAudioNormalizer.git))
 
 ### Supported build environments: ###
 * Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
