@@ -614,7 +614,7 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 Changelog <a name="chap_log"></a>
 -------------------------------------------------------------------------------
 
-### Version 2.07 (2014-10-??) ###
+### Version 2.07 (2014-11-01) ###
 * Implemented [.NET](http://en.wikipedia.org/wiki/.NET_Framework) API → Dynamic Audio Normalizer can be used in, e .g., *C#*-based applications
 * Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can be used in *Java*-based  applications
 * Implemented [Pascal](http://en.wikipedia.org/wiki/Object_Pascal) API → Dynamic Audio Normalizer can be used in *Pascal*-based applications
