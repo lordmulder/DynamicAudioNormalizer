@@ -105,7 +105,7 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.vb" />
+    <Compile Include="Properties\AssemblyInfo.vb" />
     <Compile Include="DynamicAudioNormalizerNET_Example_VB.vb" />
   </ItemGroup>
   <ItemGroup>
