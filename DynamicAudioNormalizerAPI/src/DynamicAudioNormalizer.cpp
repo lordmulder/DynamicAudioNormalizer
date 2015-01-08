@@ -589,7 +589,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 		LOG1_WRN("No all input samples could be processed -> discarding pending input!");
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -625,22 +625,27 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 		return true; /*no pending samples left*/
 	}
 
-	for(uint32_t c = 0; c < m_channels; c++)
+	bool success = false;
+	do
 	{
-		for(uint32_t i = 0; i < pendingSamples; i++)
+		for(uint32_t c = 0; c < m_channels; c++)
 		{
-			samplesOut[c][i] = m_altBoundaryMode ? DBL_EPSILON : ((m_targetRms > DBL_EPSILON) ? std::min(m_peakValue, m_targetRms) : m_peakValue);
-			if(m_enableDCCorrection)
+			for(uint32_t i = 0; i < pendingSamples; i++)
 			{
-				samplesOut[c][i] *= ((i % 2) == 1) ? (-1) : 1;
-				samplesOut[c][i] += m_dcCorrectionValue[c];
+				samplesOut[c][i] = m_altBoundaryMode ? DBL_EPSILON : ((m_targetRms > DBL_EPSILON) ? std::min(m_peakValue, m_targetRms) : m_peakValue);
+				if(m_enableDCCorrection)
+				{
+					samplesOut[c][i] *= ((i % 2) == 1) ? (-1) : 1;
+					samplesOut[c][i] += m_dcCorrectionValue[c];
+				}
 			}
 		}
+
+		success = processInplace(samplesOut, pendingSamples, outputSize, true);
 	}
+	while(success && (outputSize <= 0));
 
-	const bool success = processInplace(samplesOut, pendingSamples, outputSize, true);
-
-	if(success)
+	if(success && (outputSize > 0))
 	{
 		m_delayedSamples -= outputSize;
 	}

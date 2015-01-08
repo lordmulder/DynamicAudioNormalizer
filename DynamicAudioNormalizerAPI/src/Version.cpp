@@ -24,7 +24,7 @@
 //Version info
 const unsigned int DYNAUDNORM_VERSION_MAJOR = 2;
 const unsigned int DYNAUDNORM_VERSION_MINOR = 7;
-const unsigned int DYNAUDNORM_VERSION_PATCH = 3;
+const unsigned int DYNAUDNORM_VERSION_PATCH = 4;
 
 //Build date/time
 const char* DYNAUDNORM_BUILD_DATE = __DATE__;
@@ -58,6 +58,8 @@ const char* DYNAUDNORM_BUILD_TIME = __TIME__;
 			const char *DYNAUDNORM_COMPILER = "MSVC 2013.2";
 		#elif (_MSC_FULL_VER == 180030723)
 			const char *DYNAUDNORM_COMPILER = "MSVC 2013.3";
+		#elif (_MSC_FULL_VER == 180031101)
+			const char *DYNAUDNORM_COMPILER = "MSVC 2013.4";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
