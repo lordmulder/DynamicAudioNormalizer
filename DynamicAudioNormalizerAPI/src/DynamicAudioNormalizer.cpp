@@ -530,7 +530,11 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 			inputPos         += copyLen;
 			inputSamplesLeft -= copyLen;
 			outputBufferLeft += copyLen;
-			m_delayedSamples += copyLen;
+
+			if(!bFlush)
+			{
+				m_delayedSamples += copyLen;
+			}
 		}
 
 		//Analyze next input frame, if we have enough input
@@ -644,11 +648,6 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 		success = processInplace(samplesOut, pendingSamples, outputSize, true);
 	}
 	while(success && (outputSize <= 0));
-
-	if(success && (outputSize > 0))
-	{
-		m_delayedSamples -= outputSize;
-	}
 	
 	return success;
 }
