@@ -1,29 +1,15 @@
-Dynamic Audio Normalizer
-===============================================================================
+% Dynamic Audio Normalizer
+% Created by LoRd_MuldeR &lt;<mulder2@gmx>&gt; &ndash; Please check <http://muldersoft.com/> for news and updates!
 
-<small>Created by LoRd_MuldeR <<mulder2@gmx>></tt> – Please check http://muldersoft.com/ for news and updates!</small>
+
+# Introduction #
 
 **Dynamic Audio Normalizer** is a library for *advanced* [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization) purposes. It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" sections of the audio while avoiding distortions or clipping the "loud" sections. In other words: The volume of the "quiet" and the "loud" sections will be *harmonized*, in the sense that the volume of each section is brought to the same level. Note, however, that the Dynamic Audio Normalizer achieves this goal *without* applying "dynamic range compressing" in the classical sense. It will retain 100% of the dynamic range *within* each section of the audio file.
 
 The *Dynamic Audio Normalizer* is available as a small standalone [command-line](http://en.wikipedia.org/wiki/Command-line_interface) utility and also as an effect in the [SoX](http://sox.sourceforge.net/) audio processor application. Furthermore, it can be integrated into your favourite DAW (digital audio workstation), as a [VST](http://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in, or into your favourite media player, as a [Winamp](http://www.winamp.com/) plug-in. Last but not least, the "core" library can be integrated into custom applications easily, thanks to a straightforward [API](http://en.wikipedia.org/wiki/Application_programming_interface) (application programming interface). The "native" API is written in *C++*, but language [bindings](http://en.wikipedia.org/wiki/Language_binding) for *C99*, *Microsoft.NET*, *Java* and *Pascal* are provided.
 
-### Contents: ###
-1.  [How It Works](#chap_how)
-2.  [Package Contents](#chap_pkg)
-3.  [Command-Line Usage](#chap_cli)
-4.  [VST Plug-In Usage](#chap_vst)
-5.  [Winamp Plug-In Usage](#chap_wa5)
-6.  [Configuration](#chap_cfg)
-7.  [API Documentation](#chap_api)
-8.  [Source Code](#chap_src)
-9.  [Changelog](#chap_log)
-10.  [Frequently Asked Questions](#chap_faq)
-11. [License Terms](#chap_lic)
-12. [Acknowledgement](#chap_ack)
 
-
-How It Works<a name="chap_how"></a>
--------------------------------------------------------------------------------
+# How It Works #
 
 The "standard" audio normalization algorithm applies the same *constant* amount of gain to *all* samples in the file. Consequently, the gain factor must be chosen in a way that won't cause clipping/distortion – even for the input sample that has the highest magnitude. So if <tt>S_max</tt> denotes the highest magnitude sample in the input audio and <tt>Peak</tt> is the desired peak magnitude, then the gain factor will be chosen as <tt>G=Peak/abs(S_max)</tt>. This works fine, as long as the volume of the input audio remains constant, more or less, all the time. If, however, the volume of the input audio varies significantly over time – as is the case with many "real world" recordings – the standard normalization algorithm will *not* give satisfying result. That's because the "loud" parts can *not* be amplified any further (without distortions) and thus the "quiet" parts will remain quiet too.
 
@@ -37,57 +23,51 @@ One more subject to consider is that applying the Gaussian smoothing kernel alon
 
 The following example shows the results form a "real world" audio recording that has been processed by the Dynamic Audio Normalizer. The chart shows the maximum local gain factors for each individual frame (blue) as well as the minimum filtered gain factors (green) and the final smoothend gain factors (orange). Note how smooth the progression of the final gain factors is, while approaching the maximum local gain factors as closely as possible. Also note how the smoothend gain factors *never* exceed the maximum local gain factor in order to avoid distortions.
 
-![Chart](img/Chart.png "Dynamic Audio Normalizer – Example")  
-<small>**Figure 1:** Progression of the gain factors for each audio frame.</small>  
-<br>
+![Progression of the gain factors for each audio frame](img/Chart.png)
 
 So far it has been discussed how the optimal gain factor for each frame is determined. However, since each frame contains a large number of samples – at a typical sampling rate of 44,100 Hz and a standard frame size of 500 milliseconds we have 22,050 samples per frame – it is also required to infer the gain factor for each individual sample in the frame. The most simple approach, of course, is applying the *same* gain factor to *all* samples in the certain frame. But this would lead to abrupt changes of the gain factor at each frame boundary, while the gain factor remains constant within the frames. A better approach, as implemented in the Dynamic Audio Normalizer, is interpolating the per-sample gain factors. In particular, the Dynamic Audio Normalizer applies a *linear interpolation* in order to compute the gain factors for the samples inside the <tt>n</tt>-th frame from the gain factors <tt>G'[n-1]</tt>, <tt>G'[n]</tt> and <tt>G'[n+1]</tt>, where <tt>G'[k]</tt> denotes the *final* gain factor for the <tt>k</tt>-th frame. The following graph shows how the per-sample gain factors (orange) are interpolated from the gain factors of the preceding (green), current (blue) and subsequent (purple) frame.
 
-![Interpolation](img/Interpolation.png "Dynamic Audio Normalizer – Interpolation")  
-<small>**Figure 2:** Linear interpolation of the per-sample gain factors.</small>  
-<br>
+![Linear interpolation of the per-sample gain factors](img/Interpolation.png)
 
 Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper graph shows the unprocessed original recording while the lower graph shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified to a great extent, while retaining the dynamics of the input and avoiding clipping or distortion.
 
-![Waveform1](img/Waveform-1.png "Dynamic Audio Normalizer – Example")  
-![Waveform2](img/Waveform-2.png "Dynamic Audio Normalizer – Example")  
-<small>**Figure 3:** Waveform before and after processing with the Dynamic Audio Normalizer.</small>
+![Waveform *before* processing with the Dynamic Audio Normalizer](img/Waveform-1.png)
+
+![Waveform *after* processing with the Dynamic Audio Normalizer](img/Waveform-2.png)
 
 
-Package Contents <a name="chap_pkg"></a>
--------------------------------------------------------------------------------
+# Package Contents #
 
 The following files are included in the Dynamic Audio Normalizer release package:
 
-```
-DynamicAudioNormalizerCLI.exe - Dynamic Audio Normalizer command-line application
-DynamicAudioNormalizerGUI.exe - Dynamic Audio Normalizer log viewer application
-DynamicAudioNormalizerSoX.exe - SoX binary with included Dynamic Audio Normalizer effect
-DynamicAudioNormalizerAPI.dll - Dynamic Audio Normalizer core library
-DynamicAudioNormalizerVST.dll - Dynamic Audio Normalizer VST wrapper library
-DynamicAudioNormalizerAPI.lib - Import library for the Dynamic Audio Normalizer library
-DynamicAudioNormalizerNET.dll - .NET wrapper for the Dynamic Audio Normalizer library
-DynamicAudioNormalizerJNI.jar - Java wrapper for the Dynamic Audio Normalizer library
-DynamicAudioNormalizer.pas    - Pascal wrapper for the Dynamic Audio Normalizer library
-DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
-msvcp120.dll                  - Visual C++ 2013 runtime library
-msvcr120.dll                  - Visual C++ 2013 runtime library
-libsndfile-1.dll              - libsndfile library, used for reading/writing audio files
-pthreadVC2.dll                - POSIX threading library, used for thread management
-QtCore4.dll                   - Qt library, used to create the graphical user interfaces
-QtGui4.dll                    - Qt library, used to create the graphical user interfaces
-README.html                   - The README file
-```
+	DynamicAudioNormalizerCLI.exe - Dynamic Audio Normalizer command-line application
+	DynamicAudioNormalizerGUI.exe - Dynamic Audio Normalizer log viewer application
+	DynamicAudioNormalizerSoX.exe - SoX binary with included Dynamic Audio Normalizer effect
+	DynamicAudioNormalizerAPI.dll - Dynamic Audio Normalizer core library
+	DynamicAudioNormalizerVST.dll - Dynamic Audio Normalizer VST wrapper library
+	DynamicAudioNormalizerAPI.lib - Import library for the Dynamic Audio Normalizer library
+	DynamicAudioNormalizerNET.dll - .NET wrapper for the Dynamic Audio Normalizer library
+	DynamicAudioNormalizerJNI.jar - Java wrapper for the Dynamic Audio Normalizer library
+	DynamicAudioNormalizer.pas    - Pascal wrapper for the Dynamic Audio Normalizer library
+	DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
+	msvcp120.dll                  - Visual C++ 2013 runtime library
+	msvcr120.dll                  - Visual C++ 2013 runtime library
+	libsndfile-1.dll              - libsndfile library, used for reading/writing audio files
+	pthreadVC2.dll                - POSIX threading library, used for thread management
+	QtCore4.dll                   - Qt library, used to create the graphical user interfaces
+	QtGui4.dll                    - Qt library, used to create the graphical user interfaces
+	README.html                   - The README file
 
-<small>**Note:** Standard binaries are *32-Bit* (x86), though *64-Bit* (AMD64/Intel64) versions can be found in the "x64" sub-directory.</small>
+**Note:** Standard binaries are *32-Bit* (x86), though *64-Bit* (AMD64/Intel64) versions can be found in the "x64" sub-directory.
 
 
-Command-Line Usage <a name="chap_cli"></a>
--------------------------------------------------------------------------------
+
+# Command-Line Usage #
 
 Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface) (CLI), either *manually* from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or *automatically* by a [batch](http://en.wikipedia.org/wiki/Batch_file) file.
 
-### Basic CLI syntax: ###
+
+## Basic Command-Line Syntax ##
 
 The basic Dynamic Audio Normalizer command-line syntax is as follows:  
 <tt>DynamicAudioNormalizerCLI.exe -i &lt;input_file&gt; -o &lt;output_file&gt; [options]</tt>
@@ -100,7 +80,8 @@ Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%
 
 For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> from the command prompt. Also see to the [**configuration**](#chap_cfg) chapter for more details!
 
-### Usage examples: ###
+
+## Command-Line Usage Examples ##
 
 * Read input from Wave file and write output to a Wave file again:  
   <tt>DynamicAudioNormalizerCLI.exe -i "in_original.wav" -o "out_normalized.wav"</tt>
@@ -111,7 +92,8 @@ For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.
 * Read input from Wave file and write output to *stdout* (output is passed to [FFmpeg](http://ffmpeg.org/about.html) via pipe):  
   <tt>DynamicAudioNormalizerCLI.exe -i "input.wav" -o **-** **|** ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i **-** -c:a libmp3lame -qscale:a 2 "output.mp3"</tt>
 
-### SoX integration: ###
+
+## SoX Integration Usage ##
 
 As an alternative to the Dynamic Audio Normalizer command-line front-end, the Dynamic Audio Normalizer library may also be used as an effect in [*Sound eXchange* (SoX)](http://sox.sourceforge.net/), a versatile audio editor and converter.
 
@@ -123,8 +105,8 @@ When working with SoX, the Dynamic Audio Normalizer can be invoked by adding the
 For details about the SoX command-line syntax, please refer to the [SoX documentation](http://sox.sourceforge.net/sox.html), or type <tt>DynamicAudioNormalizerSoX.exe --help-effect dynaudnorm</tt> for a list of available options.
 
 
-VST Plug-In Usage<a name="chap_vst"></a>
--------------------------------------------------------------------------------
+
+# VST Plug-In Usage #
 
 <small>**VST PlugIn Interface Technology by Steinberg Media Technologies GmbH. VST is a trademark of Steinberg Media Technologies GmbH.**</small>
 
@@ -132,21 +114,21 @@ VST Plug-In Usage<a name="chap_vst"></a>
 
 The Dynamic Audio Normalizer is also available in the form of a [**VST** (Virtual Studio Technology) plug-in](http://en.wikipedia.org/wiki/Virtual_Studio_Technology). The VST plug-in interface technology, developed by Steinberg Media Technologies, provides a way of integrating arbitrary audio effects (and instruments) into arbitrary applications – provided that the audio effect is available in the form of a VST plug-in and provided that the application supports "hosting" VST plug-ins. An application capable of loading and using VST plug-ins is referred to as a *VST host*. This means that the Dynamic Audio Normalizer can be used as an effect in *any* VST host. Note that VST is widely supported in [DAWs (Digital Audio Workstations)](http://en.wikipedia.org/wiki/Digital_audio_workstation) nowadays, including most of the popular Wave Editors. Therefore, the provided Dynamic Audio Normalizer VST plug-in can be integrated into all of these applications easily. Note that most VST hosts provide a graphical user interface to configure the VST plug-in. The screen capture below shows the Dynamic Audio Normalizer as it appears in the *Acoustica* software by Acon AS. The options exposed by the VST plug-in are identical to those exposed by the [CLI](#chap_cli) version.
 
-![FilterSize](img/VSTPlugInConf.png "Dynamic Audio Normalizer – VST Plug-In")  
-<small>**Figure 4:** The Dynamic Audio Normalizer *VST Plug-In* interface (in Acoustica 6.0, Copyright © 2014 Acon AS).</small>
+![The Dynamic Audio Normalizer *VST Plug-In* interface (in Acoustica 6.0, Copyright © 2014 Acon AS)](img/VSTPlugInConf.png)
 
-### Install Instructions ###
+
+## Install Instructions ##
 
 The exact steps that are required to load, activate and configure a VST plug-in differ from application to application. However, it will generally be required to make the application "recognize" the new VST plug-in, i.e. <tt>DynamicAudioNormalizerVST.dll</tt> first. Most applications will either pick up the VST plug-in from the *global* VST directory – usually located at <tt>C:\Program Files (x86)\Steinberg\Vstplugins</tt> on Windows – or provide an option to choose the directory from where to load the VST plug-in. This means that, depending on the individual application, you will either need to copy the Dynamic Audio Normalizer VST plug-in into the *global* VST directory *or* tell the application where the Dynamic Audio Normalizer VST plug-in is located. Note that, with some applications, it may also be required to *explicitly* scan for new VST pluig-ins. See the manual for details! The screen capture bellow shows the situation in the *Acoustica 6.0* software by Acon AS. Here we simply open the "VST Directories" dialogue from the "Plug-Ins" menu, then *add* the Dynamic Audio Normalizer directory and finally click "OK".
 
-![FilterSize](img/VSTPlugInDirs.png "Dynamic Audio Normalizer – VST Plug-In")  
-<small>**Figure 5:** Setting up the new *VST Plug-In* directory (in Acoustica 6.0, Copyright © 2014 Acon AS).</small>
+![Setting up the new *VST Plug-In* directory (in Acoustica 6.0, Copyright © 2014 Acon AS)](img/VSTPlugInDirs.png "Dynamic Audio Normalizer – VST Plug-In")
 
 Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the VST plug-in DLL, i.e. <tt>DynamicAudioNormalizerVST.dll</tt>, also requires the Dynamic Audio Normalizer *core* library, i.e. <tt>DynamicAudioNormalizerAPI.dll</tt>. This means that the *core* library **must** be made available to the VST host *in addition* to the VST plug-in itself. Otherwise, loading the VST plug-in DLL is going to fail! Copying the *core* library to the same directory, where the VST plug-in DLL, is located generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the <tt>DynamicAudioNormalizerAPI.dll</tt> file into the same directory where the VST host's "main" executable (EXE file) is located.
 
 **Important:** Please note that Dynamic Audio Normalizer VST plug-in uses the VST interface version 2.x, which is the most widely supported VST version at this time. VST interface version 3.x is *not* currently used, supported or required. Also note that *32-Bit* (x86) VST host application can <u>only</u> work with *32-Bit* VST plug-ins and, similarly, *64-Bit* (AMD64/Intel64) VST host application can <u>only</u> work with *64-Bit* VST plug-ins. Depending on the "bitness" of your individual VST host application, always the suitable VST plug-in DLL file, 32- or 64-Bit, must be chosen!
 
-### Known VST Limitations ###
+
+## Known VST Limitations ##
 
 The algorithm used by the Dynamic Audio Normalizer uses a "look ahead" buffer. This necessarily requires that – at the beginning of the process – we read a certain minimum number of *input* samples <u>before</u> the first *output* samples can be computed. With a more flexible effect interface, like the one used by [SoX](http://sox.sourceforge.net/), the plug-in could request as many input samples from the host application as required, before it starts returning output samples. The *VST* interface, however, is rather limited in this regard: VST *enforces* that the plug-in process the audio in small chunks. The size of these chunks is *dictated* by the host application. Furthermore, VST *enforces* that the plug-in returns the corresponding output samples for each chunk of audio data *immediately* – the VST host won't provide the next chunk of input samples until the VST plug-in has returned the output samples for the previous chunk. To the best of our knowledge, there is **no** way to request even more input samples from the VST host! Consequently, the **only** known way to realize a "look ahead" buffer with VST is actually <u>delaying</u> all audio samples and returning some "silent" samples at the beginning.
 
@@ -154,7 +136,8 @@ At least, VST provides the VST plug-in with a method to *report* its delay to th
 
 The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host application. Thus, if you encounter shifted and/or truncated audio after the processing, this means that there is a **bug** in the VST host application. And, sadly, the plug-in can do absolutely *nothing* about this. Below, there is a non-exhaustive list of audio editors with *proper* VST support. Those have been tested to work correctly. There also is a list of audio editors with *known problems*. Those should **not** be used for VST processing, until the respective developers have fixed the issue…
 
-### Supported VST Hosts ###
+
+## Supported VST Hosts ##
 
 Non-exhaustive list of VST hosts that have been tested to *work correctly* with the Dynamic Audio Normalizer VST plug-in:
 
@@ -182,7 +165,8 @@ Non-exhaustive list of VST hosts that have been tested to *work correctly* with 
 
 *<u>Disclaimer:</u> There is absolutely **no** guarantee for the currentness and/or correctness of the above information!*
 
-### Problematic VST Hosts ###
+
+## Problematic VST Hosts ##
 
 List of VST hosts that have *known problems* and do **not** work correctly with VST plug-ins, such as the Dynamic Audio Normalizer:
 
@@ -215,15 +199,15 @@ List of VST hosts that have *known problems* and do **not** work correctly with 
 *If you are the developer of one of these tools and you fixed the problem already, then please let us know…*
 
 
-Winamp Plug-In Usage<a name="chap_wa5"></a>
--------------------------------------------------------------------------------
+
+# Winamp Plug-In Usage #
 
 The Dynamic Audio Normalizer is also available in the form of a **DSP/Effect** plug-in for [Winamp](http://www.winamp.com/), the popular media player created by Nullsoft. This way, the Dynamic Audio Normalizer can be applied to your audio files during playback, in *real-time*.
 
-![FilterSize](img/WAPlugIn.png "Dynamic Audio Normalizer – Winamp Plug-In")  
-<small>**Figure 6:** The Winamp DSP/Effect plug-in (Winamp is Copyright © 1997-2013 Nullsoft, Inc).</small>
+![The Winamp DSP/Effect plug-in (Winamp is Copyright © 1997-2013 Nullsoft, Inc)](img/WAPlugIn.png)
 
-### Install Instructions ###
+
+## Install Instructions ##
 
 If you have **not** installed the *latest* version of Winamp 5.x yet, please update your Winamp installation first. You can download the *latest* version from [here](http://forums.winamp.com/showpost.php?p=2984799&postcount=2) or [here](http://www.videohelp.com/tools/Winamp). Older versions are generally *not* recommended! Once the *latest* version of Winamp 5.x is installed, simply copy the provided Winamp plug-in file <tt>DynamicAudioNormalizerWA5.dll</tt> into the directory for Winamp *DSP/Effect* plug-ins. By default, that is the sub-directory <tt>Plugins</tt> *inside* your Winamp installation directory. So, if Winamp was installed at <tt>C:\Program Files (x86)\Winamp</tt>, the *default* plug-in directory would be <tt>C:\Program Files (x86)\Winamp\Plugins</tt>. If you have installed Winamp to a *different* directory or if you have changed the plug-in directory to a *different* location (see the Winamp "Perferences" dialogue), then please adjust the path accordingly!
 
@@ -231,117 +215,108 @@ Note that copying the plug-in DLL into the <tt>Plugins</tt> directory may requir
 
 Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the Winamp plug-in DLL also requires the Dynamic Audio Normalizer *core* library, i.e. <tt>DynamicAudioNormalizerAPI.dll</tt>. This means that the *core* library **must** be made available to Winamp *in addition* to the DSP/Effect plug-in itself. Otherwise, loading the DSP/Effect plug-in DLL is going to fail! Though, copying the *core* library to the same directory, where the plug-in DLL is located, i.e. the <tt>Plugins</tt> directory, generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the <tt>DynamicAudioNormalizerAPI.dll</tt> file into the same directory where the Winamp "main" executable (EXE file) is located.
 
-### Knwon Limitations ###
+
+## Knwon Limitations ##
 
 The Dynamic Audio Normalizer plug-in for Winamp does *not* provide a configuration dialogue yet, so always the *default* settings are used. This will be addressed in a futrure version.
 
 
-Configuration <a name="chap_cfg"></a>
--------------------------------------------------------------------------------
+
+# Configuration #
 
 This chapter describes the configuration options that can be used to tweak the behaviour of the Dynamic Audio Normalizer.
 
 While the default parameter of the Dynamic Audio Normalizer have been chosen to give satisfying results with a wide range of audio sources, it can be advantageous to adapt the parameters to the individual audio file as well as to your personal preferences. 
 
-#### Options: ####
-* [Gaussian Filter Window Size](#chap_cfg.g)
-* [Target Peak Magnitude](#chap_cfg.p)
-* [Channel Coupling](#chap_cfg.n)
-* [DC Bias Correction](#chap_cfg.c)
-* [Maximum Gain Factor](#chap_cfg.m)
-* [Target RMS Value](#chap_cfg.r)
-* [Frame Length](#chap_cfg.f)
-* [Boundary Mode](#chap_cfg.b)
-* [Input Compression](#chap_cfg.s)
-* [Write Log File](#chap_cfg.l)
 
-### Gaussian Filter Window Size <a name="chap_cfg.g"></a> ###
+## Gaussian Filter Window Size ##
 
 Probably the most important parameter of the Dynamic Audio Normalizer is the "window size" of the Gaussian smoothing filter. It can be controlled with the **<tt>--gauss-size</tt>** option. The filter's window size is specified in *frames*, centered around the current frame. For the sake of simplicity, this must be an *odd* number. Consequently, the default value of **31** takes into account the current frame, as well as the *15* preceding frames and the *15* subsequent frames. Using a *larger* window results in a *stronger* smoothing effect and thus in *less* gain variation, i.e. slower gain adaptation. Conversely, using a *smaller* window results in a *weaker* smoothing effect and thus in *more* gain variation, i.e. faster gain adaptation. In other words, the more you *increase* this value, the more the Dynamic Audio Normalizer will behave like a "traditional" normalization filter. On the contrary, the more you *decrease* this value, the more the Dynamic Audio Normalizer will behave like a dynamic range compressor. The following graph illustrates the effect of different filter sizes – *11* (orange), *31* (green), and *61* (purple) frames – on the progression of the final filtered gain factor.
 
-![FilterSize](img/FilterSize.png "Dynamic Audio Normalizer – Filter Size Effects")  
-<small>**Figure 7:** The effect of different "window sizes" of the Gaussian smoothing filter.</small>
+![The effect of different "window sizes" of the Gaussian smoothing filter](img/FilterSize.png)
 
-### Target Peak Magnitude <a name="chap_cfg.p"></a> ###
+
+## Target Peak Magnitude ##
 
 The target peak magnitude specifies the highest permissible magnitude level for the *normalized* audio file. It is controlled by the **<tt>--peak</tt>** option. Since the Dynamic Audio Normalizer represents audio samples as floating point values in the *-1.0* to *1.0* range – regardless of the input and output audio format – this value must be in the *0.0* to *1.0* range. Consequently, the value *1.0* is equal to [0 dBFS](http://en.wikipedia.org/wiki/DBFS), i.e. the maximum possible digital signal level (± 32767 in a 16-Bit file). The Dynamic Audio Normalizer will try to approach the target peak magnitude as closely as possible, but at the same time it also makes sure that the normalized signal will *never* exceed the peak magnitude. A frame's maximum local gain factor is imposed directly by the target peak magnitude. The default value is **0.95** and thus leaves a [headroom](http://en.wikipedia.org/wiki/Headroom_%28audio_signal_processing%29) of *5%*. It is **not** recommended to go *above* this value!
 
-### Channel Coupling <a name="chap_cfg.n"></a> ###
+
+## Channel Coupling ##
 
 By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the <tt>n</tt>-th frame is defined as <tt>S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])</tt>, where <tt>s_max[n][k]</tt> denotes the highest magnitude sample in the <tt>k</tt>-th channel and <tt>C</tt> is the channel count. The gain factor for *all* channels is then derived from <tt>S_max[n]</tt>. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **<tt>--no-coupling</tt>** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel <tt>k</tt>, depending only on the individual channel's highest magnitude sample <tt>s_max[n][k]</tt>. This allows for harmonizing the volume of the different channels. The following wave view illustrates the effect of channel coupling: It shows an input file with *uneven* channel volumes (left), the same file after normalization with channel coupling *enabled* (center) and again after normalization with channel coupling *disabled* (right).
 
-![Coupling](img/Coupling.png "Dynamic Audio Normalizer – Coupling Effects")  
-<small>**Figure 8** The effect of *channel coupling*.</small>
+![The effect of *channel coupling*](img/Coupling.png)
 
-### DC Bias Correction <a name="chap_cfg.c"></a> ###
+
+## DC Bias Correction##
 
 An audio signal (in the time domain) is a sequence of sample values. In the Dynamic Audio Normalizer these sample values are represented in the *-1.0* to *1.0* range, regardless of the original input format. Normally, the audio signal, or "waveform", should be centered around the *zero point*. That means if we calculate the *mean* value of all samples in a file, or in a single frame, then the result should be *0.0* or at least very close to that value. If, however, there is a significant deviation of the mean value from *0.0*, in either positive or negative direction, this is referred to as a [*DC bias*](http://en.wikipedia.org/wiki/DC_bias) or *DC offset*. Since a DC bias is clearly undesirable, the Dynamic Audio Normalizer provides optional *DC bias correction*, which can be enabled using the **<tt>--correct-dc</tt>** switch. With DC bias correction *enabled*, the Dynamic Audio Normalizer will determine the mean value, or "DC correction" offset, of each input frame and *subtract* that value from all of the frame's sample values – which ensures those samples are centered around *0.0* again. Also, in order to avoid "gaps" at the frame boundaries, the DC correction offset values will be interpolated smoothly between neighbouring frames. The following wave view illustrates the effect of DC bias correction: It shows an input file with positive DC bias (left), the same file after normalization with DC bias correction *disabled* (center) and again after normalization with DC bias correction *enabled* (right).
 
-![DCCorrection](img/DCCorrection.png "Dynamic Audio Normalizer – DC Correction")  
-<small>**Figure 9:** The effect of *DC Bias Correction*.</small>
- 
-### Maximum Gain Factor <a name="chap_cfg.m"></a> ###
+![The effect of *DC Bias Correction*](img/DCCorrection.png)
+
+
+## Maximum Gain Factor ##
 
 The Dynamic Audio Normalizer determines the maximum possible (local) gain factor for each input frame, i.e. the maximum gain factor that does *not* result in clipping or distortion. The maximum gain factor is determined by the frame's highest magnitude sample. However, the Dynamic Audio Normalizer *additionally* bounds the frame's maximum gain factor by a predetermined (global) *maximum gain factor*. This is done in order to avoid excessive gain factors in "silent" or almost silent frames. By default, the *maximum gain factor* is **10.0**, but it can be adjusted using the **<tt>--max-gain</tt>** switch. For most input files the default value should be sufficient and it usually is **not** recommended to increase this value. Though, for input files with an extremely low overall volume level, it may be necessary to allow even higher gain factors. Note, however, that the Dynamic Audio Normalizer does *not* simply apply a "hard" threshold (i.e. cut off values above the threshold). Instead, a "sigmoid" threshold function will be applied, as depicted in the following chart. This way, the gain factors will smoothly approach the threshold value, but *never* exceed that value.
 
-![Threshold](img/Threshold.png "Dynamic Audio Normalizer – Threshold Function")  
-<small>**Figure 10:** The Gain Factor Threshold-Function.</small>
+![The Gain Factor Threshold-Function](img/Threshold.png)
 
-### Target RMS Value <a name="chap_cfg.r"></a> ###
+
+## Target RMS Value ##
 
 By default, the Dynamic Audio Normalizer performs "peak" normalization. This means that the maximum local gain factor for each frame is defined (only) by the frame's highest magnitude sample. This way, the samples can be amplified as much as possible *without* exceeding the maximum signal level, i.e. *without* clipping. Optionally, however, the Dynamic Audio Normalizer can also take into account the frame's [*root mean square*](http://en.wikipedia.org/wiki/Root_mean_square), abbreviated RMS. In electrical engineering, the RMS is commonly used to determine the *power* of a time-varying signal. It is therefore considered that the RMS is a better approximation of the "perceived loudness" than just looking at the signal's peak magnitude. Consequently, by adjusting all frames to a *constant* RMS value, a *uniform* "perceived loudness" can be established. With the Dynamic Audio Normalizer, RMS processing can be enabled using the **<tt>--target-rms</tt>** switch. This specifies the desired RMS value, in the *0.0* to *1.0* range. There is **no** default value, because RMS processing is *disabled* by default. If a target RMS value has been specified, a frame's local gain factor is defined as the factor that would result in exactly *that* RMS value. Note, however, that the maximum local gain factor is still restricted by the frame's highest magnitude sample, in order to prevent clipping. The following chart shows the same file normalized *without* (green) and *with* (orange) RMS processing enabled.
 
-![RMS](img/RMS.png "Dynamic Audio Normalizer – RMS Processing")  
-<small>**Figure 11:** Root Mean Square (RMS) processing example.</small>
+![Root Mean Square (RMS) processing example](img/RMS.png)
 
-### Frame Length <a name="chap_cfg.f"></a> ###
+
+## Frame Length ##
 
 The Dynamic Audio Normalizer processes the input audio in small chunks, referred to as *frames*. This is required, because a *peak magnitude* has no meaning for just a single sample value. Instead, we need to determine the peak magnitude for a contiguous sequence of sample values. While a "standard" normalizer would simply use the peak magnitude of the *complete* file, the Dynamic Audio Normalizer determines the peak magnitude *individually* for each frame. The length of a frame is specified in milliseconds. By default, the Dynamic Audio Normalizer uses a frame length of **500** milliseconds, which has been found to give good results with most files, but it can be adjusted using the **<tt>--frame-len</tt>** switch. Note that the exact frame length, in number of samples, will be determined automatically, based on the sampling rate of the individual input audio file.
 
-### Boundary Mode <a name="chap_cfg.b"></a> ###
+
+## Boundary Mode ##
 
 As explained before, the Dynamic Audio Normalizer takes into account a certain neighbourhood around each frame. This includes the *preceding* frames as well as the *subsequent* frames. However, for the "boundary" frames, located at the very beginning and at the very end of the audio file, **not** all neighbouring frames are available. In particular, for the *first* few frames in the audio file, the preceding frames are *not* known. And, similarly, for the *last* few frames in the audio file, the subsequent frames are *not* known. Thus, the question arises which gain factors should be assumed for the *missing* frames in the "boundary" region. The Dynamic Audio Normalizer implements two modes to deal with this situation. The *default* boundary mode assumes a gain factor of exactly *1.0* for the missing frames, resulting in a smooth "fade in" and "fade out" at the beginning and at the end of the file, respectively. The *alternative* boundary mode can be enabled by using the **<tt>--alt-boundary</tt>** switch. The latter mode assumes that the missing frames at the *beginning* of the file have the same gain factor as the very *first* available frame. It furthermore assumes that the missing frames at the *end* of the file have same gain factor as the very *last* frame. The following chart illustrates the difference between the *default* (green) and the *alternative* (red) boundary mode. Note hat, for simplicity's sake, a file containing *constant* volume white noise was used as input here.
 
-![Boundary](img/Boundary.png "Dynamic Audio Normalizer - Boundary Modes")  
-<small>**Figure 12:** Default boundary mode vs. alternative boundary mode.</small>
+![Default boundary mode vs. alternative boundary mode](img/Boundary.png)
 
-### Input Compression <a name="chap_cfg.s"></a> ###
+
+## Input Compression ##
 
 By default, the Dynamic Audio Normalizer does **not** apply "traditional" compression. This means that signal peaks will **not** be pruned and thus the *full* dynamic range will be retained within each local neighbourhood. However, in some cases it may be desirable to *combine* the Dynamic Audio Normalizer's normalization algorithm with a more "traditional" compression. For this purpose, the Dynamic Audio Normalizer provides an *optional* compression (thresholding) function. It is disabled by default and can be enabled by using the **<tt>--compress</tt>** switch. If (and only if) the compression feature is enabled, all input frames will be processed by a [*soft knee*](https://mdn.mozillademos.org/files/5113/WebAudioKnee.png) thresholding function *prior to* the actual normalization process. Put simply, the thresholding function is going to prune all samples whose magnitude exceeds a certain threshold value. However, the Dynamic Audio Normalizer does *not* simply apply a fixed threshold value. Instead, the threshold value will be adjusted for each individual frame. More specifically, the threshold for a specific input frame is defined as <tt>T = μ + (c · σ)</tt>, where **μ** is the *mean* of all sample magnitudes in the current frame, **σ** is the *standard deviation* of those sample magnitudes and **c** is the parameter controlled by the user. Note that, assuming the samples magnitudes are following (roughly) a [normal distribution](http://content.answcdn.com/main/content/img/barrons/accounting/New/images/normaldistribution2.jpg), about 68% of the sample values will be within the **μ ± σ** range, about 95% of the sample values will be within the **μ ± 2σ** range and more than 99% of the sample values will be within the **μ ± 3σ** range. Consequently, a parameter of **c = 2** will prune about 5% of the frame's highest magnitude samples, a parameter of **c = 3** will prune about 1% of the frame's highest magnitude samples, and so on. In general, *smaller* parameters result in *stronger* compression, and vice versa. Values below *3.0* are **not** recommended, because audible distortion may appear! The following waveform view illustrates the effect of the input compression feature: It shows the same input file *before* (upper view) and *after* (lower view) the thresholding function has been applied. Please note that, for the sake of clarity, the actual normalization process has been *disabled* in the following chart. Under normal circumstances, the normalization process is applied immediately after the thresholding function.
 
-![Compression](img/Compression-1.png "Input Compression")
-<small>**Figure 13:** The effect of the input compression (thresholding) function.</small>
+![The effect of the input compression (thresholding) function](img/Compression-1.png)
 
-### Write Log File <a name="chap_cfg.l"></a> ###
+
+## Write Log File ##
 
 Optionally, the Dynamic Audio Normalizer can create a log file. The log file name is specified using the **<tt>--log-file</tt>** option.  If that option is *not* used, then *no* log file will be written. The log file uses a simple text format. The file starts with a header, followed by a list of gain factors. In that list, there is one line per frame. In each line, the *first* column contains the maximum local gain factor, the *second* column contains the minimum filtered gain factor, and the *third* column contains the final smoothed gain factor. This sequence is repeated once per channel.
 
-```
-DynamicAudioNormalizer Logfile v2.00-5
-CHANNEL_COUNT:2
-
-10.00000  8.59652  5.07585      10.00000  8.59652  5.07585
- 8.59652  8.59652  5.64167       8.59652  8.59652  5.64167
- 9.51783  8.59652  6.17045       9.51783  8.59652  6.17045
-...
-```
+	DynamicAudioNormalizer Logfile v2.00-5
+	CHANNEL_COUNT:2
+	
+	10.00000  8.59652  5.07585      10.00000  8.59652  5.07585
+	 8.59652  8.59652  5.64167       8.59652  8.59652  5.64167
+	 9.51783  8.59652  6.17045       9.51783  8.59652  6.17045
+	...
 
 The log file can be displayed as a graphical chart using, for example, the *Log Viewer* application (DynamicAudioNormalizerGUI) that is included with the Dynamic Audio Normalizer:
 
-![LogViewer](img/LogViewer.png "Dynamic Audio Normalizer - Log Viewer")  
-<small>**Figure 14:** Dynamic Audio Normalizer - Log Viewer.</small>
+![Dynamic Audio Normalizer - Log Viewer](img/LogViewer.png)
 
 
-API Documentation <a name="chap_api"></a>
--------------------------------------------------------------------------------
+
+# API Documentation #
 
 This chapter describes the **MDynamicAudioNormalizer** application programming interface (API), as defined in the <tt>DynamicAudioNormalizer.h</tt> header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
 
-#### Thread Safety: ####
+
+## Thread Safety: ##
 
 Note that all methods of the <tt>MDynamicAudioNormalizer</tt> class are [*reentrant*](http://en.wikipedia.org/wiki/Reentrancy_%28computing%29), but **not** thread-safe! This means that it *is* safe to use the MDynamicAudioNormalizer class in *multi-threaded* applications, but *only* as long as each thread uses its own separate MDynamicAudioNormalizer instance. In other words, it is *strictly forbidden* to call the *same* MDynamicAudioNormalizer instance *concurrently* from *different* threads. But it *is* admissible to call *different* MDynamicAudioNormalizer instances *concurrently* from *different* threads, provided that each thread will access *only* its own instance. If the *same* MDynamicAudioNormalizer instance needs to be accessed by *different* threads, then the calling *application* is responsible for *serializing* all calls to that MDynamicAudioNormalizer instance, e.g. by means of a Mutex. Otherwise, **undefined behaviour** follows!
 
-#### Language Bindings: ####
+
+## Language Bindings: ##
 
 Also note that the "native" MDynamicAudioNormalizer application programming interface (API) is provided in the form of a [*C++*](http://en.wikipedia.org/wiki/C%2B%2B) class, which means that *C++* applications can (and should) use the MDynamicAudioNormalizer class directly. In addition to that, [bindings](http://en.wikipedia.org/wiki/Language_binding) for various other programming languages are provided. The [*C99*](http://en.wikipedia.org/wiki/C99) API is provided in the same header file as the *C++* API. There is one *C*-based "wrapper" function for each method of the native *C++* class. These wrapper functions provide the exactly same functionality as the corresponding *C++* methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) needs to be passed around, in order to identify the MDynamicAudioNormalizer instance. The <tt>createInstance()</tt> and <tt>destroyInstance()</tt> functions exist in the *C*-based API only. They replace the *C++* constructor and destructor, respectively.
 
@@ -355,7 +330,8 @@ Summary on language bindings:
 * *Java*-based Application → Use the <tt>JDynamicAudioNormalizer</tt> [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) wrapper class, provided by the <tt>DynamicAudioNormalizerJNI.jar</tt> package, requires <tt>DynamicAudioNormalizerAPI.dll</tt> at runtime
 * *Pascal*/*Delphi*-based Application → Use the <tt>TDynamicAudioNormalizer</tt> Object Pascal wrapper class, provided by the <tt>DynamicAudioNormalizer.pas</tt> file, requires <tt>DynamicAudioNormalizerAPI.dll</tt> at runtime
 
-#### Quick Start Guide: ####
+
+## Quick Start Guide: ##
 
 The following listing summarizes the steps that an application needs to follow when using the API:
 
@@ -367,21 +343,10 @@ The following listing summarizes the steps that an application needs to follow w
 
 *Note:* The Dynamic Audio Normalizer library processes audio samples, but it does **not** provide any audio I/O capabilities. Reading or writing the audio samples from or to an audio file is up to the application. A library like [libsndfile](http://www.mega-nerd.com/libsndfile/) may be helpful.
 
-#### Function Reference: ####
 
-* [MDynamicAudioNormalizer – Constructor](#chap_api.constructor)
-* [MDynamicAudioNormalizer – Destructor](#chap_api.destructor)
-* [MDynamicAudioNormalizer::initialize()](#chap_api.initialize)
-* [MDynamicAudioNormalizer::processInplace()](#chap_api.processInplace)
-* [MDynamicAudioNormalizer::flushBuffer()](#chap_api.flushBuffer)
-* [MDynamicAudioNormalizer::reset()](#chap_api.reset)
-* [MDynamicAudioNormalizer::getConfiguration()](#chap_api.getConfiguration)
-* [MDynamicAudioNormalizer::getInternalDelay()](#chap_api.getInternalDelay)
-* [MDynamicAudioNormalizer::getVersionInfo()](#chap_api.getVersionInfo) [static]
-* [MDynamicAudioNormalizer::getBuildInfo()](#chap_api.getBuildInfo) [static]
-* [MDynamicAudioNormalizer::setLogFunction()](#chap_api.setLogFunction) [static]
+## Function Reference: ##
 
-### MDynamicAudioNormalizer::MDynamicAudioNormalizer() <a name="chap_api.constructor"></a> ###
+### MDynamicAudioNormalizer::MDynamicAudioNormalizer() ###
 ```
 MDynamicAudioNormalizer(
 	const uint32_t channels,
@@ -413,14 +378,16 @@ Constructor. Creates a new *MDynamicAudioNormalizer* instance and sets up the no
 * *altBoundaryMode*: Set to **true** in order to enable the alternative [boundary mode](#chap_cfg.b) (default: **false**).
 * *logFile*: An open **FILE*** handle with *write* access to be used for [logging](#chap_cfg.l), or **NULL** to disable logging.
 
-### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() <a name="chap_api.destructor"></a> ###
+
+### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() ###
 ```
 virtual ~MDynamicAudioNormalizer(void);
 ```
 
 Destructor. Destroys the *MDynamicAudioNormalizer* instance and releases all memory that it occupied.
 
-### MDynamicAudioNormalizer::initialize() <a name="chap_api.initialize"></a> ###
+
+### MDynamicAudioNormalizer::initialize() ###
 ```
 bool initialize(void);
 ```
@@ -432,7 +399,8 @@ This function *must* be called once for each new MDynamicAudioNormalizer instanc
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::processInplace() <a name="chap_api.processInplace"></a> ###
+
+### MDynamicAudioNormalizer::processInplace() ###
 ```
 bool processInplace(
 	double **samplesInOut,
@@ -455,7 +423,8 @@ It's possible that a specific call to this function returns *fewer* output sampl
 **Return value:**
 * Returns <tt>true</tt> if everything was successful or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::flushBuffer() <a name="chap_api.flushBuffer"></a> ###
+
+### MDynamicAudioNormalizer::flushBuffer() ###
 ```
 bool flushBuffer(
 	double **samplesOut,
@@ -469,12 +438,13 @@ This function can be called at the end of the process, after all input samples h
 **Parameters:**
 * *samplesOut*: The buffer that will receive the normalized output samples. The *i*-th output sample for the *c*-th channel will be stored at <tt>samplesOut[c][i]</tt> and is guaranteed to be inside the **-1.00** to **1.00** range. All indices are zero-based.
 * *bufferSize*: Specifies the *maximum* number of output samples to be stored in the buffer.
-* *outputSize*: Receives the number of *output* samples that have been stored in the <tt>samplesOut</tt> buffer. Please note that this value can be *smaller* than <tt>bufferSize</tt> size. It can even be *zero*! A value smaller than <tt>bufferSize</tt> indicates that all samples have been flushed already.
+* *outputSize*: Receives the number of *output* samples that have been stored in the <tt>samplesOut</tt> buffer. Please note that this value can be *smaller* than <tt>bufferSize</tt> size. It can even be *zero*! A value smaller than <tt>bufferSize</tt> indicates that all samples have been flushed now.
 
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::reset()<a name="chap_api.reset"></a> ###
+
+### MDynamicAudioNormalizer::reset() ###
 ```
 bool reset(void);
 ```
@@ -484,7 +454,8 @@ Resets the internal state of the *MDynamicAudioNormalizer* instance. It normally
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::getConfiguration()<a name="chap_api.getConfiguration"></a> ###
+
+### MDynamicAudioNormalizer::getConfiguration() ###
 ```
 bool getConfiguration(
 	uint32_t &channels,
@@ -505,7 +476,8 @@ This is a convenience function to retrieve the current configuration of an exist
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::getInternalDelay()<a name="chap_api.getInternalDelay"></a> ###
+
+### MDynamicAudioNormalizer::getInternalDelay() ###
 ```
 bool getInternalDelay(
 	int64_t &delayInSamples,
@@ -520,7 +492,8 @@ This function can be used to determine the internal delay of the *MDynamicAudioN
 **Return value:**
 * Returns <tt>true</tt> if everything was successfull or <tt>false</tt> if something went wrong.
 
-### MDynamicAudioNormalizer::getVersionInfo() [static]<a name="chap_api.getVersionInfo"></a> ###
+
+### MDynamicAudioNormalizer::getVersionInfo() [static] ###
 ```
 static void getVersionInfo(
 	uint32_t &major,
@@ -536,7 +509,8 @@ This *static* function can be called to determine the Dynamic Audio Normalizer l
 * *minor*: Receives the minor version number. Value will be in the **0** to **99** range.
 * *patch*: Receives the patch level. Value will be in the **0** to **9** range.
 
-### MDynamicAudioNormalizer::getBuildInfo() [static]<a name="chap_api.getBuildInfo"></a> ###
+
+### MDynamicAudioNormalizer::getBuildInfo() [static] ###
 ```
 static void getBuildInfo(
 	const char **date,
@@ -556,7 +530,8 @@ This *static* function can be called to determine more detailed information abou
 * *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. "x86" for IA32/x86 or "x64" for AMD64/EM64T).
 * *debug*: Will be set to <tt>true</tt> if this is a *debug* build or to <tt>false</tt> otherwise. Don't use the *debug* version production!
 
-### MDynamicAudioNormalizer::setLogFunction() [static]<a name="chap_api.setLogFunction"></a> ###
+
+### MDynamicAudioNormalizer::setLogFunction() [static] ###
 ```
 static LogFunction *setLogFunction(
 	LogFunction *const logFunction
@@ -571,7 +546,7 @@ This *static* function can be called to register a *callback* function that will
 **Return value:**
 * Returns a pointer to the *previous* callback function. This can be <tt>NULL</tt>, e.g. if **no** callback function had been registered before.
 
-#### Callback Function: ####
+#### Callback Function ####
 
 The signature of the callback function must be *exactly* as follows, with standard <tt>cdecl</tt> calling convention:
 ```
@@ -585,8 +560,9 @@ void LogFunction(
 * *logLevel*: Specifies the level of the current log message. This can be either <tt>LOG_LEVEL_NFO</tt>, <tt>LOG_LEVEL_WRN</tt> or <tt>LOG_LEVEL_ERR</tt>, which indicates an <i>information</i>, <i>warning</i> or <i>error</i> message, respectively. The application may use this value to filter the log messages according to their importance. Messages of level <tt>LOG_LEVEL_NFO</tt> are for debugging purposes only, messages of level <tt>LOG_LEVEL_WRN</tt> indicate that there might be a problem of some sort and messages of <tt>LOG_LEVEL_ERR</tt> indicate that a serious malfunction has occurred.
 * *message*: The log message. This is a pointer to a buffer, which contains a NULL-terminated C string. The character encoding of the string is UTF-8. The application should regard this string buffer as *read-only*. Also, this string buffer remains valid *only* until the callback function returns. Therefore, do *not* save a pointer to this buffer! If you need to retain the log message *after* the callback function returns, it must be *copied*, e.g. via <tt>strcpy()</tt> or <tt>strdup()</tt>, into a *separate* buffer which is owned by the application.
 
-Source Code <a name="chap_src"></a>
--------------------------------------------------------------------------------
+
+
+# Source Code #
 
 The source code of the Dynamic Audio Normalizer is available from one of the official [**Git**](http://git-scm.com/) repository mirrors:
 * <tt>https://github.com/lordmulder/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
@@ -596,11 +572,11 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 * <tt>https://muldersoft.codebasehq.com/dynamicaudionormalizer/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://muldersoft.codebasehq.com/changelog/dynamicaudionormalizer/dynamicaudionormalizer))
 * <tt>https://repo.or.cz/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](http://repo.or.cz/w/DynamicAudioNormalizer.git))
 
-### Supported build environments: ###
+## Supported build environments: ##
 * Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
 * Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.10*](https://ubuntu-mate.org/download/)
 
-### Build prerequisites: ###
+## Build prerequisites: ##
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
 * [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
 * [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
@@ -611,58 +587,58 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 * [*Pandoc*](http://johnmacfarlane.net/pandoc/), by  John MacFarlane, is required for generating the HTML documentation
 * [*UPX*](http://upx.sourceforge.net/), by Markus Franz Xaver Johannes Oberhumer et al., is required for "packing" the libraries/executables
 
-Changelog <a name="chap_log"></a>
--------------------------------------------------------------------------------
 
-### Version 2.08 (2015-??-??) ###
+# Changelog #
+
+## Version 2.08 (2015-??-??) ##
 * Core library: Fixed case when ``flushBuffer()`` is called *before* internal buffer is filled entirely
 
-### Version 2.07 (2014-11-01) ###
+## Version 2.07 (2014-11-01) ##
 * Implemented [.NET](http://en.wikipedia.org/wiki/.NET_Framework) API → Dynamic Audio Normalizer can be used in, e .g., *C#*-based applications
 * Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can be used in *Java*-based  applications
 * Implemented [Pascal](http://en.wikipedia.org/wiki/Object_Pascal) API → Dynamic Audio Normalizer can be used in *Pascal*-based applications
 * Core library: Added new <tt>getConfiguration()</tt> API to retrieve the *active* configuration params
 * Core library: Fixed a bug that caused the gain factors to *not* progress as "smoothly" as intended
 
-### Version 2.06 (2014-09-22) ###
+## Version 2.06 (2014-09-22) ##
 * Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used as Winamp plug-in
 * VST wrapper: Fixed potential audio corruptions due to the occasional insertion of "silent" samples
 * VST wrapper: Fixed a potential "double free" crash in the VST wrapper code
 * Core library: Fixed <tt>reset()</tt> API to actually work as expected (some state was *not* cleared before)
 * Core library: Make sure the number of delayed samples remains *constant* throughout the process
 
-### Version 2.05 (2014-09-10) ###
+## Version 2.05 (2014-09-10) ##
 * Significant overhaul of the *compression* (thresholding) function
 * Implemented [VST](http://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be integrated in any VST host
 * Added *64-Bit* library and VST plug-in binaries to the Windows release packages
 * No longer use <tt>__declspec(thread)</tt>, because it can crash libraries on Windows XP ([details](http://www.nynaeve.net/?p=187))
 
-### Version 2.04 (2014-08-25) ###
+## Version 2.04 (2014-08-25) ##
 * Added an optional input *compression* (thresholding) function
 * Implemented [SoX](http://sox.sourceforge.net/) wrapper → Dynamic Audio Normalizer can now be used as a SoX effect
 * Improved internal handling of "raw" PCM data
 
-### Version 2.03 (2014-08-11) ###
+## Version 2.03 (2014-08-11) ##
 * Implemented an *optional* RMS-based normalization mode
 * Added support for "raw" (headerless) audio data
 * Added pipeline support, i.e. reading from *stdin* or writing to *stdout*
 * Enabled FLAC/Vorbis support in the *static* Win32 binaries
 * Various fixes and minor improvements
 
-### Version 2.02 (2014-08-03) ###
+## Version 2.02 (2014-08-03) ##
 * Update license → core library is now released under LGPL v2.1
 * Enabled FLAC *output* in the command-line program
 * Show legend in the log viewer program
 * Some minor documentation and build file updates
 * There are **no** code changes in the core library in this release
 
-### Version 2.01 (2014-08-01) ###
+## Version 2.01 (2014-08-01) ##
 * Added graphical log viewer application to the distribution package
 * Improved the threshold function for the handling of the maximum gain factor limit
 * Added a new mode for handling the "boundary" frames (disabled by default)
 * Much improved the format of the log file
 
-### Version 2.00 (2014-07-26) ###
+## Version 2.00 (2014-07-26) ##
 * Implemented a large lookahead buffer, which eliminates the need of 2-Pass processing
 * Dynamic Audio Normalizer now works with a *single* processing pass → results in up to 2× speed-up!
 * Removed the <tt>setPass()</tt> API, because it is *not* applicable any more
@@ -671,152 +647,145 @@ Changelog <a name="chap_log"></a>
 * Added new <tt>setLogFunction</tt> API, which can be used to set up a custom logging callback function
 * There should be **no** changes of the normalized audio output in this release whatsoever
 
-### Version 1.03 (2014-07-09) ###
+## Version 1.03 (2014-07-09) ##
 * Added *static* library configuration to Visual Studio solution
 * Various compatibility fixes for Linux/GCC
 * Added Makefiles for Linux/GCC, tested under Ubuntu 14.04 LTS
 * There are **no** functional changes in this release
 
-### Version 1.02 (2014-07-06) ###
+## Version 1.02 (2014-07-06) ##
 * First public release of the Dynamic Audio Normalizer.
 
 
-Frequently Asked Questions (FAQ) <a name="chap_faq"></a>
--------------------------------------------------------------------------------
 
-### Q: How does Dynamic Audio Normalizer differ from dynamic range compression? ###
+# Frequently Asked Questions (FAQ)
+
+## Q: How does Dynamic Audio Normalizer differ from dynamic range compression? ##
 
 A traditional [*audio compressor*](http://en.wikipedia.org/wiki/Dynamic_range_compression) will prune all samples whose magnitude is above a certain threshold. In particular, the portion of the sample's magnitude that is above the pre-defined threshold will be reduced by a certain *ratio*, typically *2:1* or *4:1*. In other words, the signal *peaks* will be *flattened*, while all samples below the threshold are passed through unmodified. This leaves a certain "headroom", i.e. after flattening the signal peaks the maximum magnitude remaining in the *compressed* file will be lower than in the original. For example, if we apply *2:1* reduction to all samples above a threshold of *80%*, then the maximum remaining magnitude will be at *90%*, leaving a headroom of *10%*. After the compression has been applied, the resulting sample values will (usually) be amplified again, by a certain *fixed* gain factor. This factor will be chosen as high as possible *without* exceeding the maximum allowable signal level, similar to a traditional *normalizer*. Clearly, the compression allows for a much stronger amplification of the signal than what would be possible otherwise. However, due to the *flattening* of the signal peaks, the *dynamic range*, i.e. the ratio between the largest and smallest sample value, will be *reduced* significantly – which has a strong tendency to destroy the "vividness" of the audio signal! The excessive use of dynamic range compression in many recent productions is also known as the ["loudness war"](https://www.youtube.com/watch?v=3Gmex_4hreQ).
 
 The following waveform view shows an audio signal prior to dynamic range compression (left), after the compression step (center) and after the subsequent amplification step (right). It can be seen that the original audio had a *large* dynamic range, with each drumbeat causing a significant peak. It can also be seen how those peeks have been *eliminated* for the most part after the compression. This makes the drum sound much *less* catchy! Last but not least, it can be seen that the final amplified audio now appears much "louder" than the original, but the dynamics are mostly gone…
 
-![Compression](img/Compression-2.png "Dynamic Range Compression")  
-<small>**Figure 15:** Example of dynamic range compression.</small>
+![Example of dynamic range compression](img/Compression-2.png)
 
 In contrast, the Dynamic Audio Normalizer also implements dynamic range compression *of some sort*, but it does **not** prune signal peaks above a *fixed* threshold. Actually it does **not** prune any signal peaks at all! Furthermore, it does **not** amplify the samples by a *fixed* gain factor. Instead, an "optimal" gain factor will be chosen for each *frame*. And, since a frame's gain factor is bounded by the highest magnitude sample within that frame, **100%** of the dynamic range will be preserved *within* each frame! The Dynamic Audio Normalizer only performs a "dynamic range compression" in the sense that the gain factors are *dynamically* adjusted over time, allowing "quieter" frames to get a stronger amplification than "louder" frames. This means that the volume differences between the "quiet" and the "loud" parts of an audio recording will be *harmonized* – but still the *full* dynamic range is being preserved within each of these parts. Finally, the Gaussian filter applied by the Dynamic Audio Normalizer ensures that any changes of the gain factor between neighbouring frames will be smooth and seamlessly, avoiding noticeable "jumps" of the audio volume.
 
 
-### Q: But what if I do *not* want the "quiet" and "loud" parts to be harmonized? ###
+## Q: But what if I do *not* want the "quiet" and "loud" parts to be harmonized? ##
 
 In this case, the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. Still, by using a larger [filter size](#chap_cfg.g), the Dynamic Audio Normalizer may be configured to act much more similar to a "traditional" normalization filter.
 
 
-### Q: Why does the program crash with "GURU MEDITATION" error every time? ###
+## Q: Why does the program crash with "GURU MEDITATION" error every time? ##
 
 This error message indicates that the program has encountered a serious problem. On possible reason is that your processor does **not** support the [SSE2](http://en.wikipedia.org/wiki/SSE2) instruction set. That's because the official Dynamic Audio Normalizer binaries have been compiled with SSE and SSE2 code enabled – like pretty much any compiler does *by default* nowadays. So without SSE2 support, the program cannot run, obviosuly. This can be fixed either by upgrading your system to a less antiquated processor, or by recompiling Dynamic Audio Normalizer from the sources with SSE2 code generation *disabled*. Note that SSE2 is supported by the Pentium 4 and Athon 64 processors as well as **all** later processors. Also *every* 64-Bit supports SSE2, because [x86-64](http://en.wikipedia.org/wiki/X86-64) has adopted SSE2 as "core" instructions. That means that *every processor from the last decade* almost certainly supports SSE2.
 
 If your processor *does* support SSE2, but you still get the above error message, you probably have found a bug. In this case it is highly recommended to create a *debug build* and use a [debugger](http://en.wikipedia.org/wiki/Debugger) in order to track down the cause of the problem.
 
 
-License Terms <a name="chap_lic"></a>
--------------------------------------------------------------------------------
+# License Terms #
 
-### Dynamic Audio Normalizer Library ###
+## Dynamic Audio Normalizer Library ##
 
 The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released under the *GNU Lesser General Public License*, Version 2.1.
 
-```
-Dynamic Audio Normalizer - Audio Processing Library
-Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-```
+	Dynamic Audio Normalizer - Audio Processing Library
+	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 **http://www.gnu.org/licenses/lgpl-2.1.html**
 
-### Dynamic Audio Normalizer CLI ###
+
+## Dynamic Audio Normalizer CLI ##
 
 The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) is released under the *GNU General Public License*, Version 2.
 
-```
-Dynamic Audio Normalizer - Audio Processing Utility
-Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Dynamic Audio Normalizer - Audio Processing Utility
+	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-```
 
 **http://www.gnu.org/licenses/gpl-2.0.html**
 
-### Dynamic Audio Normalizer GUI ###
+## Dynamic Audio Normalizer GUI ##
 
 The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) is released under the *GNU General Public License*, Version 3.
 
-```
-Dynamic Audio Normalizer - Audio Processing Utility
-Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Dynamic Audio Normalizer - Audio Processing Utility
+	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	
+	**http://www.gnu.org/licenses/gpl-3.0.html**
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-```
-
-**http://www.gnu.org/licenses/gpl-3.0.html**
-
-### Dynamic Audio Normalizer Plug-In Wrapper ###
+## Dynamic Audio Normalizer Plug-In Wrapper ##
 
 The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* are released under the *MIT/X11 License*.
 
-```
-Dynamic Audio Normalizer - Audio Processing Utility
-Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-```
+	Dynamic Audio Normalizer - Audio Processing Utility
+	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+	
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+	
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	THE SOFTWARE.
 
 **http://opensource.org/licenses/MIT**
 
 
-Acknowledgement <a name="chap_ack"></a>
--------------------------------------------------------------------------------
+
+# Acknowledgement #
 
 The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) incorporates the following *third-party* software:
 
@@ -855,6 +824,8 @@ The Dynamic Audio Normalizer **VST wrapper** (DynamicAudioNormalizerVST) incorpo
   Public domain noncryptographic hash function producing well-distributed 128-bit hash values
   Created by Bob Jenkins. Public domain.
 
-<br>
+
+&nbsp;  
+&nbsp;  
 
 e.o.f.
