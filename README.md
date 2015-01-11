@@ -31,9 +31,8 @@ So far it has been discussed how the optimal gain factor for each frame is deter
 
 Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper graph shows the unprocessed original recording while the lower graph shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified to a great extent, while retaining the dynamics of the input and avoiding clipping or distortion.
 
-![Waveform *before* processing with the Dynamic Audio Normalizer](img/Waveform-1.png)
+![Waveform *before* and *after* processing with the Dynamic Audio Normalizer](img/Waveform.png)
 
-![Waveform *after* processing with the Dynamic Audio Normalizer](img/Waveform-2.png)
 
 
 # Package Contents #
