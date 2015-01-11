@@ -572,9 +572,25 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 * <tt>https://muldersoft.codebasehq.com/dynamicaudionormalizer/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://muldersoft.codebasehq.com/changelog/dynamicaudionormalizer/dynamicaudionormalizer))
 * <tt>https://repo.or.cz/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](http://repo.or.cz/w/DynamicAudioNormalizer.git))
 
-## Supported Build Environments: ##
+
+## Supported Build Environments ##
+
+The following build environments are currently supported:
+
 * Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
+
+    - You can build *Dynamic Audio Normalizer* manually, by using the provided *solution* file ``DynamicAudioNormalizer.sln``
+
+    - Optionally, you may run the deployment script ``z_build.bat``, which will also create deployment packages. You may need to edit the paths in the build script first!
+
 * Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.10*](https://ubuntu-mate.org/download/)
+
+    - The provided Makefile assumes that the essential build utilities (*make*, *g++*, *libc-dev*, etc) are installed, as contained in Debian's ``build-essential`` package
+
+    - You may need to install additional packages (*libsndfile*, *Qt*, *Apache Ant*, *JDK*, *Pandoc*, etc), in order to create a "full" build of *Dynamic Audio Normalizer*
+
+    - Use ``make MODE=no-gui`` or ``make MODE=mininmal`` in order to build *without GUI* or to create a *minimal* build (core library + CLI front-end only), respectively
+
 
 ## Build Prerequisites ##
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
@@ -592,6 +608,7 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 
 ## Version 2.08 (2015-??-??) ##
 * Core library: Fixed case when ``flushBuffer()`` is called *before* internal buffer is filled entirely
+* Various Makefile improvements
 
 ## Version 2.07 (2014-11-01) ##
 * Implemented [.NET](http://en.wikipedia.org/wiki/.NET_Framework) API → Dynamic Audio Normalizer can be used in, e .g., *C#*-based applications
