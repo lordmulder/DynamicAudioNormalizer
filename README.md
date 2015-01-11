@@ -1,5 +1,5 @@
 % Dynamic Audio Normalizer
-% Created by LoRd_MuldeR &lt;<mulder2@gmx>&gt; &ndash; Please check <http://muldersoft.com/> for news and updates!
+% Created by LoRd_MuldeR &lt;<mulder2@gmx>&gt; &ndash; check <http://muldersoft.com/> for news and updates!
 
 
 # Introduction #
@@ -78,7 +78,7 @@ Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www
 
 Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported too. Just specify the file name <tt>"-"</tt> in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams) stream, respectively. When reading from the *stdin*, you have to explicitly specify the *input* sample format, channel count and sampling rate.
 
-For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> from the command prompt. Also see to the [**configuration**](#chap_cfg) chapter for more details!
+For a list of *all* available options, please run <tt>DynamicAudioNormalizerCLI.exe --help</tt> from the command prompt. Also see to the [**configuration**](#configuration) chapter for more details!
 
 
 ## Command-Line Usage Examples ##
@@ -112,7 +112,7 @@ For details about the SoX command-line syntax, please refer to the [SoX document
 
 ![VSTLogo](img/VSTLogo.png "VST Logo")  
 
-The Dynamic Audio Normalizer is also available in the form of a [**VST** (Virtual Studio Technology) plug-in](http://en.wikipedia.org/wiki/Virtual_Studio_Technology). The VST plug-in interface technology, developed by Steinberg Media Technologies, provides a way of integrating arbitrary audio effects (and instruments) into arbitrary applications – provided that the audio effect is available in the form of a VST plug-in and provided that the application supports "hosting" VST plug-ins. An application capable of loading and using VST plug-ins is referred to as a *VST host*. This means that the Dynamic Audio Normalizer can be used as an effect in *any* VST host. Note that VST is widely supported in [DAWs (Digital Audio Workstations)](http://en.wikipedia.org/wiki/Digital_audio_workstation) nowadays, including most of the popular Wave Editors. Therefore, the provided Dynamic Audio Normalizer VST plug-in can be integrated into all of these applications easily. Note that most VST hosts provide a graphical user interface to configure the VST plug-in. The screen capture below shows the Dynamic Audio Normalizer as it appears in the *Acoustica* software by Acon AS. The options exposed by the VST plug-in are identical to those exposed by the [CLI](#chap_cli) version.
+The Dynamic Audio Normalizer is also available in the form of a [**VST** (Virtual Studio Technology) plug-in](http://en.wikipedia.org/wiki/Virtual_Studio_Technology). The VST plug-in interface technology, developed by Steinberg Media Technologies, provides a way of integrating arbitrary audio effects (and instruments) into arbitrary applications – provided that the audio effect is available in the form of a VST plug-in and provided that the application supports "hosting" VST plug-ins. An application capable of loading and using VST plug-ins is referred to as a *VST host*. This means that the Dynamic Audio Normalizer can be used as an effect in *any* VST host. Note that VST is widely supported in [DAWs (Digital Audio Workstations)](http://en.wikipedia.org/wiki/Digital_audio_workstation) nowadays, including most of the popular Wave Editors. Therefore, the provided Dynamic Audio Normalizer VST plug-in can be integrated into all of these applications easily. Note that most VST hosts provide a graphical user interface to configure the VST plug-in. The screen capture below shows the Dynamic Audio Normalizer as it appears in the *Acoustica* software by Acon AS. The options exposed by the VST plug-in are identical to those exposed by the [CLI](#command-line-usage) version.
 
 ![The Dynamic Audio Normalizer *VST Plug-In* interface (in Acoustica 6.0, Copyright © 2014 Acon AS)](img/VSTPlugInConf.png)
 
@@ -368,15 +368,15 @@ Constructor. Creates a new *MDynamicAudioNormalizer* instance and sets up the no
 **Parameters:**
 * *channels*: The number of channels in the input/output audio stream (e.g. **2** for Stereo).
 * *sampleRate*: The sampling rate of the input/output audio stream, in Hertz (e.g. **44100** for "CD Quality").
-* *frameLenMsec*: The [frame length](#chap_cfg.f), in milliseconds. A typical value is **500** milliseconds.
-* *filterSize*: The ["window size"](#chap_cfg.g) of the Gaussian filter, in frames. Must be an *odd* number. (default: **31**).
-* *peakValue*: Specifies the [peak magnitude](#chap_cfg.p) for normalized audio, in the **0.0** to **1.0** range (default: **0.95**).
-* *maxAmplification*: Specifies the [maximum gain factor](#chap_cfg.m). Must be greater than **1.0** (default: **10.0**).
-* *targetRms*: Specifies the [target RMS](#chap_cfg.r) value. Must be in the **0.0** to **1.0** range, **0.0** means *disabled* (default: **0.0**).
-* *channelsCoupled*: Set to **true** in order to enable [channel coupling](#chap_cfg.n), or to **false** otherwise (default: **true**).
-* *enableDCCorrection*: Set to **true** in order to enable [DC correction](#chap_cfg.c), or to **false** otherwise (default: **false**).
-* *altBoundaryMode*: Set to **true** in order to enable the alternative [boundary mode](#chap_cfg.b) (default: **false**).
-* *logFile*: An open **FILE*** handle with *write* access to be used for [logging](#chap_cfg.l), or **NULL** to disable logging.
+* *frameLenMsec*: The [frame length](#frame-length), in milliseconds. A typical value is **500** milliseconds.
+* *filterSize*: The ["window size"](#gaussian-filter-window-size) of the Gaussian filter, in frames. Must be an *odd* number. (default: **31**).
+* *peakValue*: Specifies the [peak magnitude](#target-peak-magnitude) for normalized audio, in the **0.0** to **1.0** range (default: **0.95**).
+* *maxAmplification*: Specifies the [maximum gain factor](#maximum-gain-factor). Must be greater than **1.0** (default: **10.0**).
+* *targetRms*: Specifies the [target RMS](#target-rms-value) value. Must be in the **0.0** to **1.0** range, **0.0** means *disabled* (default: **0.0**).
+* *channelsCoupled*: Set to **true** in order to enable [channel coupling](#channel-coupling), or to **false** otherwise (default: **true**).
+* *enableDCCorrection*: Set to **true** in order to enable [DC correction](#dc-bias-correction), or to **false** otherwise (default: **false**).
+* *altBoundaryMode*: Set to **true** in order to enable the alternative [boundary mode](#boundary-mode) (default: **false**).
+* *logFile*: An open **FILE*** handle with *write* access to be used for [logging](#write-log-file), or **NULL** to disable logging.
 
 
 ### MDynamicAudioNormalizer::~MDynamicAudioNormalizer() ###
@@ -572,11 +572,11 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 * <tt>https://muldersoft.codebasehq.com/dynamicaudionormalizer/dynamicaudionormalizer.git</tt> &nbsp; ([Browse](https://muldersoft.codebasehq.com/changelog/dynamicaudionormalizer/dynamicaudionormalizer))
 * <tt>https://repo.or.cz/DynamicAudioNormalizer.git</tt> &nbsp; ([Browse](http://repo.or.cz/w/DynamicAudioNormalizer.git))
 
-## Supported build environments: ##
+## Supported Build Environments: ##
 * Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
 * Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.10*](https://ubuntu-mate.org/download/)
 
-## Build prerequisites: ##
+## Build Prerequisites ##
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
 * [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
 * [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
@@ -673,7 +673,7 @@ In contrast, the Dynamic Audio Normalizer also implements dynamic range compress
 
 ## Q: But what if I do *not* want the "quiet" and "loud" parts to be harmonized? ##
 
-In this case, the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. Still, by using a larger [filter size](#chap_cfg.g), the Dynamic Audio Normalizer may be configured to act much more similar to a "traditional" normalization filter.
+In this case, the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. Still, by using a larger [filter size](#gaussian-filter-window-size), the Dynamic Audio Normalizer may be configured to act much more similar to a "traditional" normalization filter.
 
 
 ## Q: Why does the program crash with "GURU MEDITATION" error every time? ##
