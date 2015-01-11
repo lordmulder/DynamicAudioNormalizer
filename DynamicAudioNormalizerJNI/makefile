@@ -22,6 +22,19 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
+ANT ?= ant
+
+##############################################################################
+# Ant Checks
+##############################################################################
+
+ifneq ($(MAKECMDGOALS),clean)
+   ANT_CHECK = $(findstring Apache Ant,$(shell $(ANT) -version 2>&1))
+   ifneq ($(ANT_CHECK),Apache Ant)
+      $(error Apache Ant not found. Please set ANT environment variable properly!)
+   endif
+endif
+
 ##############################################################################
 # Rules
 ##############################################################################
@@ -45,7 +58,7 @@ LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
 
 all: build.xml
 	@$(ECHO) "\e[1;36m[ANT] $<\e[0m"
-	ant -buildfile $<
+	$(ANT) -buildfile $<
 
 #-------------------------------------------------------------
 # Clean
@@ -53,5 +66,7 @@ all: build.xml
 
 clean: build.xml
 	@$(ECHO) "\e[1;36m[ANT] $< clean\e[0m"
-	ant -buildfile $< clean
+	$(ANT) -buildfile $< clean || echo "Ant clean failed!"
+	rm -rfv ./bin
+	rm -rfv ./out
 

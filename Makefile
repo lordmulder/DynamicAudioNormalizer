@@ -23,6 +23,9 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
+MODE ?= full
+PANDOC ?= pandoc
+
 ##############################################################################
 # Constants
 ##############################################################################
@@ -37,6 +40,7 @@ BUILD_TIME   := $(shell date +%H:%M:%S)
 BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
 TARGET_PATH  := ./bin/$(BUILD_DATE)
 OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).tbz2)
+PANDOC_FLAGS := markdown_github+pandoc_title_block+header_attributes+implicit_figures
 
 # Version info
 VER_MAJOR = $(shell sed -n 's/.*DYNAUDNORM_VERSION_MAJOR = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
@@ -47,11 +51,31 @@ VER_PATCH = $(shell sed -n 's/.*DYNAUDNORM_VERSION_PATCH = \([0-9]*\).*/\1/p' < 
 export API_VERSION := $(shell sed -n 's/.*define MDYNAMICAUDIONORMALIZER_CORE \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/include/DynamicAudioNormalizer.h)
 
 ##############################################################################
+# Projects
+##############################################################################
+
+undefine MY_PROJECTS
+
+ifeq ($(MODE),full)
+  MY_PROJECTS := API CLI GUI JNI
+endif
+ifeq ($(MODE),no-gui)
+  MY_PROJECTS := API CLI JNI
+endif
+ifeq ($(MODE),minimal)
+  MY_PROJECTS := API CLI
+endif
+
+ifndef MY_PROJECTS
+  $(error Invalid MODE value: $(MODE))
+endif
+
+##############################################################################
 # Rules
 ##############################################################################
 
-BUILD_PROJECTS = $(addprefix DynamicAudioNormalizer,API CLI GUI JNI)
-CLEAN_PROJECTS = $(addprefix Clean,$(BUILD_PROJECTS))
+BUILD_PROJECTS = $(addprefix DynamicAudioNormalizer,$(MY_PROJECTS))
+CLEAN_PROJECTS = $(addprefix CleanUp,$(BUILD_PROJECTS))
 
 .PHONY: all clean $(BUILD_PROJECTS) $(CLEAN_PROJECTS) DeployBinaries CopyAllBinaries CreateDocuments CreateTagFile
 
@@ -69,7 +93,7 @@ $(CLEAN_PROJECTS):
 	@$(ECHO) "\n\e[1;31m-----------------------------------------------------------------------------\e[0m"
 	@$(ECHO) "\e[1;31mClean: $(patsubst Clean%,%,$@)\e[0m"
 	@$(ECHO) "\e[1;31m-----------------------------------------------------------------------------\n\e[0m"
-	make -C ./$(patsubst Clean%,%,$@) clean
+	make -C ./$(patsubst CleanUp%,%,$@) clean
 
 CleanBinaries:
 	@$(ECHO) "\n\e[1;31m-----------------------------------------------------------------------------\e[0m"
@@ -130,9 +154,9 @@ CopyAllBinaries:
 	rm -rf $(TARGET_PATH) 
 	mkdir -p $(TARGET_PATH)/include
 	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME) $(TARGET_PATH)
-	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH)
 	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).so $(TARGET_PATH)
-	cp $(JNIWRAP_NAME)/out/$(JNIWRAP_NAME).jar $(TARGET_PATH)
+	-cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH)
+	-cp $(JNIWRAP_NAME)/out/$(JNIWRAP_NAME).jar $(TARGET_PATH)
 	cp $(LIBRARY_NAME)/include/*.h $(TARGET_PATH)/include
 	cp $(PASWRAP_NAME)/include/*.pas $(TARGET_PATH)/include
 	cp ./LICENSE-*.html $(TARGET_PATH)
@@ -142,6 +166,6 @@ CreateDocuments:
 	@$(ECHO) "\e[1;34mCreate Documents\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
 	mkdir -p $(TARGET_PATH)/img
-	pandoc --from markdown_github+header_attributes --to html5 --standalone -H ./img/Style.inc ./README.md --output $(TARGET_PATH)/README.html
+	$(PANDOC) --from $(PANDOC_FLAGS) --to html5 --standalone -H ./img/Style.inc ./README.md --output $(TARGET_PATH)/README.html || cp ./README.md $(TARGET_PATH)/README.md
 	cp ./img/*.png $(TARGET_PATH)/img
 
