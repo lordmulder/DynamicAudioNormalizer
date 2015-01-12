@@ -21,6 +21,9 @@
 
 #include "DynamicAudioNormalizer.h"
 
+//Java support?
+#ifndef NO_JAVA_SUPPORT
+
 //StdLib
 #include <algorithm>
 #include <stdexcept>
@@ -702,3 +705,7 @@ extern "C"
 		JAVA_TRY_CATCH(getInternalDelay, -1, env, handle)
 	}
 }
+
+
+#endif //NO_JAVA_SUPPORT
+

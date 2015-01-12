@@ -22,7 +22,7 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
-JDK_PATH ?= $(shell update-java-alternatives -l | grep -oE '[^[:space:]]+$$')
+JDK_PATH ?= $(shell update-java-alternatives -l 2>/dev/null | grep -oE '[^[:space:]]+$$' || echo "/usr/lib/jvm/default")
 
 ##############################################################################
 # Constants
@@ -38,10 +38,9 @@ endif
 # JDK Checks
 ##############################################################################
 
-ifneq ($(MAKECMDGOALS),clean)
-   ifneq ($(notdir $(realpath $(JDK_PATH)/include/jni.h)),jni.h)
-      $(error File "include/jni.h" not found in JDK path. Please set JDK_PATH environment variable properly!)
-   endif
+JDK_CHECK := $(shell [ -f $(JDK_PATH)/include/jni.h ] && echo true || echo false)
+ifneq ($(JDK_CHECK),true)
+   JDK_WARNING := $(shell $(ECHO) "\e[1;33mWARNING: File \"include/jni.h\" not found in JDK_PATH path. Java/JNI support will be disabled !!!\e[0m" >&2)
 endif
 
 ##############################################################################
@@ -72,8 +71,13 @@ CXXFLAGS += -I./src
 CXXFLAGS += -I./include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 CXXFLAGS += -I../DynamicAudioNormalizerJNI/include
-CXXFLAGS += -I$(JDK_PATH)/include
-CXXFLAGS += -I$(JDK_PATH)/include/linux
+
+ifeq ($(JDK_CHECK),true)
+   CXXFLAGS += -I$(JDK_PATH)/include
+   CXXFLAGS += -I$(JDK_PATH)/include/linux
+else
+   CXXFLAGS += -DNO_JAVA_SUPPORT
+endif
 
 ##############################################################################
 # Rules

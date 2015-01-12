@@ -39,7 +39,7 @@ endif
 ##############################################################################
 
 ifneq ($(MAKECMDGOALS),clean)
-   MOC_CHECK = $(findstring Qt Meta Object Compiler,$(shell $(MOC) -v 2>&1))
+   MOC_CHECK := $(findstring Qt Meta Object Compiler,$(shell $(MOC) -v 2>&1))
    ifneq ($(MOC_CHECK),Qt Meta Object Compiler)
       $(error Qt Meta Object Compiler not found. Please set MOC environment variable properly!)
    endif
