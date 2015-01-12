@@ -54,7 +54,7 @@ export API_VERSION := $(shell sed -n 's/.*define MDYNAMICAUDIONORMALIZER_CORE \(
 # Projects
 ##############################################################################
 
-undefine MY_PROJECTS
+MY_PROJECTS := NONE
 
 ifeq ($(MODE),full)
   MY_PROJECTS := API CLI GUI JNI
@@ -66,7 +66,7 @@ ifeq ($(MODE),minimal)
   MY_PROJECTS := API CLI
 endif
 
-ifndef MY_PROJECTS
+ifeq ($(MY_PROJECTS),NONE)
   $(error Invalid MODE value: $(MODE))
 endif
 

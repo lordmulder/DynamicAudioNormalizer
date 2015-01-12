@@ -40,7 +40,7 @@ endif
 
 JDK_CHECK := $(shell [ -f $(JDK_PATH)/include/jni.h ] && echo true || echo false)
 ifneq ($(JDK_CHECK),true)
-   JDK_WARNING := $(shell $(ECHO) "\e[1;33mWARNING: File \"include/jni.h\" not found in JDK_PATH path. Java/JNI support will be disabled !!!\e[0m" >&2)
+   JDK_WARNING := $(shell $(ECHO) "\e[1;33mWARNING: File \"include/jni.h\" not found in JDK_PATH path. Java/JNI bindings will be disabled !!!\e[0m" >&2)
 endif
 
 ##############################################################################
