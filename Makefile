@@ -58,12 +58,15 @@ MY_PROJECTS := NONE
 
 ifeq ($(MODE),full)
   MY_PROJECTS := API CLI GUI JNI
+  export ENABLE_JNI := true
 endif
 ifeq ($(MODE),no-gui)
   MY_PROJECTS := API CLI JNI
+  export ENABLE_JNI := true
 endif
 ifeq ($(MODE),minimal)
   MY_PROJECTS := API CLI
+  export ENABLE_JNI := false
 endif
 
 ifeq ($(MY_PROJECTS),NONE)

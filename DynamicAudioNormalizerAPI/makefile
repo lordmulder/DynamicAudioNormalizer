@@ -38,11 +38,14 @@ endif
 # JDK Checks
 ##############################################################################
 
-JDK_CHECK := $(shell [ -f $(JDK_PATH)/include/jni.h ] && echo true || echo false)
-ifneq ($(JDK_CHECK),true)
-   JDK_WARNING := $(shell $(ECHO) "\e[1;33mWARNING: File \"include/jni.h\" not found in JDK_PATH path. Java/JNI bindings will be disabled !!!\e[0m" >&2)
+ifneq ($(MAKECMDGOALS),clean)
+   ifneq ($(ENABLE_JNI),false)
+      JDK_CHECK := $(shell [ -f $(JDK_PATH)/include/jni.h ] && echo true || echo false)
+      ifneq ($(JDK_CHECK),true)
+         $(error File "include/jni.h" not found in JDK_PATH path!)
+      endif
+   endif
 endif
-
 ##############################################################################
 # Flags
 ##############################################################################
@@ -72,7 +75,7 @@ CXXFLAGS += -I./include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 CXXFLAGS += -I../DynamicAudioNormalizerJNI/include
 
-ifeq ($(JDK_CHECK),true)
+ifneq ($(ENABLE_JNI),false)
    CXXFLAGS += -I$(JDK_PATH)/include
    CXXFLAGS += -I$(JDK_PATH)/include/linux
 else
