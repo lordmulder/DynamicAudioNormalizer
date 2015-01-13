@@ -1,6 +1,6 @@
 ﻿REM //////////////////////////////////////////////////////////////////////////////////
 REM // Dynamic Audio Normalizer - Microsoft.NET Wrapper
-REM // Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+REM // Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 REM //
 REM // Permission is hereby granted, free of charge, to any person obtaining a copy
 REM // of this software and associated documentation files (the "Software"), to deal

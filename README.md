@@ -707,7 +707,7 @@ If your processor *does* support SSE2, but you still get the above error message
 The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released under the *GNU Lesser General Public License*, Version 2.1.
 
 	Dynamic Audio Normalizer - Audio Processing Library
-	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This library is free software; you can redistribute it and/or
 	modify it under the terms of the GNU Lesser General Public
@@ -731,7 +731,7 @@ The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released
 The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) is released under the *GNU General Public License*, Version 2.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -755,7 +755,7 @@ The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI
 The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) is released under the *GNU General Public License*, Version 3.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -778,7 +778,7 @@ The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) 
 The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* are released under the *MIT/X11 License*.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (C) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal

@@ -1,6 +1,6 @@
 /* ================================================================================== */
 /* Dynamic Audio Normalizer - SoX Effect Wrapper                                      */
-/* Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.             */
+/* Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.             */
 /*                                                                                    */
 /* Permission is hereby granted, free of charge, to any person obtaining a copy       */
 /* of this software and associated documentation files (the "Software"), to deal      */
@@ -340,7 +340,7 @@ static int dynaudnorm_start(sox_effect_t *effp)
 
 		dynaudnorm_print(effp, "\n---------------------------------------------------------------------------\n");
 		dynaudnorm_print(effp, "Dynamic Audio Normalizer (SoX Wrapper), Version %u.%02u-%u, %s\n", versionMajor, versionMinor, versionPatch, LINKAGE);
-		dynaudnorm_print(effp, "Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
+		dynaudnorm_print(effp, "Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
 		dynaudnorm_print(effp, "Built on %s at %s with %s for %s.\n\n", buildDate, buildTime, buildCompiler, buildArch);
 		dynaudnorm_print(effp, "This program is free software: you can redistribute it and/or modify\n");
 		dynaudnorm_print(effp, "it under the terms of the GNU General Public License <http://www.gnu.org/>.\n");

@@ -195,7 +195,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 REM // Create version tag
 REM ///////////////////////////////////////////////////////////////////////////
 echo Dynamic Audio Normalizer >                                                                      "%PACK_PATH%\BUILD_TAG"
-echo Copyright (C) 2014 LoRd_MuldeR ^<MuldeR2@GMX.de^> >>                                            "%PACK_PATH%\BUILD_TAG"
+echo Copyright (C) 2015 LoRd_MuldeR ^<MuldeR2@GMX.de^> >>                                            "%PACK_PATH%\BUILD_TAG"
 echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
 echo Version %VER_MAJOR%.%VER_MINOR%-%VER_PATCH%. Built on %ISO_DATE%, at %ISO_TIME% >>              "%PACK_PATH%\BUILD_TAG"
 echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"

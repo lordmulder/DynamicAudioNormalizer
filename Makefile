@@ -1,6 +1,6 @@
 ##############################################################################
 # Dynamic Audio Normalizer
-# Copyright (C) 2014 LoRd_MuldeR <MuldeR2@GMX.de>
+# Copyright (C) 2015 LoRd_MuldeR <MuldeR2@GMX.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ CreateTagFile:
 	@$(ECHO) "\e[1;34mBuild Tag\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
 	echo "Dynamic Audio Normalizer" > $(BUILD_TAG)
-	echo "Copyright (C) 2014 LoRd_MuldeR <MuldeR2@GMX.de>" >> $(BUILD_TAG)
+	echo "Copyright (C) 2015 LoRd_MuldeR <MuldeR2@GMX.de>" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	echo "Version $$(printf %d.%02d-%d $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH)). Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)

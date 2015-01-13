@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - VST 2.x Wrapper
-// Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal

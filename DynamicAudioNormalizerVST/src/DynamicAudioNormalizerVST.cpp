@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - VST 2.x Wrapper
-// Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -640,6 +640,8 @@ void DynamicAudioNormalizerVST::suspend(void)
 
 void DynamicAudioNormalizerVST::processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames)
 {
+	outputMessage("[DynAudNorm_VST] ENTER >>> processReplacing()");
+
 	if(sampleFrames < 1)
 	{
 		return; /*number of samples is zero or even negative!*/
@@ -658,15 +660,20 @@ void DynamicAudioNormalizerVST::processReplacing(float** inputs, float** outputs
 	if(!p->instance->processInplace(p->temp, sampleFrames, outputSamples))
 	{
 		showErrorMsg("Dynamic Audio Normalizer processing failed!");
+		outputMessage("[DynAudNorm_VST] LEAVE <<< processReplacing()");
 		return;
 	}
 
 	//outputMessage("InputSamples/OutputSamples: %llu/%llu --> %llu", int64_t(sampleFrames), outputSamples, int64_t(sampleFrames) - outputSamples);
 	writeOutputSamplesFlt(outputs, sampleFrames, outputSamples);
+
+	outputMessage("[DynAudNorm_VST] LEAVE <<< processReplacing()");
 }
 
 void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double** outputs, VstInt32 sampleFrames)
 {
+	outputMessage("[DynAudNorm_VST] ENTER >>> processDoubleReplacing()");
+
 	if(sampleFrames < 1)
 	{
 		return; /*number of samples is zero or even negative!*/
@@ -685,10 +692,13 @@ void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double*
 	if(!p->instance->processInplace(p->temp, sampleFrames, outputSamples))
 	{
 		showErrorMsg("Dynamic Audio Normalizer processing failed!");
+		outputMessage("[DynAudNorm_VST] LEAVE <<< processDoubleReplacing()");
 		return;
 	}
 
 	writeOutputSamplesDbl(outputs, sampleFrames, outputSamples);
+
+	outputMessage("[DynAudNorm_VST] LEAVE <<< processDoubleReplacing()");
 }
 
 VstInt32 DynamicAudioNormalizerVST::getGetTailSize(void)
@@ -896,7 +906,7 @@ static bool showAboutScreen(const uint32_t & major, const uint32_t & minor, cons
 {
 	wchar_t text[1024] = { '\0' };
 	appendStr(text, 1024, L"Dynamic Audio Normalizer, VST Wrapper, Version %u.%02u-%u, %s\n", major, minor, patch, (debug ? L"DEBGU" : L"Release"));
-	appendStr(text, 1024, L"Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
+	appendStr(text, 1024, L"Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
 	appendStr(text, 1024, L"Built on %S at %S with %S for %S.\n\n", date, time, compiler, arch);
 	appendStr(text, 1024, L"This library is free software; you can redistribute it and/or\n");
 	appendStr(text, 1024, L"modify it under the terms of the GNU Lesser General Public\n");
