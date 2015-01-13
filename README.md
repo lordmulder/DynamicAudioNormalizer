@@ -608,6 +608,7 @@ The following build environments are currently supported:
 ## Version 2.08 (2015-??-??) ## {-}
 * CLI front-end: Very short files (shorter than Gaussian window size) are now handled properly
 * Core library: Fixed case when ``flushBuffer()`` is called *before* internal buffer is filled entirely
+* Core library: Workaround for the [*FMA3 bug*](https://connect.microsoft.com/VisualStudio/feedback/details/987093/x64-log-function-uses-vpsrlq-avx-instruction-without-regard-to-operating-system-so-it-crashes-on-vista-x64) in the Microsoft Visual C++ 2013 runtime libraries
 * Makefile: Various improvements
 
 ## Version 2.07 (2014-11-01) ## {-}
