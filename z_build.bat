@@ -143,6 +143,7 @@ for %%c in (DLL, Static) do (
 	mkdir "%PACK_PATH%\%%c"
 	mkdir "%PACK_PATH%\%%c\x64"
 	mkdir "%PACK_PATH%\%%c\img"
+	mkdir "%PACK_PATH%\%%c\img\dyauno"
 
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%\%%c"
 	copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerGUI.exe" "%PACK_PATH%\%%c"
@@ -177,9 +178,9 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\LICENSE-LGPL.html" "%PACK_PATH%\%%c"
 	copy "%~dp0\LICENSE-GPL2.html" "%PACK_PATH%\%%c"
 	copy "%~dp0\LICENSE-GPL3.html" "%PACK_PATH%\%%c"
-	copy "%~dp0\img\*.png"         "%PACK_PATH%\%%c\img"
+	copy "%~dp0\img\dyauno\*.png"  "%PACK_PATH%\%%c\img\dyauno"
 
-	"%PDOC_PATH%\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone -H "%~dp0\img\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\%%c\README.html"
+	"%PDOC_PATH%\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone -H "%~dp0\img\dyauno\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\%%c\README.html"
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
