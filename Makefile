@@ -169,6 +169,6 @@ CreateDocuments:
 	@$(ECHO) "\e[1;34mCreate Documents\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
 	mkdir -p $(TARGET_PATH)/img/dyauno
-	$(PANDOC) --from $(PANDOC_FLAGS) --to html5 --standalone -H ./img/dyauno/Style.inc ./README.md --output $(TARGET_PATH)/README.html || cp ./README.md $(TARGET_PATH)/README.md
+	$(PANDOC) --from $(PANDOC_FLAGS) --to html5 --toc -N --standalone -H ./img/dyauno/Style.inc ./README.md --output $(TARGET_PATH)/README.html || cp ./README.md $(TARGET_PATH)/README.md
 	cp ./img/dyauno/*.png $(TARGET_PATH)/img/dyauno
 
