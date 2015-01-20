@@ -58,6 +58,9 @@
 #endif
 #include <pthread.h>
 
+//Enable extra logging output?
+#undef DEBUG_LOGGING
+
 //Constants
 static const VstInt32 CHANNEL_COUNT   = 2;
 static const VstInt32 PARAMETER_COUNT = 8;
@@ -90,6 +93,12 @@ static const uint64_t SEED_VALU1 = 0xC11D908A35A625A5, SEED_VALU2 = 0x5E57D080BC
 static const uint64_t SEED_VALU1 = 0x24575239D116386B, SEED_VALU2 = 0xE03BDD5B975F47D0;
 #endif
 
+//Debugging outputs
+#ifdef DEBUG_LOGGING
+#define DEBUG_LOG(...) outputMessage(__VA_ARGS__)
+#else
+#define DEBUG_LOG(...) ((void)0)
+#endif //DEBUG_LOGGING
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -640,7 +649,7 @@ void DynamicAudioNormalizerVST::suspend(void)
 
 void DynamicAudioNormalizerVST::processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames)
 {
-	outputMessage("[DynAudNorm_VST] ENTER >>> processReplacing()");
+	DEBUG_LOG("[DynAudNorm_VST] ENTER >>> processReplacing()");
 
 	if(sampleFrames < 1)
 	{
@@ -660,19 +669,19 @@ void DynamicAudioNormalizerVST::processReplacing(float** inputs, float** outputs
 	if(!p->instance->processInplace(p->temp, sampleFrames, outputSamples))
 	{
 		showErrorMsg("Dynamic Audio Normalizer processing failed!");
-		outputMessage("[DynAudNorm_VST] LEAVE <<< processReplacing()");
+		DEBUG_LOG("[DynAudNorm_VST] LEAVE <<< processReplacing()");
 		return;
 	}
 
-	//outputMessage("InputSamples/OutputSamples: %llu/%llu --> %llu", int64_t(sampleFrames), outputSamples, int64_t(sampleFrames) - outputSamples);
+	DEBUG_LOG("InputSamples/OutputSamples: %llu/%llu --> %llu", int64_t(sampleFrames), outputSamples, int64_t(sampleFrames) - outputSamples);
 	writeOutputSamplesFlt(outputs, sampleFrames, outputSamples);
 
-	outputMessage("[DynAudNorm_VST] LEAVE <<< processReplacing()");
+	DEBUG_LOG("[DynAudNorm_VST] LEAVE <<< processReplacing()");
 }
 
 void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double** outputs, VstInt32 sampleFrames)
 {
-	outputMessage("[DynAudNorm_VST] ENTER >>> processDoubleReplacing()");
+	DEBUG_LOG("[DynAudNorm_VST] ENTER >>> processDoubleReplacing()");
 
 	if(sampleFrames < 1)
 	{
@@ -692,13 +701,13 @@ void DynamicAudioNormalizerVST::processDoubleReplacing (double** inputs, double*
 	if(!p->instance->processInplace(p->temp, sampleFrames, outputSamples))
 	{
 		showErrorMsg("Dynamic Audio Normalizer processing failed!");
-		outputMessage("[DynAudNorm_VST] LEAVE <<< processDoubleReplacing()");
+		DEBUG_LOG("[DynAudNorm_VST] LEAVE <<< processDoubleReplacing()");
 		return;
 	}
 
 	writeOutputSamplesDbl(outputs, sampleFrames, outputSamples);
 
-	outputMessage("[DynAudNorm_VST] LEAVE <<< processDoubleReplacing()");
+	DEBUG_LOG("[DynAudNorm_VST] LEAVE <<< processDoubleReplacing()");
 }
 
 VstInt32 DynamicAudioNormalizerVST::getGetTailSize(void)
