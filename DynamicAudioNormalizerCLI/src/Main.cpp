@@ -358,7 +358,7 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"),     defaults.filterSize());
 	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"),   defaults.peakValue());
 	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"),            defaults.maxAmplification());
-	PRINT(TXT("  -r --rms-mode <value>    Target RMS value [default: %.2f]\n"),               defaults.targetRms());
+	PRINT(TXT("  -r --target-rms <value>    Target RMS value [default: %.2f]\n"),             defaults.targetRms());
 	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"),         BOOLIFY(defaults.channelsCoupled()));
 	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"),    BOOLIFY(defaults.enableDCCorrection()));
 	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"),    BOOLIFY(defaults.altBoundaryMode()));
