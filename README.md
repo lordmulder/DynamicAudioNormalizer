@@ -35,9 +35,31 @@ Finally, the following waveform view illustrates how the volume of a "real world
 
 
 
-# Package Contents #
+# Download and Installation #
 
-The following files are included in the Dynamic Audio Normalizer release package:
+Dynamic Audio Normalizer can be downloaded from one of the following *official* mirror sites:
+* https://github.com/lordmulder/DynamicAudioNormalizer/releases/latest
+* https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/downloads
+* http://sourceforge.net/projects/muldersoft/files/Dynamic%20Audio%20Normalizer/
+* https://www.assembla.com/spaces/dynamicaudionormalizer/documents
+
+**Note:** Windows binaries are provided in the *ZIP* format. Simply use [7-Zip](http://www.7-zip.org/) or a similar tool to unzip *all* files to new/empty directory. That's it!
+
+
+## System Requirements ##
+
+Dynamic Audio Normalizer is written in plain C++ (C++98) and therefore does **not** have any system requirements, except for a conforming C++ compiler on the target platform. Currently, the Microsoft C++ compiler and the GNU Compiler Collection are used for development.
+
+*Pre-compiled* binaries are provided for the *Windows* and  the *Linux* platform. The 32-Bit Windows binaries should work on Windows XP (with Service Pack 2) or any late version. The 64-Bit Windows binaries require Windows Vista ("x64" edition) or later. Linux binaries are provided for some popular distributions (latest version at the time of release). They may work on other distributions too, or not. Thus, Linux users are generally recommended to compile Dynamic Audio Normalizer themselves, from the source codes.
+
+For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required program libraries *built-in* (including C++ Runtime) and thus do *not* depend on any separate DLL files. At the same time, the "DLL" binaries depend use separate DLL files for the "core" functions and the C++ Runtime. If you don't understand what this means, then just go with the "Static" version. If you want to call Dynamic Audio Normalizer from your own code, use the "DLL" version.
+
+All *pre-compiled* binaries have been compiled with the [*SSE2*](https://en.wikipedia.org/wiki/SSE2) instruction set enabled, so a processor with SSE2 support (i.e. Pentium 4 or later) is required. For *legacy* processors you will need to compile Dynamic Audio Normalizer from the sources &ndash; with appropriate CPU flags.
+
+
+## Package Contents ##
+
+The following files are included in the Dynamic Audio Normalizer release package (Windows version):
 
 	DynamicAudioNormalizerCLI.exe - Dynamic Audio Normalizer command-line application
 	DynamicAudioNormalizerGUI.exe - Dynamic Audio Normalizer log viewer application
@@ -566,7 +588,7 @@ void LogFunction(
 The source code of the Dynamic Audio Normalizer is available from one of the official [**Git**](http://git-scm.com/) repository mirrors:
 * ``https://github.com/lordmulder/DynamicAudioNormalizer.git`` &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
 * ``https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git`` &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
-* ``https://git.gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer.git`` &nbsp; ([Browse](https://gitorious.org/dynamic-audio-normalizer/dynamic-audio-normalizer))
+* ``https://gitlab.com/dynamic-audio-normalizer/dynamic-audio-normalizer.git`` &nbsp; ([Browse](https://gitlab.com/dynamic-audio-normalizer/dynamic-audio-normalizer/tree/master))
 * ``https://git.assembla.com/dynamicaudionormalizer.git`` &nbsp; ([Browse](https://www.assembla.com/code/dynamicaudionormalizer/git/nodes))
 * ``https://muldersoft.codebasehq.com/dynamicaudionormalizer/dynamicaudionormalizer.git`` &nbsp; ([Browse](https://muldersoft.codebasehq.com/changelog/dynamicaudionormalizer/dynamicaudionormalizer))
 * ``https://repo.or.cz/DynamicAudioNormalizer.git`` &nbsp; ([Browse](http://repo.or.cz/w/DynamicAudioNormalizer.git))
