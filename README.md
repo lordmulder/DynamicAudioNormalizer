@@ -35,7 +35,7 @@ Finally, the following waveform view illustrates how the volume of a "real world
 
 
 
-# Download and Installation #
+# Download & Installation #
 
 Dynamic Audio Normalizer can be downloaded from one of the following *official* mirror sites:
 * https://github.com/lordmulder/DynamicAudioNormalizer/releases/latest
@@ -52,7 +52,7 @@ Dynamic Audio Normalizer is written in plain C++ (C++98) and therefore does **no
 
 *Pre-compiled* binaries are provided for the *Windows* and  the *Linux* platform. The 32-Bit Windows binaries should work on Windows XP (with Service Pack 2) or any late version. The 64-Bit Windows binaries require Windows Vista ("x64" edition) or later. Linux binaries are provided for some popular distributions (latest version at the time of release). They may work on other distributions too, or not. Thus, Linux users are generally recommended to compile Dynamic Audio Normalizer themselves, from the source codes.
 
-For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required program libraries *built-in* (including C++ Runtime) and thus do *not* depend on any separate DLL files. At the same time, the "DLL" binaries depend use separate DLL files for the "core" functions and the C++ Runtime. If you don't understand what this means, then just go with the "Static" version. If you want to call Dynamic Audio Normalizer from your own code, use the "DLL" version.
+For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required program libraries *built-in* (including C++ Runtime) and thus do *not* depend on any separate DLL files. At the same time, the "DLL" binaries use separate DLL files for the "core" functions as well as the C++ Runtime. If you don't understand what this means, then just go with the "Static" version. If you want to call Dynamic Audio Normalizer from your own code, use the "DLL" version.
 
 All *pre-compiled* binaries have been compiled with the [*SSE2*](https://en.wikipedia.org/wiki/SSE2) instruction set enabled, so a processor with SSE2 support (i.e. Pentium 4 or later) is required. For *legacy* processors you will need to compile Dynamic Audio Normalizer from the sources &ndash; with appropriate CPU flags.
 
