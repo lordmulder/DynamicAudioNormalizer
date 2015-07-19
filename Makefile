@@ -157,7 +157,7 @@ CopyAllBinaries:
 	rm -rf $(TARGET_PATH) 
 	mkdir -p $(TARGET_PATH)/include
 	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME) $(TARGET_PATH)
-	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).so $(TARGET_PATH)
+	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).* $(TARGET_PATH)
 	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME) $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(LOGVIEW_NAME)\" not found!\e[0m"
 	cp $(JNIWRAP_NAME)/out/$(JNIWRAP_NAME).jar $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(JNIWRAP_NAME).jar\" not found!\e[0m"
 	cp $(LIBRARY_NAME)/include/*.h $(TARGET_PATH)/include

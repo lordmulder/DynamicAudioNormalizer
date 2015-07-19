@@ -324,7 +324,7 @@ bool Parameters::validateParameters(void)
 	}
 	if((m_filterSize % 2) != 1)
 	{
-		PRINT2_WRN(TXT("Filter size %u is invalid. Must be an odd value! (i.e. `filter_size mod 2 == 1´)\n"), m_filterSize);
+		PRINT2_WRN(TXT("Filter size %u is invalid. Must be an odd value! (i.e. 'filter_size mod 2 == 1')\n"), m_filterSize);
 		return false;
 	}
 	if((m_peakValue < 0.01) || (m_peakValue > 1.0))

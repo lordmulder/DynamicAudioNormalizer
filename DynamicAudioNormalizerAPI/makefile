@@ -46,6 +46,7 @@ ifneq ($(MAKECMDGOALS),clean)
       endif
    endif
 endif
+
 ##############################################################################
 # Flags
 ##############################################################################
@@ -65,8 +66,11 @@ else
    endif
 endif
 
+ifneq ($(findstring MINGW,$(shell uname -s)),MINGW)
+   CXXFLAGS += -fPIC
+endif
+
 CXXFLAGS += -std=gnu++11
-CXXFLAGS += -fPIC
 CXXFLAGS += -fvisibility=hidden
 CXXFLAGS += -DMDYNAMICAUDIONORMALIZER_EXPORTS
 
@@ -83,15 +87,22 @@ else
 endif
 
 ##############################################################################
-# Rules
+# File Names
 ##############################################################################
+
+ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
+   SO_EXT = dll
+   LDXFLAGS += -Wl,--out-implib,$@.a
+else
+   SO_EXT = so
+endif
 
 SOURCES_CPP = $(wildcard src/*.cpp)
 SOURCES_OBJ = $(patsubst %.cpp,%.o,$(SOURCES_CPP))
 
 LIBRARY_OUT = lib/$(LIBRARY_NAME)-$(API_VERSION)
-LIBRARY_BIN = $(LIBRARY_OUT).so
-LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
+LIBRARY_BIN = $(LIBRARY_OUT).$(SO_EXT)
+LIBRARY_DBG = $(LIBRARY_OUT)-DBG.$(SO_EXT)
 
 ##############################################################################
 # Rules
@@ -99,16 +110,17 @@ LIBRARY_DBG = $(LIBRARY_OUT)-DBG.so
 
 .PHONY: all clean
 
-all: $(LIBRARY_BIN)
+all: $(LIBRARY_DBG) $(LIBRARY_BIN)
 
 #-------------------------------------------------------------
 # Link & Strip
 #-------------------------------------------------------------
 
-$(LIBRARY_BIN): $(LIBRARY_DBG)
+$(LIBRARY_BIN): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[STR] $@\e[0m"
 	@mkdir -p $(dir $@)
-	strip --strip-unneeded -o $@ $<
+	g++ -shared -g0 -o $@ $+ $(LDXFLAGS)
+	strip --strip-unneeded $@
 
 $(LIBRARY_DBG): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[LNK] $@\e[0m"

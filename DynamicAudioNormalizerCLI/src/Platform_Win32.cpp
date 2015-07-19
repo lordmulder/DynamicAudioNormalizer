@@ -30,9 +30,21 @@
 #include <io.h>
 #include <fcntl.h>
 
+#ifdef __MINGW32__
+#define _O_U8TEXT 0x40000
+extern "C"
+{
+	typedef struct { int newmode; } _startupinfo;
+	typedef void (*ptr_invalid_param_handler)(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
+	int __cdecl __declspec(dllimport) __wgetmainargs (int *_Argc, wchar_t ***_Argv, wchar_t ***_Env, int _DoWildCard, _startupinfo * _StartInfo);
+	int wmain(int argc, CHR* argv[]);
+	static ptr_invalid_param_handler _set_invalid_parameter_handler(ptr_invalid_param_handler) { return NULL; }
+}
+#endif //__MINGW32__
+
 static void my_crash_handler(const char *const message)
 {
-	__try
+	TRY_SEH
 	{
 		DWORD bytesWritten;
 		if(HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE))
@@ -41,7 +53,7 @@ static void my_crash_handler(const char *const message)
 			FlushFileBuffers(hStdErr);
 		}
 	}
-	__except(1)
+	CATCH_SEH
 	{
 		/*ignore any exception that might occur in crash handler*/
 	}
@@ -98,5 +110,20 @@ void SYSTEM_INIT(const bool &debugMode)
 	_setmode(_fileno(stderr), _O_U8TEXT);
 	_setmode(_fileno(stdout), _O_BINARY);
 }
+
+//MinGW does *not* provide a proper wmain() entry point, so we have to emulate it here!
+#ifdef __MINGW32__
+int main()
+{
+	int argc;
+	wchar_t **argv_wide, **envp_wide;
+	_startupinfo startup = { 0 };
+	if(__wgetmainargs(&argc, &argv_wide, &envp_wide, 0, &startup) != 0)
+	{
+		abort();
+	}
+	return wmain(argc, argv_wide);
+}
+#endif //__MINGW32__
 
 #endif //_WIN32

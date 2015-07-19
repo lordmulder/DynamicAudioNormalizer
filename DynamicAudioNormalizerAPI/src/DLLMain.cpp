@@ -27,7 +27,9 @@
 #include <Windows.h>
 
 //VLD
+#ifndef __MINGW32__
 #include <vld.h>
+#endif
 
 BOOL APIENTRY DllMain(HMODULE hModule,DWORD  ul_reason_for_call, LPVOID lpReserved)
 {

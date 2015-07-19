@@ -56,6 +56,12 @@ CXXFLAGS += -I./include
 CXXFLAGS += -I../DynamicAudioNormalizerAPI/include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 
+ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
+   CXXFLAGS += -D__USE_MINGW_FSEEK 
+   CXXFLAGS += -I../../libsndfile/include
+   LDXFLAGS += -L../../libsndfile/lib
+endif
+
 LDXFLAGS += -Wl,-rpath,'$$ORIGIN'
 LDXFLAGS += -L../DynamicAudioNormalizerAPI/lib
 LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
@@ -64,15 +70,21 @@ LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
 LDXFLAGS += -lsndfile
 
 ##############################################################################
-# Rules
+# File Names
 ##############################################################################
+
+ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
+   PRG_EXT = exe
+else
+   PRG_EXT = bin
+endif
 
 SOURCES_CPP = $(wildcard src/*.cpp)
 SOURCES_OBJ = $(patsubst %.cpp,%.o,$(SOURCES_CPP))
 
 PROGRAM_OUT = bin/$(PROGRAM_NAME)
-PROGRAM_BIN = $(PROGRAM_OUT)
-PROGRAM_DBG = $(PROGRAM_OUT)-DBG
+PROGRAM_BIN = $(PROGRAM_OUT).$(PRG_EXT)
+PROGRAM_DBG = $(PROGRAM_OUT)-DBG.$(PRG_EXT)
 
 ##############################################################################
 # Rules

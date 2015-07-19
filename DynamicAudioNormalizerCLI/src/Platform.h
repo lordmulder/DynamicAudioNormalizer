@@ -49,10 +49,10 @@
 void SYSTEM_INIT(const bool &debugMode);
 
 //============================================================================
-// WINDOWS
+// WINDOWS | MSVC
 //============================================================================
 
-#ifdef _WIN32 /*Windows only*/
+#if defined(_WIN32) && defined(_MSC_VER) /*Windows MSVC only*/
 
 #include <io.h>
 
@@ -157,6 +157,110 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 #endif //_WIN32
 
 //============================================================================
+// WINDOWS | MINGW
+//============================================================================
+
+#if defined(_WIN32) && defined(__MINGW32__) /*Windows MSVC only*/
+
+#include <io.h>
+
+#define _TXT(X) L##X
+#define TXT(X) _TXT(X)
+#define OS_TYPE TXT("Win")
+#define FMT_CHAR TXT("%S")
+#define MAIN wmain
+#define TRY_SEH if(1)
+#define CATCH_SEH else
+
+#define F_OK 0
+#define X_OK 1
+#define W_OK 2
+#define R_OK 4
+
+typedef wchar_t CHR;
+typedef struct _stati64 STAT64;
+
+inline static int PRINT(const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = vfwprintf(stderr, format, ap);
+	va_end(ap);
+	return result;
+}
+
+inline static void FLUSH(void)
+{
+	fflush(stderr);
+}
+
+inline static FILE *FOPEN(const CHR *const fileName, const CHR *const mode)
+{
+	return _wfopen(fileName, mode);
+}
+
+inline static int FILENO(FILE *const file)
+{
+	return _fileno(file);
+}
+
+inline static int FSTAT64(const int fd, STAT64 *stat)
+{
+	return _fstati64(fd, stat);
+}
+
+inline static int FSEEK64(FILE *const file, int64_t offset, const int origin)
+{
+	return __mingw_fseeko64(file, offset, origin);
+}
+
+inline static int64_t FTELL64(FILE *const file)
+{
+	return ftello64(file);
+}
+
+inline static int ACCESS(const CHR *const fileName, const int mode)
+{
+	return _waccess(fileName, mode);
+}
+
+inline static int STRCASECMP(const CHR *const s1, const CHR *const s2)
+{
+	return _wcsicmp(s1, s2);
+}
+
+inline static const CHR *STRCHR(const CHR *const str, const CHR c)
+{
+	return wcschr(str, c);
+}
+
+inline static const CHR *STRRCHR(const CHR *const str, const CHR c)
+{
+	return wcsrchr(str, c);
+}
+
+inline static int SNPRINTF(CHR *const buffer, size_t buffSize, const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = _vsnwprintf(buffer, buffSize, format, ap);
+	buffer[buffSize-1] = 0x00;
+	va_end(ap);
+	return result;
+}
+
+inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = vswscanf(str, format, ap);
+	va_end(ap);
+	return result;
+}
+
+#endif //_WIN32
+
+//============================================================================
 // LINUX
 //============================================================================
 
@@ -170,7 +274,7 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 #define FMT_CHAR TXT("%s")
 #define MAIN main
 #define TRY_SEH if(1)
-#define CATCH_SEH if(0)
+#define CATCH_SEH else
 
 typedef char CHR;
 typedef struct stat64 STAT64;
