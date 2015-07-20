@@ -48,11 +48,11 @@ Dynamic Audio Normalizer can be downloaded from one of the following *official* 
 
 ## System Requirements ##
 
-Dynamic Audio Normalizer is written in plain C++ (C++98) and therefore does **not** have any system requirements, except for a conforming C++ compiler on the target platform. Currently, the Microsoft C++ compiler and the GNU Compiler Collection are used for development.
+Dynamic Audio Normalizer "core" library and CLI front-end are written in plain C++11 and therefore do **not** have any system requirements, except for a conforming C++ compiler. Currently, the Microsoft C++ compiler and the GNU Compiler Collection are actively supported.
 
-*Pre-compiled* binaries are provided for the *Windows* and  the *Linux* platform. The 32-Bit Windows binaries should work on Windows XP (with Service Pack 2) or any late version. The 64-Bit Windows binaries require Windows Vista ("x64" edition) or later. Linux binaries are provided for some popular distributions (latest version at the time of release). They may work on other distributions too, or not. Thus, Linux users are generally recommended to compile Dynamic Audio Normalizer themselves, from the source codes.
+*Pre-compiled* binaries are provided for the *Windows* and  the *Linux* platform. The 32-Bit Windows binaries should work on Windows XP (with Service Pack 2) or any late version. The 64-Bit Windows binaries require the "x64" edition of Windows Vista or any later 64-Bit Windows. Linux binaries are provided for some popular distributions (latest version at the time of release). They may work on other distributions too, or not. Thus, Linux users are generally recommended to compile Dynamic Audio Normalizer themselves, from the source codes.
 
-For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required program libraries *built-in* (including C++ Runtime) and thus do *not* depend on any separate DLL files. At the same time, the "DLL" binaries use separate DLL files for the "core" functions as well as the C++ Runtime. If you don't understand what this means, then just go with the "Static" version. If you want to call Dynamic Audio Normalizer from your own code, use the "DLL" version.
+For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required program libraries *built-in* (including C++ Runtime) and thus do *not* depend on any separate DLL files. At the same time, the "DLL" package uses separate DLL files for the "core" functions as well as for the C++ Runtime. If you don't understand what this means, then just go with the "Static" version. If you want to call Dynamic Audio Normalizer from your own code, you need to use the "DLL" version.
 
 All *pre-compiled* binaries have been compiled with the [*SSE2*](https://en.wikipedia.org/wiki/SSE2) instruction set enabled, so a processor with SSE2 support (i.e. Pentium 4 or later) is required. For *legacy* processors you will need to compile Dynamic Audio Normalizer from the sources &ndash; with appropriate CPU flags.
 
@@ -116,7 +116,7 @@ For a list of *all* available options, please run ``DynamicAudioNormalizerCLI.ex
 
 ## SoX Integration Usage ##
 
-As an alternative to the Dynamic Audio Normalizer command-line front-end, the Dynamic Audio Normalizer library may also be used as an effect in [*Sound eXchange* (SoX)](http://sox.sourceforge.net/), a versatile audio editor and converter.
+As an alternative to the Dynamic Audio Normalizer command-line front-end, the Dynamic Audio Normalizer library may also be used as an effect in [**SoX** (Sound eXchange)](http://sox.sourceforge.net/), a versatile audio editor and converter.
 
 Note, however, that *standard* SoX distributions do **not** currently support the Dynamic Audio Normalizer. Instead, a special *patched* build of SoX that has the Dynamic Audio Normalizer effect enabled is required!
 
@@ -125,6 +125,17 @@ When working with SoX, the Dynamic Audio Normalizer can be invoked by adding the
 
 For details about the SoX command-line syntax, please refer to the [SoX documentation](http://sox.sourceforge.net/sox.html), or type ``DynamicAudioNormalizerSoX.exe --help-effect dynaudnorm`` for a list of available options.
 
+
+## FFmpeg Integration Usage ##
+
+Furthermore, the Dynamic Audio Normalizer now is also available as an audio filter in [**FFmpeg**](https://www.ffmpeg.org/), a complete, cross-platform solution to record, convert and stream audio and video. Thanks to *Paul B Mahol* for porting Dynamic Audio Normalizer code to FFmpeg.
+
+Since the Dynamic Audio Normalizer has been committed to the official FFmpeg codebase, you can use *any* FFmpeg binary &ndash; the Dynamic Audio Normalizer distribution package does **not** contain FFmpeg binaries. Just be sure to grab an *up-to-date* FFmpeg that has the "dynaudnorm" filter integrated. Windows users can download ready-made FFmpeg binaries [here](http://ffmpeg.zeranoe.com/builds/). Linux users install FFmpeg from the package manager of their distribution or [build](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu) it themselves. If the FFmpeg included with your distribution is too old, find recent Linux binaries [here](http://johnvansickle.com/ffmpeg/).
+
+When working with FFmpeg, the Dynamic Audio Normalizer can be invoked by adding the "dynaudnorm" audio filter, using the "-af" switch:
+``ffmpeg.exe -i "in_original.wav" -af dynaudnorm "out_normalized.wav"``
+
+For details about the FFmpeg command-line syntax, please refer to the [FFmpeg documentation](https://ffmpeg.org/ffmpeg-filters.html#dynaudnorm), see the [FFmpeg filtering guide](https://trac.ffmpeg.org/wiki/FilteringGuide), or type ``ffmpeg.exe -h full | more`` for a list of available options.
 
 
 # VST Plug-In Usage #
