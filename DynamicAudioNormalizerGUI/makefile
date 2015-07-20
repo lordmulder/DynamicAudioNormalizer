@@ -53,18 +53,14 @@ endif
 ##############################################################################
 
 DEBUG_BUILD ?= 0
+MARCH ?= native
 
 ifeq ($(DEBUG_BUILD), 1)
    CONFIG_NAME = Debug
    CXXFLAGS = -g -O0 -D_DEBUG
 else
    CONFIG_NAME = Release
-   CXXFLAGS = -O3 -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG
-   ifeq ($(shell getconf LONG_BIT),64)
-      CXXFLAGS += -march=core2
-   else
-      CXXFLAGS += -march=pentium4
-   endif
+   CXXFLAGS = -O3 -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG -march=$(MARCH) -Wno-strict-overflow
 endif
 
 CXXFLAGS += -I./src
@@ -82,8 +78,14 @@ CXXFLAGS += -I$(QTDIR)/QtCore
 LDXFLAGS += -lQtCore -lQtGui
 
 ##############################################################################
-# Rules
+# File Names
 ##############################################################################
+
+ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
+   PRG_EXT = exe
+else
+   PRG_EXT = bin
+endif
 
 SOURCES_HDR = $(wildcard src/*.h) $(wildcard src/3rd_party/*.h)
 SOURCES_MOC = $(patsubst %.h,%_MOC.cpp,$(SOURCES_HDR))
@@ -91,8 +93,8 @@ SOURCES_CPP = $(wildcard src/*.cpp) $(wildcard src/3rd_party/*.cpp) $(SOURCES_MO
 SOURCES_OBJ = $(patsubst %.cpp,%.o,$(SOURCES_CPP))
 
 PROGRAM_OUT = bin/$(PROGRAM_NAME)
-PROGRAM_BIN = $(PROGRAM_OUT)
-PROGRAM_DBG = $(PROGRAM_OUT)-DBG
+PROGRAM_BIN = $(PROGRAM_OUT).$(PRG_EXT)
+PROGRAM_DBG = $(PROGRAM_OUT)-DBG.$(PRG_EXT)
 
 ##############################################################################
 # Rules

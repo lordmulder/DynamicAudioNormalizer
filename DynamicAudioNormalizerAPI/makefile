@@ -52,18 +52,14 @@ endif
 ##############################################################################
 
 DEBUG_BUILD ?= 0
+MARCH ?= native
 
 ifeq ($(DEBUG_BUILD), 1)
    CONFIG_NAME = Debug
    CXXFLAGS = -g -O0 -D_DEBUG
 else
    CONFIG_NAME = Release
-   CXXFLAGS = -O3 -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG
-   ifeq ($(shell getconf LONG_BIT),64)
-      CXXFLAGS += -march=core2
-   else
-      CXXFLAGS += -march=pentium4
-   endif
+   CXXFLAGS = -O3 -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG -march=$(MARCH)
 endif
 
 ifneq ($(findstring MINGW,$(shell uname -s)),MINGW)
