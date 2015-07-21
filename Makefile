@@ -136,7 +136,7 @@ CreateTagFile:
 	echo "" >> $(BUILD_TAG)
 	g++ --version | head -n1 | sed 's/^/Compiler version:   /' >> $(BUILD_TAG)
 	uname -srmo | sed 's/^/Build platform:     /' >> $(BUILD_TAG)
-	(lsb_release -s -d || echo "Unknown") | sed 's/\"//g' | sed 's/^/System description: /' >> $(BUILD_TAG)
+	(lsb_release -s -d || ([ -n "$$MSYSTEM" ] && echo "$$MSYSTEM") || echo "Unknown") | sed 's/\"//g' | sed 's/^/System description: /' >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	echo "This library is free software; you can redistribute it and/or" >> $(BUILD_TAG)
 	echo "modify it under the terms of the GNU Lesser General Public" >> $(BUILD_TAG)
