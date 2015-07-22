@@ -228,7 +228,7 @@ bool AudioIO_File_Private::openRd(const CHR *const fileName, const uint32_t chan
 	{
 		if(!bPipe)
 		{
-			PRINT2_ERR(TXT("Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
+			PRINT2_ERR(TXT("Failed to open \"") FMT_chr TXT("\"\n"), sf_strerror(NULL));
 			fclose(file);
 		}
 		return false;
@@ -282,7 +282,7 @@ bool AudioIO_File_Private::openWr(const CHR *const fileName, const uint32_t chan
 	{
 		if(file)
 		{
-			PRINT2_ERR(TXT("Failed to open \"") FMT_CHAR TXT("\"\n"), sf_strerror(NULL));
+			PRINT2_ERR(TXT("Failed to open \"") FMT_chr TXT("\"\n"), sf_strerror(NULL));
 			fclose(file);
 		}
 		return false;
@@ -474,7 +474,7 @@ void AudioIO_File_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 		case SF_FORMAT_VORBIS: subfmt = TXT("Xiph Vorbis");           break;
 	}
 
-	SNPRINTF(buffer, buffSize, TXT("%s, %s"), format, subfmt);
+	SNPRINTF(buffer, buffSize, FMT_CHR TXT(", ") FMT_CHR, format, subfmt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

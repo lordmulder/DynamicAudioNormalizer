@@ -31,14 +31,11 @@
 #include <fcntl.h>
 
 #ifdef __MINGW32__
-#define _O_U8TEXT 0x40000
 extern "C"
 {
 	typedef struct { int newmode; } _startupinfo;
-	typedef void (*ptr_invalid_param_handler)(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
 	int __cdecl __declspec(dllimport) __wgetmainargs (int *_Argc, wchar_t ***_Argv, wchar_t ***_Env, int _DoWildCard, _startupinfo * _StartInfo);
 	int wmain(int argc, CHR* argv[]);
-	static ptr_invalid_param_handler _set_invalid_parameter_handler(ptr_invalid_param_handler) { return NULL; }
 }
 #endif //__MINGW32__
 
@@ -107,7 +104,6 @@ void SYSTEM_INIT(const bool &debugMode)
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 
 	_setmode(_fileno(stdin ), _O_BINARY);
-	_setmode(_fileno(stderr), _O_U8TEXT);
 	_setmode(_fileno(stdout), _O_BINARY);
 }
 

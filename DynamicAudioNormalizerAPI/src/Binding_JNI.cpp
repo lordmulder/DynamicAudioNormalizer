@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <queue>
 #include <climits>
+#include <malloc.h>
 
 //C++11 support
 #if (__cplusplus >= 201100L) || (defined(_MSC_VER) && (_MSC_VER > 1600))

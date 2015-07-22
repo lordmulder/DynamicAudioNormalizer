@@ -34,7 +34,7 @@
 { \
 	if(++pos >= argc) \
 	{ \
-		PRINT2_WRN(TXT("Missing argument for option \"%s\".\n"), argv[pos-1]); \
+		PRINT2_WRN(TXT("Missing argument for option \"") FMT_CHR TXT("\".\n"), argv[pos-1]); \
 		return false; \
 	} \
 } \
@@ -44,7 +44,7 @@ while(0)
 { \
 	if(((pos++) + (N)) >= argc) \
 	{ \
-		PRINT2_WRN(TXT("Missing argument(s) for option \"%s\".\n"), argv[pos-1]); \
+		PRINT2_WRN(TXT("Missing argument(s) for option \"") FMT_CHR TXT("\".\n"), argv[pos-1]); \
 		return false; \
 	} \
 } \
@@ -76,7 +76,7 @@ static bool STR_TO_UINT(uint32_t &output, const CHR *str)
 { \
 	if(!STR_TO_FLT((OUT), argv[pos])) \
 	{ \
-		PRINT2_WRN(TXT("Failed to parse floating point value \"%s\"\n"), argv[pos]); \
+		PRINT2_WRN(TXT("Failed to parse floating point value \"") FMT_CHR TXT("\"\n"), argv[pos]); \
 		return false; \
 	} \
 } \
@@ -86,7 +86,7 @@ while(0)
 { \
 	if(!STR_TO_UINT((OUT), argv[pos])) \
 	{ \
-		PRINT2_WRN(TXT("Failed to parse unsigned integral value \"%s\"\n"), argv[pos]); \
+		PRINT2_WRN(TXT("Failed to parse unsigned integral value \"") FMT_CHR TXT("\"\n"), argv[pos]); \
 		return false; \
 	} \
 } \
@@ -243,13 +243,13 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 			continue;
 		}
 
-		PRINT2_WRN(TXT("Unknown command-line argument \"%s\"\n"), argv[pos]);
+		PRINT2_WRN(TXT("Unknown command-line argument \"") FMT_CHR TXT("\"\n"), argv[pos]);
 		return false;
 	}
 
 	if((!m_showHelp) && (pos < argc))
 	{
-		PRINT2_WRN(TXT("Excess command-line argument \"%s\"\n"), argv[pos]);
+		PRINT2_WRN(TXT("Excess command-line argument \"") FMT_CHR TXT("\"\n"), argv[pos]);
 		return false;
 	}
 

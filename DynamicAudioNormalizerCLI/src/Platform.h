@@ -59,7 +59,8 @@ void SYSTEM_INIT(const bool &debugMode);
 #define _TXT(X) L##X
 #define TXT(X) _TXT(X)
 #define OS_TYPE TXT("Win")
-#define FMT_CHAR TXT("%S")
+#define FMT_CHR TXT("%S")
+#define FMT_chr TXT("%s")
 #define MAIN wmain
 #define TRY_SEH __try
 #define CATCH_SEH __except(1)
@@ -160,14 +161,15 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 // WINDOWS | MINGW
 //============================================================================
 
-#if defined(_WIN32) && defined(__MINGW32__) /*Windows MSVC only*/
+#if defined(_WIN32) && defined(__MINGW32__) /*Windows MinGW only*/
 
 #include <io.h>
 
 #define _TXT(X) L##X
 #define TXT(X) _TXT(X)
 #define OS_TYPE TXT("Win")
-#define FMT_CHAR TXT("%S")
+#define FMT_CHR TXT("%ls")
+#define FMT_chr TXT("%s")
 #define MAIN wmain
 #define TRY_SEH if(1)
 #define CATCH_SEH else
@@ -211,7 +213,7 @@ inline static int FSTAT64(const int fd, STAT64 *stat)
 
 inline static int FSEEK64(FILE *const file, int64_t offset, const int origin)
 {
-	return __mingw_fseeko64(file, offset, origin);
+	return fseeko64(file, offset, origin); //__mingw_fseeko64(file, offset, origin)
 }
 
 inline static int64_t FTELL64(FILE *const file)
@@ -271,7 +273,8 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 #define _TXT(X) X
 #define TXT(X) _TXT(X)
 #define OS_TYPE TXT("Linux")
-#define FMT_CHAR TXT("%s")
+#define FMT_CHR TXT("%s")
+#define FMT_chr TXT("%s")
 #define MAIN main
 #define TRY_SEH if(1)
 #define CATCH_SEH else

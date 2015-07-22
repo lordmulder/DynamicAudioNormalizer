@@ -53,12 +53,12 @@ CXXFLAGS += -I../DynamicAudioNormalizerAPI/include
 CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 
 ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
-   CXXFLAGS += -D__USE_MINGW_FSEEK 
    CXXFLAGS += -I../../libsndfile/include
    LDXFLAGS += -L../../libsndfile/lib
+else
+   LDXFLAGS += -Wl,-rpath,'$$ORIGIN'
 endif
 
-LDXFLAGS += -Wl,-rpath,'$$ORIGIN'
 LDXFLAGS += -L../DynamicAudioNormalizerAPI/lib
 LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
 

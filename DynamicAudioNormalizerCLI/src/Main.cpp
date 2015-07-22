@@ -84,10 +84,10 @@ static void loggingCallback_default(const int logLevel, const char *const messag
 	switch(logLevel)
 	{
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
-		PRINT2_WRN(FMT_CHAR, message);
+		PRINT2_WRN(FMT_chr, message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_ERR:
-		PRINT2_ERR(FMT_CHAR, message);
+		PRINT2_ERR(FMT_chr, message);
 		break;
 	}
 }
@@ -97,13 +97,13 @@ static void loggingCallback_verbose(const int logLevel, const char *const messag
 	switch(logLevel)
 	{
 	case MDynamicAudioNormalizer::LOG_LEVEL_NFO:
-		PRINT2_NFO(FMT_CHAR, message);
+		PRINT2_NFO(FMT_chr, message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:
-		PRINT2_WRN(FMT_CHAR, message);
+		PRINT2_WRN(FMT_chr, message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_ERR:
-		PRINT2_ERR(FMT_CHAR, message);
+		PRINT2_ERR(FMT_chr, message);
 		break;
 	}
 }
@@ -113,8 +113,8 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	uint32_t channels = 0, sampleRate = 0, bitDepth = 0;
 	int64_t length = 0;
 
-	PRINT(TXT("SourceFile: %s\n"),   STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.sourceFile() : TXT("<STDIN>"));
-	PRINT(TXT("OutputFile: %s\n\n"), STRCASECMP(parameters.outputFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
+	PRINT(TXT("SourceFile: ") FMT_CHR TXT("\n"),   STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.sourceFile() : TXT("<STDIN>"));
+	PRINT(TXT("OutputFile: ") FMT_CHR TXT("\n\n"), STRCASECMP(parameters.outputFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
 
 	MY_DELETE(*sourceFile);
 	MY_DELETE(*outputFile);
@@ -123,7 +123,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	*sourceFile = new AudioIO_SndFile();
 	if(!(*sourceFile)->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
 	{
-		PRINT2_WRN(TXT("Failed to open input file \"%s\" for reading!\n"), parameters.sourceFile());
+		PRINT2_WRN(TXT("Failed to open input file \"") FMT_CHR TXT("\" for reading!\n"), parameters.sourceFile());
 		MY_DELETE(*sourceFile);
 		return false;
 	}
@@ -132,7 +132,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	if((*sourceFile)->queryInfo(channels, sampleRate, length, bitDepth))
 	{
 		CHR timeBuffer[32];
-		PRINT(TXT("Properties: %u channels, %u Hz, %u bit/sample (Duration: %s)\n\n"), channels, sampleRate, bitDepth, timeToString(timeBuffer, 32, length, sampleRate));
+		PRINT(TXT("Properties: %u channels, %u Hz, %u bit/sample (Duration: ") FMT_CHR TXT(")\n\n"), channels, sampleRate, bitDepth, timeToString(timeBuffer, 32, length, sampleRate));
 	}
 	else
 	{
@@ -145,7 +145,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	*outputFile = new AudioIO_SndFile();
 	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
 	{
-		PRINT2_WRN(TXT("Failed to open output file \"%s\" for writing!\n"), parameters.outputFile());
+		PRINT2_WRN(TXT("Failed to open output file \"") FMT_CHR TXT("\" for writing!\n"), parameters.outputFile());
 		MY_DELETE(*sourceFile);
 		MY_DELETE(*outputFile);
 		return false;
@@ -155,9 +155,9 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	{
 		CHR info[128];
 		(*sourceFile)->getFormatInfo(info, 128);
-		PRINT(TXT("SourceInfo: %s\n"), info);
+		PRINT(TXT("SourceInfo: ") FMT_CHR TXT("\n"), info);
 		(*outputFile)->getFormatInfo(info, 128);
-		PRINT(TXT("OutputInfo: %s\n\n"), info);
+		PRINT(TXT("OutputInfo: ") FMT_CHR TXT("\n\n"), info);
 	}
 
 	return true;
@@ -347,22 +347,22 @@ static void printHelpScreen(int argc, CHR* argv[])
 	Parameters defaults;
 
 	PRINT(TXT("Basic Usage:\n"));
-	PRINT(TXT("  %s [options] -i <input.wav> -o <output.wav>\n"), appName(argv[0]));
+	PRINT(TXT("  ") FMT_CHR TXT(" [options] -i <input.wav> -o <output.wav>\n"), appName(argv[0]));
 	PRINT(TXT("\n"));
 	PRINT(TXT("Input/Output:\n"));
 	PRINT(TXT("  -i --input <file>        Input audio file [required]\n"));
 	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
 	PRINT(TXT("\n"));
 	PRINT(TXT("Algorithm Tweaks:\n"));
-	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"),    defaults.frameLenMsec());
-	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"),     defaults.filterSize());
-	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"),   defaults.peakValue());
-	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"),            defaults.maxAmplification());
-	PRINT(TXT("  -r --target-rms <value>  Target RMS value [default: %.2f]\n"),               defaults.targetRms());
-	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: %s]\n"),         BOOLIFY(defaults.channelsCoupled()));
-	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: %s]\n"),    BOOLIFY(defaults.enableDCCorrection()));
-	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: %s]\n"),    BOOLIFY(defaults.altBoundaryMode()));
-	PRINT(TXT("  -s --compress <value>    Compress the input data [default: %.2f]\n"),        defaults.compressFactor());
+	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"),               defaults.frameLenMsec());
+	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"),                defaults.filterSize());
+	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"),              defaults.peakValue());
+	PRINT(TXT("  -m --max-gain <value>    Maximum gain factor [default: %.2f]\n"),                       defaults.maxAmplification());
+	PRINT(TXT("  -r --target-rms <value>  Target RMS value [default: %.2f]\n"),                          defaults.targetRms());
+	PRINT(TXT("  -n --no-coupling         Disable channel coupling [default: ") FMT_CHR TXT("]\n"),      BOOLIFY(defaults.channelsCoupled()));
+	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: ") FMT_CHR TXT("]\n"), BOOLIFY(defaults.enableDCCorrection()));
+	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: ") FMT_CHR TXT("]\n"), BOOLIFY(defaults.altBoundaryMode()));
+	PRINT(TXT("  -s --compress <value>    Compress the input data [default: %.2f]\n"),                   defaults.compressFactor());
 	PRINT(TXT("\n"));
 	PRINT(TXT("Diagnostics:\n"));
 	PRINT(TXT("  -v --verbose             Output additional diagnostic info\n"));
@@ -386,9 +386,9 @@ static void printLogo(void)
 
 	PRINT(TXT("---------------------------------------------------------------------------\n"));
 
-	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u, %s\n"), versionMajor, versionMinor, versionPatch, LINKAGE);
+	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u, %ls\n"), versionMajor, versionMinor, versionPatch, LINKAGE);
 	PRINT(TXT("Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
-	PRINT(TXT("Built on ") FMT_CHAR TXT(" at ") FMT_CHAR TXT(" with ") FMT_CHAR TXT(" for ") OS_TYPE TXT("-") FMT_CHAR TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
+	PRINT(TXT("Built on ") FMT_chr TXT(" at ") FMT_chr TXT(" with ") FMT_chr TXT(" for ") OS_TYPE TXT("-") FMT_chr TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
 
 	PRINT(TXT("This program is free software: you can redistribute it and/or modify\n"));
 	PRINT(TXT("it under the terms of the GNU General Public License <http://www.gnu.org/>.\n"));
@@ -415,7 +415,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	Parameters parameters;
 	if(!parameters.parseArgs(argc, argv))
 	{
-		PRINT2_ERR(TXT("Invalid or incomplete command-line arguments have been detected.\n\nPlease type \"%s --help\" for details!\n"), appName(argv[0]));
+		PRINT2_ERR(TXT("Invalid or incomplete command-line arguments have been detected.\n\nPlease type \"") FMT_CHR TXT(" --help\" for details!\n"), appName(argv[0]));
 		return EXIT_FAILURE;
 	}
 
@@ -425,7 +425,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
-	PRINT(TXT("Using ") FMT_CHAR TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_SndFile::libraryVersion());
+	PRINT(TXT("Using ") FMT_chr TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_SndFile::libraryVersion());
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioIO *sourceFile = NULL, *outputFile = NULL;
@@ -461,7 +461,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 	}
 
 	PRINT(TXT("--------------\n\n"));
-	PRINT(TXT("%s\n\nOperation took %.1f seconds.\n\n"), ((result != EXIT_SUCCESS) ? TXT("Sorry, something went wrong :-(") : TXT("Everything completed successfully :-)")), elapsed);
+	PRINT(FMT_CHR TXT("\n\nOperation took %.1f seconds.\n\n"), ((result != EXIT_SUCCESS) ? TXT("Sorry, something went wrong :-(") : TXT("Everything completed successfully :-)")), elapsed);
 
 	return result;
 }
@@ -476,7 +476,7 @@ int mainEx(int argc, CHR* argv[])
 	}
 	catch(std::exception &e)
 	{
-		PRINT(TXT("\n\nGURU MEDITATION: Unhandeled C++ exception error: ") FMT_CHAR TXT("\n\n"), e.what());
+		PRINT(TXT("\n\nGURU MEDITATION: Unhandeled C++ exception error: ") FMT_chr TXT("\n\n"), e.what());
 		exitCode = EXIT_FAILURE;
 	}
 	catch(...)

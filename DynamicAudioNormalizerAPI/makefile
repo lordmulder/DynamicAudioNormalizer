@@ -77,7 +77,11 @@ CXXFLAGS += -I../DynamicAudioNormalizerJNI/include
 
 ifneq ($(ENABLE_JNI),false)
    CXXFLAGS += -I$(JDK_PATH)/include
-   CXXFLAGS += -I$(JDK_PATH)/include/linux
+   ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
+      CXXFLAGS += -I$(JDK_PATH)/include/win32
+   else
+      CXXFLAGS += -I$(JDK_PATH)/include/linux
+   endif
 else
    CXXFLAGS += -DNO_JAVA_SUPPORT
 endif
