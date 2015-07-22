@@ -386,7 +386,7 @@ static void printLogo(void)
 
 	PRINT(TXT("---------------------------------------------------------------------------\n"));
 
-	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u, %ls\n"), versionMajor, versionMinor, versionPatch, LINKAGE);
+	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u, ") FMT_CHR TXT("\n"), versionMajor, versionMinor, versionPatch, LINKAGE);
 	PRINT(TXT("Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
 	PRINT(TXT("Built on ") FMT_chr TXT(" at ") FMT_chr TXT(" with ") FMT_chr TXT(" for ") OS_TYPE TXT("-") FMT_chr TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
 
