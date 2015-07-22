@@ -59,8 +59,8 @@ void SYSTEM_INIT(const bool &debugMode);
 #define _TXT(X) L##X
 #define TXT(X) _TXT(X)
 #define OS_TYPE TXT("Win")
-#define FMT_CHR TXT("%S")
-#define FMT_chr TXT("%s")
+#define FMT_CHR TXT("%s")
+#define FMT_chr TXT("%S")
 #define MAIN wmain
 #define TRY_SEH __try
 #define CATCH_SEH __except(1)
