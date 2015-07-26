@@ -27,8 +27,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#define IS_ARG_LONG(ARG_LONG)           (STRCASECMP(argv[pos], TXT("--")TXT(ARG_LONG)) == 0)
-#define IS_ARG_SHRT(ARG_SHRT, ARG_LONG) ((STRCASECMP(argv[pos], TXT("-")TXT(ARG_SHRT)) == 0) || (STRCASECMP(argv[pos], TXT("--")TXT(ARG_LONG)) == 0))
+#define IS_ARG_LONG(ARG_LONG)           (STRCASECMP(argv[pos], TXT("--") TXT(ARG_LONG)) == 0)
+#define IS_ARG_SHRT(ARG_SHRT, ARG_LONG) ((STRCASECMP(argv[pos], TXT("-") TXT(ARG_SHRT)) == 0) || (STRCASECMP(argv[pos], TXT("--") TXT(ARG_LONG)) == 0))
 
 #define ENSURE_NEXT_ARG() do \
 { \

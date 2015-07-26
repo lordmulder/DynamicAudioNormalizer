@@ -12,6 +12,7 @@ set "QT_SHARED=C:\Qt\4.8.6-Shared"
 set "QT_STATIC=C:\Qt\4.8.6-Static"
 set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_25"
 set "ANT1_PATH=C:\Eclipse\plugins\org.apache.ant_1.9.2.v201404171502"
+set "SLN_SUFFX=VS2013"
 
 REM ###############################################
 REM # DO NOT MODIFY ANY LINES BELOW THIS LINE !!! #
@@ -118,11 +119,11 @@ for %%c in (DLL, Static) do (
 		echo BEGIN BUILD [%%p/Release_%%c]
 		echo ---------------------------------------------------------------------
 
-		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:clean   "%~dp0\DynamicAudioNormalizer.sln"
+		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:clean   "%~dp0\DynamicAudioNormalizer_%SLN_SUFFX%.sln"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:rebuild "%~dp0\DynamicAudioNormalizer.sln"
+		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:rebuild "%~dp0\DynamicAudioNormalizer_%SLN_SUFFX%.sln"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:build   "%~dp0\DynamicAudioNormalizer.sln"
+		MSBuild.exe /property:Platform=%%p /property:Configuration=Release_%%c /target:build   "%~dp0\DynamicAudioNormalizer_%SLN_SUFFX%.sln"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 	)
 )

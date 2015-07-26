@@ -37,6 +37,9 @@
 #if defined(_WIN32) && defined(_MT)
 #define PTW32_STATIC_LIB 1
 #endif
+#if (_MSC_VER >= 1900) && !defined(_CRT_NO_TIME_T)
+#define _TIMESPEC_DEFINED 1
+#endif
 #include <pthread.h>
 
 //Globals
