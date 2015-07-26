@@ -60,6 +60,8 @@ const char* DYNAUDNORM_BUILD_TIME = __TIME__;
 			const char *DYNAUDNORM_COMPILER = "MSVC 2013.3";
 		#elif (_MSC_FULL_VER == 180031101)
 			const char *DYNAUDNORM_COMPILER = "MSVC 2013.4";
+		#elif (_MSC_FULL_VER == 180040629)
+			const char *DYNAUDNORM_COMPILER = "MSVC 2013.5";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
