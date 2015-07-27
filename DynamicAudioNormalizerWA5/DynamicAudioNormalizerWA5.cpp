@@ -40,18 +40,10 @@
 
 //Internal
 #include <Common.h>
+#include <Threads.h>
 
 //Dynamic Audio Normalizer API
 #include <DynamicAudioNormalizer.h>
-
-//PThread
-#if defined(_WIN32) && defined(_MT)
-#define PTW32_STATIC_LIB 1
-#endif
-#if (_MSC_VER >= 1900) && !defined(_CRT_NO_TIME_T)
-#define _TIMESPEC_DEFINED 1
-#endif
-#include <pthread.h>
 
 //DLL exports
 #define DLL_EXPORT __declspec(dllexport)
