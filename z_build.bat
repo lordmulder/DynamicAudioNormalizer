@@ -7,12 +7,13 @@ REM ///////////////////////////////////////////////////////////////////////////
 set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
 set "UPX3_PATH=C:\Program Files (x86)\UPX"
 set "PDOC_PATH=C:\Program Files (x86)\Pandoc"
-set "QT_SOURCE=C:\Qt\4.8.6"
-set "QT_SHARED=C:\Qt\4.8.6-Shared"
-set "QT_STATIC=C:\Qt\4.8.6-Static"
+set "QT_SOURCE=C:\Qt\4.8.7"
+set "QT_SHARED=C:\Qt\4.8.7-Shared"
+set "QT_STATIC=C:\Qt\4.8.7-Static"
 set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_25"
 set "ANT1_PATH=C:\Eclipse\plugins\org.apache.ant_1.9.2.v201404171502"
 set "SLN_SUFFX=VS2013"
+set "MSC_TOOLS=v120_xp"
 
 REM ###############################################
 REM # DO NOT MODIFY ANY LINES BELOW THIS LINE !!! #
@@ -156,24 +157,24 @@ for %%c in (DLL, Static) do (
 	if "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\include"
 		
-		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c"
-		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c"
-		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerNET.dll" "%PACK_PATH%\%%c"
-		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.dll" "%PACK_PATH%\%%c\x64"
-		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib" "%PACK_PATH%\%%c\x64"
-		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerNET.dll" "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.dll"     "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerAPI.lib"     "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\Release_%%c\DynamicAudioNormalizerNET.dll"     "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.dll"     "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerAPI.lib"     "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\Release_%%c\DynamicAudioNormalizerNET.dll"     "%PACK_PATH%\%%c\x64"
 		
-		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"               "%PACK_PATH%\%%c\include"
-		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"             "%PACK_PATH%\%%c\include"
-		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                 "%PACK_PATH%\%%c"
-		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"       "%PACK_PATH%\%%c"
-		copy "%~dp0\etc\pthread\lib\Win32\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c"
-		copy "%~dp0\etc\pthread\lib\x64\.\shared\pthreadVC2.dll"         "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                   "%PACK_PATH%\%%c\include"
+		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                 "%PACK_PATH%\%%c\include"
+		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                     "%PACK_PATH%\%%c"
+		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"           "%PACK_PATH%\%%c"
+		copy "%~dp0\etc\pthread\lib\Win32\shared\pthreadVC2.%MSC_TOOLS%.dll" "%PACK_PATH%\%%c\pthreadVC2.dll"
+		copy "%~dp0\etc\pthread\lib\x64\.\shared\pthreadVC2.%MSC_TOOLS%.dll" "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
 		
-		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\msvc????.dll"   "%PACK_PATH%\%%c"
-		copy "%MSVC_PATH%\redist\x64\Microsoft.VC120.CRT\msvc????.dll"   "%PACK_PATH%\%%c\x64"
-		copy "%QT_SHARED%\bin\QtGui4.dll"                                "%PACK_PATH%\%%c"
-		copy "%QT_SHARED%\bin\QtCore4.dll"                               "%PACK_PATH%\%%c"
+		copy "%MSVC_PATH%\redist\x86\Microsoft.VC120.CRT\*.dll"              "%PACK_PATH%\%%c"
+		copy "%MSVC_PATH%\redist\x64\Microsoft.VC120.CRT\*.dll"              "%PACK_PATH%\%%c\x64"
+		copy "%QT_SHARED%\bin\QtGui4.dll"                                    "%PACK_PATH%\%%c"
+		copy "%QT_SHARED%\bin\QtCore4.dll"                                   "%PACK_PATH%\%%c"
 	)
 
 	copy "%~dp0\LICENSE-LGPL.html" "%PACK_PATH%\%%c"

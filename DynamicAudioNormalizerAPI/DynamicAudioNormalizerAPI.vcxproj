@@ -163,7 +163,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -184,7 +184,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">
@@ -211,7 +211,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">LinkVerboseLib</ShowProgress>
-      <AdditionalDependencies>pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|x64'">
@@ -237,7 +237,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LinkVerboseLib</ShowProgress>
-      <AdditionalDependencies>pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
@@ -266,7 +266,7 @@
     </Link>
     <Lib>
       <Verbose>true</Verbose>
-      <AdditionalDependencies>pthreadVC2.lib</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\static</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference />
@@ -296,7 +296,7 @@
     </Link>
     <Lib>
       <Verbose>true</Verbose>
-      <AdditionalDependencies>pthreadVC2.lib</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\static</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference />
