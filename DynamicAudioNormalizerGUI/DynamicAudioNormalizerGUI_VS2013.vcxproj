@@ -62,6 +62,7 @@
     <ProjectGuid>{131C921A-7144-4C1D-9C97-57C43FA83DFE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DynamicAudioNormalizerGUI</RootNamespace>
+    <ProjectName>DynamicAudioNormalizerGUI</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
