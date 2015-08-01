@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerCLI", "DynamicAudioNormalizerCLI\DynamicAudioNormalizerCLI.vcxproj", "{5B755CC3-EC17-490F-AE82-CBC16E2EB143}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerCLI", "DynamicAudioNormalizerCLI\DynamicAudioNormalizerCLI_VS2015.vcxproj", "{5B755CC3-EC17-490F-AE82-CBC16E2EB143}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerAPI", "DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI.vcxproj", "{376386EE-8268-47E3-A335-7663716E4C60}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerAPI", "DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI_VS2015.vcxproj", "{376386EE-8268-47E3-A335-7663716E4C60}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerGUI", "DynamicAudioNormalizerGUI\DynamicAudioNormalizerGUI.vcxproj", "{131C921A-7144-4C1D-9C97-57C43FA83DFE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerGUI", "DynamicAudioNormalizerGUI\DynamicAudioNormalizerGUI_VS2015.vcxproj", "{131C921A-7144-4C1D-9C97-57C43FA83DFE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerVST", "DynamicAudioNormalizerVST\DynamicAudioNormalizerVST.vcxproj", "{A30375E8-AEF7-4531-B372-02328E0B9D43}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerVST", "DynamicAudioNormalizerVST\DynamicAudioNormalizerVST_VS2015.vcxproj", "{A30375E8-AEF7-4531-B372-02328E0B9D43}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerWA5", "DynamicAudioNormalizerWA5\DynamicAudioNormalizerWA5.vcxproj", "{4C09B776-E4AC-4459-9CEA-086011A0BA14}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerWA5", "DynamicAudioNormalizerWA5\DynamicAudioNormalizerWA5_VS2015.vcxproj", "{4C09B776-E4AC-4459-9CEA-086011A0BA14}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerNET", "DynamicAudioNormalizerNET\DynamicAudioNormalizerNET.vcxproj", "{E1794071-AB51-45C7-B215-028F3DAA2219}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerNET", "DynamicAudioNormalizerNET\DynamicAudioNormalizerNET_VS2015.vcxproj", "{E1794071-AB51-45C7-B215-028F3DAA2219}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
