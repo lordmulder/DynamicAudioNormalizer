@@ -54,8 +54,13 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI.vcxproj">
+    <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI_VS2015.vcxproj">
       <Project>{376386ee-8268-47e3-a335-7663716e4c60}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
