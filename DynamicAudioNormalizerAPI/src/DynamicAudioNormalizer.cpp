@@ -174,7 +174,6 @@ private:
 	double *m_fadeFactors[2];
 
 protected:
-	void processNextFrame(void);
 	void analyzeFrame(FrameData *frame);
 	void amplifyFrame(FrameData *frame);
 	

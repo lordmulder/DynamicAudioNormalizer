@@ -33,9 +33,9 @@ extern const unsigned int DYNAUDNORM_VERSION_MINOR;
 extern const unsigned int DYNAUDNORM_VERSION_PATCH;
 
 //Build date/time
-extern const char* DYNAUDNORM_BUILD_DATE;
-extern const char* DYNAUDNORM_BUILD_TIME;
+extern const char *const DYNAUDNORM_BUILD_DATE;
+extern const char *const DYNAUDNORM_BUILD_TIME;
 
 //Compiler info
-extern const char* DYNAUDNORM_COMPILER;
-extern const char* DYNAUDNORM_ARCH;
+extern const char *const DYNAUDNORM_COMPILER;
+extern const char *const DYNAUDNORM_ARCH;
