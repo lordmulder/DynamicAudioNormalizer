@@ -638,6 +638,9 @@ The following build environments are currently supported:
 
 # Changelog #
 
+## Version 2.09 (2016-08-01) ## {-}
+* Core library: Improved pre-filling code in order to avoid possible clipping at the very beginning
+
 ## Version 2.08 (2015-01-20) ## {-}
 * CLI front-end: Very short files (shorter than Gaussian window size) are now handled properly
 * Core library: Fixed case when ``flushBuffer()`` is called *before* internal buffer is filled entirely

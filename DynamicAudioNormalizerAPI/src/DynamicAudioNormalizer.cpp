@@ -855,14 +855,11 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	if(m_gainHistory_original[channel].empty() || m_gainHistory_minimum[channel].empty())
 	{
 		const uint32_t preFillSize = m_filterSize / 2;
-		m_prevAmplificationFactor[channel] = m_altBoundaryMode ? currentGainFactor : 1.0;
+		const double initial_value = m_altBoundaryMode ? currentGainFactor : 1.0;
+		m_prevAmplificationFactor[channel] = initial_value;
 		while(m_gainHistory_original[channel].size() < preFillSize)
 		{
-			m_gainHistory_original[channel].push_back(m_altBoundaryMode ? currentGainFactor : 1.0);
-		}
-		while(m_gainHistory_minimum[channel].size() < preFillSize)
-		{
-			m_gainHistory_minimum[channel].push_back(m_altBoundaryMode ? currentGainFactor : 1.0);
+			m_gainHistory_original[channel].push_back(initial_value);
 		}
 	}
 
@@ -874,12 +871,21 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	while(m_gainHistory_original[channel].size() >= m_filterSize)
 	{
 		assert(m_gainHistory_original[channel].size() == m_filterSize);
+		if (m_gainHistory_minimum[channel].empty())
+		{
+			const uint32_t preFillSize = m_filterSize / 2;
+			double initial_value = m_altBoundaryMode ? m_gainHistory_original[channel].front() : 1.0;
+			std::deque<double>::const_iterator input = m_gainHistory_original[channel].begin() + preFillSize;
+			while (m_gainHistory_minimum[channel].size() < preFillSize)
+			{
+				initial_value = std::min(initial_value, *(++input));
+				m_gainHistory_minimum[channel].push_back(initial_value);
+			}
+		}
 		const double minimum = m_minimumFilter->apply(m_gainHistory_original[channel]);
-
-		m_gainHistory_minimum[channel].push_back(minimum);
-		m_loggingData_minimum[channel].push     (minimum);
-
 		m_gainHistory_original[channel].pop_front();
+		m_gainHistory_minimum[channel].push_back(minimum);
+		m_loggingData_minimum[channel].push(minimum);
 	}
 
 	//Apply the Gaussian filter
@@ -887,11 +893,9 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	{
 		assert(m_gainHistory_minimum[channel].size() == m_filterSize);
 		const double smoothed = m_gaussianFilter->apply(m_gainHistory_minimum[channel]);
-			
-		m_gainHistory_smoothed[channel].push_back(smoothed);
-		m_loggingData_smoothed[channel].push     (smoothed);
-
 		m_gainHistory_minimum[channel].pop_front();
+		m_gainHistory_smoothed[channel].push_back(smoothed);
+		m_loggingData_smoothed[channel].push(smoothed);
 	}
 }
 

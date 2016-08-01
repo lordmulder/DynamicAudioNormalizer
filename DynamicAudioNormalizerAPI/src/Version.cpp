@@ -23,8 +23,8 @@
 
 //Version info
 const unsigned int DYNAUDNORM_VERSION_MAJOR = 2;
-const unsigned int DYNAUDNORM_VERSION_MINOR = 8;
-const unsigned int DYNAUDNORM_VERSION_PATCH = 1;
+const unsigned int DYNAUDNORM_VERSION_MINOR = 9;
+const unsigned int DYNAUDNORM_VERSION_PATCH = 0;
 
 //Build date/time
 const char *const DYNAUDNORM_BUILD_DATE = __DATE__;
