@@ -180,8 +180,8 @@ for %%c in (DLL, Static) do (
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"             "%PACK_PATH%\%%c"
 		
 		if %TOOLS_VER% GEQ 140 (
-			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x86\*.dll"                                    "%PACK_PATH%"
-			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x64\*.dll"                                    "%PACK_PATH%\x64"
+			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x86\*.dll"                                    "%PACK_PATH%\%%c"
+			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x64\*.dll"                                    "%PACK_PATH%\%%c\x64"
 		)
 	)
 
@@ -199,15 +199,14 @@ REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
-	
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\*.exe"
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\Qt*.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\libsndfile-?.dll"
+	
+	if "%%c"=="DLL" (
+		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
+		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
+		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
+		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
+	)
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
