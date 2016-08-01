@@ -5,6 +5,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 REM // Set Paths
 REM ///////////////////////////////////////////////////////////////////////////
 set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
+set "WSDK_PATH=C:\Program Files (x86)\Windows Kits\10"
 set "UPX3_PATH=C:\Program Files (x86)\UPX"
 set "PDOC_PATH=C:\Program Files (x86)\Pandoc"
 set "QTDIR_MSC=C:\Qt\4.8.7"
@@ -36,6 +37,16 @@ if "%VCINSTALLDIR%"=="" (
 if not exist "%VCINSTALLDIR%\bin\cl.exe" (
 	echo C++ compiler binary not found. Please check your MSVC_PATH var^^!
 	goto BuildError
+)
+if %TOOLS_VER% GEQ 140 (
+	if not exist "%WSDK_PATH%\Redist\ucrt\DLLs\x86\ucrtbase.dll" (
+		echo UCRT redist ^(x86^) libraries not found. Please check your WSDK_PATH var^^!
+		goto BuildError
+	)
+	if not exist "%WSDK_PATH%\Redist\ucrt\DLLs\x64\ucrtbase.dll" (
+		echo UCRT redist ^(x64^) libraries not found. Please check your WSDK_PATH var^^!
+		goto BuildError
+	)
 )
 if not exist "%UPX3_PATH%\upx.exe" (
 	echo UPX binary could not be found. Please check your UPX3_PATH var^^!
@@ -167,6 +178,11 @@ for %%c in (DLL, Static) do (
 		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                      "%PACK_PATH%\%%c\redist"
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"              "%PACK_PATH%\%%c"
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"             "%PACK_PATH%\%%c"
+		
+		if %TOOLS_VER% GEQ 140 (
+			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x86\*.dll"                                    "%PACK_PATH%"
+			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x64\*.dll"                                    "%PACK_PATH%\x64"
+		)
 	)
 
 	copy "%~dp0\LICENSE-LGPL.html" "%PACK_PATH%\%%c"
@@ -182,8 +198,16 @@ REM // Compress
 REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
 	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\*.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
+	
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\*.exe"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\Qt*.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
+	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\libsndfile-?.dll"
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
