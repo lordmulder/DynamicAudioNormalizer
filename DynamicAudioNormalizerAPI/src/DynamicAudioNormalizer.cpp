@@ -988,7 +988,10 @@ void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
 			m_loggingData_smoothed[c].pop();
 			bIsEmpty = bIsEmpty || m_loggingData_original[c].empty() || m_loggingData_minimum[c].empty() || m_loggingData_smoothed[c].empty();
 		}
-		fprintf(m_logFile, "\n");
+		if (m_logFile && (ferror(m_logFile) == 0))
+		{
+			fprintf(m_logFile, "\n");
+		}
 	}
 
 	if(m_logFile && (ferror(m_logFile) != 0))
