@@ -27,7 +27,6 @@
 
 #include "Common.h"
 #include "FrameBuffer.h"
-#include "MinimumFilter.h"
 #include "GaussianFilter.h"
 #include "Logging.h"
 #include "Version.h"
@@ -129,6 +128,7 @@ private:
 	const uint32_t m_sampleRate;
 	const uint32_t m_frameLen;
 	const uint32_t m_filterSize;
+	const uint32_t m_prefillLen;
 	const uint32_t m_delay;
 
 	const double m_peakValue;
@@ -164,7 +164,6 @@ private:
 	std::queue<double> *m_loggingData_minimum;
 	std::queue<double> *m_loggingData_smoothed;
 
-	MinimumFilter  *m_minimumFilter;
 	GaussianFilter *m_gaussianFilter;
 
 	double *m_prevAmplificationFactor;
@@ -208,6 +207,7 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_sampleRate(sampleRate),
 	m_frameLen(FRAME_SIZE(sampleRate, frameLenMsec)),
 	m_filterSize(LIMIT(3u, filterSize, 301u)),
+	m_prefillLen(m_filterSize / 2u),
 	m_delay(m_frameLen * m_filterSize),
 	m_peakValue(LIMIT(0.01, peakValue, 1.0)),
 	m_maxAmplification(LIMIT(1.0, maxAmplification, 100.0)),
@@ -249,7 +249,6 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_loggingData_minimum  = NULL;
 	m_loggingData_smoothed = NULL;
 
-	m_minimumFilter  = NULL;
 	m_gaussianFilter = NULL;
 
 	m_prevAmplificationFactor = NULL;
@@ -276,8 +275,6 @@ MDynamicAudioNormalizer_PrivateData::~MDynamicAudioNormalizer_PrivateData(void)
 	MY_DELETE(m_buffOut);
 
 	MY_DELETE(m_frameBuffer);
-
-	MY_DELETE(m_minimumFilter);
 	MY_DELETE(m_gaussianFilter);
 	
 	MY_DELETE_ARRAY(m_gainHistory_original);
@@ -354,7 +351,6 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	m_loggingData_minimum  = new std::queue<double>[m_channels];
 	m_loggingData_smoothed = new std::queue<double>[m_channels];
 
-	m_minimumFilter = new MinimumFilter(m_filterSize);
 	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
 	m_gaussianFilter = new GaussianFilter(m_filterSize, sigma);
 
@@ -854,10 +850,9 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	//Pre-fill the gain history
 	if(m_gainHistory_original[channel].empty() || m_gainHistory_minimum[channel].empty())
 	{
-		const uint32_t preFillSize = m_filterSize / 2;
 		const double initial_value = m_altBoundaryMode ? currentGainFactor : 1.0;
 		m_prevAmplificationFactor[channel] = initial_value;
-		while(m_gainHistory_original[channel].size() < preFillSize)
+		while(m_gainHistory_original[channel].size() < m_prefillLen)
 		{
 			m_gainHistory_original[channel].push_back(initial_value);
 		}
@@ -873,19 +868,18 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 		assert(m_gainHistory_original[channel].size() == m_filterSize);
 		if (m_gainHistory_minimum[channel].empty())
 		{
-			const uint32_t preFillSize = m_filterSize / 2;
 			double initial_value = m_altBoundaryMode ? m_gainHistory_original[channel].front() : 1.0;
-			std::deque<double>::const_iterator input = m_gainHistory_original[channel].begin() + preFillSize;
-			while (m_gainHistory_minimum[channel].size() < preFillSize)
+			std::deque<double>::const_iterator input = m_gainHistory_original[channel].begin() + m_prefillLen;
+			while (m_gainHistory_minimum[channel].size() < m_prefillLen)
 			{
 				initial_value = std::min(initial_value, *(++input));
 				m_gainHistory_minimum[channel].push_back(initial_value);
 			}
 		}
-		const double minimum = m_minimumFilter->apply(m_gainHistory_original[channel]);
+		const std::deque<double>::iterator minimum = std::min_element(m_gainHistory_original[channel].begin(), m_gainHistory_original[channel].end());
 		m_gainHistory_original[channel].pop_front();
-		m_gainHistory_minimum[channel].push_back(minimum);
-		m_loggingData_minimum[channel].push(minimum);
+		m_gainHistory_minimum[channel].push_back(*minimum);
+		m_loggingData_minimum[channel].push(*minimum);
 	}
 
 	//Apply the Gaussian filter
@@ -971,39 +965,34 @@ void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, c
 
 void MDynamicAudioNormalizer_PrivateData::writeLogFile(void)
 {
-	bool bWritten = false;
-		
-	for(uint32_t c = 0; c < m_channels; c++)
+	bool bIsEmpty = false;
+	for (uint32_t c = 0; c < m_channels; c++)
 	{
-		if(!(m_loggingData_original[c].empty() || m_loggingData_minimum[c].empty() || m_loggingData_smoothed[c].empty()))
+		bIsEmpty = bIsEmpty || m_loggingData_original[c].empty() || m_loggingData_minimum[c].empty() || m_loggingData_smoothed[c].empty();
+	}
+
+	while (!bIsEmpty)
+	{
+		for (uint32_t c = 0; c < m_channels; c++)
 		{
-			if(m_logFile && (ferror(m_logFile) == 0))
+			if (m_logFile && (ferror(m_logFile) == 0))
 			{
-				if(bWritten)
+				if (c > 0)
 				{
 					fprintf(m_logFile, "\t\t");
 				}
-
 				fprintf(m_logFile, "%.5f\t%.5f\t%.5f", m_loggingData_original[c].front(), m_loggingData_minimum[c].front(), m_loggingData_smoothed[c].front());
-				
-				if(ferror(m_logFile) != 0)
-				{
-					LOG1_WRN("Error while writing to log file. No further logging output will be created.");
-				}
-				
-				bWritten = true;
 			}
-
 			m_loggingData_original[c].pop();
-			m_loggingData_minimum [c].pop();
+			m_loggingData_minimum[c].pop();
 			m_loggingData_smoothed[c].pop();
+			bIsEmpty = bIsEmpty || m_loggingData_original[c].empty() || m_loggingData_minimum[c].empty() || m_loggingData_smoothed[c].empty();
 		}
+		fprintf(m_logFile, "\n");
 	}
 
-	if(m_logFile && (ferror(m_logFile) == 0) && bWritten)
+	if(m_logFile && (ferror(m_logFile) != 0))
 	{
-		fprintf(m_logFile, "\n");
-
 		if(ferror(m_logFile) != 0)
 		{
 			LOG1_WRN("Error while writing to log file. No further logging output will be created.");
