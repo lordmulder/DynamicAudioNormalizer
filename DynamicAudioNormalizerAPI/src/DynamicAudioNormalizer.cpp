@@ -69,6 +69,11 @@ template<typename T> static inline T LIMIT(const T &min, const T &val, const T &
 	return std::min(max, std::max(min, val));
 }
 
+template<typename T> static inline void UPDATE_MAX(T &max, const T &val)
+{
+	if (val > max) { max = val; }
+}
+
 static inline uint32_t FRAME_SIZE(const uint32_t &sampleRate, const uint32_t &frameLenMsec)
 {
 	const uint32_t frameSize = static_cast<uint32_t>(round(double(sampleRate) * (double(frameLenMsec) / 1000.0)));
@@ -88,8 +93,8 @@ static inline double FADE(const double &prev, const double &next, const uint32_t
 
 static inline double BOUND(const double &threshold, const double &val)
 {
-	const double CONST = 0.8862269254527580136490837416705725913987747280611935; //sqrt(PI) / 2.0
-	return erf(CONST * (val / threshold)) * threshold;
+	const double SQRT_PI = 0.8862269254527580136490837416705725913987747280611935; //sqrt(PI) / 2.0
+	return erf(SQRT_PI * (val / threshold)) * threshold;
 }
 
 static inline double POW2(const double &value)
@@ -155,7 +160,7 @@ private:
 	uint64_t m_sampleCounterCompr;
 
 	FrameBuffer *m_frameBuffer;
-	
+
 	std::deque<double> *m_gainHistory_original;
 	std::deque<double> *m_gainHistory_minimum;
 	std::deque<double> *m_gainHistory_smoothed;
@@ -176,17 +181,17 @@ protected:
 	void analyzeFrame(FrameData *frame);
 	void amplifyFrame(FrameData *frame);
 	
-	double getMaxLocalGain(FrameData *frame, const uint32_t channel = UINT32_MAX);
-	double findPeakMagnitude(FrameData *frame, const uint32_t channel = UINT32_MAX);
-	double computeFrameRMS(const FrameData *frame, const uint32_t channel = UINT32_MAX);
-	double computeFrameStdDev(const FrameData *frame, const uint32_t channel = UINT32_MAX);
+	double getMaxLocalGain(FrameData *const frame, const uint32_t channel = UINT32_MAX);
+	double findPeakMagnitude(FrameData *const frame, const uint32_t channel = UINT32_MAX);
+	double computeFrameRMS(const FrameData *const frame, const uint32_t channel = UINT32_MAX);
+	double computeFrameStdDev(const FrameData *const frame, const uint32_t channel = UINT32_MAX);
 	void updateGainHistory(const uint32_t &channel, const double &currentGainFactor);
-	void perfromDCCorrection(FrameData *frame, const bool &isFirstFrame);
-	void perfromCompression(FrameData *frame, const bool &isFirstFrame);
+	void perfromDCCorrection(FrameData *const frame, const bool &isFirstFrame);
+	void perfromCompression(FrameData *const frame, const bool &isFirstFrame);
 	void writeLogFile(void);
 	void printParameters(void);
 	
-	static void precalculateFadeFactors(double *fadeFactors[2], const uint32_t frameLen);
+	static void precalculateFadeFactors(double *const fadeFactors[2], const uint32_t frameLen);
 	static double setupCompressThresh(const double &dThreshold);
 };
 
@@ -239,7 +244,9 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	
 	m_delayedSamples = 0;
 	m_sampleCounterClips = m_sampleCounterTotal = 0;
+
 	m_frameBuffer = NULL;
+	m_gaussianFilter = NULL;
 
 	m_gainHistory_original = NULL;
 	m_gainHistory_minimum  = NULL;
@@ -248,8 +255,6 @@ MDynamicAudioNormalizer_PrivateData::MDynamicAudioNormalizer_PrivateData(const u
 	m_loggingData_original = NULL;
 	m_loggingData_minimum  = NULL;
 	m_loggingData_smoothed = NULL;
-
-	m_gaussianFilter = NULL;
 
 	m_prevAmplificationFactor = NULL;
 	m_dcCorrectionValue = NULL;
@@ -511,7 +516,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 	bool bStop = false;
 
 	uint32_t inputPos = 0;
-	uint32_t inputSamplesLeft = static_cast<uint32_t>(std::min(std::max(inputSize, int64_t(0)), int64_t(UINT32_MAX)));
+	uint32_t inputSamplesLeft = static_cast<uint32_t>(LIMIT(int64_t(0), inputSize, int64_t(UINT32_MAX)));
 	
 	uint32_t outputPos = 0;
 	uint32_t outputBufferLeft = 0;
@@ -623,7 +628,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 	}
 
 	m_flushBuffer = true;
-	const int64_t pendingSamples = std::min(std::min(std::max(bufferSize, int64_t(0)), m_delayedSamples), int64_t(UINT32_MAX));
+	const uint32_t pendingSamples = static_cast<uint32_t>(LIMIT(int64_t(0), std::min(m_delayedSamples, bufferSize), int64_t(UINT32_MAX)));
 
 	if(pendingSamples < 1)
 	{
@@ -682,7 +687,7 @@ MDynamicAudioNormalizer::LogFunction *MDynamicAudioNormalizer::setLogFunction(MD
 // Procesing Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
+void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *const frame)
 {
 	//Perform DC Correction (optional)
 	if(m_enableDCCorrection)
@@ -717,7 +722,7 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *frame)
 	writeLogFile();
 }
 
-void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
+void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *const frame)
 {
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
@@ -752,41 +757,41 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *frame)
 // Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-double MDynamicAudioNormalizer_PrivateData::getMaxLocalGain(FrameData *frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::getMaxLocalGain(FrameData *const frame, const uint32_t channel)
 {
 	const double maximumGain = m_peakValue / findPeakMagnitude(frame, channel);
 	const double rmsGain = (m_targetRms > DBL_EPSILON) ? (m_targetRms / computeFrameRMS(frame, channel)) : DBL_MAX;
 	return BOUND(m_maxAmplification, std::min(maximumGain, rmsGain));
 }
 
-double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *const frame, const uint32_t channel)
 {
 	double dMax = DBL_EPSILON;
 
-	if(channel == UINT32_MAX)
+	if (channel == UINT32_MAX)
 	{
-		for(uint32_t c = 0; c < m_channels; c++)
+		for (uint32_t c = 0; c < m_channels; c++)
 		{
-			double *dataPtr = frame->data(c);
-			for(uint32_t i = 0; i < m_frameLen; i++)
+			double *const dataPtr = frame->data(c);
+			for (uint32_t i = 0; i < m_frameLen; i++)
 			{
-				dMax = std::max(dMax, fabs(dataPtr[i]));
+				UPDATE_MAX(dMax, fabs(dataPtr[i]));
 			}
 		}
 	}
 	else
 	{
-		double *dataPtr = frame->data(channel);
-		for(uint32_t i = 0; i < m_frameLen; i++)
+		double *const dataPtr = frame->data(channel);
+		for (uint32_t i = 0; i < m_frameLen; i++)
 		{
-			dMax = std::max(dMax, fabs(dataPtr[i]));
+			UPDATE_MAX(dMax, fabs(dataPtr[i]));
 		}
 	}
 
 	return dMax;
 }
 
-double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(const FrameData *frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(const FrameData *const frame, const uint32_t channel)
 {
 	double rmsValue = 0.0;
 	
@@ -893,7 +898,7 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	}
 }
 
-void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, const bool &isFirstFrame)
+void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *const frame, const bool &isFirstFrame)
 {
 	const double diff = 1.0 / double(m_frameLen);
 
@@ -917,7 +922,7 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *frame, 
 	}
 }
 
-void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *frame, const bool &isFirstFrame)
+void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *const frame, const bool &isFirstFrame)
 {
 	if(m_channelsCoupled)
 	{
@@ -1025,7 +1030,7 @@ void MDynamicAudioNormalizer_PrivateData::printParameters(void)
 // Static Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *fadeFactors[2], const uint32_t frameLen)
+void MDynamicAudioNormalizer_PrivateData::precalculateFadeFactors(double *const fadeFactors[2], const uint32_t frameLen)
 {
 	assert((frameLen > 0) && ((frameLen % 2) == 0));
 	const double dStepSize = 1.0 / double(frameLen);
