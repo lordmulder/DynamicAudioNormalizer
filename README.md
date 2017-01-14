@@ -39,7 +39,7 @@ Finally, the following waveform view illustrates how the volume of a "real world
 
 Dynamic Audio Normalizer can be downloaded from one of the following *official* mirror sites:
 * https://github.com/lordmulder/DynamicAudioNormalizer/releases/latest
-* https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/downloads
+* https://bitbucket.org/muldersoft/dynamic-audio-normalizer/downloads
 * http://sourceforge.net/projects/muldersoft/files/Dynamic%20Audio%20Normalizer/
 * https://www.assembla.com/spaces/dynamicaudionormalizer/documents
 
@@ -598,7 +598,7 @@ void LogFunction(
 
 The source code of the Dynamic Audio Normalizer is available from one of the official [**Git**](http://git-scm.com/) repository mirrors:
 * ``https://github.com/lordmulder/DynamicAudioNormalizer.git`` &nbsp; ([Browse](https://github.com/lordmulder/DynamicAudioNormalizer))
-* ``https://bitbucket.org/lord_mulder/dynamic-audio-normalizer.git`` &nbsp; ([Browse](https://bitbucket.org/lord_mulder/dynamic-audio-normalizer/overview))
+* ``https://bitbucket.org/muldersoft/dynamic-audio-normalizer.git`` &nbsp; ([Browse](https://bitbucket.org/muldersoft/dynamic-audio-normalizer/overview))
 * ``https://gitlab.com/dynamic-audio-normalizer/dynamic-audio-normalizer.git`` &nbsp; ([Browse](https://gitlab.com/dynamic-audio-normalizer/dynamic-audio-normalizer/tree/master))
 * ``https://git.assembla.com/dynamicaudionormalizer.git`` &nbsp; ([Browse](https://www.assembla.com/code/dynamicaudionormalizer/git/nodes))
 * ``https://muldersoft.codebasehq.com/dynamicaudionormalizer/dynamicaudionormalizer.git`` &nbsp; ([Browse](https://muldersoft.codebasehq.com/changelog/dynamicaudionormalizer/dynamicaudionormalizer))
