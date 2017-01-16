@@ -149,7 +149,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MDYNAMICAUDIONORMALIZER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\etc\pthread\include;$(SolutionDir)\etc\vld\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <OmitFramePointers>false</OmitFramePointers>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -160,7 +160,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -170,7 +170,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MDYNAMICAUDIONORMALIZER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\etc\pthread\include;$(SolutionDir)\etc\vld\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <OmitFramePointers>false</OmitFramePointers>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -181,7 +181,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -199,7 +199,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\etc\pthread\include;$(SolutionDir)\etc\vld\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -207,7 +207,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">LinkVerboseLib</ShowProgress>
       <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -225,7 +225,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\etc\pthread\include;$(SolutionDir)\etc\vld\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -233,7 +233,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\shared;$(SolutionDir)\etc\vld\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LinkVerboseLib</ShowProgress>
       <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -252,7 +252,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\etc\pthread\include;$(SolutionDir)\etc\vld\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -265,7 +265,7 @@
     <Lib>
       <Verbose>true</Verbose>
       <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\static</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\static</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference />
   </ItemDefinitionGroup>
@@ -282,7 +282,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\etc\pthread\include;$(SolutionDir)\etc\vld\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerJNI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(JDK8_PATH)\include;$(JDK8_PATH)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -295,7 +295,7 @@
     <Lib>
       <Verbose>true</Verbose>
       <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\etc\pthread\lib\$(Platform)\static</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\static</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference />
   </ItemDefinitionGroup>

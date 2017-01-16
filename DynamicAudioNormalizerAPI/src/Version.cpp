@@ -57,6 +57,8 @@ const char*const DYNAUDNORM_BUILD_TIME = __TIME__;
 			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.1";
 		#elif (_MSC_FULL_VER == 190023918)
 			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.2";
+		#elif (_MSC_FULL_VER == 190024210) || (_MSC_FULL_VER == 190024215)
+			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.3";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
