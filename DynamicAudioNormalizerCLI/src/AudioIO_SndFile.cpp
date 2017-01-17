@@ -57,7 +57,7 @@ public:
 
 	//Open and Close
 	bool openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
-	bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
+	bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth, const CHR *const format);
 	bool close(void);
 
 	//Read and Write
@@ -129,9 +129,9 @@ bool AudioIO_SndFile::openRd(const CHR *const fileName, const uint32_t channels,
 	return p->openRd(fileName, channels, sampleRate, bitDepth);
 }
 
-bool AudioIO_SndFile::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+bool AudioIO_SndFile::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth, const CHR *const format)
 {
-	return p->openWr(fileName, channels, sampleRate, bitDepth);
+	return p->openWr(fileName, channels, sampleRate, bitDepth, format);
 }
 
 bool AudioIO_SndFile::close(void)
@@ -214,7 +214,7 @@ bool AudioIO_File_Private::openRd(const CHR *const fileName, const uint32_t chan
 	return true;
 }
 
-bool AudioIO_File_Private::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
+bool AudioIO_File_Private::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth, const CHR *const format)
 {
 	if(handle)
 	{
@@ -229,7 +229,7 @@ bool AudioIO_File_Private::openWr(const CHR *const fileName, const uint32_t chan
 	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
 
 	//Setup output format
-	info.format = bPipe ? formatFromExtension(TXT("raw"), bitDepth) : formatFromExtension(fileName, bitDepth);
+	info.format = bPipe ? formatFromExtension(TXT("raw"), bitDepth) : formatFromExtension((format ? format : fileName), bitDepth);
 	info.channels = channels;
 	info.samplerate = sampleRate;
 

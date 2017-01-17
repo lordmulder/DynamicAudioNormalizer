@@ -32,9 +32,10 @@ public:
 	
 	bool parseArgs(const int argc, CHR* argv[]);
 
-	inline const CHR* sourceFile(void) const { return m_sourceFile; }
-	inline const CHR* outputFile(void) const { return m_outputFile; }
-	inline const CHR* dbgLogFile(void) const { return m_dbgLogFile; }
+	inline const CHR* sourceFile(void)   const { return m_sourceFile;   }
+	inline const CHR* outputFile(void)   const { return m_outputFile;   }
+	inline const CHR* outputFormat(void) const { return m_outputFormat; }
+	inline const CHR* dbgLogFile(void)   const { return m_dbgLogFile;   }
 	
 	inline const uint32_t &frameLenMsec(void)       const { return m_frameLenMsec;       }
 	inline const uint32_t &filterSize(void)         const { return m_filterSize;         }
@@ -58,6 +59,7 @@ protected:
 private:
 	const CHR* m_sourceFile;
 	const CHR* m_outputFile;
+	const CHR* m_outputFormat;
 	const CHR* m_dbgLogFile;
 
 	uint32_t m_frameLenMsec;

@@ -143,7 +143,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 
 	//Open *output* file
 	*outputFile = new AudioIO_SndFile();
-	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth))
+	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth, parameters.outputFormat()))
 	{
 		PRINT2_WRN(TXT("Failed to open output file \"") FMT_CHR TXT("\" for writing!\n"), parameters.outputFile());
 		MY_DELETE(*sourceFile);
@@ -352,6 +352,7 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("Input/Output:\n"));
 	PRINT(TXT("  -i --input <file>        Input audio file [required]\n"));
 	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
+	PRINT(TXT("  -t --output-fmt <value>  Output format [default: guesstimate]\n"));
 	PRINT(TXT("\n"));
 	PRINT(TXT("Algorithm Tweaks:\n"));
 	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"),               defaults.frameLenMsec());

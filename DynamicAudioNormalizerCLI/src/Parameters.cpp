@@ -26,7 +26,6 @@
 // Helper functions
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #define IS_ARG_LONG(ARG_LONG)           (STRCASECMP(argv[pos], TXT("--") TXT(ARG_LONG)) == 0)
 #define IS_ARG_SHRT(ARG_SHRT, ARG_LONG) ((STRCASECMP(argv[pos], TXT("-") TXT(ARG_SHRT)) == 0) || (STRCASECMP(argv[pos], TXT("--") TXT(ARG_LONG)) == 0))
 
@@ -92,6 +91,29 @@ while(0)
 } \
 while(0)
 
+static bool CHECK_ENUM(const CHR *const str, const CHR *const *const values)
+{
+	for (size_t i = 0; values[i]; ++i)
+	{
+		if (STRCASECMP(str, values[i]) == 0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Constants
+///////////////////////////////////////////////////////////////////////////////
+
+static const CHR *const OUTPUT_FORMATS[] =
+{
+	TXT("wav"),  TXT("w64"), TXT("rf64"), TXT("au"),
+	TXT("aiff"), TXT("ogg"), TXT("flac"), TXT("raw"),
+	NULL
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Parameters Class
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,9 +129,10 @@ Parameters::~Parameters(void)
 
 void Parameters::setDefaults(void)
 {
-	m_sourceFile = NULL;
-	m_outputFile = NULL;
-	m_dbgLogFile = NULL;
+	m_sourceFile   = NULL;
+	m_outputFile   = NULL;
+	m_outputFormat = NULL;
+	m_dbgLogFile   = NULL;
 
 	m_frameLenMsec = 500;
 	m_filterSize   = 31;
@@ -154,6 +177,12 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		{
 			ENSURE_NEXT_ARG();
 			m_outputFile = argv[pos];
+			continue;
+		}
+		if (IS_ARG_SHRT("t", "output-fmt"))
+		{
+			ENSURE_NEXT_ARG();
+			m_outputFormat = argv[pos];
 			continue;
 		}
 
@@ -267,6 +296,16 @@ bool Parameters::validateParameters(void)
 	{
 		PRINT_WRN(TXT("Output file not specified!\n"));
 		return false;
+	}
+
+	/*validate output format*/
+	if(m_outputFormat)
+	{
+		if (!CHECK_ENUM(m_outputFormat, OUTPUT_FORMATS))
+		{
+			PRINT2_WRN(TXT("Unknown output format \"") FMT_CHR TXT("\" specified! Supported formats:\nwav / w64 / rf64 / au / aiff / ogg / flac / raw\n"), m_outputFormat);
+			return false;
+		}
 	}
 
 	/*check input file*/
