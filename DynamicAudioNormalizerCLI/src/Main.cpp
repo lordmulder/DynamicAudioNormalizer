@@ -23,7 +23,7 @@
 #include "Common.h"
 #include "Platform.h"
 #include "Parameters.h"
-#include "AudioIO_SndFile.h"
+#include "AudioIO.h"
 
 //MDynamicAudioNormalizer API
 #include "DynamicAudioNormalizer.h"
@@ -120,7 +120,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	MY_DELETE(*outputFile);
 
 	//Open *source* file
-	*sourceFile = new AudioIO_SndFile();
+	*sourceFile = AudioIO_createInstance(TXT("libsndfile"));
 	if(!(*sourceFile)->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
 	{
 		PRINT2_WRN(TXT("Failed to open input file \"") FMT_CHR TXT("\" for reading!\n"), parameters.sourceFile());
@@ -142,7 +142,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	}
 
 	//Open *output* file
-	*outputFile = new AudioIO_SndFile();
+	*outputFile = AudioIO_createInstance(TXT("libsndfile"));
 	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth, parameters.outputFormat()))
 	{
 		PRINT2_WRN(TXT("Failed to open output file \"") FMT_CHR TXT("\" for writing!\n"), parameters.outputFile());
@@ -426,7 +426,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
-	PRINT(TXT("Using ") FMT_chr TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_SndFile::libraryVersion());
+	PRINT(TXT("Using ") FMT_chr TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_getLibraryVersion(TXT("libsndfile")));
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioIO *sourceFile = NULL, *outputFile = NULL;

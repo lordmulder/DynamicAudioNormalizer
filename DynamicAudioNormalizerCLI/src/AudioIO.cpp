@@ -21,36 +21,75 @@
 
 #pragma once
 
-#include <stdint.h>
-#include "Platform.h"
+#include "AudioIO.h"
+#include "AudioIO_SndFile.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// AudioIO Interface
+// Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-class AudioIO
+//AudioIO libraries
+static const uint8_t AUDIO_LIB_NULL       = 0x00u;
+static const uint8_t AUDIO_LIB_LIBSNDFILE = 0x01u;
+
+//AudioIO library name to id mappings
+static const struct
 {
-public:
-	AudioIO(void) {};
-	virtual ~AudioIO(void) {}
-
-	//Functions implemented in derived classes
-	virtual bool openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth) = 0;
-	virtual bool openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth, const CHR *const format = NULL) = 0;
-	virtual int64_t read(double **buffer, const int64_t count) = 0;
-	virtual int64_t write(double *const *buffer, const int64_t count) = 0;
-	virtual bool close(void) = 0;
-	virtual bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth) = 0;
-	virtual void getFormatInfo(CHR *buffer, const uint32_t buffSize) = 0;
-	
-private:
-	AudioIO &operator=(const AudioIO &) { throw 666; }
+	const CHR name[32];
+	const uint8_t id;
+}
+g_audioIO_mapping[] =
+{
+	{ TXT("libsndfile"), AUDIO_LIB_LIBSNDFILE },
+	{ TXT(""),           AUDIO_LIB_NULL       }
 };
+
+//Get id from AudioIO library name
+static uint8_t parseName(const CHR *const name)
+{
+	for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
+	{
+		if (STRCASECMP(name, g_audioIO_mapping[i].name) == 0)
+		{
+			return g_audioIO_mapping[i].id;
+		}
+	}
+	return AUDIO_LIB_NULL;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // AudioIO Factory
 ///////////////////////////////////////////////////////////////////////////////
 
-AudioIO *AudioIO_createInstance(const CHR *const name);
-const CHR *const *AudioIO_getSupportedFormats(const CHR *const name, const CHR **const list, const uint32_t maxLen);
-const char *AudioIO_getLibraryVersion(const CHR *const name);
+AudioIO *AudioIO_createInstance(const CHR *const name)
+{
+	switch (parseName(name))
+	{
+	case AUDIO_LIB_LIBSNDFILE:
+		return new AudioIO_SndFile();
+	default:
+		throw "Unsupported audio I/O library!";
+	}
+}
+
+const CHR *const *AudioIO_getSupportedFormats(const CHR *const name, const CHR **const list, const uint32_t maxLen)
+{
+	switch (parseName(name))
+	{
+	case AUDIO_LIB_LIBSNDFILE:
+		return AudioIO_SndFile::supportedFormats(list, maxLen);
+	default:
+		throw "Unsupported audio I/O library!";
+	}
+}
+
+const char *AudioIO_getLibraryVersion(const CHR *const name)
+{
+	switch (parseName(name))
+	{
+	case AUDIO_LIB_LIBSNDFILE:
+		return AudioIO_SndFile::libraryVersion();
+	default:
+		throw "Unsupported audio I/O library!";
+	}
+}

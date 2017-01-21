@@ -20,6 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 #include "Parameters.h"
+#include "AudioIO.h"
+
 #include <cerrno>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -103,16 +105,22 @@ static bool CHECK_ENUM(const CHR *const str, const CHR *const *const values)
 	return false;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Constants
-///////////////////////////////////////////////////////////////////////////////
-
-static const CHR *const OUTPUT_FORMATS[] =
+static const CHR *JOIN_STR(CHR *const buffer, uint32_t buffSize, const CHR *const *const values, const CHR *const separator)
 {
-	TXT("wav"),  TXT("w64"), TXT("rf64"), TXT("au"),
-	TXT("aiff"), TXT("ogg"), TXT("flac"), TXT("raw"),
-	NULL
-};
+	if (buffer && (buffSize > 0))
+	{
+		buffer[0] = TXT('\0');
+		for (size_t i = 0; values[i]; ++i)
+		{
+			if (i > 0)
+			{
+				STRNCAT(buffer, separator, buffSize);
+			}
+			STRNCAT(buffer, values[i], buffSize);
+		}
+	}
+	return buffer;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Parameters Class
@@ -301,9 +309,11 @@ bool Parameters::validateParameters(void)
 	/*validate output format*/
 	if(m_outputFormat)
 	{
-		if (!CHECK_ENUM(m_outputFormat, OUTPUT_FORMATS))
+		const CHR *supportedFormats[32];
+		if (!CHECK_ENUM(m_outputFormat, AudioIO_getSupportedFormats(TXT("libsndfile"), supportedFormats, 32)))
 		{
-			PRINT2_WRN(TXT("Unknown output format \"") FMT_CHR TXT("\" specified! Supported formats:\nwav / w64 / rf64 / au / aiff / ogg / flac / raw\n"), m_outputFormat);
+			CHR allFormats[256];
+			PRINT2_WRN(TXT("Unknown output format \"") FMT_CHR TXT("\" specified!\nSupported formats are: ") FMT_CHR TXT("\n"), m_outputFormat, JOIN_STR(allFormats, 256, supportedFormats, TXT(", ")));
 			return false;
 		}
 	}

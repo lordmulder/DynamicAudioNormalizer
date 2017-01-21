@@ -46,6 +46,30 @@
 #define MY_THROW(X) throw std::runtime_error((X))
 
 ///////////////////////////////////////////////////////////////////////////////
+// Const
+///////////////////////////////////////////////////////////////////////////////
+
+static const struct
+{
+	const CHR *const extension[3];
+	const int format;
+	const int sub_format;
+	const bool flag[2];
+}
+g_audio_formats[] =
+{
+	{ { TXT("wav"),  NULL             }, SF_FORMAT_WAV,  0,                0, 1 },
+	{ { TXT("w64"),  NULL             }, SF_FORMAT_W64,  0,                0, 1 },
+	{ { TXT("rf64"), NULL             }, SF_FORMAT_RF64, 0,                0, 1 },
+	{ { TXT("au"),   NULL             }, SF_FORMAT_AU,   0,                1, 1 },
+	{ { TXT("aiff"), NULL             }, SF_FORMAT_AIFF, 0,                1, 1 },
+	{ { TXT("ogg"),  TXT("oga"), NULL }, SF_FORMAT_OGG,  SF_FORMAT_VORBIS, 0, 0 },
+	{ { TXT("flac"), TXT("fla"), NULL }, SF_FORMAT_FLAC, 0,                1, 0 },
+	{ { TXT("raw") , TXT("pcm"), NULL }, SF_FORMAT_RAW,  0,                1, 1 },
+	{ { NULL }, 0, 0, 0, 0 }
+};
+
+///////////////////////////////////////////////////////////////////////////////
 // Private Data
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -70,6 +94,7 @@ public:
 
 	//Library info
 	static const char *libraryVersion(void);
+	static const CHR *const *supportedFormats(const CHR **const list, const uint32_t maxLen);
 
 private:
 	//libsndfile
@@ -162,6 +187,11 @@ void AudioIO_SndFile::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 const char *AudioIO_SndFile::libraryVersion(void)
 {
 	return AudioIO_File_Private::libraryVersion();
+}
+
+const CHR *const *AudioIO_SndFile::supportedFormats(const CHR **const list, const uint32_t maxLen)
+{
+	return AudioIO_File_Private::supportedFormats(list, maxLen);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -439,6 +469,23 @@ const char *AudioIO_File_Private::libraryVersion(void)
 	return versionBuffer;
 }
 
+const CHR *const *AudioIO_File_Private::supportedFormats(const CHR **const list, const uint32_t maxLen)
+{
+	if (list && (maxLen > 0))
+	{
+		uint32_t nextPos = 0;
+		for (size_t i = 0; g_audio_formats[i].format; ++i)
+		{
+			if (g_audio_formats[i].extension[0] && (nextPos < maxLen))
+			{
+				list[nextPos++] = g_audio_formats[i].extension[0];
+			}
+		}
+		list[(nextPos < maxLen) ? nextPos : (maxLen - 1)] = NULL;
+	}
+	return list;
+}
+
 int AudioIO_File_Private::formatToBitDepth(const int &format)
 {
 	switch(format & SF_FORMAT_SUBMASK)
@@ -462,51 +509,25 @@ int AudioIO_File_Private::formatToBitDepth(const int &format)
 
 int AudioIO_File_Private::formatFromExtension(const CHR *const fileName, const int &bitDepth)
 {
-	int format = 0;
 	const CHR *ext = fileName;
 
 	if(const CHR *tmp = STRRCHR(ext, TXT('/' ))) ext = ++tmp;
 	if(const CHR *tmp = STRRCHR(ext, TXT('\\'))) ext = ++tmp;
 	if(const CHR *tmp = STRRCHR(ext, TXT('.' ))) ext = ++tmp;
 
-	if(STRCASECMP(ext, TXT("wav")) == 0)
+	for (size_t i = 0; g_audio_formats[i].format; ++i)
 	{
-		format = SF_FORMAT_WAV  | getSubFormat(bitDepth, 0, 1);
+		for (size_t j = 0; g_audio_formats[i].extension[j]; ++j)
+		{
+			if (STRCASECMP(ext, g_audio_formats[i].extension[j]) == 0)
+			{
+				return g_audio_formats[i].format | (g_audio_formats[i].sub_format ? g_audio_formats[i].sub_format :
+					getSubFormat(bitDepth, g_audio_formats[i].flag[0], g_audio_formats[i].flag[1]));
+			}
+		}
 	}
-	else if(STRCASECMP(ext, TXT("w64")) == 0)
-	{
-		format = SF_FORMAT_W64  | getSubFormat(bitDepth, 0, 1);
-	}
-	else if(STRCASECMP(ext, TXT("rf64")) == 0)
-	{
-		format = SF_FORMAT_RF64 | getSubFormat(bitDepth, 0, 1);
-	}
-	else if(STRCASECMP(ext, TXT("au")) == 0)
-	{
-		format = SF_FORMAT_AU   | getSubFormat(bitDepth, 1, 1);
-	}
-	else if(STRCASECMP(ext, TXT("aiff")) == 0)
-	{
-		format = SF_FORMAT_AIFF | getSubFormat(bitDepth, 1, 1);
-	}
-	else if((STRCASECMP(ext, TXT("ogg")) == 0) || (STRCASECMP(ext, TXT("oga")) == 0))
-	{
-		format = SF_FORMAT_OGG | SF_FORMAT_VORBIS;
-	}
-	else if((STRCASECMP(ext, TXT("fla")) == 0) || (STRCASECMP(ext, TXT("flac")) == 0))
-	{
-		format = SF_FORMAT_FLAC | getSubFormat(bitDepth, 1, 0);
-	}
-	else if((STRCASECMP(ext, TXT("raw")) == 0) || (STRCASECMP(ext, TXT("pcm")) == 0))
-	{
-		format = SF_FORMAT_RAW  | getSubFormat(bitDepth, 1, 1);
-	}
-	else
-	{
-		format = SF_FORMAT_WAV  | getSubFormat(bitDepth, 0, 1);
-	}
-	
-	return format;
+
+	return SF_FORMAT_WAV  | getSubFormat(bitDepth, 0, 1);
 }
 
 int AudioIO_File_Private::getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported)

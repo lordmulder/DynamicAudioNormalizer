@@ -25,6 +25,10 @@
 // COMMON
 //============================================================================
 
+#ifdef _DYNAUDNORM_PLATFORM_SUPPORT
+#undef _DYNAUDNORM_PLATFORM_SUPPORT
+#endif
+
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS
 #endif
@@ -53,6 +57,12 @@ void SYSTEM_INIT(const bool &debugMode);
 //============================================================================
 
 #if defined(_WIN32) && defined(_MSC_VER) /*Windows MSVC only*/
+
+#ifndef _DYNAUDNORM_PLATFORM_SUPPORT
+#define _DYNAUDNORM_PLATFORM_SUPPORT 1
+#else
+#error Whoops, more than one platform has been detected!
+#endif
 
 #include <io.h>
 
@@ -155,6 +165,12 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 	return result;
 }
 
+inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const uint32_t len)
+{
+	wcsncat_s(buff, len, str, _TRUNCATE);
+	return buff;
+}
+
 #endif //_WIN32
 
 //============================================================================
@@ -162,6 +178,12 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 //============================================================================
 
 #if defined(_WIN32) && defined(__MINGW32__) /*Windows MinGW only*/
+
+#ifndef _DYNAUDNORM_PLATFORM_SUPPORT
+#define _DYNAUDNORM_PLATFORM_SUPPORT 1
+#else
+#error Whoops, more than one platform has been detected!
+#endif
 
 #include <io.h>
 
@@ -260,6 +282,16 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 	return result;
 }
 
+inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const uint32_t len)
+{
+	const size_t offset = wcslen(buffer);
+	if (len >= 1)
+	{
+		return wcsncat(buff, str, len - offset - 1);
+	}
+	return buff;
+}
+
 #endif //_WIN32
 
 //============================================================================
@@ -267,6 +299,12 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 //============================================================================
 
 #ifdef __linux /*Linux only*/
+
+#ifndef _DYNAUDNORM_PLATFORM_SUPPORT
+#define _DYNAUDNORM_PLATFORM_SUPPORT 1
+#else
+#error Whoops, more than one platform has been detected!
+#endif
 
 #include <unistd.h>
 
@@ -359,5 +397,23 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 	return result;
 }
 
+inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const uint32_t len)
+{
+	const size_t offset = strlen(buffer);
+	if (len >= 1)
+	{
+		return strncat(buff, str, len - offset - 1);
+	}
+	return buff;
+}
+
 #endif //__linux
 
+//============================================================================
+// VALIDATION
+//============================================================================
+
+/*make sure one platform has been initialized!*/
+#if !(defined(_DYNAUDNORM_PLATFORM_SUPPORT) && _DYNAUDNORM_PLATFORM_SUPPORT)
+#error This platform is *not* currently supported!
+#endif

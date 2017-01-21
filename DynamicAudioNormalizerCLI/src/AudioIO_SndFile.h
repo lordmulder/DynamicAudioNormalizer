@@ -46,6 +46,7 @@ public:
 
 	//Static functions
 	static const char *libraryVersion(void);
+	static const CHR *const *supportedFormats(const CHR **const list, const uint32_t maxLen);
 	
 private:
 	AudioIO_SndFile &operator=(const AudioIO_SndFile &) { throw 666; }
