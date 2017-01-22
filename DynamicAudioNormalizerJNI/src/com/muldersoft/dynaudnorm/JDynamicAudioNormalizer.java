@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - Java/JNI Wrapper
-// Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -425,7 +425,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		{
 			System.out.println("Dynamic Audio Normalizer, Unknown Version");
 		}
-		System.out.println("Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.");
+		System.out.println("Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.");
 		System.out.println();
 		System.out.println("This program is free software: you can redistribute it and/or modify");
 		System.out.println("it under the terms of the GNU General Public License <http://www.gnu.org/>.");

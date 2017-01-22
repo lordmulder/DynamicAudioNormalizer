@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("FSF")]
 [assembly: AssemblyProduct("DynamicAudioNormalizer.NET")]
-[assembly: AssemblyCopyright("Copyright © LoRd_MuldeR 2015")]
+[assembly: AssemblyCopyright("Copyright © 2014-2017 LoRd_MuldeR <mulder2@gmx.de>")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

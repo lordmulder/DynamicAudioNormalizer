@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - Audio Processing Utility
-// Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -389,7 +389,7 @@ static void printLogo(void)
 	PRINT(TXT("---------------------------------------------------------------------------\n"));
 
 	PRINT(TXT("Dynamic Audio Normalizer, Version %u.%02u-%u, ") FMT_CHR TXT("\n"), versionMajor, versionMinor, versionPatch, LINKAGE);
-	PRINT(TXT("Copyright (c) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
+	PRINT(TXT("Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n"));
 	PRINT(TXT("Built on ") FMT_chr TXT(" at ") FMT_chr TXT(" with ") FMT_chr TXT(" for ") OS_TYPE TXT("-") FMT_chr TXT(".\n\n"), buildDate, buildTime, buildCompiler, buildArch);
 
 	PRINT(TXT("This program is free software: you can redistribute it and/or modify\n"));

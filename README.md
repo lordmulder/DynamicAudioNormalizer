@@ -615,7 +615,7 @@ The following build environments are currently supported:
 
     - Optionally, you may run the deployment script ``z_build.bat``, which will also create deployment packages. You may need to edit the paths in the build script first!
 
-* Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 14.10*](https://ubuntu-mate.org/download/)
+* Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 16.04 LTS*](https://ubuntu-mate.org/download/)
 
     - The provided Makefile assumes that the essential build utilities (*make*, *g++*, *libc-dev*, etc), as contained in Debian's ``build-essential`` package, are installed
 
@@ -625,6 +625,18 @@ The following build environments are currently supported:
 
 
 ## Build Prerequisites ##
+
+Building the *Dynamic Audio Normalizer* requires some third-party tools and libraries!
+
+Windows users are recommended to download our pre-compiled "all-in-one" prerequisites package from here:
+* <https://sourceforge.net/projects/muldersoft/files/Prerequisites/>
+* <https://www.mediafire.com/folder/ygv9qoqv11kvk/Prerequisites>
+
+Linux users should install the prerequisites via their package manager. Here is a list of required packages for Ubuntu:
+* `apt install build-essential`
+* etc
+
+Old stuff:
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
 * [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
 * [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
@@ -744,7 +756,7 @@ If your processor *does* support SSE2, but you still get the above error message
 The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released under the *GNU Lesser General Public License*, Version 2.1.
 
 	Dynamic Audio Normalizer - Audio Processing Library
-	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This library is free software; you can redistribute it and/or
 	modify it under the terms of the GNU Lesser General Public
@@ -768,7 +780,7 @@ The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released
 The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) is released under the *GNU General Public License*, Version 2.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -792,7 +804,7 @@ The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI
 The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) is released under the *GNU General Public License*, Version 3.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -815,7 +827,7 @@ The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) 
 The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* are released under the *MIT/X11 License*.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (C) 2015 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
@@ -845,7 +857,7 @@ The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI
 
 * [**libsndfile**](http://www.mega-nerd.com/libsndfile/)  
   C library for reading and writing files containing sampled sound through one standard library interface  
-  Copyright (C) 1999-2011 Erik de Castro Lopo
+  Copyright (C) 1999-2016 Erik de Castro Lopo
   
 The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) incorporates the following *third-party* software:
 
