@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AudioIO.cpp" />
+    <ClCompile Include="src\AudioIO_Mpg123.cpp" />
     <ClCompile Include="src\AudioIO_SndFile.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Parameters.cpp" />
@@ -25,6 +26,7 @@
   <ItemGroup>
     <ClInclude Include="..\DynamicAudioNormalizerShared\include\Common.h" />
     <ClInclude Include="src\AudioIO.h" />
+    <ClInclude Include="src\AudioIO_Mpg123.h" />
     <ClInclude Include="src\AudioIO_SndFile.h" />
     <ClInclude Include="src\Parameters.h" />
     <ClInclude Include="src\Platform.h" />
@@ -101,7 +103,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <OmitFramePointers>false</OmitFramePointers>
@@ -126,7 +128,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -154,7 +156,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;MDYNAMICAUDIONORMALIZER_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>

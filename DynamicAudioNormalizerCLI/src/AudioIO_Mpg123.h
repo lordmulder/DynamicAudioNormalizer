@@ -23,13 +23,13 @@
 
 #include "AudioIO.h"
 
-class AudioIO_SndFile_Private;
+class AudioIO_Mpg123_Private;
 
-class AudioIO_SndFile : public AudioIO
+class AudioIO_Mpg123 : public AudioIO
 {
 public:
-	AudioIO_SndFile(void);
-	virtual ~AudioIO_SndFile(void);
+	AudioIO_Mpg123(void);
+	virtual ~AudioIO_Mpg123(void);
 
 	//Open and Close
 	virtual bool openRd(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
@@ -49,6 +49,6 @@ public:
 	static const CHR *const *supportedFormats(const CHR **const list, const uint32_t maxLen);
 	
 private:
-	AudioIO_SndFile &operator=(const AudioIO_SndFile &) { throw 666; }
-	AudioIO_SndFile_Private *const p;
+	AudioIO_Mpg123 &operator=(const AudioIO_Mpg123 &) { throw 666; }
+	AudioIO_Mpg123_Private *const p;
 };

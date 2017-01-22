@@ -47,7 +47,7 @@ public:
 	static const CHR *const *AudioIO::getSupportedLibraries(const CHR **const list, const uint32_t maxLen);
 	static AudioIO *createInstance(const CHR *const name = NULL);
 	static const CHR *const *getSupportedFormats(const CHR **const list, const uint32_t maxLen, const CHR *const name = NULL);
-	static const char *getLibraryVersion(const CHR *const name = NULL);
+	static const CHR *getLibraryVersion(const CHR *const name = NULL);
 
 private:
 	AudioIO(const AudioIO &)            { throw 666; }

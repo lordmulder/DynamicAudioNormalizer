@@ -23,6 +23,7 @@
 
 #include "AudioIO.h"
 #include "AudioIO_SndFile.h"
+#include "AudioIO_Mpg123.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Functions
@@ -31,6 +32,7 @@
 //AudioIO libraries
 static const uint8_t AUDIO_LIB_NULL       = 0x00u;
 static const uint8_t AUDIO_LIB_LIBSNDFILE = 0x01u;
+static const uint8_t AUDIO_LIB_LIBMPG123  = 0x02u;
 
 //AudioIO library name to id mappings
 static const struct
@@ -41,6 +43,7 @@ static const struct
 g_audioIO_mapping[] =
 {
 	{ TXT("libsndfile"), AUDIO_LIB_LIBSNDFILE },
+	{ TXT("libmpg123"),  AUDIO_LIB_LIBMPG123  },
 	{ TXT(""),           AUDIO_LIB_NULL       }
 };
 
@@ -91,6 +94,8 @@ AudioIO *AudioIO::createInstance(const CHR *const name)
 	{
 	case AUDIO_LIB_LIBSNDFILE:
 		return new AudioIO_SndFile();
+	case AUDIO_LIB_LIBMPG123:
+		return new AudioIO_Mpg123();
 	default:
 		throw "Unsupported audio I/O library!";
 	}
@@ -102,17 +107,21 @@ const CHR *const *AudioIO::getSupportedFormats(const CHR **const list, const uin
 	{
 	case AUDIO_LIB_LIBSNDFILE:
 		return AudioIO_SndFile::supportedFormats(list, maxLen);
+	case AUDIO_LIB_LIBMPG123:
+		return AudioIO_Mpg123::supportedFormats(list, maxLen);
 	default:
 		throw "Unsupported audio I/O library!";
 	}
 }
 
-const char *AudioIO::getLibraryVersion(const CHR *const name)
+const CHR *AudioIO::getLibraryVersion(const CHR *const name)
 {
 	switch (parseName(name))
 	{
 	case AUDIO_LIB_LIBSNDFILE:
 		return AudioIO_SndFile::libraryVersion();
+	case AUDIO_LIB_LIBMPG123:
+		return AudioIO_Mpg123::libraryVersion();
 	default:
 		throw "Unsupported audio I/O library!";
 	}

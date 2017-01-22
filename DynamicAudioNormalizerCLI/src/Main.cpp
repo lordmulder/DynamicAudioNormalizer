@@ -427,7 +427,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
-	PRINT(TXT("Using ") FMT_chr TXT("\n\n"), AudioIO::getLibraryVersion(parameters.sourceLibrary()));
+	PRINT(TXT("Using ") FMT_CHR TXT("\n\n"), AudioIO::getLibraryVersion(parameters.sourceLibrary()));
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioIO *sourceFile = NULL, *outputFile = NULL;
