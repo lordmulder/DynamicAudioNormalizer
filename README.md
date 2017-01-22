@@ -1,5 +1,5 @@
 % Dynamic Audio Normalizer
-% Created by LoRd_MuldeR &lt;<mulder2@gmx>&gt; &ndash; check <http://muldersoft.com/> for news and updates!
+% by LoRd_MuldeR &lt;<mulder2@gmx>&gt; &ndash; <http://muldersoft.com/>
 
 
 # Introduction #
@@ -95,23 +95,35 @@ The basic Dynamic Audio Normalizer command-line syntax is as follows:
 
 Note that the *input* file and the *output* file always have to be specified, while all other parameters are optional. But take care, an existing output file will be *overwritten*!
 
-Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output, so a wide range of file formats (WAV, W64, FLAC, Ogg/Vorbis, AIFF, AU/SND, etc) as well as various sample types (ranging from 8-Bit Integer to 64-Bit floating point) are supported.
+Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output by default, so a wide range of file formats (WAV, W64, FLAC, Ogg/Vorbis, AIFF, AU/SND, etc) as well as various sample types (ranging from 8-Bit Integer to 64-Bit floating point) are supported. However, *libsndfile* can **not** read MP2 (MPEG-1 Audio Layer II) or MP3 (MPEG-1 Audio Layer III) files. In order to read MP2/MP3 files, add the `-d libmpg123` option, which uses [libmpg123](https://www.mpg123.de/) to read your source file.
 
-Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported too. Just specify the file name ``"-"`` in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams) stream, respectively. When reading from the *stdin*, you have to explicitly specify the *input* sample format, channel count and sampling rate.
+By default, the Dynamic Audio Normalizer program will *guesstimate* the output file format from the file extension of the specified output file. This can be overwritten by using the `-t` option. To create a FLAC file, e.g., you can specify `-t flac`.
 
-For a list of *all* available options, please run ``DynamicAudioNormalizerCLI.exe --help`` from the command prompt. Also see to the [**configuration**](#configuration) chapter for more details!
+Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported. Specify the file name ``"-"`` in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams), respectively. When reading from the *stdin*, you have to specify the *input* sample format, channel count and sampling rate!
+
+For a list of *all* available options, please run ``DynamicAudioNormalizerCLI.exe --help`` from the command prompt. Also, please refer to the [**configuration**](#configuration) chapter for more details on the Dynamic Audio Normalizer parameters!
+
+
 
 
 ## Command-Line Usage Examples ##
 
 * Read input from Wave file and write output to a Wave file again:  
-  ``DynamicAudioNormalizerCLI.exe -i "in_original.wav" -o "out_normalized.wav"``
+```
+DynamicAudioNormalizerCLI.exe -i "in_original.wav" -o "out_normalized.wav"
+```
 
 * Read input from *stdin* (input is provided by [FFmpeg](http://ffmpeg.org/about.html) via pipe) and write output to Wave file:  
-  ``ffmpeg.exe -i "movie.mkv" -loglevel quiet -vn -f s16le -c:a pcm_s16le - | DynamicAudioNormalizerCLI.exe -i - --input-bits 16 --input-chan 2 --input-rate 48000 -o "output.wav"``
+```
+ffmpeg.exe -i "movie.mkv" -loglevel quiet -vn -f s16le -c:a pcm_s16le - |
+  DynamicAudioNormalizerCLI.exe -i - --input-bits 16 --input-chan 2 --input-rate 48000 -o "output.wav"
+```
 
 * Read input from Wave file and write output to *stdout* (output is passed to [FFmpeg](http://ffmpeg.org/about.html) via pipe):  
-  ``DynamicAudioNormalizerCLI.exe -i "input.wav" -o - | ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i - -c:a libmp3lame -qscale:a 2 "output.mp3"``
+```
+DynamicAudioNormalizerCLI.exe -i "input.wav" -o - |
+  ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i - -c:a libmp3lame -qscale:a 2 "output.mp3"
+```
 
 
 ## SoX Integration Usage ##
@@ -120,20 +132,24 @@ As an alternative to the Dynamic Audio Normalizer command-line front-end, the Dy
 
 Note, however, that *standard* SoX distributions do **not** currently support the Dynamic Audio Normalizer. Instead, a special *patched* build of SoX that has the Dynamic Audio Normalizer effect enabled is required!
 
-When working with SoX, the Dynamic Audio Normalizer can be invoked by adding the "dynaudnorm" effect to your effect chain, which can be done as follows:  
-``DynamicAudioNormalizerSoX.exe -S "in_original.wav" -o "out_normalized.wav" dynaudnorm [options]``
+When using SoX, the Dynamic Audio Normalizer can be invoked by adding the "dynaudnorm" effect to your chain:  
+```
+DynamicAudioNormalizerSoX.exe -S "in_original.wav" -o "out_normalized.wav" dynaudnorm [options]
+```
 
-For details about the SoX command-line syntax, please refer to the [SoX documentation](http://sox.sourceforge.net/sox.html), or type ``DynamicAudioNormalizerSoX.exe --help-effect dynaudnorm`` for a list of available options.
+For details about the SoX command-line syntax, please refer to the offical [SoX documentation](http://sox.sourceforge.net/sox.html), or simply type ``--help-effect dynaudnorm`` in order to make SoX print a list of available options.
 
 
 ## FFmpeg Integration Usage ##
 
-Furthermore, the Dynamic Audio Normalizer now is also available as an audio filter in [**FFmpeg**](https://www.ffmpeg.org/), a complete, cross-platform solution to record, convert and stream audio and video. Thanks to *Paul B Mahol* for porting Dynamic Audio Normalizer code to FFmpeg.
+Furthermore, the Dynamic Audio Normalizer is available as an audio filter in [**FFmpeg**](https://www.ffmpeg.org/), a complete, cross-platform solution to record, convert and stream audio and video. Thanks to *Paul B Mahol* for porting Dynamic Audio Normalizer to FFmpeg.
 
-Since the Dynamic Audio Normalizer has been committed to the official FFmpeg codebase, you can use *any* FFmpeg binary &ndash; the Dynamic Audio Normalizer distribution package does **not** contain FFmpeg binaries. Just be sure to grab an *up-to-date* FFmpeg that has the "dynaudnorm" filter integrated. Windows users can download ready-made FFmpeg binaries [here](http://ffmpeg.zeranoe.com/builds/). Linux users install FFmpeg from the package manager of their distribution or [build](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu) it themselves. If the FFmpeg included with your distribution is too old, find recent Linux binaries [here](http://johnvansickle.com/ffmpeg/).
+Since the Dynamic Audio Normalizer has been committed to the official FFmpeg codebase, you can use *any* FFmpeg binary. Just be sure to grab an *up-to-date* FFmpeg that has the "dynaudnorm" filter integrated. Windows users can download ready-made FFmpeg binaries [here](http://ffmpeg.zeranoe.com/builds/). Linux users install FFmpeg from the package manager of their distribution or [build](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu) it themselves. If the FFmpeg included with your distribution is too old, find recent Linux binaries [here](http://johnvansickle.com/ffmpeg/).
 
-When working with FFmpeg, the Dynamic Audio Normalizer can be invoked by adding the "dynaudnorm" audio filter, using the "-af" switch:
-``ffmpeg.exe -i "in_original.wav" -af dynaudnorm "out_normalized.wav"``
+When using FFmpeg, the Dynamic Audio Normalizer can be invoked by adding the "dynaudnorm" filter via `-af` switch:
+```
+ffmpeg.exe -i "in_original.wav" -af dynaudnorm "out_normalized.wav"
+```
 
 For details about the FFmpeg command-line syntax, please refer to the [FFmpeg documentation](https://ffmpeg.org/ffmpeg-filters.html#dynaudnorm), see the [FFmpeg filtering guide](https://trac.ffmpeg.org/wiki/FilteringGuide), or type ``ffmpeg.exe -h full | more`` for a list of available options.
 
@@ -634,9 +650,9 @@ Windows users are recommended to download our pre-compiled "all-in-one" prerequi
 
 Linux users should install the prerequisites via their package manager. Here is a list of required packages for Ubuntu:
 * `apt install build-essential`
-* etc
+* !!! TODO !!!
 
-Old stuff:
+Old prerequisites:
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
 * [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
 * [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
@@ -649,6 +665,12 @@ Old stuff:
 
 
 # Changelog #
+
+## Version 2.10 (2017-01-??) ## {-}
+* CLI front-end: Added new CLI option `-t` to specify the desired output format
+* CLI front-end: Added new CLI option `-d` to specify the desired input decoder library
+* CLI front-end: Added support for decoding input files via *libmpg123* library
+* Windows binaries: Updated the included *libsndfile* version to 1.0.27 (2016-06-19)
 
 ## Version 2.09 (2016-08-01) ## {-}
 * Core library: Improved pre-filling code in order to avoid possible clipping at the very beginning
@@ -726,7 +748,7 @@ Old stuff:
 
 # Frequently Asked Questions (FAQ)
 
-## Q: How does Dynamic Audio Normalizer differ from dynamic range compression? ##
+## Q: How does DynAudNorm differ from dynamic range compression? ## {-}
 
 A traditional [*audio compressor*](http://en.wikipedia.org/wiki/Dynamic_range_compression) will prune all samples whose magnitude is above a certain threshold. In particular, the portion of the sample's magnitude that is above the pre-defined threshold will be reduced by a certain *ratio*, typically *2:1* or *4:1*. In other words, the signal *peaks* will be *flattened*, while all samples below the threshold are passed through unmodified. This leaves a certain "headroom", i.e. after flattening the signal peaks the maximum magnitude remaining in the *compressed* file will be lower than in the original. For example, if we apply *2:1* reduction to all samples above a threshold of *80%*, then the maximum remaining magnitude will be at *90%*, leaving a headroom of *10%*. After the compression has been applied, the resulting sample values will (usually) be amplified again, by a certain *fixed* gain factor. This factor will be chosen as high as possible *without* exceeding the maximum allowable signal level, similar to a traditional *normalizer*. Clearly, the compression allows for a much stronger amplification of the signal than what would be possible otherwise. However, due to the *flattening* of the signal peaks, the *dynamic range*, i.e. the ratio between the largest and smallest sample value, will be *reduced* significantly – which has a strong tendency to destroy the "vividness" of the audio signal! The excessive use of dynamic range compression in many recent productions is also known as the ["loudness war"](https://www.youtube.com/watch?v=3Gmex_4hreQ).
 
@@ -737,12 +759,19 @@ The following waveform view shows an audio signal prior to dynamic range compres
 In contrast, the Dynamic Audio Normalizer also implements dynamic range compression *of some sort*, but it does **not** prune signal peaks above a *fixed* threshold. Actually it does **not** prune any signal peaks at all! Furthermore, it does **not** amplify the samples by a *fixed* gain factor. Instead, an "optimal" gain factor will be chosen for each *frame*. And, since a frame's gain factor is bounded by the highest magnitude sample within that frame, **100%** of the dynamic range will be preserved *within* each frame! The Dynamic Audio Normalizer only performs a "dynamic range compression" in the sense that the gain factors are *dynamically* adjusted over time, allowing "quieter" frames to get a stronger amplification than "louder" frames. This means that the volume differences between the "quiet" and the "loud" parts of an audio recording will be *harmonized* – but still the *full* dynamic range is being preserved within each of these parts. Finally, the Gaussian filter applied by the Dynamic Audio Normalizer ensures that any changes of the gain factor between neighbouring frames will be smooth and seamlessly, avoiding noticeable "jumps" of the audio volume.
 
 
-## Q: But what if I do *not* want the "quiet" and "loud" parts to be harmonized? ##
+## Q: Why does DynAudNorm *not* seem to change my audio at all? ## {-}
 
-In this case, the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. Still, by using a larger [filter size](#gaussian-filter-window-size), the Dynamic Audio Normalizer may be configured to act much more similar to a "traditional" normalization filter.
+If you think that the Dynamic Audio Normalizer is *not* working properly, because it (seemingly) did *not* change your audio at all, you are almost certainly having the *wrong* expectations and the Dynamic Audio Normalizer actually ***is*** working just as it is supposed to work! Please keep in mind, that the Dynamic Audio Normalizer does *not* use compression, by default, which means that all local "peaks" are perfectly preserved. Also, the Dynamic Audio Normalizer *never* amplifies your audio more than what would bring the "loudest" local peak up to the threshold, i.e. *no* peak is ever allowed to exceed the threshold. Furthermore &ndash; and that is the important part &ndash; the Dynamic Audio Normalizer does **not** simply amplify each *frame* to its local maximum! Instead, it employs a Gaussian filter in order to "smooth" the amplification factors between neighboring frames, which ensures natural volume transitions and avoids noticeable "jumps" of the volume. But this also means that, due to the Gaussian smoothing filter, a particular *frame* may (and often will!) be amplified **less** than what its *local* maximum would allow.
+
+Consequently, if the Dynamic Audio Normalizer did *not* change your audio in a noticeable way, it probably means that your audio simply could *not* be amplified any further &ndash; with the current Dynamic Audio Normalizer settings. This is **not** a "problem", it is just how the Dynamic Audio Normalizer is designed to work! Also keep in mind that the *default* settings of the Dynamic Audio Normalizer have been chosen rather "conservative", in order to make sure that the filter will *not* hurt the dynamics of the audio. Still, if you think that the Dynamic Audio Normalizer should be acting more "aggressively", you can try tweaking the settings. There are two settings that you may wish to adjust: Try a *smaller* [filter size](#gaussian-filter-window-size) and/or throw in some [input compression](#input-compression).
 
 
-## Q: Why does the program crash with "GURU MEDITATION" error every time? ##
+## Q: How to *not* harmonize the "quiet" and "loud" parts? ## {-}
+
+If you do *not* want the "quiet" and the "loud" parts of your audio to be harmonized, then the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. It was purposely designed to work like that. Nonetheless, by using a larger [filter size](#gaussian-filter-window-size), the Dynamic Audio Normalizer may be configured to act more similar to a "traditional" normalization filter.
+
+
+## Q: Why does the program crash with "GURU MEDITATION" error? ## {-}
 
 This error message indicates that the program has encountered a serious problem. On possible reason is that your processor does **not** support the [SSE2](http://en.wikipedia.org/wiki/SSE2) instruction set. That's because the official Dynamic Audio Normalizer binaries have been compiled with SSE and SSE2 code enabled – like pretty much any compiler does *by default* nowadays. So without SSE2 support, the program cannot run, obviosuly. This can be fixed either by upgrading your system to a less antiquated processor, or by recompiling Dynamic Audio Normalizer from the sources with SSE2 code generation *disabled*. Note that SSE2 is supported by the Pentium 4 and Athon 64 processors as well as **all** later processors. Also *every* 64-Bit supports SSE2, because [x86-64](http://en.wikipedia.org/wiki/X86-64) has adopted SSE2 as "core" instructions. That means that *every processor from the last decade* almost certainly supports SSE2.
 
