@@ -175,9 +175,9 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\LICENSE-GPL3.html" "%PACK_PATH%\%%c"
 	copy "%~dp0\img\dyauno\*.png"  "%PACK_PATH%\%%c\img\dyauno"
 
-	"%~dp0\..\Prerequisites\Pandoc\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone --self-contained -c "%~dp0\..\Prerequisites\Pandoc\css\github-pandoc.css" --output "%PACK_PATH%\%%c\README.html" "%~dp0\README.md"
+	"%~dp0\..\Prerequisites\Pandoc\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone -H "%~dp0\..\Prerequisites\Pandoc\css\github-pandoc.inc" --output "%~dp0\README.local.html" "%~dp0\README.md"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	
+
 	"%JAVA_HOME%\bin\java.exe" -jar "%~dp0\..\Prerequisites\HTMLCompressor\bin\htmlcompressor-1.5.3.jar" --compress-css -o "%PACK_PATH%\%%c\README.html~minified" "%PACK_PATH%\%%c\README.html"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 
