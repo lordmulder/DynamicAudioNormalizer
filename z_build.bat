@@ -6,8 +6,6 @@ REM // Set Paths
 REM ///////////////////////////////////////////////////////////////////////////
 set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
 set "WSDK_PATH=C:\Program Files (x86)\Windows Kits\10"
-set "UPX3_PATH=C:\Program Files (x86)\UPX"
-set "PDOC_PATH=C:\Program Files (x86)\Pandoc"
 set "QTDIR_MSC=C:\Qt\4.8.7"
 set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_25"
 set "ANT1_PATH=C:\Eclipse\plugins\org.apache.ant_1.9.2.v201404171502"
@@ -47,14 +45,6 @@ if %TOOLS_VER% GEQ 140 (
 		echo UCRT redist ^(x64^) libraries not found. Please check your WSDK_PATH var^^!
 		goto BuildError
 	)
-)
-if not exist "%UPX3_PATH%\upx.exe" (
-	echo UPX binary could not be found. Please check your UPX3_PATH var^^!
-	goto BuildError
-)
-if not exist "%PDOC_PATH%\pandoc.exe" (
-	echo Pandoc binary could not be found. Please check your PDOC_PATH var^^!
-	goto BuildError
 )
 if not exist "%QTDIR%\bin\moc.exe" (
 	echo Qt could not be found. Please check your QTDIR_MSC var^^!
@@ -190,22 +180,29 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\LICENSE-GPL3.html" "%PACK_PATH%\%%c"
 	copy "%~dp0\img\dyauno\*.png"  "%PACK_PATH%\%%c\img\dyauno"
 
-	"%PDOC_PATH%\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone -H "%~dp0\img\dyauno\Style.inc" "%~dp0\README.md" --output "%PACK_PATH%\%%c\README.html"
+	"%~dp0\..\Prerequisites\Pandoc\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone --self-contained -c "%~dp0\..\Prerequisites\Pandoc\css\github-pandoc.css" --output "%PACK_PATH%\%%c\README.html" "%~dp0\README.md"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	
+	"%JAVA_HOME%\bin\java.exe" -jar "%~dp0\..\Prerequisites\HTMLCompressor\bin\htmlcompressor-1.5.3.jar" --compress-css -o "%PACK_PATH%\%%c\README.html~minified" "%PACK_PATH%\%%c\README.html"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+
+	move /Y "%PACK_PATH%\%%c\README.html~minified" "%PACK_PATH%\%%c\README.html"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress
 REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
-	"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
+	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
+	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
+	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
 	
 	if "%%c"=="DLL" (
-		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
-		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
-		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
-		"%UPX3_PATH%\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
+		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
+		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
+		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
+		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
 	)
 )
 

@@ -753,7 +753,8 @@ If your processor *does* support SSE2, but you still get the above error message
 
 ## Dynamic Audio Normalizer Library ##
 
-The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released under the *GNU Lesser General Public License*, Version 2.1.
+The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released under the  
+***GNU Lesser General Public License, Version 2.1***.
 
 	Dynamic Audio Normalizer - Audio Processing Library
 	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
@@ -772,12 +773,13 @@ The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-**http://www.gnu.org/licenses/lgpl-2.1.html**
+<http://www.gnu.org/licenses/lgpl-2.1.html>
 
 
 ## Dynamic Audio Normalizer CLI ##
 
-The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) is released under the *GNU General Public License*, Version 2.
+The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) is released under the  
+***GNU General Public License, Version 2***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
 	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
@@ -797,11 +799,13 @@ The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-**http://www.gnu.org/licenses/gpl-2.0.html**
+<http://www.gnu.org/licenses/gpl-2.0.html>
+
 
 ## Dynamic Audio Normalizer GUI ##
 
-The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) is released under the *GNU General Public License*, Version 3.
+The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) is released under the  
+***GNU General Public License, Version 3***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
 	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
@@ -824,7 +828,8 @@ The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) 
 
 ## Dynamic Audio Normalizer Plug-In Wrapper ##
 
-The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* are released under the *MIT/X11 License*.
+The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* are released under the  
+***MIT/X11 License***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
 	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
@@ -847,19 +852,19 @@ The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* 
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE.
 
-**http://opensource.org/licenses/MIT**
+<http://opensource.org/licenses/MIT>
 
 
 
 # Acknowledgement #
 
-The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI) incorporates the following *third-party* software:
+The Dynamic Audio Normalizer **CLI program** (DynamicAudioNormalizerCLI) incorporates the following *third-party* software:
 
 * [**libsndfile**](http://www.mega-nerd.com/libsndfile/)  
   C library for reading and writing files containing sampled sound through one standard library interface  
   Copyright (C) 1999-2016 Erik de Castro Lopo
   
-The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) incorporates the following *third-party* software:
+The Dynamic Audio Normalizer **log viewer** (DynamicAudioNormalizerGUI) incorporates the following *third-party* software:
 
 * [**Qt Framework**](http://qt-project.org/)  
   Cross-platform application and UI framework for developers using C++ or QML, a CSS & JavaScript like language  
