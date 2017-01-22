@@ -8,7 +8,6 @@ set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
 set "WSDK_PATH=C:\Program Files (x86)\Windows Kits\10"
 set "QTDIR_MSC=C:\Qt\4.8.7"
 set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_25"
-set "ANT1_PATH=C:\Eclipse\plugins\org.apache.ant_1.9.2.v201404171502"
 set "TOOLS_VER=120"
 set "SLN_SUFFX=VS2013"
 
@@ -22,7 +21,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 set "QTDIR=%QTDIR_MSC%"
 call "%MSVC_PATH%\vcvarsall.bat" x86
 set "JAVA_HOME=%JDK8_PATH%"
-set "ANT_HOME=%ANT1_PATH%"
+set "ANT_HOME=%~dp0\..\Prerequisites\Ant"
 set "PATH=%QTDIR%\bin;%JAVA_HOME%\bin;%ANT_HOME%\bin;%PATH%"
 
 REM ///////////////////////////////////////////////////////////////////////////
@@ -56,10 +55,6 @@ if not exist "%QTDIR%\include\QtCore\qglobal.h" (
 )
 if not exist "%JDK8_PATH%\include\jni.h" (
 	echo JNI header files could not be found. Please check your JDK8_PATH var^^!
-	goto BuildError
-)
-if not exist "%ANT1_PATH%\lib\ant.jar" (
-	echo Ant library file could not be found. Please check your ANT1_PATH var^^!
 	goto BuildError
 )
 
@@ -120,7 +115,7 @@ for %%c in (DLL, Static) do (
 	)
 )
 
-call "%ANT1_PATH%\bin\ant.bat" -buildfile "%~dp0\DynamicAudioNormalizerJNI\build.xml"
+call "%ANT_HOME%\bin\ant.bat" -buildfile "%~dp0\DynamicAudioNormalizerJNI\build.xml"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Copy program files
