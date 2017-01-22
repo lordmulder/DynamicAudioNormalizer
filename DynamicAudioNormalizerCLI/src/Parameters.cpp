@@ -137,10 +137,11 @@ Parameters::~Parameters(void)
 
 void Parameters::setDefaults(void)
 {
-	m_sourceFile   = NULL;
-	m_outputFile   = NULL;
-	m_outputFormat = NULL;
-	m_dbgLogFile   = NULL;
+	m_sourceFile    = NULL;
+	m_sourceLibrary = NULL;
+	m_outputFile    = NULL;
+	m_outputFormat  = NULL;
+	m_dbgLogFile    = NULL;
 
 	m_frameLenMsec = 500;
 	m_filterSize   = 31;
@@ -179,6 +180,12 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		{
 			ENSURE_NEXT_ARG();
 			m_sourceFile = argv[pos];
+			continue;
+		}
+		if (IS_ARG_SHRT("d", "input-lib"))
+		{
+			ENSURE_NEXT_ARG();
+			m_sourceLibrary = argv[pos];
 			continue;
 		}
 		if(IS_ARG_SHRT("o", "output"))
@@ -306,14 +313,26 @@ bool Parameters::validateParameters(void)
 		return false;
 	}
 
+	/*validate input library*/
+	if (m_sourceLibrary)
+	{
+		const CHR *supportedLibraries[8];
+		if (!CHECK_ENUM(m_sourceLibrary, AudioIO::getSupportedLibraries(supportedLibraries, 8)))
+		{
+			CHR allLibraries[128];
+			PRINT2_WRN(TXT("Unknown input library \"") FMT_CHR TXT("\" specified!\nSupported libraries include: ") FMT_CHR TXT("\n"), m_sourceLibrary, JOIN_STR(allLibraries, 128, supportedLibraries, TXT(", ")));
+			return false;
+		}
+	}
+
 	/*validate output format*/
 	if(m_outputFormat)
 	{
 		const CHR *supportedFormats[32];
-		if (!CHECK_ENUM(m_outputFormat, AudioIO_getSupportedFormats(TXT("libsndfile"), supportedFormats, 32)))
+		if (!CHECK_ENUM(m_outputFormat, AudioIO::getSupportedFormats(supportedFormats, 32)))
 		{
 			CHR allFormats[256];
-			PRINT2_WRN(TXT("Unknown output format \"") FMT_CHR TXT("\" specified!\nSupported formats are: ") FMT_CHR TXT("\n"), m_outputFormat, JOIN_STR(allFormats, 256, supportedFormats, TXT(", ")));
+			PRINT2_WRN(TXT("Unknown output format \"") FMT_CHR TXT("\" specified!\nSupported formats include: ") FMT_CHR TXT("\n"), m_outputFormat, JOIN_STR(allFormats, 256, supportedFormats, TXT(", ")));
 			return false;
 		}
 	}

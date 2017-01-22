@@ -47,21 +47,45 @@ g_audioIO_mapping[] =
 //Get id from AudioIO library name
 static uint8_t parseName(const CHR *const name)
 {
-	for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
+	if (name && name[0])
 	{
-		if (STRCASECMP(name, g_audioIO_mapping[i].name) == 0)
+		for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
 		{
-			return g_audioIO_mapping[i].id;
+			if (STRCASECMP(name, g_audioIO_mapping[i].name) == 0)
+			{
+				return g_audioIO_mapping[i].id;
+			}
 		}
+		return AUDIO_LIB_NULL;
 	}
-	return AUDIO_LIB_NULL;
+	else
+	{
+		return AUDIO_LIB_LIBSNDFILE; /*default*/
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // AudioIO Factory
 ///////////////////////////////////////////////////////////////////////////////
 
-AudioIO *AudioIO_createInstance(const CHR *const name)
+const CHR *const *AudioIO::getSupportedLibraries(const CHR **const list, const uint32_t maxLen)
+{
+	if (list && (maxLen > 0))
+	{
+		uint32_t nextPos = 0;
+		for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
+		{
+			if (g_audioIO_mapping[i].name[0] && (nextPos < maxLen))
+			{
+				list[nextPos++] = &g_audioIO_mapping[i].name[0];
+			}
+		}
+		list[(nextPos < maxLen) ? nextPos : (maxLen - 1)] = NULL;
+	}
+	return list;
+}
+
+AudioIO *AudioIO::createInstance(const CHR *const name)
 {
 	switch (parseName(name))
 	{
@@ -72,7 +96,7 @@ AudioIO *AudioIO_createInstance(const CHR *const name)
 	}
 }
 
-const CHR *const *AudioIO_getSupportedFormats(const CHR *const name, const CHR **const list, const uint32_t maxLen)
+const CHR *const *AudioIO::getSupportedFormats(const CHR **const list, const uint32_t maxLen, const CHR *const name)
 {
 	switch (parseName(name))
 	{
@@ -83,7 +107,7 @@ const CHR *const *AudioIO_getSupportedFormats(const CHR *const name, const CHR *
 	}
 }
 
-const char *AudioIO_getLibraryVersion(const CHR *const name)
+const char *AudioIO::getLibraryVersion(const CHR *const name)
 {
 	switch (parseName(name))
 	{

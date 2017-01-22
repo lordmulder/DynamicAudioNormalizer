@@ -43,14 +43,13 @@ public:
 	virtual bool queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth) = 0;
 	virtual void getFormatInfo(CHR *buffer, const uint32_t buffSize) = 0;
 	
+	//Static "factory" functions
+	static const CHR *const *AudioIO::getSupportedLibraries(const CHR **const list, const uint32_t maxLen);
+	static AudioIO *createInstance(const CHR *const name = NULL);
+	static const CHR *const *getSupportedFormats(const CHR **const list, const uint32_t maxLen, const CHR *const name = NULL);
+	static const char *getLibraryVersion(const CHR *const name = NULL);
+
 private:
+	AudioIO(const AudioIO &)            { throw 666; }
 	AudioIO &operator=(const AudioIO &) { throw 666; }
 };
-
-///////////////////////////////////////////////////////////////////////////////
-// AudioIO Factory
-///////////////////////////////////////////////////////////////////////////////
-
-AudioIO *AudioIO_createInstance(const CHR *const name);
-const CHR *const *AudioIO_getSupportedFormats(const CHR *const name, const CHR **const list, const uint32_t maxLen);
-const char *AudioIO_getLibraryVersion(const CHR *const name);

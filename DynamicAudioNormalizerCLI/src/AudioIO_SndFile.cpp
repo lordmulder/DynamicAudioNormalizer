@@ -108,7 +108,7 @@ private:
 	static const size_t BUFF_SIZE = 2048;
 
 	//Library info
-	static char versionBuffer[128];
+	static char versionBuffer[256];
 
 	//Helper functions
 	static int formatToBitDepth(const int &format);
@@ -458,7 +458,7 @@ void AudioIO_File_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 // Static Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-char AudioIO_File_Private::versionBuffer[128] = { '\0' };
+char AudioIO_File_Private::versionBuffer[256] = { '\0' };
 
 const char *AudioIO_File_Private::libraryVersion(void)
 {
@@ -466,6 +466,7 @@ const char *AudioIO_File_Private::libraryVersion(void)
 	{
 		sf_command (NULL, SFC_GET_LIB_VERSION, versionBuffer, sizeof(versionBuffer));
 	}
+	strcat(versionBuffer, ", by Erik de Castro Lopo <erikd@mega-nerd.com>.");
 	return versionBuffer;
 }
 

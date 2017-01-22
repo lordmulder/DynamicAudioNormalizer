@@ -120,7 +120,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	MY_DELETE(*outputFile);
 
 	//Open *source* file
-	*sourceFile = AudioIO_createInstance(TXT("libsndfile"));
+	*sourceFile = AudioIO::createInstance(parameters.sourceLibrary());
 	if(!(*sourceFile)->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
 	{
 		PRINT2_WRN(TXT("Failed to open input file \"") FMT_CHR TXT("\" for reading!\n"), parameters.sourceFile());
@@ -142,7 +142,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	}
 
 	//Open *output* file
-	*outputFile = AudioIO_createInstance(TXT("libsndfile"));
+	*outputFile = AudioIO::createInstance();
 	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth, parameters.outputFormat()))
 	{
 		PRINT2_WRN(TXT("Failed to open output file \"") FMT_CHR TXT("\" for writing!\n"), parameters.outputFile());
@@ -351,6 +351,7 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("\n"));
 	PRINT(TXT("Input/Output:\n"));
 	PRINT(TXT("  -i --input <file>        Input audio file [required]\n"));
+	PRINT(TXT("  -d --input-lib <value>   Input decoder library [default: libsndfile]\n"));
 	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
 	PRINT(TXT("  -t --output-fmt <value>  Output format [default: guesstimate]\n"));
 	PRINT(TXT("\n"));
@@ -426,7 +427,7 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
-	PRINT(TXT("Using ") FMT_chr TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>.\n\n"), AudioIO_getLibraryVersion(TXT("libsndfile")));
+	PRINT(TXT("Using ") FMT_chr TXT("\n\n"), AudioIO::getLibraryVersion(parameters.sourceLibrary()));
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioIO *sourceFile = NULL, *outputFile = NULL;
