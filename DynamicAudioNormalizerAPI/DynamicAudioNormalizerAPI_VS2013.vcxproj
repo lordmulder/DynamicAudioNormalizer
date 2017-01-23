@@ -264,8 +264,6 @@
     </Link>
     <Lib>
       <Verbose>true</Verbose>
-      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\static</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference />
   </ItemDefinitionGroup>
@@ -294,8 +292,6 @@
     </Link>
     <Lib>
       <Verbose>true</Verbose>
-      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\static</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference />
   </ItemDefinitionGroup>

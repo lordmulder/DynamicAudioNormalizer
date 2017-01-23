@@ -29,7 +29,8 @@
 #endif
 
 #include "AudioIO_SndFile.h"
-#include "Common.h"
+#include <Common.h>
+#include <Threads.h>
 
 #include <sndfile.h>
 #include <stdexcept>
@@ -109,6 +110,7 @@ private:
 
 	//Library info
 	static CHR versionBuffer[256];
+	static pthread_mutex_t mutex_lock;
 
 	//Helper functions
 	static int formatToBitDepth(const int &format);
@@ -229,10 +231,7 @@ bool AudioIO_SndFile_Private::openRd(const CHR *const fileName, const uint32_t c
 
 	if(!handle)
 	{
-		if(!bPipe)
-		{
-			PRINT2_ERR(TXT("Failed to open \"") FMT_chr TXT("\"\n"), sf_strerror(NULL));
-		}
+		PRINT2_ERR(TXT("Failed to open file for reading: \"") FMT_chr TXT("\"\n"), sf_strerror(NULL));
 		return false;
 	}
 
@@ -268,10 +267,7 @@ bool AudioIO_SndFile_Private::openWr(const CHR *const fileName, const uint32_t c
 
 	if(!handle)
 	{
-		if (!bPipe)
-		{
-			PRINT2_ERR(TXT("Failed to open \"") FMT_chr TXT("\"\n"), sf_strerror(NULL));
-		}
+		PRINT2_ERR(TXT("Failed to open file for writing: \"") FMT_chr TXT("\"\n"), sf_strerror(NULL));
 		return false;
 	}
 
@@ -459,15 +455,18 @@ void AudioIO_SndFile_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize
 ///////////////////////////////////////////////////////////////////////////////
 
 CHR AudioIO_SndFile_Private::versionBuffer[256] = { TXT('\0') };
+pthread_mutex_t AudioIO_SndFile_Private::mutex_lock = PTHREAD_MUTEX_INITIALIZER;
 
 const CHR *AudioIO_SndFile_Private::libraryVersion(void)
 {
+	MY_CRITSEC_ENTER(mutex_lock);
 	if(!versionBuffer[0])
 	{
 		char temp[128] = { '\0' };
 		sf_command(NULL, SFC_GET_LIB_VERSION, temp, sizeof(temp));
 		SNPRINTF(versionBuffer, 256, FMT_chr TXT(", by Erik de Castro Lopo <erikd@mega-nerd.com>."), temp);
 	}
+	MY_CRITSEC_LEAVE(mutex_lock);
 	return versionBuffer;
 }
 
