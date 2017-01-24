@@ -26,6 +26,7 @@
 #include <Threads.h>
 
 #include <mpg123_msvc.h>
+#include <stdexcept>
 #include <algorithm>
 
 #ifdef __unix
@@ -86,9 +87,18 @@ private:
 	//libmpg123
 	mpg123_handle *handle;
 
+	//audio format info
+	struct
+	{
+		long rate;
+		int channels;
+		int encoding;
+	}
+	format;
+
 	//(De)Interleaving buffer
 	double *tempBuff;
-	static const size_t BUFF_SIZE = 2048;
+	size_t buffSize;
 
 	//Library info
 	static uint32_t instanceCounter;
@@ -96,10 +106,8 @@ private:
 	static pthread_mutex_t mutex_lock;
 
 	//Helper functions
-	static int formatToBitDepth(const int &format);
-	static int formatFromExtension(const CHR *const fileName, const int &bitDepth);
-	static int getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported);
-	static bool checkRawParameters(const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth);
+	static void library_init(void);
+	static void library_exit(void);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -119,31 +127,19 @@ AudioIO_Mpg123::~AudioIO_Mpg123(void)
 
 AudioIO_Mpg123_Private::AudioIO_Mpg123_Private(void)
 {
-	handle   = NULL;
+	library_init();
+
 	tempBuff = NULL;
 	handle   = NULL;
+	buffSize = 0;
 
-	MY_CRITSEC_ENTER(mutex_lock);
-	if (!(instanceCounter++))
-	{
-		if (mpg123_init() != MPG123_OK)
-		{
-			abort();
-		}
-	}
-	MY_CRITSEC_LEAVE(mutex_lock);
+	memset(&format, 0, sizeof(format));
 }
 
 AudioIO_Mpg123_Private::~AudioIO_Mpg123_Private(void)
 {
 	close();
-
-	MY_CRITSEC_ENTER(mutex_lock);
-	if (!(--instanceCounter))
-	{
-		mpg123_exit();
-	}
-	MY_CRITSEC_LEAVE(mutex_lock);
+	library_exit();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -214,20 +210,28 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 		PRINT2_ERR(TXT("Failed to create libmpg123 handle:\n") FMT_chr TXT("\n"), mpg123_plain_strerror(error));
 	}
 
-	//Use pipe?
-	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
-
-	//Initialize libmpg123 flags
+	//Initialize the libmpg123 flags
 	long flags; double fflags;
 	if (mpg123_getparam(handle, MPG123_FLAGS, &flags, &fflags) == MPG123_OK)
 	{
+		flags |= MPG123_FORCE_FLOAT;
 		flags |= MPG123_QUIET;
-		if (!bPipe)
+		if (mpg123_param(handle, MPG123_FLAGS, flags, fflags) != MPG123_OK)
 		{
-			flags |= MPG123_FORCE_SEEKABLE;
+			PRINT2_ERR(TXT("Failed to set up libmpg123 flags: \"") FMT_chr TXT("\"\n"), mpg123_strerror(handle));
+			MPG123_DELETE(handle);
+			return false;
 		}
-		mpg123_param(handle, MPG123_FLAGS, flags, 0.0);
 	}
+	else
+	{
+		PRINT2_ERR(TXT("Failed to query libmpg123 flags: \"") FMT_chr TXT("\"\n"), mpg123_strerror(handle));
+		MPG123_DELETE(handle);
+		return false;
+	}
+
+	//Use pipe?
+	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
 
 	//Open file in libmpg123
 	if ((bPipe ? mpg123_open_fd(handle, STDIN_FILENO) : MPG123OPEN(handle, fileName)) != MPG123_OK)
@@ -237,26 +241,37 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 		return false;
 	}
 
-	//Scan entire file
-	if (mpg123_scan(handle) != MPG123_OK)
+	//Detect format info
+	if (mpg123_getformat(handle, &format.rate, &format.channels, &format.encoding) != MPG123_OK)
 	{
-		PRINT2_ERR(TXT("Failed to scan audio file:\n") FMT_chr TXT("\n"), mpg123_strerror(handle));
-		MPG123_DELETE(handle);
+		PRINT2_ERR(TXT("Failed to get format info from audio file:\n") FMT_chr TXT("\n"), mpg123_strerror(handle));
+		close();
 		return false;
 	}
 
-	//Get format info
-	int format_channels, format_encoding;
-	long format_rate;
-	if (mpg123_getformat(handle, &format_rate, &format_channels, &format_encoding) != MPG123_OK)
+	PRINT2_NFO("[libmpg123] rate: %ld\n", format.rate);
+	PRINT2_NFO("[libmpg123] channels: %d\n", format.channels);
+	PRINT2_NFO("[libmpg123] encoding: %d\n", format.encoding);
+
+	//Ensure that this output format will not change
+	if ((mpg123_format_none(handle) != MPG123_OK) || (mpg123_format(handle, format.rate, format.channels, format.encoding) != MPG123_OK))
 	{
-		PRINT2_ERR(TXT("Failed to get format info from audio file:\n") FMT_chr TXT("\n"), mpg123_strerror(handle));
-		MPG123_DELETE(handle);
+		PRINT2_ERR(TXT("Failed to set up output format:\n") FMT_chr TXT("\n"), mpg123_strerror(handle));
+		close();
+		return false;
+	}
+
+	//Query output buffer size
+	if (buffSize = mpg123_outblock(handle) < 1)
+	{
+		PRINT2_ERR(TXT("Failed to get output buffer size from libmpg123:\n") FMT_chr TXT("\n"), mpg123_strerror(handle));
+		close();
 		return false;
 	}
 
 	//Allocate temp buffer
-	tempBuff = new double[BUFF_SIZE * format_channels];
+	tempBuff = new double[buffSize];
+
 	return true;
 }
 
@@ -269,14 +284,20 @@ bool AudioIO_Mpg123_Private::close(void)
 {
 	bool result = false;
 
-	//Close sndfile
+	//Close audio file
 	if (handle)
 	{
 		result = (mpg123_close(handle) == MPG123_OK);
-		MPG123_DELETE(handle);
 	}
 
+	//Free handle
+	MPG123_DELETE(handle);
+
+	//Clear format info
+	memset(&format, 0, sizeof(format));
+
 	//Free temp buffer
+	buffSize = 0;
 	MY_DELETE_ARRAY(tempBuff);
 	return result;
 }
@@ -293,6 +314,13 @@ int64_t AudioIO_Mpg123_Private::write(double *const *buffer, const int64_t count
 
 bool AudioIO_Mpg123_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
 {
+	if (!handle)
+	{
+		MY_THROW("Audio file not currently open!");
+	}
+
+	if(format.)
+
 	return false;
 }
 
@@ -331,22 +359,25 @@ const CHR *const *AudioIO_Mpg123_Private::supportedFormats(const CHR **const lis
 	return list;
 }
 
-int AudioIO_Mpg123_Private::formatToBitDepth(const int &format)
+void AudioIO_Mpg123_Private::library_init(void)
 {
-	return 0;
+	MY_CRITSEC_ENTER(mutex_lock);
+	if (!(instanceCounter++))
+	{
+		if (mpg123_init() != MPG123_OK)
+		{
+			abort();
+		}
+	}
+	MY_CRITSEC_LEAVE(mutex_lock);
 }
 
-int AudioIO_Mpg123_Private::formatFromExtension(const CHR *const fileName, const int &bitDepth)
+void AudioIO_Mpg123_Private::library_exit(void)
 {
-	return 0;
-}
-
-int AudioIO_Mpg123_Private::getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported)
-{
-	return 0;
-}
-
-bool AudioIO_Mpg123_Private::checkRawParameters(const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
-{
-	return false;
+	MY_CRITSEC_ENTER(mutex_lock);
+	if (!(--instanceCounter))
+	{
+		mpg123_exit();
+	}
+	MY_CRITSEC_LEAVE(mutex_lock);
 }
