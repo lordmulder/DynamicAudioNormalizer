@@ -26,6 +26,7 @@
 #include <Threads.h>
 
 #include <mpg123_msvc.h>
+#include <fmt123.h>
 #include <stdexcept>
 #include <algorithm>
 
@@ -88,16 +89,10 @@ private:
 	mpg123_handle *handle;
 
 	//audio format info
-	struct
-	{
-		long rate;
-		int channels;
-		int encoding;
-	}
-	format;
+	struct mpg123_fmt format;
 
 	//(De)Interleaving buffer
-	double *tempBuff;
+	uint8_t *tempBuff;
 	size_t buffSize;
 
 	//Library info
@@ -106,8 +101,11 @@ private:
 	static pthread_mutex_t mutex_lock;
 
 	//Helper functions
-	static void library_init(void);
-	static void library_exit(void);
+	static void libraryInit(void);
+	static void libraryExit(void);
+	static void deinterleave_float32(double **destination, const int64_t offset, const float  *const source, const int &channels, const int64_t &len);
+	static void deinterleave_float64(double **destination, const int64_t offset, const double *const source, const int &channels, const int64_t &len);
+	static int encodingToBitDepth(const int &encoding);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -127,19 +125,19 @@ AudioIO_Mpg123::~AudioIO_Mpg123(void)
 
 AudioIO_Mpg123_Private::AudioIO_Mpg123_Private(void)
 {
-	library_init();
+	libraryInit();
 
 	tempBuff = NULL;
 	handle   = NULL;
 	buffSize = 0;
 
-	memset(&format, 0, sizeof(format));
+	memset(&format, 0, sizeof(struct mpg123_fmt));
 }
 
 AudioIO_Mpg123_Private::~AudioIO_Mpg123_Private(void)
 {
 	close();
-	library_exit();
+	libraryExit();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -249,10 +247,6 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 		return false;
 	}
 
-	PRINT2_NFO("[libmpg123] rate: %ld\n", format.rate);
-	PRINT2_NFO("[libmpg123] channels: %d\n", format.channels);
-	PRINT2_NFO("[libmpg123] encoding: %d\n", format.encoding);
-
 	//Ensure that this output format will not change
 	if ((mpg123_format_none(handle) != MPG123_OK) || (mpg123_format(handle, format.rate, format.channels, format.encoding) != MPG123_OK))
 	{
@@ -262,7 +256,7 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 	}
 
 	//Query output buffer size
-	if (buffSize = mpg123_outblock(handle) < 1)
+	if ((buffSize = mpg123_outblock(handle)) < 1)
 	{
 		PRINT2_ERR(TXT("Failed to get output buffer size from libmpg123:\n") FMT_chr TXT("\n"), mpg123_strerror(handle));
 		close();
@@ -270,14 +264,14 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 	}
 
 	//Allocate temp buffer
-	tempBuff = new double[buffSize];
+	tempBuff = new uint8_t[buffSize];
 
 	return true;
 }
 
 bool AudioIO_Mpg123_Private::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth, const CHR *const format)
 {
-	return false;
+	return false; /*unsupported*/
 }
 
 bool AudioIO_Mpg123_Private::close(void)
@@ -294,7 +288,7 @@ bool AudioIO_Mpg123_Private::close(void)
 	MPG123_DELETE(handle);
 
 	//Clear format info
-	memset(&format, 0, sizeof(format));
+	memset(&format, 0, sizeof(struct mpg123_fmt));
 
 	//Free temp buffer
 	buffSize = 0;
@@ -304,12 +298,67 @@ bool AudioIO_Mpg123_Private::close(void)
 
 int64_t AudioIO_Mpg123_Private::read(double **buffer, const int64_t count)
 {
-	return -1;
+	if (!handle)
+	{
+		MY_THROW("Audio file not currently open!");
+	}
+
+	const size_t frameSize = MPG123_SAMPLESIZE(format.encoding) * format.channels;
+	const int64_t maxRdSize = static_cast<int64_t>(buffSize / frameSize);
+
+	int64_t offset = 0;
+	int64_t remaining = count;
+
+	while (remaining > 0)
+	{
+		//Read data
+		const size_t rdBytes = static_cast<size_t>(std::min(remaining, maxRdSize) * frameSize);
+		size_t outBytes = 0;
+		if (mpg123_read(handle, tempBuff, rdBytes, &outBytes) != MPG123_OK)
+		{
+			break;
+		}
+
+		//Deinterleaving
+		const int64_t outSamples = (int64_t)(outBytes / frameSize);
+		switch (format.encoding)
+		{
+		case MPG123_ENC_FLOAT_32:
+			deinterleave_float32(buffer, offset, reinterpret_cast<float*> (tempBuff), format.channels, outSamples);
+			break;
+		case MPG123_ENC_FLOAT_64:
+			deinterleave_float64(buffer, offset, reinterpret_cast<double*>(tempBuff), format.channels, outSamples);
+			break;
+		default:
+			PRINT2_ERR(TXT("Sample encoding 0x%X is NOT supported!"), format.encoding);
+			return 0;
+		}
+
+		offset += outSamples;
+		remaining -= outSamples;
+
+		if (outBytes < rdBytes)
+		{
+			PRINT_WRN(TXT("File read error. Read fewer bytes than what was requested!"));
+			break;
+		}
+	}
+
+	//Zero remaining data
+	if (remaining > 0)
+	{
+		for (int c = 0; c < format.channels; c++)
+		{
+			memset(&buffer[c][offset], 0, sizeof(double) * size_t(remaining));
+		}
+	}
+
+	return count - remaining;
 }
 
 int64_t AudioIO_Mpg123_Private::write(double *const *buffer, const int64_t count)
 {
-	return -1;
+	return -1; /*unsupported*/
 }
 
 bool AudioIO_Mpg123_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate, int64_t &length, uint32_t &bitDepth)
@@ -319,13 +368,24 @@ bool AudioIO_Mpg123_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate,
 		MY_THROW("Audio file not currently open!");
 	}
 
-	if(format.)
+	if (format.channels && format.rate && format.encoding)
+	{
+		channels = format.channels;
+		sampleRate = format.rate;
+		if ((length = mpg123_length(handle)) == MPG123_ERR)
+		{
+			length = INT64_MAX;
+		}
+		bitDepth = encodingToBitDepth(format.encoding);
+		return true;
+	}
 
 	return false;
 }
 
 void AudioIO_Mpg123_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 {
+	SNPRINTF(buffer, buffSize, TXT("MPEG Audio"));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -341,7 +401,7 @@ const CHR *AudioIO_Mpg123_Private::libraryVersion(void)
 	MY_CRITSEC_ENTER(mutex_lock);
 	if(!versionBuffer[0])
 	{
-		SNPRINTF(versionBuffer, 256, TXT("libmpg123-%u, written and copyright by Michael Hipp and others."), MPG123_API_VERSION);
+		SNPRINTF(versionBuffer, 256, TXT("libmpg123-v%u, written and copyright by Michael Hipp and others."), MPG123_API_VERSION);
 	}
 	MY_CRITSEC_LEAVE(mutex_lock);
 	return versionBuffer;
@@ -359,7 +419,55 @@ const CHR *const *AudioIO_Mpg123_Private::supportedFormats(const CHR **const lis
 	return list;
 }
 
-void AudioIO_Mpg123_Private::library_init(void)
+void AudioIO_Mpg123_Private::deinterleave_float32(double **destination, const int64_t offset, const float *const source, const int &channels, const int64_t &len)
+{
+	for (size_t i = 0; i < len; i++)
+	{
+		for (int c = 0; c < channels; c++)
+		{
+			destination[c][i + offset] = source[(i * channels) + c];
+		}
+	}
+}
+
+void AudioIO_Mpg123_Private::deinterleave_float64(double **destination, const int64_t offset, const double *const source, const int &channels, const int64_t &len)
+{
+	for (size_t i = 0; i < len; i++)
+	{
+		for (int c = 0; c < channels; c++)
+		{
+			destination[c][i + offset] = source[(i * channels) + c];
+		}
+	}
+}
+
+int AudioIO_Mpg123_Private::encodingToBitDepth(const int &encoding)
+{
+	switch (encoding)
+	{
+	case MPG123_ENC_UNSIGNED_8:
+	case MPG123_ENC_SIGNED_8:
+	case MPG123_ENC_ULAW_8:
+	case MPG123_ENC_ALAW_8:
+		return 8;
+	case MPG123_ENC_SIGNED_16:
+	case MPG123_ENC_UNSIGNED_16:
+		return 16;
+	case MPG123_ENC_SIGNED_24:
+	case MPG123_ENC_UNSIGNED_24:
+		return 24;
+	case MPG123_ENC_SIGNED_32:
+	case MPG123_ENC_UNSIGNED_32:
+	case MPG123_ENC_FLOAT_32:
+		return 32;
+	case MPG123_ENC_FLOAT_64:
+		return 64;
+	default:
+		return 16;
+	}
+}
+
+void AudioIO_Mpg123_Private::libraryInit(void)
 {
 	MY_CRITSEC_ENTER(mutex_lock);
 	if (!(instanceCounter++))
@@ -372,7 +480,7 @@ void AudioIO_Mpg123_Private::library_init(void)
 	MY_CRITSEC_LEAVE(mutex_lock);
 }
 
-void AudioIO_Mpg123_Private::library_exit(void)
+void AudioIO_Mpg123_Private::libraryExit(void)
 {
 	MY_CRITSEC_ENTER(mutex_lock);
 	if (!(--instanceCounter))
