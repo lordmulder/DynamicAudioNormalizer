@@ -1,4 +1,5 @@
-% Dynamic Audio Normalizer
+% ![](img/dyauno/DynAudNorm.png)  
+Dynamic Audio Normalizer
 % by LoRd_MuldeR &lt;<mulder2@gmx>&gt; &ndash; <http://muldersoft.com/>
 
 
