@@ -49,6 +49,9 @@ public:
 	static const CHR *const *getSupportedFormats(const CHR **const list, const uint32_t maxLen, const CHR *const name = NULL);
 	static const CHR *getLibraryVersion(const CHR *const name = NULL);
 
+	//File type auto-detection
+	static const CHR *detectSourceType(const CHR *const fileName = NULL);
+
 private:
 	AudioIO(const AudioIO &)            { throw 666; }
 	AudioIO &operator=(const AudioIO &) { throw 666; }

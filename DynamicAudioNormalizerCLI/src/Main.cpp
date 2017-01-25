@@ -119,8 +119,15 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	MY_DELETE(*sourceFile);
 	MY_DELETE(*outputFile);
 
+	//Auto-detect source file type
+	const CHR *sourceLibrary = parameters.sourceLibrary();
+	if (!sourceLibrary)
+	{
+		sourceLibrary = AudioIO::detectSourceType(parameters.sourceFile());
+	}
+
 	//Open *source* file
-	*sourceFile = AudioIO::createInstance(parameters.sourceLibrary());
+	*sourceFile = AudioIO::createInstance(sourceLibrary);
 	if(!(*sourceFile)->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
 	{
 		PRINT2_WRN(TXT("Failed to open input file \"") FMT_CHR TXT("\" for reading!\n"), parameters.sourceFile());
@@ -351,9 +358,9 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("\n"));
 	PRINT(TXT("Input/Output:\n"));
 	PRINT(TXT("  -i --input <file>        Input audio file [required]\n"));
-	PRINT(TXT("  -d --input-lib <value>   Input decoder library [default: libsndfile]\n"));
+	PRINT(TXT("  -d --input-lib <value>   Input decoder library [default: auto-detect]\n"));
 	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
-	PRINT(TXT("  -t --output-fmt <value>  Output format [default: guesstimate]\n"));
+	PRINT(TXT("  -t --output-fmt <value>  Output format [default: auto-detect]\n"));
 	PRINT(TXT("\n"));
 	PRINT(TXT("Algorithm Tweaks:\n"));
 	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"),               defaults.frameLenMsec());
