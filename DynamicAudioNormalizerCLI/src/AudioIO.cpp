@@ -70,6 +70,19 @@ static uint8_t parseName(const CHR *const name)
 	}
 }
 
+//Get id from AudioIO library name
+static const CHR* getName(const uint8_t id)
+{
+	for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
+	{
+		if (g_audioIO_mapping[i].id == id)
+		{
+			return g_audioIO_mapping[i].name;
+		}
+	}
+	return NULL;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // AudioIO Factory
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,33 +147,50 @@ const CHR *AudioIO::getLibraryVersion(const CHR *const name)
 // File Type Detection
 ///////////////////////////////////////////////////////////////////////////////
 
-static const uint32_t SRATE_LUT[2][4] =
+static const size_t MPG123_HDR_SIZE = 4U;
+
+static const uint32_t MPG123_SRATE[2][4] =
 {
-	{ 44100, 48000, 32000 },
-	{ 22050, 24000, 16000 }
+	{ 22050, 24000, 16000, 0 }, /*V2*/
+	{ 44100, 48000, 32000, 0 }  /*V1*/
 };
 
-static const uint32_t BITRT_LUT[2][3][16] =
+static const uint32_t MPG123_BITRT[2][4][16] =
 {
 	{
-		{ 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 },
-		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0 },
-		{ 0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 0 }
+		{ 0,  0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 0 }, /*V2*/
+		{ 0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0 }, /*L3*/
+		{ 0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0 }, /*L2*/
+		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 144, 160, 176, 192, 224, 256, 0 }, /*L1*/
 	},
 	{
-		{ 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 },
-		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0 },
-		{ 0,  8, 16, 24,  32,  64,  80,  56,  64, 128, 160, 112, 128, 256, 320, 0 }
-	},
+		{ 0,  0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 0 }, /*V1*/
+		{ 0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 0 }, /*L3*/
+		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0 }, /*L2*/
+		{ 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 }, /*L1*/
+	}
 };
 
-static void detectFromChunk(const uint8_t *const buffer, const size_t &count, uint32_t &max_sequence)
+static const uint32_t MPG123_FSIZE[2][4]
 {
-	uint32_t prev_srate = 0, sequence_len = 0;
-	const size_t limit = count - 2U;
-	for (size_t fpos = 0; fpos < limit; ++fpos)
+	{ 0,  72, 144, 48 }, /*V2*/
+	{ 0, 144, 144, 48 }  /*V1*/
+};
+
+static bool detectMpg123Sync(const uint8_t *const buffer, const size_t &fpos)
+{
+	return (buffer[fpos] == ((uint8_t)0xFF)) && ((buffer[fpos + 1] & ((uint8_t)0xF0)) == ((uint8_t)0xF0));
+}
+
+static uint32_t detectMpg123Sequ(const uint8_t *const buffer, const size_t &count, uint32_t &max_sequence)
+{
+	const size_t limit = count - MPG123_HDR_SIZE;
+	uint32_t sequence_len = 0;
+	uint8_t prev_idx[3] = { 0, 0, 0 };
+	size_t fpos = 0;
+	while (fpos < limit)
 	{
-		if ((buffer[fpos] == ((uint8_t)0xFF)) && ((buffer[fpos + 1] & ((uint8_t)0xF0)) == ((uint8_t)0xF0)))
+		if (detectMpg123Sync(buffer, fpos))
 		{
 			const uint8_t versn_idx = ((buffer[fpos + 1U] & ((uint8_t)0x08)) >> 3U);
 			const uint8_t layer_idx = ((buffer[fpos + 1U] & ((uint8_t)0x06)) >> 1U);
@@ -169,45 +199,59 @@ static void detectFromChunk(const uint8_t *const buffer, const size_t &count, ui
 			const uint8_t padd_byte = ((buffer[fpos + 2U] & ((uint8_t)0x02)) >> 1U);
 			if ((layer_idx > 0x00) && (layer_idx <= 0x03) && (bitrt_idx > 0x00) && (bitrt_idx < 0x0F) && (srate_idx < 0x03))
 			{
-				const uint32_t bitrt = BITRT_LUT[1U - versn_idx][3U - layer_idx][bitrt_idx];
-				const uint32_t srate = SRATE_LUT[1U - versn_idx][srate_idx];
-				const uint32_t fsize = (144U * bitrt * 1000U / srate) + padd_byte;
-				if (fsize > 1)
+				const uint32_t bitrt = MPG123_BITRT[versn_idx][layer_idx][bitrt_idx];
+				const uint32_t srate = MPG123_SRATE[versn_idx][srate_idx];
+				const uint32_t fsize = (MPG123_FSIZE[versn_idx][layer_idx] * bitrt * 1000U / srate) + padd_byte;
+				if ((prev_idx[0] == versn_idx) && (prev_idx[1] == layer_idx) && (prev_idx[2] == srate_idx))
 				{
-					if (prev_srate && (prev_srate == srate))
-					{
-						max_sequence = std::max(max_sequence, ++sequence_len);
-					}
-					fpos += fsize - 1U;
-					prev_srate = srate;
+					max_sequence = std::max(max_sequence, ++sequence_len);
+				}
+				if ((fsize > 0) && ((fpos + fsize) < limit) && detectMpg123Sync(buffer, fpos + fsize))
+				{
+					prev_idx[0] = versn_idx;
+					prev_idx[1] = layer_idx;
+					prev_idx[2] = srate_idx;
+					fpos += fsize;
 					continue;
 				}
 			}
 		}
-		prev_srate = sequence_len = 0;
+		sequence_len = 0;
+		prev_idx[0] = prev_idx[1] = prev_idx[2] = 0;
+		fpos++;
 	}
+	return max_sequence;
 }
 
-const CHR *AudioIO::detectSourceType(const CHR *const fileName)
+static bool detectMpg123File(const CHR *const fileName)
 {
+	static const uint32_t THRESHOLD = 12U;
 	uint32_t max_sequence = 0;
 	if (fileName && fileName[0] && (STRCASECMP(fileName, TXT("-")) != 0))
 	{
-		static const size_t BUFF_SIZE = 256 * 1024;
+		static const size_t BUFF_SIZE = 128U * 1024U;
 		uint8_t *buffer = new uint8_t[BUFF_SIZE];
 		if (FILE *const file = FOPEN(fileName, TXT("rb")))
 		{
 			size_t count = BUFF_SIZE;
-			for (int chunk = 0; (chunk < 32) && (count >= BUFF_SIZE); ++chunk)
+			for (int chunk = 0; (chunk < 64) && (count >= BUFF_SIZE); ++chunk)
 			{
-				if ((count = fread(buffer, sizeof(uint8_t), BUFF_SIZE, file)) >= 2U)
+				if ((count = fread(buffer, sizeof(uint8_t), BUFF_SIZE, file)) >= MPG123_HDR_SIZE)
 				{
-					detectFromChunk(buffer, count, max_sequence);
+					if (detectMpg123Sequ(buffer, count, max_sequence) >= THRESHOLD)
+					{
+						break; /*early termination*/
+					}
 				}
 			}
 			fclose(file);
 		}
 		MY_DELETE_ARRAY(buffer);
 	}
-	return (max_sequence >= 16U) ? TXT("libmpg123") : NULL;
+	return (max_sequence >= THRESHOLD);
+}
+
+const CHR *AudioIO::detectSourceType(const CHR *const fileName)
+{
+	return getName(detectMpg123File(fileName) ? AUDIO_LIB_LIBMPG123 : AUDIO_LIB_NULL);
 }
