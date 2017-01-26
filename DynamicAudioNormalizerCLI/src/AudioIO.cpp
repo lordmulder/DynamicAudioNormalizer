@@ -202,17 +202,15 @@ static uint32_t detectMpg123Sequ(const uint8_t *const buffer, const size_t &coun
 				const uint32_t bitrt = MPG123_BITRT[versn_idx][layer_idx][bitrt_idx];
 				const uint32_t srate = MPG123_SRATE[versn_idx][srate_idx];
 				const uint32_t fsize = (MPG123_FSIZE[versn_idx][layer_idx] * bitrt * 1000U / srate) + padd_byte;
-				if ((prev_idx[0] == versn_idx) && (prev_idx[1] == layer_idx) && (prev_idx[2] == srate_idx))
+				if ((sequence_len < 1U) || ((prev_idx[0] == versn_idx) && (prev_idx[1] == layer_idx) && (prev_idx[2] == srate_idx)))
 				{
+					prev_idx[0] = versn_idx; prev_idx[1] = layer_idx; prev_idx[2] = srate_idx;
 					max_sequence = std::max(max_sequence, ++sequence_len);
-				}
-				if ((fsize > 0) && ((fpos + fsize) < limit) && detectMpg123Sync(buffer, fpos + fsize))
-				{
-					prev_idx[0] = versn_idx;
-					prev_idx[1] = layer_idx;
-					prev_idx[2] = srate_idx;
-					fpos += fsize;
-					continue;
+					if ((fsize > 0) && ((fpos + fsize) < limit) && detectMpg123Sync(buffer, fpos + fsize))
+					{
+						fpos += fsize;
+						continue;
+					}
 				}
 			}
 		}
