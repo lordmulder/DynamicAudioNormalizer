@@ -223,7 +223,7 @@ static uint32_t detectMpg123Sequ(const uint8_t *const buffer, const size_t &coun
 
 static bool detectMpg123File(const CHR *const fileName)
 {
-	static const uint32_t THRESHOLD = 12U;
+	static const uint32_t THRESHOLD = 13U;
 	uint32_t max_sequence = 0;
 	if (fileName && fileName[0] && (STRCASECMP(fileName, TXT("-")) != 0))
 	{

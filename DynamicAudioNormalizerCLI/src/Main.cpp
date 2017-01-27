@@ -176,8 +176,8 @@ static void printProgress(const int64_t &length, const int64_t &remaining, short
 	
 	if(length != INT64_MAX)
 	{
-		const double progress = done ? 100.0 : (99.9 * (double(length - remaining) / double(length)));
-		PRINT(TXT("\rNormalization in progress: %5.1f%% [%c]"), progress, done ? TXT('*') : spinner[spinnerPos++]);
+		const double progress = 99.99 * (double(length - remaining) / double(length));
+		PRINT(TXT("\rNormalization in progress: %5.1f%% [%c]"), done ? std::max(progress, 100.0) : progress, done ? TXT('*') : spinner[spinnerPos++]);
 	}
 	else
 	{
@@ -199,7 +199,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 	printProgress(length, remaining, spinnerPos);
 
 	//Main audio processing loop
-	while(remaining > 0)
+	for(;;)
 	{
 		if((++indicator >= 256))
 		{
@@ -207,12 +207,10 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 			indicator = 0; 
 		}
 
-		const int64_t readSize = std::min(remaining, int64_t(FRAME_SIZE));
-		const int64_t samplesRead = sourceFile->read(buffer, readSize);
-
+		const int64_t samplesRead = sourceFile->read(buffer, int64_t(FRAME_SIZE));
 		if(samplesRead > 0)
 		{
-			if((length != INT64_MAX))
+			if(length != INT64_MAX)
 			{
 				remaining -= samplesRead;
 			}
@@ -230,9 +228,9 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 			}
 		}
 
-		if(samplesRead < readSize)
+		if(samplesRead < int64_t(FRAME_SIZE))
 		{
-			if((length != INT64_MAX))
+			if ((length != INT64_MAX) && (double(remaining) / double(length) >= 0.25))
 			{
 				error = true; /*read error must have ocurred*/
 			}
@@ -288,7 +286,7 @@ static int processFiles(const Parameters &parameters, AudioIO *const sourceFile,
 		return EXIT_FAILURE;
 	}
 
-	//Create the normalizer
+	//Create the normalizer instance
 	MDynamicAudioNormalizer *normalizer = new MDynamicAudioNormalizer
 	(
 		channels,
