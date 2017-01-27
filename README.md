@@ -92,19 +92,19 @@ Dynamic Audio Normalizer program can be invoked via [command-line interface](htt
 ## Basic Command-Line Syntax ##
 
 The basic Dynamic Audio Normalizer command-line syntax is as follows:  
-``DynamicAudioNormalizerCLI.exe -i <;input_file> -o <output_file> [options]``
+```
+DynamicAudioNormalizerCLI.exe -i <;input_file> -o <output_file> [options]
+```
 
-Note that the *input* file and the *output* file always have to be specified, while all other parameters are optional. But take care, an existing output file will be *overwritten*!
+Note that the *input* file (option `-i` or `--input`) and the *output* file (option `-o` or `--output`) always have to be specified, while all other parameters are optional. But take care, an existing output file will be *overwritten* silently!
 
-Also note that the Dynamic Audio Normalizer program uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output by default, so a wide range of file formats (WAV, W64, FLAC, Ogg/Vorbis, AIFF, AU/SND, etc) as well as various sample types (ranging from 8-Bit Integer to 64-Bit floating point) are supported. However, *libsndfile* can **not** read MP2 (MPEG-1 Audio Layer II) or MP3 (MPEG-1 Audio Layer III) files. In order to read MP2/MP3 files, add the `-d libmpg123` option, which uses [libmpg123](https://www.mpg123.de/) to read your source file.
+Also note that the Dynamic Audio Normalizer uses [libsndfile](http://www.mega-nerd.com/libsndfile/) for input/output, so a wide range of file formats (WAV, W64, FLAC, Ogg/Vorbis, AIFF, AU/SND, etc) as well as various sample types (ranging from 8-Bit INT to 64-Bit FP) are supported. However, *libsndfile* can **not** read MP2 (MPEG Audio Layer II) or MP3 (MPEG Audio Layer III) files, so [libmpg123](https://www.mpg123.de/) will be used for reading files that "look" like MP2 or MP3 data. You can specify `-d` option to select the desired decoder library explicitly.
 
-By default, the Dynamic Audio Normalizer program will *guesstimate* the output file format from the file extension of the specified output file. This can be overwritten by using the `-t` option. To create a FLAC file, e.g., you can specify `-t flac`.
+By default, the Dynamic Audio Normalizer program will *guess* the output file format from the file extension of the specified output file. This can be overwritten by using the `-t` option. To create a FLAC file, e.g., you can specify `-t flac`.
 
 Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported. Specify the file name ``"-"`` in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams), respectively. When reading from the *stdin*, you have to specify the *input* sample format, channel count and sampling rate!
 
 For a list of *all* available options, please run ``DynamicAudioNormalizerCLI.exe --help`` from the command prompt. Also, please refer to the [**configuration**](#configuration) chapter for more details on the Dynamic Audio Normalizer parameters!
-
-
 
 
 ## Command-Line Usage Examples ##
