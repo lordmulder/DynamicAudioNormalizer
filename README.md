@@ -2,6 +2,7 @@
 Dynamic Audio Normalizer
 % by LoRd_MuldeR &lt;<mulder2@gmx>&gt; &ndash; <http://muldersoft.com/>
 
+**Free/libre software · This software is provided 100% free of charge · No adware!**
 
 # Introduction #
 

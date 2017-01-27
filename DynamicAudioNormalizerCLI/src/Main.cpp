@@ -113,9 +113,6 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	uint32_t channels = 0, sampleRate = 0, bitDepth = 0;
 	int64_t length = 0;
 
-	PRINT(TXT("SourceFile: ") FMT_CHR TXT("\n"),   STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.sourceFile() : TXT("<STDIN>"));
-	PRINT(TXT("OutputFile: ") FMT_CHR TXT("\n\n"), STRCASECMP(parameters.outputFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
-
 	MY_DELETE(*sourceFile);
 	MY_DELETE(*outputFile);
 
@@ -125,6 +122,11 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	{
 		sourceLibrary = AudioIO::detectSourceType(parameters.sourceFile());
 	}
+
+	//Print Audio I/O information
+	PRINT(TXT("Using ") FMT_CHR TXT("\n\n"), AudioIO::getLibraryVersion(sourceLibrary));
+	PRINT(TXT("SourceFile: ") FMT_CHR TXT("\n"),   STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.sourceFile() : TXT("<STDIN>" ));
+	PRINT(TXT("OutputFile: ") FMT_CHR TXT("\n\n"), STRCASECMP(parameters.outputFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
 
 	//Open *source* file
 	*sourceFile = AudioIO::createInstance(sourceLibrary);
@@ -432,7 +434,6 @@ int dynamicNormalizerMain(int argc, CHR* argv[])
 		return EXIT_SUCCESS;
 	}
 
-	PRINT(TXT("Using ") FMT_CHR TXT("\n\n"), AudioIO::getLibraryVersion(parameters.sourceLibrary()));
 	MDynamicAudioNormalizer::setLogFunction(parameters.verboseMode() ? loggingCallback_verbose : loggingCallback_default);
 
 	AudioIO *sourceFile = NULL, *outputFile = NULL;

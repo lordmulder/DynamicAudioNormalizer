@@ -115,8 +115,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libsndfile-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;libsndfile-1.lib;libmpg123-0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">
@@ -142,8 +142,8 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libsndfile-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;libsndfile-1.lib;libmpg123-0.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
   </ItemDefinitionGroup>

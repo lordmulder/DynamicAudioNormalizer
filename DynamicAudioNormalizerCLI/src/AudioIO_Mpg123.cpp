@@ -25,7 +25,14 @@
 #include <Common.h>
 #include <Threads.h>
 
+#ifdef _WIN32
 #include <mpg123_msvc.h>
+#define MPG123OPEN(X,Y) mpg123_topen((X),(Y))
+#else
+#include <mpg123.h>
+#define MPG123OPEN(X,Y) mpg123_open((X),(Y))
+#endif
+
 #include <fmt123.h>
 #include <stdexcept>
 #include <algorithm>
@@ -36,13 +43,6 @@
 #define STDIN_FILENO  0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
-#endif
-
-#ifdef _WIN32
-#define ENABLE_SNDFILE_WINDOWS_PROTOTYPES 1
-#define MPG123OPEN(X,Y) mpg123_topen((X),(Y))
-#else
-#define MPG123OPEN(X,Y) mpg123_open((X),(Y))
 #endif
 
 #define MPG123_DELETE(X) do \
@@ -93,7 +93,7 @@ private:
 
 	//(De)Interleaving buffer
 	uint8_t *tempBuff;
-	size_t buffSize;
+	size_t frameSize, buffSize;
 
 	//Library info
 	static uint32_t instanceCounter;
@@ -103,8 +103,7 @@ private:
 	//Helper functions
 	static void libraryInit(void);
 	static void libraryExit(void);
-	static void deinterleave_float32(double **destination, const int64_t offset, const float  *const source, const int &channels, const int64_t &len);
-	static void deinterleave_float64(double **destination, const int64_t offset, const double *const source, const int &channels, const int64_t &len);
+	template<typename T> static void deinterleave(double **destination, const int64_t offset, const T *const source, const int &channels, const int64_t &len);
 	static int encodingToBitDepth(const int &encoding);
 };
 
@@ -127,9 +126,10 @@ AudioIO_Mpg123_Private::AudioIO_Mpg123_Private(void)
 {
 	libraryInit();
 
-	tempBuff = NULL;
-	handle   = NULL;
-	buffSize = 0;
+	tempBuff  = NULL;
+	handle    = NULL;
+	frameSize = 0;
+	buffSize  = 0;
 
 	memset(&format, 0, sizeof(struct mpg123_fmt));
 }
@@ -263,6 +263,9 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 		return false;
 	}
 
+	//Compute frame size
+	frameSize = MPG123_SAMPLESIZE(format.encoding) * format.channels;
+
 	//Allocate temp buffer
 	tempBuff = new uint8_t[buffSize];
 
@@ -291,7 +294,7 @@ bool AudioIO_Mpg123_Private::close(void)
 	memset(&format, 0, sizeof(struct mpg123_fmt));
 
 	//Free temp buffer
-	buffSize = 0;
+	buffSize = frameSize = 0;
 	MY_DELETE_ARRAY(tempBuff);
 	return result;
 }
@@ -303,11 +306,8 @@ int64_t AudioIO_Mpg123_Private::read(double **buffer, const int64_t count)
 		MY_THROW("Audio file not currently open!");
 	}
 
-	const size_t frameSize = MPG123_SAMPLESIZE(format.encoding) * format.channels;
+	int64_t offset = 0, remaining = count;
 	const int64_t maxRdSize = static_cast<int64_t>(buffSize / frameSize);
-
-	int64_t offset = 0;
-	int64_t remaining = count;
 
 	while (remaining > 0)
 	{
@@ -320,27 +320,26 @@ int64_t AudioIO_Mpg123_Private::read(double **buffer, const int64_t count)
 		}
 
 		//Deinterleaving
-		const int64_t outSamples = (int64_t)(outBytes / frameSize);
+		const int64_t rdFrames = (int64_t)(outBytes / frameSize);
 		switch (format.encoding)
 		{
 		case MPG123_ENC_FLOAT_32:
-			deinterleave_float32(buffer, offset, reinterpret_cast<float*> (tempBuff), format.channels, outSamples);
+			deinterleave(buffer, offset, reinterpret_cast<const float*> (tempBuff), format.channels, rdFrames);
 			break;
 		case MPG123_ENC_FLOAT_64:
-			deinterleave_float64(buffer, offset, reinterpret_cast<double*>(tempBuff), format.channels, outSamples);
+			deinterleave(buffer, offset, reinterpret_cast<const double*>(tempBuff), format.channels, rdFrames);
 			break;
 		default:
 			PRINT2_ERR(TXT("Sample encoding 0x%X is NOT supported!"), format.encoding);
 			return 0;
 		}
 
-		offset += outSamples;
-		remaining -= outSamples;
+		offset += rdFrames;
+		remaining -= rdFrames;
 
 		if (outBytes < rdBytes)
 		{
-			PRINT_WRN(TXT("File read error. Read fewer bytes than what was requested!"));
-			break;
+			break; /*end of file, or read error*/
 		}
 	}
 
@@ -385,7 +384,7 @@ bool AudioIO_Mpg123_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate,
 
 void AudioIO_Mpg123_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 {
-	SNPRINTF(buffer, buffSize, TXT("MPEG Audio"));
+	SNPRINTF(buffer, buffSize, TXT("MPG123 Audio"));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -401,7 +400,7 @@ const CHR *AudioIO_Mpg123_Private::libraryVersion(void)
 	MY_CRITSEC_ENTER(mutex_lock);
 	if(!versionBuffer[0])
 	{
-		SNPRINTF(versionBuffer, 256, TXT("libmpg123-v%u, written and copyright by Michael Hipp and others."), MPG123_API_VERSION);
+		SNPRINTF(versionBuffer, 256, TXT("libmpg123 API-v%u, written and copyright by Michael Hipp and others."), MPG123_API_VERSION);
 	}
 	MY_CRITSEC_LEAVE(mutex_lock);
 	return versionBuffer;
@@ -419,18 +418,8 @@ const CHR *const *AudioIO_Mpg123_Private::supportedFormats(const CHR **const lis
 	return list;
 }
 
-void AudioIO_Mpg123_Private::deinterleave_float32(double **destination, const int64_t offset, const float *const source, const int &channels, const int64_t &len)
-{
-	for (size_t i = 0; i < len; i++)
-	{
-		for (int c = 0; c < channels; c++)
-		{
-			destination[c][i + offset] = source[(i * channels) + c];
-		}
-	}
-}
-
-void AudioIO_Mpg123_Private::deinterleave_float64(double **destination, const int64_t offset, const double *const source, const int &channels, const int64_t &len)
+template<typename T>
+void AudioIO_Mpg123_Private::deinterleave(double **destination, const int64_t offset, const T *const source, const int &channels, const int64_t &len)
 {
 	for (size_t i = 0; i < len; i++)
 	{

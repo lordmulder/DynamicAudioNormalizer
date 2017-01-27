@@ -342,8 +342,7 @@ int64_t AudioIO_SndFile_Private::read(double **buffer, const int64_t count)
 
 		if(result < rdSize)
 		{
-			PRINT_WRN(TXT("File read error. Read fewer frames than what was requested!"));
-			break;
+			break; /*end of file, or read error*/
 		}
 	}
 
