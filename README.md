@@ -87,7 +87,7 @@ The following files are included in the Dynamic Audio Normalizer release package
 
 # Command-Line Usage #
 
-Dynamic Audio Normalizer program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface) (CLI), either *manually* from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or *automatically* by a [batch](http://en.wikipedia.org/wiki/Batch_file) file.
+The Dynamic Audio Normalizer *standalone* program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface) (CLI), which can be done either *manually* from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or *automatically* (scripted), e.g. by using a [batch](http://en.wikipedia.org/wiki/Batch_file) file.
 
 
 ## Basic Command-Line Syntax ##
@@ -105,10 +105,52 @@ By default, the Dynamic Audio Normalizer program will *guess* the output file fo
 
 Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported. Specify the file name ``"-"`` in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams), respectively. When reading from the *stdin*, you have to specify the *input* sample format, channel count and sampling rate!
 
-For a list of *all* available options, please run ``DynamicAudioNormalizerCLI.exe --help`` from the command prompt. Also, please refer to the [**configuration**](#configuration) chapter for more details on the Dynamic Audio Normalizer parameters!
+For a list of *all* available options, see the [list below](#command-line-options) or run ``DynamicAudioNormalizerCLI.exe --help`` from the command prompt. Also, refer to the [**configuration**](#configuration) chapter for more details on the Dynamic Audio Normalizer parameters!
+
+
+## Command-Line Options
+
+The following Dynamic Audio Normalizer command-line options are available:  
+
+* **Input/Output:**  
+```
+-i --input <file>        Input audio file [required]
+-d --input-lib <value>   Input decoder library [default: auto-detect]
+-o --output <file>       Output audio file [required]
+-t --output-fmt <value>  Output format [default: auto-detect]
+```
+
+* **Algorithm Tweaks:**  
+```
+-f --frame-len <value>   Frame length, in milliseconds [default: 500]
+-g --gauss-size <value>  Gauss filter size, in frames [default: 31]
+-p --peak <value>        Target peak magnitude, 0.1-1 [default: 0.95]
+-m --max-gain <value>    Maximum gain factor [default: 10.00]
+-r --target-rms <value>  Target RMS value [default: 0.00]
+-n --no-coupling         Disable channel coupling [default: on]
+-c --correct-dc          Enable the DC bias correction [default: off]
+-b --alt-boundary        Use alternative boundary mode [default: off]
+-s --compress <value>    Compress the input data [default: 0.00]
+```
+
+* **Diagnostics:**  
+```
+-v --verbose             Output additional diagnostic info
+-l --log-file <file>     Create a log file
+-h --help                Print *this* help screen
+```
+
+* **Raw Data Options:**  
+```
+--input-bits <value>     Bits per sample, e.g. '16' or '32'
+--input-chan <value>     Number of channels, e.g. '2' for Stereo
+--input-rate <value>     Sample rate in Hertz, e.g. '44100'
+```
 
 
 ## Command-Line Usage Examples ##
+
+Here are some examples on how to invoke the Dynamic Audio Normalizer command-line program:
 
 * Read input from Wave file and write output to a Wave file again:  
 ```
@@ -126,6 +168,12 @@ ffmpeg.exe -i "movie.mkv" -loglevel quiet -vn -f s16le -c:a pcm_s16le - |
 DynamicAudioNormalizerCLI.exe -i "input.wav" -o - |
   ffmpeg.exe -loglevel quiet -f s16le -ar 44100 -ac 2 -i - -c:a libmp3lame -qscale:a 2 "output.mp3"
 ```
+
+
+
+# SoX/FFmpeg Usage
+
+The Dynamic Audio Normalizer library is *integrated* in the **SoX** and **FFmpeg** command-line applications!
 
 
 ## SoX Integration Usage ##
