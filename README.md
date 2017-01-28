@@ -409,12 +409,14 @@ The log file can be displayed as a graphical chart using, for example, the *Log 
 This chapter describes the **MDynamicAudioNormalizer** application programming interface (API), as defined in the ``DynamicAudioNormalizer.h`` header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
 
 
-## Thread Safety: ##
+## Thread Safety ##
 
-Note that all methods of the ``MDynamicAudioNormalizer`` class are [*reentrant*](http://en.wikipedia.org/wiki/Reentrancy_%28computing%29), but **not** thread-safe! This means that it *is* safe to use the MDynamicAudioNormalizer class in *multi-threaded* applications, but *only* as long as each thread uses its own separate MDynamicAudioNormalizer instance. In other words, it is *strictly forbidden* to call the *same* MDynamicAudioNormalizer instance *concurrently* from *different* threads. But it *is* admissible to call *different* MDynamicAudioNormalizer instances *concurrently* from *different* threads, provided that each thread will access *only* its own instance. If the *same* MDynamicAudioNormalizer instance needs to be accessed by *different* threads, then the calling *application* is responsible for *serializing* all calls to that MDynamicAudioNormalizer instance, e.g. by means of a Mutex. Otherwise, **undefined behaviour** follows!
+All methods of the `MDynamicAudioNormalizer` class are [*reentrant*](https://doc.qt.io/qt-4.8/threads-reentrancy.html), but **not** [*thread-safe*](https://doc.qt.io/qt-4.8/threads-reentrancy.html)! Hence, it ***is*** safe to use the MDynamicAudioNormalizer class in *multi-threaded* applications, but **only** as long as each thread uses its "own" separate MDynamicAudioNormalizer instance. In other words, it is *strictly forbidden* to call the *same* MDynamicAudioNormalizer instance *concurrently* from *different* threads. But it ***is*** admissible to call *distinct* MDynamicAudioNormalizer instances *concurrently* from *different* threads &ndash; provided that each thread will access *only* its "own" instance. If the *same* MDynamicAudioNormalizer instance needs to be accessed by *different* threads, then the calling application is responsible for *serializing* each and every call to that instance, e.g. by means of a Mutex; otherwise **undefined behavior** follows!
+
+There is *one* notable exception from the above restrictions: The **static** methods of the `MDynamicAudioNormalizer` class as well as the `createInstance()` function of the "C99" API ***are*** perfectly *thread-safe*. No synchronization is needed for those.
 
 
-## Language Bindings: ##
+## Language Bindings ##
 
 Also note that the "native" MDynamicAudioNormalizer application programming interface (API) is provided in the form of a [*C++*](http://en.wikipedia.org/wiki/C%2B%2B) class, which means that *C++* applications can (and should) use the MDynamicAudioNormalizer class directly. In addition to that, [bindings](http://en.wikipedia.org/wiki/Language_binding) for various other programming languages are provided. The [*C99*](http://en.wikipedia.org/wiki/C99) API is provided in the same header file as the *C++* API. There is one *C*-based "wrapper" function for each method of the native *C++* class. These wrapper functions provide the exactly same functionality as the corresponding *C++* methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) needs to be passed around, in order to identify the MDynamicAudioNormalizer instance. The ``createInstance()`` and ``destroyInstance()`` functions exist in the *C*-based API only. They replace the *C++* constructor and destructor, respectively.
 
@@ -429,20 +431,21 @@ Summary on language bindings:
 * *Pascal*/*Delphi*-based Application → Use the ``TDynamicAudioNormalizer`` Object Pascal wrapper class, provided by the ``DynamicAudioNormalizer.pas`` file, requires ``DynamicAudioNormalizerAPI.dll`` at runtime
 
 
-## Quick Start Guide: ##
+## Quick Start Guide ##
 
 The following listing summarizes the steps that an application needs to follow when using the API:
 
-1. Create a new *MDynamicAudioNormalizer* instance.
+1. Create a new *MDynamicAudioNormalizer* instance. This allocates required resources.
 2. Call the ``initialize()`` method, *once*, in order to initialize the MDynamicAudioNormalizer instance.
-3. Call the ``processInplace()`` method, *in a loop*, until all input samples have been processed.
-4. Call the ``flushBuffer()`` method, *in a loop*, until all the pending output samples have been flushed.
-5. Destroy the *MDynamicAudioNormalizer* instance.
+3. Call the ``processInplace()`` method, *in a loop*, until all input samples have been processed.  
+   **Note:** At the beginning, this function returns *less* output samples than input have been passed. Samples are guaranteed to be returned in FIFO order, but there is a certain "delay"; call `getInternalDelay()` to determine.
+4. Call the ``flushBuffer()`` method, *in a loop*, until all the pending "delayed" output samples have been flushed.
+5. Destroy the *MDynamicAudioNormalizer* instance. This will free up all allocated resources.
 
 *Note:* The Dynamic Audio Normalizer library processes audio samples, but it does **not** provide any audio I/O capabilities. Reading or writing the audio samples from or to an audio file is up to the application. A library like [libsndfile](http://www.mega-nerd.com/libsndfile/) may be helpful.
 
 
-## Function Reference: ##
+## Function Reference ##
 
 ### MDynamicAudioNormalizer::MDynamicAudioNormalizer() ### {-}
 ```
