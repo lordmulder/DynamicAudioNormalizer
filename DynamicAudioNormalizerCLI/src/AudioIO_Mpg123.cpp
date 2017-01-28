@@ -28,9 +28,11 @@
 #ifdef _WIN32
 #include <mpg123_msvc.h>
 #define MPG123OPEN(X,Y) mpg123_topen((X),(Y))
+#define MPG123CLOSE(X)  mpg123_tclose((X))
 #else
 #include <mpg123.h>
 #define MPG123OPEN(X,Y) mpg123_open((X),(Y))
+#define MPG123CLOSE(X)  mpg123_close((X))
 #endif
 
 #include <fmt123.h>
@@ -284,7 +286,7 @@ bool AudioIO_Mpg123_Private::close(void)
 	//Close audio file
 	if (handle)
 	{
-		result = (mpg123_close(handle) == MPG123_OK);
+		result = (MPG123CLOSE(handle) == MPG123_OK);
 	}
 
 	//Free handle
