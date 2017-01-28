@@ -27,11 +27,11 @@ The following example shows the results from a "real world" audio recording that
 
 ![Progression of the gain factors for each audio frame](img/dyauno/Chart.png)
 
-So far it has been discussed how the optimal gain factor for each frame is determined. However, since each frame contains a large number of samples – at a typical sampling rate of 44,100 Hz and a standard frame size of 500 milliseconds we have 22,050 samples per frame – it is also required to infer the gain factor for each individual sample in the frame. The most simple approach, of course, is applying the *same* gain factor to *all* samples in the certain frame. But this would lead to abrupt changes of the gain factor at each frame boundary, while the gain factor remains constant within the frames. A better approach, as implemented in the Dynamic Audio Normalizer, is interpolating the per-sample gain factors. In particular, the Dynamic Audio Normalizer applies a *linear interpolation* in order to compute the gain factors for the samples inside the ``n``-th frame from the gain factors ``G'[n-1]``, ``G'[n]`` and ``G'[n+1]``, where ``G'[k]`` denotes the *final* gain factor for the ``k``-th frame. The following graph shows how the per-sample gain factors (orange) are interpolated from the gain factors of the preceding (green), current (blue) and subsequent (purple) frame.
+So far it has been discussed how the "optimal" gain factor for each frame is determined. However, since each frame contains a large number of samples – at a typical sampling rate of 44,100 Hz and a standard frame size of 500 milliseconds we have 22,050 samples per frame – it is also required to infer the gain factor for each individual sample *within* the frame. The most simple approach, of course, would be applying the *same* gain factor to *all* samples in a certain frame. But this would also lead to abrupt changes of the gain factor at each frame boundary, while the gain factor remains completely constant within the frames. A better approach, as implemented in the Dynamic Audio Normalizer, is *interpolating* the per-sample gain factors. In particular, the Dynamic Audio Normalizer applies a straight-forward *linear interpolation*, which is used to compute the gain factors for the samples of the `n`-th frame from the gain factors `G'[n-1]`, `G'[n]` and `G'[n+1]` – where `G'[k]` denotes the gain factor of the `k`-th frame. The following graph shows how the per-sample gain factors (orange) are interpolated from the gain factors of the *preceding* (`G'[n-1]`, green), *current* (`G'[n]`, blue) and *subsequent* (`G'[n+1]`, purple) frame.
 
 ![Linear interpolation of the per-sample gain factors](img/dyauno/Interpolation.png)
 
-Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper graph shows the unprocessed original recording while the lower graph shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified to a great extent, while retaining the dynamics of the input and avoiding clipping or distortion.
+Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper graph shows the unprocessed original recording while the lower graph shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified – to a great extent – while the dynamics within each section of the input have been retained. Also, there is absolutely **no** clipping or distortion in the "loud" sections.
 
 ![Waveform *before* (top) and *after* (bottom) processing with the Dynamic Audio Normalizer](img/dyauno/Waveform.png)
 
@@ -45,23 +45,23 @@ Dynamic Audio Normalizer can be downloaded from one of the following *official* 
 * http://sourceforge.net/projects/muldersoft/files/Dynamic%20Audio%20Normalizer/
 * https://www.assembla.com/spaces/dynamicaudionormalizer/documents
 
-**Note:** Windows binaries are provided in the *ZIP* format. Simply use [7-Zip](http://www.7-zip.org/) or a similar tool to unzip *all* files to new/empty directory. That's it!
+**Note:** Windows binaries are provided in the compressed *ZIP* format. Simply use [7-Zip](http://www.7-zip.org/) or a similar tool to unzip *all* files to new/empty directory. If in doubt, Windows users should download the "static" version. That's it!
 
 
 ## System Requirements ##
 
-Dynamic Audio Normalizer "core" library and CLI front-end are written in plain C++11 and therefore do **not** have any system requirements, except for a conforming C++ compiler. Currently, the Microsoft C++ compiler and the GNU Compiler Collection are actively supported.
+The Dynamic Audio Normalizer "core" library and CLI front-end are written in plain C++11 and therefore do **not** have any system requirements, except for a conforming C++ compiler. Currently, the Microsoft Visual C++ compiler and the GNU Compiler Collection (GCC) are actively supported. Other compilers should work too, but this cannot be guaranteed.
 
-*Pre-compiled* binaries are provided for the *Windows* and  the *Linux* platform. The 32-Bit Windows binaries should work on Windows XP (with Service Pack 2) or any late version. The 64-Bit Windows binaries require the "x64" edition of Windows Vista or any later 64-Bit Windows. Linux binaries are provided for some popular distributions (latest version at the time of release). They may work on other distributions too, or not. Thus, Linux users are generally recommended to compile Dynamic Audio Normalizer themselves, from the source codes.
+*Pre-compiled* binaries are provided for the *Windows* and *GNU/Linux* platforms. The 32-Bit Windows binaries should work on Windows XP (with Service Pack 2) or any later version (32-Bit or 64-Bit), while the 64-Bit Windows binaries require the "x64" edition of Windows Vista or any later 64-Bit Windows. Linux binaries are provided for some popular distributions (latest "Long Term Support" version at the time of release). Those Linux binaries *may* work on other distributions too, or not. Therefore, Linux users are generally recommended to compile the Dynamic Audio Normalizer themselves, from the source codes.
 
-For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required program libraries *built-in* (including C++ Runtime) and thus do *not* depend on any separate DLL files. At the same time, the "DLL" package uses separate DLL files for the "core" functions as well as for the C++ Runtime. If you don't understand what this means, then just go with the "Static" version. If you want to call Dynamic Audio Normalizer from your own code, you need to use the "DLL" version.
+For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required libraries *built-in* (including third-party libraries and the C-Runtime) and thus they do *not* depend on any separate DLL files. At the same time, the "DLL" package uses separate DLL files for the "core" functions as well as for the third-party libraries and the C-Runtime. If you don't understand what this means, then just go with the "Static" version. If you are a programmer and want to invoke the Dynamic Audio Normalizer from your own program, you need to use the "DLL" version.
 
-All *pre-compiled* binaries have been compiled with the [*SSE2*](https://en.wikipedia.org/wiki/SSE2) instruction set enabled, so a processor with SSE2 support (i.e. Pentium 4 or later) is required. For *legacy* processors you will need to compile Dynamic Audio Normalizer from the sources &ndash; with appropriate CPU flags.
+All *pre-compiled* binaries have been optimized for processors that support *at least* the [*SSE2*](https://en.wikipedia.org/wiki/SSE2) instruction set, so an SSE2-enabled processor (Pentium 4, Athlon 64, or later) is required. For *legacy* processors you will need to compile Dynamic Audio Normalizer and all the third-party libraries *yourself*, from the sources &ndash; with appropriate compiler settings.
 
 
 ## Package Contents ##
 
-The following files are included in the Dynamic Audio Normalizer release package (Windows version):
+The following files are included in the Dynamic Audio Normalizer release package (Windows "DLL" version):
 
 	DynamicAudioNormalizerCLI.exe - Dynamic Audio Normalizer command-line application
 	DynamicAudioNormalizerGUI.exe - Dynamic Audio Normalizer log viewer application
@@ -75,13 +75,14 @@ The following files are included in the Dynamic Audio Normalizer release package
 	DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
 	msvcp120.dll                  - Visual C++ 2013 runtime library
 	msvcr120.dll                  - Visual C++ 2013 runtime library
+	libmpg123.dll                 - libmpg123 library, used for reading MPEG audio files
 	libsndfile-1.dll              - libsndfile library, used for reading/writing audio files
 	pthreadVC2.dll                - POSIX threading library, used for thread management
 	QtCore4.dll                   - Qt library, used to create the graphical user interfaces
 	QtGui4.dll                    - Qt library, used to create the graphical user interfaces
 	README.html                   - The README file
 
-**Note:** Standard binaries are *32-Bit* (x86), though *64-Bit* (AMD64/Intel64) versions can be found in the "x64" sub-directory.
+**Note:** Standard binaries are *32-Bit* (x86), though *64-Bit* (AMD64/EM64T) versions can be found in the `x64` sub-folder.
 
 
 
@@ -730,6 +731,7 @@ Old prerequisites:
 * CLI front-end: Added new CLI option `-d` to specify the desired input decoder library
 * CLI front-end: Added support for decoding input files via *libmpg123* library
 * Windows binaries: Updated the included *libsndfile* version to 1.0.27 (2016-06-19)
+* Windows binaries: Updated build environment to Visual Studio 2015 (MSVC 14.0)
 
 ## Version 2.09 (2016-08-01) ## {-}
 * Core library: Improved pre-filling code in order to avoid possible clipping at the very beginning
@@ -910,8 +912,8 @@ The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) 
 	
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-	
-	**http://www.gnu.org/licenses/gpl-3.0.html**
+
+<http://www.gnu.org/licenses/gpl-3.0.html>
 
 
 ## Dynamic Audio Normalizer Plug-In Wrapper ##
@@ -951,18 +953,33 @@ The Dynamic Audio Normalizer **CLI program** (DynamicAudioNormalizerCLI) incorpo
 * [**libsndfile**](http://www.mega-nerd.com/libsndfile/)  
   C library for reading and writing files containing sampled sound through one standard library interface  
   Copyright (C) 1999-2016 Erik de Castro Lopo
+  *Applicable license:* GNU Lesser General Public License, Version 2.1
   
+* [**libmpg123**]()  
+  C library for decoding of MPEG 1.0/2.0/2.5 layer I/II/III audio streams to interleaved PCM  
+  Copyright (C) 1995-2016 by Michael Hipp, Thomas Orgis, Patrick Dehne, Jonathan Yong and others.  
+  *Applicable license:* GNU Lesser General Public License, Version 2.1
+
 The Dynamic Audio Normalizer **log viewer** (DynamicAudioNormalizerGUI) incorporates the following *third-party* software:
 
 * [**Qt Framework**](http://qt-project.org/)  
   Cross-platform application and UI framework for developers using C++ or QML, a CSS & JavaScript like language  
-  Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies)
+  Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies)  
+  *Applicable license:* GNU Lesser General Public License, Version 2.1
   
 * [**QCustomPlot**](http://www.qcustomplot.com/)  
   Qt C++ widget for plotting and data visualization that focuses on making good looking, publication quality 2D plots  
-  Copyright (C) 2011-2014 Emanuel Eichhammer
+  Copyright (C) 2011-2014 Emanuel Eichhammer  
+  *Applicable license:* GNU General Public License, Version 3
 
-The Dynamic Audio Normalizer can operate as a **plug-in** (effect) using the following *third-party* applications or technologies:
+The Dynamic Audio Normalizer **VST wrapper** (DynamicAudioNormalizerVST) incorporates the following *third-party* software:
+
+* [**Spooky Hash V2**](http://burtleburtle.net/bob/hash/spooky.html)  
+  Public domain noncryptographic hash function producing well-distributed 128-bit hash values  
+  Created by Bob Jenkins, 2012.  
+  *Applicable license:* None / Public Domain
+
+The Dynamic Audio Normalizer can operate as a **plug-in** (effect) using the following *third-party* technologies:
 
   * [**Sound eXchange**](http://sox.sourceforge.net/)  
   Cross-platform command line utility that can convert various formats of computer audio files in to other formats  
@@ -974,14 +991,8 @@ The Dynamic Audio Normalizer can operate as a **plug-in** (effect) using the fol
   <small>**VST PlugIn Interface Technology by Steinberg Media Technologies GmbH. VST is a trademark of Steinberg Media Technologies GmbH.**</small>
 
   * [**Winamp**](http://www.winamp.com/)  
-  Popular media player for Windows, Android, and OS X that supports extensibility with plug-ins and skins.
+  Popular media player for Windows, Android, and OS X that supports extensibility with plug-ins and skins.  
   Copyright (C) 1997-2013 Nullsoft, Inc. All Rights Reserved.  
-
-The Dynamic Audio Normalizer **VST wrapper** (DynamicAudioNormalizerVST) incorporates the following *third-party* software:
-
-* [**Spooky Hash V2**](http://burtleburtle.net/bob/hash/spooky.html)  
-  Public domain noncryptographic hash function producing well-distributed 128-bit hash values
-  Created by Bob Jenkins. Public domain.
 
 
 &nbsp;  
