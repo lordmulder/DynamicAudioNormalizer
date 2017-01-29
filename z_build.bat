@@ -144,33 +144,33 @@ for %%c in (DLL, Static) do (
 		mkdir "%PACK_PATH%\%%c\include"
 		mkdir "%PACK_PATH%\%%c\redist"
 		
-		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"     "%PACK_PATH%\%%c"
-		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"     "%PACK_PATH%\%%c"
-		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"     "%PACK_PATH%\%%c"
-		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"     "%PACK_PATH%\%%c\x64"
-		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"     "%PACK_PATH%\%%c\x64"
-		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"     "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"       "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"       "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"       "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"       "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"       "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"       "%PACK_PATH%\%%c\x64"
 		
-		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                                   "%PACK_PATH%\%%c\include"
-		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                                 "%PACK_PATH%\%%c\include"
-		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                                     "%PACK_PATH%\%%c"
-		copy "%~dp0\..\Prerequisites\LibSndFile\bin\Win32\libsndfile-1.dll"                  "%PACK_PATH%\%%c"
-		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"      "%PACK_PATH%\%%c\libmpg123.dll"
-		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\Win32\pthreadVC2.v%TOOLS_VER%_xp.dll"   "%PACK_PATH%\%%c\pthreadVC2.dll"
-		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\x64\.\pthreadVC2.v%TOOLS_VER%_xp.dll"   "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
+		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                                     "%PACK_PATH%\%%c\include"
+		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                                   "%PACK_PATH%\%%c\include"
+		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                                       "%PACK_PATH%\%%c"
+		copy "%~dp0\..\Prerequisites\LibSndFile\bin\Win32\libsndfile-1.dll"                    "%PACK_PATH%\%%c"
+		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"        "%PACK_PATH%\%%c\libmpg123.dll"
+		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\Win32\pthreadVC2.v%TOOLS_VER%_xp.dll"     "%PACK_PATH%\%%c\pthreadVC2.dll"
+		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\x64\.\pthreadVC2.v%TOOLS_VER%_xp.dll"     "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
+		                                                                                      
+		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"                "%PACK_PATH%\%%c"
+		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"               "%PACK_PATH%\%%c"
 		
-		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"              "%PACK_PATH%\%%c"
-		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"             "%PACK_PATH%\%%c"
-
-		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                      "%PACK_PATH%\%%c\redist"
-		for %%q in (msv,vcr) do (
-			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\%%~q*.dll"              "%PACK_PATH%\%%c"
-			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\%%~q*.dll"              "%PACK_PATH%\%%c\x64"
-		)
+		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                        "%PACK_PATH%\%%c\redist"
+		copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c"
+		copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c\x64"
 		
 		if %TOOLS_VER% GEQ 140 (
-			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                    "%PACK_PATH%\%%c"
-			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x64\*.dll"                    "%PACK_PATH%\%%c\x64"
+			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll" "%PACK_PATH%\%%c"
+			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll" "%PACK_PATH%\%%c\x64"
+			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                      "%PACK_PATH%\%%c"
+			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x64\*.dll"                      "%PACK_PATH%\%%c\x64"
 		)
 	)
 
