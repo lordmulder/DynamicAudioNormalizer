@@ -4,59 +4,59 @@ setlocal enabledelayedexpansion
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Set Paths
 REM ///////////////////////////////////////////////////////////////////////////
-set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
-set "WSDK_PATH=C:\Program Files (x86)\Windows Kits\10"
-set "QTDIR_MSC=C:\Qt\4.8.7"
-set "JDK8_PATH=C:\Program Files (x86)\Java\jdk1.8.0_25"
-set "TOOLS_VER=120"
-set "SLN_SUFFX=VS2013"
+set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
+set "TOOLS_VER=140"
+set "SLN_SUFFX=VS2015"
 
 REM ###############################################
 REM # DO NOT MODIFY ANY LINES BELOW THIS LINE !!! #
 REM ###############################################
 
 REM ///////////////////////////////////////////////////////////////////////////
-REM // Setup environment
-REM ///////////////////////////////////////////////////////////////////////////
-set "QTDIR=%QTDIR_MSC%"
-call "%MSVC_PATH%\vcvarsall.bat" x86
-set "JAVA_HOME=%JDK8_PATH%"
-set "ANT_HOME=%~dp0\..\Prerequisites\Ant"
-set "PATH=%QTDIR%\bin;%JAVA_HOME%\bin;%ANT_HOME%\bin;%PATH%"
-
-REM ///////////////////////////////////////////////////////////////////////////
 REM // Check environment
 REM ///////////////////////////////////////////////////////////////////////////
-if "%VCINSTALLDIR%"=="" (
-	echo %%VCINSTALLDIR%% not specified. Please check your MSVC_PATH var^^!
+if not exist "%MSVC_PATH%\vcvarsall.bat" (
+	echo MSVC compiler not found. Please check your MSVC_PATH var^^!
 	goto BuildError
 )
-if not exist "%VCINSTALLDIR%\bin\cl.exe" (
-	echo C++ compiler binary not found. Please check your MSVC_PATH var^^!
+if not exist "%MSVC_PATH%\bin\cl.exe" (
+	echo MSVC compiler not found. Please check your MSVC_PATH var^^!
 	goto BuildError
 )
-if %TOOLS_VER% GEQ 140 (
-	if not exist "%WSDK_PATH%\Redist\ucrt\DLLs\x86\ucrtbase.dll" (
-		echo UCRT redist ^(x86^) libraries not found. Please check your WSDK_PATH var^^!
-		goto BuildError
-	)
-	if not exist "%WSDK_PATH%\Redist\ucrt\DLLs\x64\ucrtbase.dll" (
-		echo UCRT redist ^(x64^) libraries not found. Please check your WSDK_PATH var^^!
-		goto BuildError
-	)
-)
+
 if not exist "%QTDIR%\bin\moc.exe" (
-	echo Qt could not be found. Please check your QTDIR_MSC var^^!
+	echo Qt could not be found. Please check your QTDIR var^^!
 	goto BuildError
 )
 if not exist "%QTDIR%\include\QtCore\qglobal.h" (
-	echo Qt could not be found. Please check your QTDIR_MSC var^^!
+	echo Qt could not be found. Please check your QTDIR var^^!
 	goto BuildError
 )
-if not exist "%JDK8_PATH%\include\jni.h" (
-	echo JNI header files could not be found. Please check your JDK8_PATH var^^!
+
+if not exist "%JAVA_HOME%\bin\java.exe" (
+	echo JDK could not be found. Please check your JAVA_HOME var^^!
 	goto BuildError
 )
+if not exist "%JAVA_HOME%\lib\tools.jar" (
+	echo JDK could not be found. Please check your JAVA_HOME var^^!
+	goto BuildError
+)
+if not exist "%JAVA_HOME%\include\jni.h" (
+	echo JDK could not be found. Please check your JAVA_HOME var^^!
+	goto BuildError
+)
+
+if not exist "%~dp0\..\Prerequisites\README.txt" (
+	echo Prerequisites not found. Repair your build environment^^!
+	goto BuildError
+)
+
+REM ///////////////////////////////////////////////////////////////////////////
+REM // Setup environment
+REM ///////////////////////////////////////////////////////////////////////////
+set "ANT_HOME=%~dp0\..\Prerequisites\Ant"
+set "PATH=%QTDIR%\bin;%JAVA_HOME%\bin;%ANT_HOME%\bin;%PATH%"
+call "%MSVC_PATH%\vcvarsall.bat" x86
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Get current date and time (in ISO format)
@@ -140,7 +140,7 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll" "%PACK_PATH%\%%c"
 	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll" "%PACK_PATH%\%%c\x64"
 
-	if "%%c"=="DLL" (
+	if /I "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\include"
 		mkdir "%PACK_PATH%\%%c\redist"
 		
@@ -154,19 +154,23 @@ for %%c in (DLL, Static) do (
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                                   "%PACK_PATH%\%%c\include"
 		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                                 "%PACK_PATH%\%%c\include"
 		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                                     "%PACK_PATH%\%%c"
-		copy "%~dp0\etc\sndfile\lib\Win32\shared\libsndfile-1.dll"                           "%PACK_PATH%\%%c"
-		copy "%~dp0\etc\pthread\lib\Win32\shared\pthreadVC2.v%TOOLS_VER%_xp.dll"             "%PACK_PATH%\%%c\pthreadVC2.dll"
-		copy "%~dp0\etc\pthread\lib\x64\.\shared\pthreadVC2.v%TOOLS_VER%_xp.dll"             "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
+		copy "%~dp0\..\Prerequisites\LibSndFile\bin\Win32\libsndfile-1.dll"                  "%PACK_PATH%\%%c"
+		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"      "%PACK_PATH%\%%c\libmpg123.dll"
+		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\Win32\pthreadVC2.v%TOOLS_VER%_xp.dll"   "%PACK_PATH%\%%c\pthreadVC2.dll"
+		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\x64\.\pthreadVC2.v%TOOLS_VER%_xp.dll"   "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
 		
-		copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                      "%PACK_PATH%\%%c"
-		copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                      "%PACK_PATH%\%%c\x64"
-		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                      "%PACK_PATH%\%%c\redist"
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"              "%PACK_PATH%\%%c"
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"             "%PACK_PATH%\%%c"
+
+		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                      "%PACK_PATH%\%%c\redist"
+		for "%%i" in (msv,vcr) do (
+			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\%%~i*.dll"              "%PACK_PATH%\%%c"
+			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\%%~i*.dll"              "%PACK_PATH%\%%c\x64"
+		)
 		
 		if %TOOLS_VER% GEQ 140 (
-			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x86\*.dll"                                    "%PACK_PATH%\%%c"
-			copy "%WSDK_PATH%\Redist\ucrt\DLLs\x64\*.dll"                                    "%PACK_PATH%\%%c\x64"
+			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                    "%PACK_PATH%\%%c"
+			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x64\*.dll"                    "%PACK_PATH%\%%c\x64"
 		)
 	)
 
@@ -222,8 +226,10 @@ REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
 	attrib +R "%PACK_PATH%\%%c\*"
 	attrib +R "%PACK_PATH%\%%c\x64\*"
-	attrib +R "%PACK_PATH%\%%c\include\*"
-	attrib +R "%PACK_PATH%\%%c\img\*"
+	attrib +R "%PACK_PATH%\%%c\img\dyauno\*"
+	if "%%c"=="DLL" (
+		attrib +R "%PACK_PATH%\%%c\include\*"
+	)
 )
 
 REM ///////////////////////////////////////////////////////////////////////////
