@@ -231,10 +231,10 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 	}
 
 	//Use pipe?
-	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
+	const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
 
 	//Open file in libmpg123
-	if ((bPipe ? mpg123_open_fd(handle, STDIN_FILENO) : MPG123OPEN(handle, fileName)) != MPG123_OK)
+	if ((bStdIn ? mpg123_open_fd(handle, STDIN_FILENO) : MPG123OPEN(handle, fileName)) != MPG123_OK)
 	{
 		PRINT2_ERR(TXT("Failed to open file for reading: \"") FMT_chr TXT("\"\n"), mpg123_strerror(handle));
 		MPG123_DELETE(handle);

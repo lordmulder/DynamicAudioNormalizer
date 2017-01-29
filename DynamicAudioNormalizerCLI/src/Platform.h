@@ -171,6 +171,16 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 	return buff;
 }
 
+inline static bool FILE_ISREG(FILE *const stream)
+{
+	struct _stat64 stat;
+	if (_fstat64(_fileno(stream), &stat) == 0)
+	{
+		return ((stat.st_mode & _S_IFMT) == _S_IFREG);
+	}
+	return false;
+}
+
 #endif //_WIN32
 
 //============================================================================
@@ -292,6 +302,16 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 	return buff;
 }
 
+inline static bool FILE_ISREG(FILE *const stream)
+{
+	struct _stat64 stat;
+	if (_fstat64(_fileno(stream), &stat) == 0)
+	{
+		return ((stat.st_mode & _S_IFMT) == _S_IFREG);
+	}
+	return false;
+}
+
 #endif //_WIN32
 
 //============================================================================
@@ -405,6 +425,16 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 		return strncat(buff, str, len - offset - 1);
 	}
 	return buff;
+}
+
+inline static bool FILE_ISREG(FILE *const stream)
+{
+	struct fstat64 stat;
+	if (fstat64(fileno(stream), &stat) == 0)
+	{
+		return ((stat.st_mode & S_IFMT) == S_IFREG);
+	}
+	return false;
 }
 
 #endif //__linux

@@ -24,9 +24,6 @@
     <ClCompile Include="src\GaussianFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MinimumFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,9 +48,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\GaussianFilter.h">
-      <Filter>Internal Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MinimumFilter.h">
       <Filter>Internal Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Version.h">

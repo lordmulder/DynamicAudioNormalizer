@@ -225,12 +225,14 @@ static bool detectMpg123File(const CHR *const fileName)
 {
 	static const uint32_t THRESHOLD = 13U;
 	uint32_t max_sequence = 0;
-	if (fileName && fileName[0] && (STRCASECMP(fileName, TXT("-")) != 0))
+	if ((fileName) && (fileName[0]))
 	{
 		static const size_t BUFF_SIZE = 128U * 1024U;
-		uint8_t *buffer = new uint8_t[BUFF_SIZE];
-		if (FILE *const file = FOPEN(fileName, TXT("rb")))
+		const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
+		const bool bIsPipe = bStdIn && (!FILE_ISREG(stdin));
+		if (FILE *const file = bStdIn ? (bIsPipe ? NULL : stdin) : FOPEN(fileName, TXT("rb")))
 		{
+			uint8_t *buffer = new uint8_t[BUFF_SIZE];
 			size_t count = BUFF_SIZE;
 			for (int chunk = 0; (chunk < 64) && (count >= BUFF_SIZE); ++chunk)
 			{
@@ -242,9 +244,12 @@ static bool detectMpg123File(const CHR *const fileName)
 					}
 				}
 			}
-			fclose(file);
+			if (bStdIn ? fseek(stdin, 0L, SEEK_SET) : fclose(file))
+			{
+				PRINT2_WRN("Failed to rewind input stream!");
+			}
+			MY_DELETE_ARRAY(buffer);
 		}
-		MY_DELETE_ARRAY(buffer);
 	}
 	return (max_sequence >= THRESHOLD);
 }

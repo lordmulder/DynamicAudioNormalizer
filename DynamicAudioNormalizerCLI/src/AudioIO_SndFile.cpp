@@ -212,7 +212,8 @@ bool AudioIO_SndFile_Private::openRd(const CHR *const fileName, const uint32_t c
 	memset(&info, 0, sizeof(SF_INFO));
 
 	//Use pipe?
-	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
+	const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
+	const bool bPipe = bStdIn && (!FILE_ISREG(stdin));
 	
 	//Setup info for "raw" input
 	if(bPipe)
@@ -227,7 +228,7 @@ bool AudioIO_SndFile_Private::openRd(const CHR *const fileName, const uint32_t c
 	}
 
 	//Open file in libsndfile
-	handle = bPipe ? sf_open_fd(STDIN_FILENO, SFM_READ, &info, SF_FALSE) : SF_OPEN_FILE(fileName, SFM_READ, &info);
+	handle = bStdIn ? sf_open_fd(STDIN_FILENO, SFM_READ, &info, SF_FALSE) : SF_OPEN_FILE(fileName, SFM_READ, &info);
 
 	if(!handle)
 	{
@@ -255,7 +256,8 @@ bool AudioIO_SndFile_Private::openWr(const CHR *const fileName, const uint32_t c
 	memset(&info, 0, sizeof(SF_INFO));
 
 	//Use pipe?
-	const bool bPipe = (STRCASECMP(fileName, TXT("-")) == 0);
+	const bool bStdOut = (STRCASECMP(fileName, TXT("-")) == 0);
+	const bool bPipe = bStdOut && (!FILE_ISREG(stdout));
 
 	//Setup output format
 	info.format = bPipe ? formatFromExtension(TXT("raw"), bitDepth) : formatFromExtension((format ? format : fileName), bitDepth);
@@ -263,7 +265,7 @@ bool AudioIO_SndFile_Private::openWr(const CHR *const fileName, const uint32_t c
 	info.samplerate = sampleRate;
 
 	//Open file in libsndfile
-	handle = bPipe ? sf_open_fd(STDOUT_FILENO, SFM_WRITE, &info, SF_FALSE) : SF_OPEN_FILE(fileName, SFM_WRITE, &info);
+	handle = bStdOut ? sf_open_fd(STDOUT_FILENO, SFM_WRITE, &info, SF_FALSE) : SF_OPEN_FILE(fileName, SFM_WRITE, &info);
 
 	if(!handle)
 	{
