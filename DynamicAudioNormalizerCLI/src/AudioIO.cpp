@@ -246,7 +246,7 @@ static bool detectMpg123File(const CHR *const fileName)
 			}
 			if (bStdIn ? fseek(stdin, 0L, SEEK_SET) : fclose(file))
 			{
-				PRINT2_WRN("Failed to rewind input stream!");
+				PRINT2_WRN(TXT("Failed to rewind input stream!"));
 			}
 			MY_DELETE_ARRAY(buffer);
 		}
