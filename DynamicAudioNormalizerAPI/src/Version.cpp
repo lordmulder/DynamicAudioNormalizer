@@ -22,13 +22,13 @@
 #include "Version.h"
 
 //Version info
-const unsigned int DYNAUDNORM_VERSION_MAJOR = 2;
-const unsigned int DYNAUDNORM_VERSION_MINOR = 9;
-const unsigned int DYNAUDNORM_VERSION_PATCH = 0;
+const unsigned int DYNAUDNORM_VERSION_MAJOR =  2;
+const unsigned int DYNAUDNORM_VERSION_MINOR = 10;
+const unsigned int DYNAUDNORM_VERSION_PATCH =  0;
 
 //Build date/time
 const char *const DYNAUDNORM_BUILD_DATE = __DATE__;
-const char*const DYNAUDNORM_BUILD_TIME = __TIME__;
+const char *const DYNAUDNORM_BUILD_TIME = __TIME__;
 
 //Compiler detection
 #if defined(__INTEL_COMPILER)
@@ -57,7 +57,7 @@ const char*const DYNAUDNORM_BUILD_TIME = __TIME__;
 			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.1";
 		#elif (_MSC_FULL_VER == 190023918)
 			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.2";
-		#elif (_MSC_FULL_VER == 190024210) || (_MSC_FULL_VER == 190024215)
+		#elif (_MSC_FULL_VER >= 190024210) && (_MSC_FULL_VER <= 190024215)
 			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.3";
 		#else
 			#error Compiler version is not supported yet!
