@@ -17,6 +17,9 @@ A "standard" (non-dynamic) audio normalization algorithm applies the same *const
 
 **Dynamic Audio Normalizer** solves this problem by processing the input audio in small chunks, referred to as *frames*. A frame typically has a length 500 milliseconds, but the frame size can be adjusted as needed. The Dynamic Audio Normalizer then finds the highest magnitude sample *within* each frame, individually and independently. Next, it computes the maximum possible gain factor (without distortions) for each individual frame. So, if ``S_max[n]`` denotes the highest magnitude sample within the *n*-th frame, then the maximum possible gain factor for the *n*-th frame will be `G[n]=Peak/abs(S_max[n])`. Unfortunately, simply amplifying each frame with its own "local" maximum gain factor `G[n]` would **not** produce a satisfying overall result either. That's because the maximum gain factors can vary *strongly* and *unsteadily* between neighboring frames! Therefore, applying the maximum possible gain to each frame *without* taking neighboring frames into account would result in a strong *dynamic range compression* – which not only has a tendency to destroy the "vividness" of the audio but could also result in the "pumping" effect, i.e fast changes of the gain factor that become clearly noticeable to the listener.
 
+
+## Dynamic Normalization Algorithm ##
+
 The Dynamic Audio Normalizer tries to avoid these issues by applying an advanced *dynamic* normalization algorithm. Essentially, when processing a particular frame, it also takes into account a certain *neighborhood* around the current frame, i.e. the frames *preceding* and *succeeding* the current frame will be considered as well. However, while information about "past" frames can simply be stored as long as they are needed, information about "future" frames are *not* normally available. A simple approach to solve this issue would be using a *2-Pass* algorithm, but this would require processing the entire audio file *twice* – which also makes stream processing impossible. The Dynamic Audio Normalizer uses a different approach instead: It employs a tall "look ahead" buffer. This means that that all audio frames will progress trough an internal [*FIFO*](http://en.wikipedia.org/wiki/FIFO) (first in, first out) buffer. The size of this buffer is chosen sufficiently large, so that a frame's *complete* neighborhood, including the *subsequent* frames, will already be present in the buffer when *that* particular frame is being processed. The "look ahead" buffer eliminates the need for 2-Pass processing and thus gives an improved performance. It also makes stream processing possible.
 
 With information about the frame's neighborhood available, a [*Gaussian* smoothing kernel](http://en.wikipedia.org/wiki/Gaussian_blur) can be applied on those gain factors. Put simply, this smoothing filter "mixes" the gain factor of the ``n``-th frames with those of its *preceding* frames (`n-1`, `n-2`, &hellip;) as well as with its *subsequent* frames (`n+1`, `n+2`, …) – where "nearby" frames have a stronger influence (weight), while "distant" frames have a declining influence. This way, abrupt changes of the gain factor are avoided and, instead, we get *smooth transitions* of the gain factor over time. Furthermore, since the filter also takes into account *future* frames, Dynamic Audio Normalizer avoids applying strong gain to "quiet" frames located shortly before "loud" frames. In other words, Dynamic Audio Normalizer adjusts the gain factor *early* and thus nicely prevents distortions or abrupt gain changes.
@@ -27,9 +30,15 @@ The following example shows the results from a "real world" audio recording that
 
 ![Progression of the gain factors for each audio frame](img/dyauno/Chart.png)
 
+
+## Intra-Frame Normalization ##
+
 So far it has been discussed how the "optimal" gain factor for each frame is determined. However, since each frame contains a large number of samples – at a typical sampling rate of 44,100 Hz and a standard frame size of 500 milliseconds we have 22,050 samples per frame – it is also required to infer the gain factor for each individual sample *within* the frame. The most simple approach, of course, would be applying the *same* gain factor to *all* samples in a certain frame. But this would also lead to abrupt changes of the gain factor at each frame boundary, while the gain factor remains completely constant within the frames. A better approach, as implemented in the Dynamic Audio Normalizer, is *interpolating* the per-sample gain factors. In particular, the Dynamic Audio Normalizer applies a straight-forward *linear interpolation*, which is used to compute the gain factors for the samples of the `n`-th frame from the gain factors `G'[n-1]`, `G'[n]` and `G'[n+1]` – where `G'[k]` denotes the gain factor of the `k`-th frame. The following graph shows how the per-sample gain factors (orange) are interpolated from the gain factors of the *preceding* (`G'[n-1]`, green), *current* (`G'[n]`, blue) and *subsequent* (`G'[n+1]`, purple) frame.
 
 ![Linear interpolation of the per-sample gain factors](img/dyauno/Interpolation.png)
+
+
+## Real World Results (Example) ##
 
 Finally, the following waveform view illustrates how the volume of a "real world" audio recording has been harmonized by the Dynamic Audio Normalizer. The upper graph shows the unprocessed original recording while the lower graph shows the output as created by the Dynamic Audio Normalizer. As can be seen, the significant volume variation between the "loud" and the "quiet" parts that existed in the original recording has been rectified – to a great extent – while the dynamics within each section of the input have been retained. Also, there is absolutely **no** clipping or distortion in the "loud" sections.
 
@@ -42,7 +51,8 @@ Finally, the following waveform view illustrates how the volume of a "real world
 Dynamic Audio Normalizer can be downloaded from one of the following *official* mirror sites:
 * https://github.com/lordmulder/DynamicAudioNormalizer/releases/latest
 * https://bitbucket.org/muldersoft/dynamic-audio-normalizer/downloads
-* http://sourceforge.net/projects/muldersoft/files/Dynamic%20Audio%20Normalizer/
+* https://sourceforge.net/projects/muldersoft/files/Dynamic%20Audio%20Normalizer/
+* https://www.mediafire.com/?flrb14nitnh8i
 * https://www.assembla.com/spaces/dynamicaudionormalizer/documents
 
 **Note:** Windows binaries are provided in the compressed *ZIP* format. Simply use [7-Zip](http://www.7-zip.org/) or a similar tool to unzip *all* files to new/empty directory. If in doubt, Windows users should download the "static" version. That's it!
@@ -235,39 +245,37 @@ At least, VST provides the VST plug-in with a method to *report* its delay to th
 
 The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host application. Thus, if you encounter shifted and/or truncated audio after the processing, this means that there is a **bug** in the VST host application. And, sadly, the plug-in can do absolutely *nothing* about this. Below, there is a non-exhaustive list of audio editors with *proper* VST support. Those have been tested to work correctly. There also is a list of audio editors with *known problems*. Those should **not** be used for VST processing, until the respective developers have fixed the issue…
 
-
-## Supported VST Hosts ##
+### List of functioning VST Hosts ### {-}
 
 Non-exhaustive list of VST hosts that have been tested to *work correctly* with the Dynamic Audio Normalizer VST plug-in:
+
+* **[Audacity](http://sourceforge.net/projects/audacity/files/audacity/) v2.0.6+, by Audacity Team**  
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free/libre OpenSource software &nbsp;|&nbsp; <span style="color:GoldenRod">**recommended!**</span>
+  *Please see [**here**](http://wiki.audacityteam.org/wiki/VST_Plug-ins) for install instructions. Also make sure that the **Buffer Delay Compensation** option is enabled!*
 
 * **[Acoustica](http://acondigital.com/products/acoustica-audio-editor/), by Acon AS**  
   <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; unrestricted Freeware edition available &nbsp;|&nbsp; <span style="color:GoldenRod">**recommended!**</span>
   
-* **[Audacity](http://sourceforge.net/projects/audacity/files/audacity/) v2.0.6+, by Audacity Team**  
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free/libre OpenSource software &nbsp;|&nbsp; <span style="color:GoldenRod">**recommended!**</span>
-  *Please see [**here**](http://wiki.audacityteam.org/wiki/VST_Plug-ins) for install instructions. Also make sure that the new "Buffer Delay Compensation" option is enabled!*
-  
 * **[GoldWave](http://www.goldwave.com/), by GoldWave Inc.**  
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $59 (lifetime license)
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; Payware, free *trial* version available
   
 * **[REAPER](http://www.reaper.fm/), by Cockos Inc.**  
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $225 (full license)
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; Payware, free *trial* version available
   
 * **[WaveLab](http://www.steinberg.net/en/products/wavelab/start.html), by Steinberg Media Technologies GmbH**
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $100 (for "Elements" edition)
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; Payware, free *trial* version available
   
 * **[Audition CC](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro"), by Adobe Systems Inc.**  
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $20 per month ("single app")
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; Payware, free *trial* version available
   
 * **[Sound Forge Pro](http://www.sonycreativesoftware.com/soundforgesoftware), by Sony (formerly Sonic Foundry)**  
-  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; free *trial* version available &nbsp;|&nbsp; full version: $400 (full license)
+  <span style="color:SeaGreen">VST support working</span> &nbsp;|&nbsp; Payware, free *trial* version available
 
-*<u>Disclaimer:</u> There is absolutely **no** guarantee for the currentness and/or correctness of the above information!*
+*<u>Disclaimer:</u> There is absolutely **no** guarantee for the completeness or correctness of the above information!*
 
+### List of problematic VST Hosts ### {-}
 
-## Problematic VST Hosts ##
-
-List of VST hosts that have *known problems* and do **not** work correctly with VST plug-ins, such as the Dynamic Audio Normalizer:
+List of VST hosts with *known problems* that do **not** work correctly with VST plug-ins like the Dynamic Audio Normalizer:
 
 * **[Audacity](http://audacity.sourceforge.net/) v2.0.5 (and older)**  
   <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated → *fixed in Audacity v2.0.6+*
@@ -293,9 +301,9 @@ List of VST hosts that have *known problems* and do **not** work correctly with 
 * **[AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v4, by CyberLink Corp**  
   <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated by a very large amount
 
-*<u>Disclaimer:</u> There is absolutely **no** guarantee for the currentness and/or correctness of the above information!*
+*<u>Disclaimer:</u> There is absolutely **no** guarantee for the completeness or correctness of the above information!*
 
-*If you are the developer of one of these tools and you fixed the problem already, then please let us know…*
+*If you are the developer of one of the "problematic" tools and you are interested in fixing the problem in your product, or if you have already fixed the problem in the meantime, then please let us know, so that we can update the information…*
 
 
 
