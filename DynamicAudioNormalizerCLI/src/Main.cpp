@@ -19,6 +19,10 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 //////////////////////////////////////////////////////////////////////////////////
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS 1
+#endif
+
 //Internal
 #include "Common.h"
 #include "Platform.h"
@@ -37,6 +41,7 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
+#include <inttypes.h>
 
 //Linkage
 #ifdef MDYNAMICAUDIONORMALIZER_STATIC
@@ -256,7 +261,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 		}
 		else
 		{
-			break; /*failed to flush pending samples*/
+			break; /*no more pending samples*/
 		}
 	}
 
@@ -265,6 +270,10 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 	{
 		printProgress(length, remaining, spinnerPos, true);
 		PRINT(TXT("\nFinished.\n\n"));
+		if ((length != INT64_MAX) && remaining)
+		{
+			PRINT2_WRN(TXT("Audio reader got \n") TXT(PRId64) TXT(" ") FMT_CHR TXT(" samples than projected!"), (remaining > 0) ? TXT("less") : TXT("more"), abs(remaining));
+		}
 	}
 	else
 	{
