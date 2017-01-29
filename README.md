@@ -52,7 +52,7 @@ Dynamic Audio Normalizer can be downloaded from one of the following *official* 
 * https://github.com/lordmulder/DynamicAudioNormalizer/releases/latest
 * https://bitbucket.org/muldersoft/dynamic-audio-normalizer/downloads
 * https://sourceforge.net/projects/muldersoft/files/Dynamic%20Audio%20Normalizer/
-* https://www.mediafire.com/?flrb14nitnh8i
+* https://www.mediafire.com/folder/flrb14nitnh8i/Dynamic_Audio_Normalizer
 * https://www.assembla.com/spaces/dynamicaudionormalizer/documents
 
 **Note:** Windows binaries are provided in the compressed *ZIP* format. Simply use [7-Zip](http://www.7-zip.org/) or a similar tool to unzip *all* files to new/empty directory. If in doubt, Windows users should download the "static" version. That's it!
@@ -73,24 +73,27 @@ All *pre-compiled* binaries have been optimized for processors that support *at 
 
 The following files are included in the Dynamic Audio Normalizer release package (Windows "DLL" version):
 
+	api-ms-win-*                  - Microsoft Universal CRT redistributable
+	DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
+	DynamicAudioNormalizer.pas    - Pascal wrapper for the Dynamic Audio Normalizer library
+	DynamicAudioNormalizerAPI.dll - Dynamic Audio Normalizer core library (shared)
+	DynamicAudioNormalizerAPI.lib - Import library for the Dynamic Audio Normalizer library
 	DynamicAudioNormalizerCLI.exe - Dynamic Audio Normalizer command-line application
 	DynamicAudioNormalizerGUI.exe - Dynamic Audio Normalizer log viewer application
-	DynamicAudioNormalizerSoX.exe - SoX binary with included Dynamic Audio Normalizer effect
-	DynamicAudioNormalizerAPI.dll - Dynamic Audio Normalizer core library
-	DynamicAudioNormalizerVST.dll - Dynamic Audio Normalizer VST wrapper library
-	DynamicAudioNormalizerAPI.lib - Import library for the Dynamic Audio Normalizer library
-	DynamicAudioNormalizerNET.dll - .NET wrapper for the Dynamic Audio Normalizer library
 	DynamicAudioNormalizerJNI.jar - Java wrapper for the Dynamic Audio Normalizer library
-	DynamicAudioNormalizer.pas    - Pascal wrapper for the Dynamic Audio Normalizer library
-	DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
-	msvcp120.dll                  - Visual C++ 2013 runtime library
-	msvcr120.dll                  - Visual C++ 2013 runtime library
+	DynamicAudioNormalizerNET.dll - .NET wrapper for the Dynamic Audio Normalizer library
+	DynamicAudioNormalizerSoX.exe - SoX binary with included Dynamic Audio Normalizer effect
+	DynamicAudioNormalizerVST.dll - Dynamic Audio Normalizer VST wrapper library
 	libmpg123.dll                 - libmpg123 library, used for reading MPEG audio files
 	libsndfile-1.dll              - libsndfile library, used for reading/writing audio files
+	msvcp140.dll                  - Visual C++ 2015 runtime library redistributable
 	pthreadVC2.dll                - POSIX threading library, used for thread management
 	QtCore4.dll                   - Qt library, used to create the graphical user interfaces
 	QtGui4.dll                    - Qt library, used to create the graphical user interfaces
 	README.html                   - The README file
+	ucrtbase.dll                  - Microsoft Universal CRT redistributable
+	vcruntime140.dll              - Visual C++ 2015 runtime library redistributable
+
 
 **Note:** Standard binaries are *32-Bit* (x86), though *64-Bit* (AMD64/EM64T) versions can be found in the `x64` sub-folder.
 
@@ -241,7 +244,7 @@ Furthermore, note that – unless you are using the *static* build of the Dynami
 
 The algorithm used by the Dynamic Audio Normalizer uses a "look ahead" buffer. This necessarily requires that – at the beginning of the process – we read a certain minimum number of *input* samples <u>before</u> the first *output* samples can be computed. With a more flexible effect interface, like the one used by [SoX](http://sox.sourceforge.net/), the plug-in could request as many input samples from the host application as required, before it starts returning output samples. The *VST* interface, however, is rather limited in this regard: VST *enforces* that the plug-in process the audio in small chunks. The size of these chunks is *dictated* by the host application. Furthermore, VST *enforces* that the plug-in returns the corresponding output samples for each chunk of audio data *immediately* – the VST host won't provide the next chunk of input samples until the VST plug-in has returned the output samples for the previous chunk. To the best of our knowledge, there is **no** way to request even more input samples from the VST host! Consequently, the **only** known way to realize a "look ahead" buffer with VST is actually <u>delaying</u> all audio samples and returning some "silent" samples at the beginning.
 
-At least, VST provides the VST plug-in with a method to *report* its delay to the VST host application. Unfortunately, to the best of our knowledge, the VST specification lacks a detailed description on how a host application is required to deal with such a delay. This means that the actual behaviour totally depends on the individual host application! Anyway, it is clear that, if a VST plug-in reports a delay of N samples, an audio editor **shall** discard the *first* N samples returned by that plug-in. Also, the audio editor **shall** feed N samples of additional "dummy" data to the plug-in at the very end of the process – in order to flush the pending output samples. In practice, however, it turns out that, while *some* audio editors show the "correct" behaviour, others do **not**. Those audio editors seem to *ignore* the plug-in's delay, so the audio file will end up shifted and truncated!
+At least, VST provides the VST plug-in with a method to *report* its delay to the VST host application. Unfortunately, to the best of our knowledge, the VST specification lacks a detailed description on how a host application is required to deal with such a delay. This means that the actual behavior totally depends on the individual host application! Anyway, it is clear that, if a VST plug-in reports a delay of N samples, an audio editor **shall** discard the *first* N samples returned by that plug-in. Also, the audio editor **shall** feed N samples of additional "dummy" data to the plug-in at the very end of the process – in order to flush the pending output samples. In practice, however, it turns out that, while *some* audio editors show the "correct" behavior, others do **not**. Those audio editors seem to *ignore* the plug-in's delay, so the audio file will end up shifted and truncated!
 
 The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host application. Thus, if you encounter shifted and/or truncated audio after the processing, this means that there is a **bug** in the VST host application. And, sadly, the plug-in can do absolutely *nothing* about this. Below, there is a non-exhaustive list of audio editors with *proper* VST support. Those have been tested to work correctly. There also is a list of audio editors with *known problems*. Those should **not** be used for VST processing, until the respective developers have fixed the issue…
 
@@ -329,15 +332,15 @@ Note that copying the plug-in DLL into the ``Plugins`` directory may require adm
 Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the Winamp plug-in DLL also requires the Dynamic Audio Normalizer *core* library, i.e. ``DynamicAudioNormalizerAPI.dll``. This means that the *core* library **must** be made available to Winamp *in addition* to the DSP/Effect plug-in itself. Otherwise, loading the DSP/Effect plug-in DLL is going to fail! Though, copying the *core* library to the same directory, where the plug-in DLL is located, i.e. the ``Plugins`` directory, generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the ``DynamicAudioNormalizerAPI.dll`` file into the same directory where the Winamp "main" executable (EXE file) is located.
 
 
-## Knwon Limitations ##
+## Known Limitations ##
 
-The Dynamic Audio Normalizer plug-in for Winamp does *not* provide a configuration dialogue yet, so always the *default* settings are used. This will be addressed in a future version. Pacthes welcome ;-)
+The Dynamic Audio Normalizer plug-in for Winamp does *not* provide a configuration dialogue yet, so always the *default* settings are used. This will be addressed in a future version. Patches are welcome ;-)
 
 
 
 # Configuration #
 
-This chapter describes the configuration options that can be used to tweak the behaviour of the Dynamic Audio Normalizer.
+This chapter describes the configuration options that can be used to tweak the behavior of the Dynamic Audio Normalizer.
 
 While the default parameter of the Dynamic Audio Normalizer have been chosen to give satisfying results for a wide range of audio sources, it can be advantageous to adapt the parameters to the individual audio file as well as to your personal preferences. The *default* settings have been chosen rather "conservative", so that the dynamics of the audio are preserved well. People who desire a more "aggressive" effect should try using a *smaller* [*filter size*](#gaussian-filter-window-size), or enable [*input compression*](#input-compression).
 
@@ -356,7 +359,7 @@ The target peak magnitude specifies the highest permissible magnitude level for 
 
 ## Channel Coupling ##
 
-By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the ``n``-th frame is defined as ``S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])``, where ``s_max[n][k]`` denotes the highest magnitude sample in the ``k``-th channel and ``C`` is the channel count. The gain factor for *all* channels is then derived from ``S_max[n]``. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **``--no-coupling``** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel ``k``, depending only on the individual channel's highest magnitude sample ``s_max[n][k]``. This allows for harmonizing the volume of the different channels. The following wave view illustrates the effect of channel coupling: It shows an input file with *uneven* channel volumes (left), the same file after normalization with channel coupling *enabled* (center) and again after normalization with channel coupling *disabled* (right).
+By default, the Dynamic Audio Normalizer will amplify all channels by the same amount. This means the *same* gain factor will be applied to *all* channels, i.e. the maximum possible gain factor is determined by the "loudest" channel. In particular, the highest magnitude sample for the `n`-th frame is defined as `S_max[n]=Max(s_max[n][1],s_max[n][2],…,s_max[n][C])`, where `s_max[n][k]` denotes the highest magnitude sample in the `k`-th channel and `C` is the channel count. The gain factor for *all* channels is then derived from `S_max[n]`. This is referred to as *channel coupling* and for most audio files it gives the desired result. Therefore, channel coupling is *enabled* by default. However, in some recordings, it may happen that the volume of the different channels is *uneven*, e.g. one channel may be "quieter" than the other one(s). In this case, the **`--no-coupling`** option can be used to *disable* the channel coupling. This way, the gain factor will be determined *independently* for each channel `k`, depending only on the individual channel's highest magnitude sample `s_max[n][k]`. This allows for harmonizing the volume of the different channels. The following wave view illustrates the effect of channel coupling: It shows an input file with *uneven* channel volumes (left), the same file after normalization with channel coupling *enabled* (center) and again after normalization with channel coupling *disabled* (right).
 
 ![The effect of *channel coupling*](img/dyauno/Coupling.png)
 
@@ -695,7 +698,7 @@ The following build environments are currently supported:
 
 * Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
 
-    - You can build *Dynamic Audio Normalizer* manually, by using the provided *solution* file ``DynamicAudioNormalizer.sln``
+    - You can build *Dynamic Audio Normalizer* manually, by using the provided *solution* file `DynamicAudioNormalizer.sln`
 
     - Optionally, you may run the deployment script ``z_build.bat``, which will also create deployment packages. You may need to edit the paths in the build script first!
 
@@ -705,7 +708,7 @@ The following build environments are currently supported:
 
     - You may need to install additional packages (*libsndfile*, *Qt*, *Apache Ant*, *JDK*, *Pandoc*, etc), in order to create a "full" build of *Dynamic Audio Normalizer*
 
-    - Use ``make MODE=no-gui`` or ``make MODE=mininmal`` in order to build *without GUI* or to create a *minimal* build (core library + CLI front-end only), respectively
+    - Use `make MODE=no-gui` or `make MODE=mininmal` in order to build *without GUI* or to create a *minimal* build (core library + CLI front-end only), respectively
 
 
 ## Build Prerequisites ##
@@ -718,9 +721,9 @@ Windows users are recommended to download our pre-compiled "all-in-one" prerequi
 
 Linux users should install the prerequisites via their package manager. Here is a list of required packages for Ubuntu:
 * `apt install build-essential`
-* !!! TODO !!!
+* **TODO**
 
-Old prerequisites:
+Additional prerequisites:
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
 * [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
 * [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
@@ -840,7 +843,16 @@ Consequently, if the Dynamic Audio Normalizer did *not* change your audio in a n
 If you do *not* want the "quiet" and the "loud" parts of your audio to be harmonized, then the Dynamic Audio Normalizer simply may *not* be the right tool for what you are trying to achieve. It was purposely designed to work like that. Nonetheless, by using a larger [filter size](#gaussian-filter-window-size), the Dynamic Audio Normalizer may be configured to act more similar to a "traditional" normalization filter.
 
 
-## Q: Why does the program crash with "GURU MEDITATION" error? ## {-}
+## Q: Why do I get audio reader warnings about more/less samples? ## {-}
+
+This warning indicates that the audio reader delivered more/less audio samples than what was initially projected. For most file formats, the projected number of audio samples should be *accurate*, in which case the warning may actually indicate an I/O error. When processing MPEG audio files, however, the projected number of audio samples is only a *rough estimate*. That's because MPEG audio files, like `.mp2` or `.mp3` files, do **not** use a proper file format; they are just a "loose" collection of MPEG frames. Consequently, there is **no** way to accurately determine the number of samples in an MPEG audio file, except for decoding the *entire* file – which would be way too slow. That's why MPEG audio decoders, like ***libmpg123***, will try to *estimate* the total number of samples from the first couple of MPEG frames. Of course, this is **not** always accurate.
+
+Consequently, when working with MPEG audio files, the warning about more/less audio samples than what was initially projected being read from the input file is most likely **not** a reason for concern; the warning can safely be *ignored* in that case. But, if the warning occurs with *other* types of audio files, please take care, since there probably was an I/O error!
+
+*Note:* The Dynamic Audio Normalizer considers a discrepancy of the audio sample count of more than *25%* as critical error.
+
+
+## Q: Why does the program crash with GURU MEDITATION error? ## {-}
 
 This error message indicates that the program has encountered a serious problem. On possible reason is that your processor does **not** support the [SSE2](http://en.wikipedia.org/wiki/SSE2) instruction set. That's because the official Dynamic Audio Normalizer binaries have been compiled with SSE and SSE2 code enabled – like pretty much any compiler does *by default* nowadays. So without SSE2 support, the program cannot run, obviosuly. This can be fixed either by upgrading your system to a less antiquated processor, or by recompiling Dynamic Audio Normalizer from the sources with SSE2 code generation *disabled*. Note that SSE2 is supported by the Pentium 4 and Athon 64 processors as well as **all** later processors. Also *every* 64-Bit supports SSE2, because [x86-64](http://en.wikipedia.org/wiki/X86-64) has adopted SSE2 as "core" instructions. That means that *every processor from the last decade* almost certainly supports SSE2.
 
@@ -848,6 +860,9 @@ If your processor *does* support SSE2, but you still get the above error message
 
 
 # License Terms #
+
+This chapter lists the licenses that apply to the individual components of the Dynamic Audio Normalizer software.
+
 
 ## Dynamic Audio Normalizer Library ##
 
