@@ -272,7 +272,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 		PRINT(TXT("\nFinished.\n\n"));
 		if ((length != INT64_MAX) && remaining)
 		{
-			PRINT2_WRN(TXT("Audio reader got \n") TXT(PRId64) TXT(" ") FMT_CHR TXT(" samples than projected!"), (remaining > 0) ? TXT("less") : TXT("more"), abs(remaining));
+			PRINT2_WRN(TXT("Audio reader got %") TXT(PRId64) TXT(" ") FMT_CHR TXT(" samples than projected!\n"), abs(remaining), (remaining > 0) ? TXT("less") : TXT("more"));
 		}
 	}
 	else
