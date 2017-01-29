@@ -63,11 +63,11 @@ REM // Get current date and time (in ISO format)
 REM ///////////////////////////////////////////////////////////////////////////
 set "ISO_DATE="
 set "ISO_TIME="
-if not exist "%~dp0\etc\date.exe" BuildError
-for /F "tokens=1,2 delims=:" %%a in ('"%~dp0\etc\date.exe" +ISODATE:%%Y-%%m-%%d') do (
+if not exist "%~dp0\..\Prerequisites\GnuWin32\date.exe" goto BuildError
+for /F "tokens=1,2 delims=:" %%a in ('"%~dp0\..\Prerequisites\GnuWin32\date.exe" +ISODATE:%%Y-%%m-%%d') do (
 	if "%%a"=="ISODATE" set "ISO_DATE=%%b"
 )
-for /F "tokens=1,2,3,4 delims=:" %%a in ('"%~dp0\etc\date.exe" +ISOTIME:%%T') do (
+for /F "tokens=1,2,3,4 delims=:" %%a in ('"%~dp0\..\Prerequisites\GnuWin32\date.exe" +ISOTIME:%%T') do (
 	if "%%a"=="ISOTIME" set "ISO_TIME=%%b:%%c:%%d"
 )
 if "%ISO_DATE%"=="" goto BuildError
@@ -163,9 +163,9 @@ for %%c in (DLL, Static) do (
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"             "%PACK_PATH%\%%c"
 
 		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                      "%PACK_PATH%\%%c\redist"
-		for "%%i" in (msv,vcr) do (
-			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\%%~i*.dll"              "%PACK_PATH%\%%c"
-			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\%%~i*.dll"              "%PACK_PATH%\%%c\x64"
+		for %%q in (msv,vcr) do (
+			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\%%~q*.dll"              "%PACK_PATH%\%%c"
+			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\%%~q*.dll"              "%PACK_PATH%\%%c\x64"
 		)
 		
 		if %TOOLS_VER% GEQ 140 (
@@ -191,7 +191,7 @@ for %%c in (DLL, Static) do (
 	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
 	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
 	
-	if "%%c"=="DLL" (
+	if /I "%%c"=="DLL" (
 		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
 		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
 		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
@@ -202,23 +202,23 @@ for %%c in (DLL, Static) do (
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Create version tag
 REM ///////////////////////////////////////////////////////////////////////////
-echo Dynamic Audio Normalizer >                                                                      "%PACK_PATH%\BUILD_TAG"
-echo Copyright (c) 2014-2017 LoRd_MuldeR ^<MuldeR2@GMX.de^>. Some rights reserved. >>                "%PACK_PATH%\BUILD_TAG"
-echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
-echo Version %VER_MAJOR%.%VER_MINOR%-%VER_PATCH%. Built on %ISO_DATE%, at %ISO_TIME% >>              "%PACK_PATH%\BUILD_TAG"
-echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
-cl 2>&1  | "%~dp0\etc\head.exe" -n1 | "%~dp0\etc\sed.exe" -e "/^$/d" -e "s/^/Compiler version: /" >> "%PACK_PATH%\BUILD_TAG"
-ver 2>&1 |                            "%~dp0\etc\sed.exe" -e "/^$/d" -e "s/^/Build platform:   /" >> "%PACK_PATH%\BUILD_TAG"
-echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
-echo This library is free software; you can redistribute it and/or >>                                "%PACK_PATH%\BUILD_TAG"
-echo modify it under the terms of the GNU Lesser General Public >>                                   "%PACK_PATH%\BUILD_TAG"
-echo License as published by the Free Software Foundation; either >>                                 "%PACK_PATH%\BUILD_TAG"
-echo version 2.1 of the License, or (at your option) any later version. >>                           "%PACK_PATH%\BUILD_TAG"
-echo. >>                                                                                             "%PACK_PATH%\BUILD_TAG"
-echo This library is distributed in the hope that it will be useful, >>                              "%PACK_PATH%\BUILD_TAG"
-echo but WITHOUT ANY WARRANTY; without even the implied warranty of >>                               "%PACK_PATH%\BUILD_TAG"
-echo MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU >>                            "%PACK_PATH%\BUILD_TAG"
-echo Lesser General Public License for more details. >>                                              "%PACK_PATH%\BUILD_TAG"
+echo Dynamic Audio Normalizer>                                                                                                                     "%PACK_PATH%\BUILD_TAG"
+echo Copyright (c) 2014-2017 LoRd_MuldeR ^<MuldeR2@GMX.de^>. Some rights reserved.>>                                                               "%PACK_PATH%\BUILD_TAG"
+echo.>>                                                                                                                                            "%PACK_PATH%\BUILD_TAG"
+echo Version %VER_MAJOR%.%VER_MINOR%-%VER_PATCH%. Built on %ISO_DATE%, at %ISO_TIME%>>                                                             "%PACK_PATH%\BUILD_TAG"
+echo.>>                                                                                                                                            "%PACK_PATH%\BUILD_TAG"
+cl.exe 2>&1 | "%~dp0\..\Prerequisites\GnuWin32\head.exe" -n1 | "%~dp0\..\Prerequisites\GnuWin32\sed.exe" -e "/^$/d" -e "s/^/Compiler version: /">> "%PACK_PATH%\BUILD_TAG"
+ver    2>&1 |                                                  "%~dp0\..\Prerequisites\GnuWin32\sed.exe" -e "/^$/d" -e "s/^/Build platform:   /">> "%PACK_PATH%\BUILD_TAG"
+echo.>>                                                                                                                                            "%PACK_PATH%\BUILD_TAG"
+echo This library is free software; you can redistribute it and/or>>                                                                               "%PACK_PATH%\BUILD_TAG"
+echo modify it under the terms of the GNU Lesser General Public>>                                                                                  "%PACK_PATH%\BUILD_TAG"
+echo License as published by the Free Software Foundation; either>>                                                                                "%PACK_PATH%\BUILD_TAG"
+echo version 2.1 of the License, or (at your option) any later version.>>                                                                          "%PACK_PATH%\BUILD_TAG"
+echo.>>                                                                                                                                            "%PACK_PATH%\BUILD_TAG"
+echo This library is distributed in the hope that it will be useful,>>                                                                             "%PACK_PATH%\BUILD_TAG"
+echo but WITHOUT ANY WARRANTY; without even the implied warranty of>>                                                                              "%PACK_PATH%\BUILD_TAG"
+echo MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU>>                                                                           "%PACK_PATH%\BUILD_TAG"
+echo Lesser General Public License for more details.>>                                                                                             "%PACK_PATH%\BUILD_TAG"
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Attributes
@@ -227,7 +227,7 @@ for %%c in (DLL, Static) do (
 	attrib +R "%PACK_PATH%\%%c\*"
 	attrib +R "%PACK_PATH%\%%c\x64\*"
 	attrib +R "%PACK_PATH%\%%c\img\dyauno\*"
-	if "%%c"=="DLL" (
+	if /I "%%c"=="DLL" (
 		attrib +R "%PACK_PATH%\%%c\include\*"
 	)
 )
@@ -251,7 +251,7 @@ REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
 	copy "%PACK_PATH%\BUILD_TAG" "%PACK_PATH%\%%c"
 	pushd "%PACK_PATH%\%%c"
-	"%~dp0\etc\zip.exe" -9 -r -z "%~dp0\out\%OUT_NAME%.%%c.zip" "*.*" < "%PACK_PATH%\BUILD_TAG"
+	"%~dp0\..\Prerequisites\GnuWin32\zip.exe" -9 -r -z "%~dp0\out\%OUT_NAME%.%%c.zip" "*.*" < "%PACK_PATH%\BUILD_TAG"
 	popd
 	attrib +R "%~dp0\out\%OUT_NAME%.%%c.zip"
 )
