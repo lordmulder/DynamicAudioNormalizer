@@ -37,17 +37,27 @@ static const uint8_t AUDIO_LIB_NULL       = 0x00u;
 static const uint8_t AUDIO_LIB_LIBSNDFILE = 0x01u;
 static const uint8_t AUDIO_LIB_LIBMPG123  = 0x02u;
 
-//AudioIO library name to id mappings
+//Function prototypes
+typedef const CHR *       (libraryVersion_t)  (void);
+typedef const CHR *const *(supportedFormats_t)(const CHR **const list, const uint32_t maxLen);
+typedef bool              (checkFileType_t)   (FILE *const);
+typedef AudioIO*          (createInstance_t)  (void);
+
+//AudioIO library mappings
 static const struct
 {
-	const CHR name[32];
-	const uint8_t id;
+	const CHR                 name[16];
+	const uint8_t             id;
+	libraryVersion_t   *const libraryVersion;
+	supportedFormats_t *const supportedFormats;
+	checkFileType_t    *const checkFileType;
+	createInstance_t   *const createInstance;
 }
 g_audioIO_mapping[] =
 {
-	{ TXT("libsndfile"), AUDIO_LIB_LIBSNDFILE },
-	{ TXT("libmpg123"),  AUDIO_LIB_LIBMPG123  },
-	{ TXT(""),           AUDIO_LIB_NULL       }
+	{ TXT("libsndfile"), AUDIO_LIB_LIBSNDFILE, AudioIO_SndFile::libraryVersion, AudioIO_SndFile::supportedFormats, AudioIO_SndFile::checkFileType, AudioIO_SndFile::createInstance },
+	{ TXT("libmpg123"),  AUDIO_LIB_LIBMPG123,  AudioIO_Mpg123 ::libraryVersion, AudioIO_Mpg123 ::supportedFormats, AudioIO_Mpg123 ::checkFileType, AudioIO_Mpg123 ::createInstance },
+	{ TXT(""),           AUDIO_LIB_NULL,       NULL,                            NULL,                              NULL,                           NULL                            }
 };
 
 //Get id from AudioIO library name
@@ -71,7 +81,7 @@ static uint8_t parseName(const CHR *const name)
 }
 
 //Get id from AudioIO library name
-static const CHR* getName(const uint8_t id)
+static const CHR* getLibName(const uint8_t id)
 {
 	for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
 	{
@@ -81,6 +91,14 @@ static const CHR* getName(const uint8_t id)
 		}
 	}
 	return NULL;
+}
+
+//Check file type
+static bool checkFileType(bool(*const check)(FILE *const), FILE *const file)
+{
+	const bool check_result = check(file);
+	rewind(file);
+	return check_result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -106,155 +124,62 @@ const CHR *const *AudioIO::getSupportedLibraries(const CHR **const list, const u
 
 AudioIO *AudioIO::createInstance(const CHR *const name)
 {
-	switch (parseName(name))
+	const uint8_t id = parseName(name);
+	for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
 	{
-	case AUDIO_LIB_LIBSNDFILE:
-		return new AudioIO_SndFile();
-	case AUDIO_LIB_LIBMPG123:
-		return new AudioIO_Mpg123();
-	default:
-		throw "Unsupported audio I/O library!";
+		if (g_audioIO_mapping[i].id == id)
+		{
+			return g_audioIO_mapping[i].createInstance();
+		}
 	}
+	throw "Unsupported audio I/O library!";
 }
 
 const CHR *const *AudioIO::getSupportedFormats(const CHR **const list, const uint32_t maxLen, const CHR *const name)
 {
-	switch (parseName(name))
+	const uint8_t id = parseName(name);
+	for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
 	{
-	case AUDIO_LIB_LIBSNDFILE:
-		return AudioIO_SndFile::supportedFormats(list, maxLen);
-	case AUDIO_LIB_LIBMPG123:
-		return AudioIO_Mpg123::supportedFormats(list, maxLen);
-	default:
-		throw "Unsupported audio I/O library!";
+		if (g_audioIO_mapping[i].id == id)
+		{
+			return g_audioIO_mapping[i].supportedFormats(list, maxLen);
+		}
 	}
+	throw "Unsupported audio I/O library!";
 }
 
 const CHR *AudioIO::getLibraryVersion(const CHR *const name)
 {
-	switch (parseName(name))
+	const uint8_t id = parseName(name);
+	for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
 	{
-	case AUDIO_LIB_LIBSNDFILE:
-		return AudioIO_SndFile::libraryVersion();
-	case AUDIO_LIB_LIBMPG123:
-		return AudioIO_Mpg123::libraryVersion();
-	default:
-		throw "Unsupported audio I/O library!";
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// File Type Detection
-///////////////////////////////////////////////////////////////////////////////
-
-static const size_t MPG123_HDR_SIZE = 4U;
-
-static const uint32_t MPG123_SRATE[2][4] =
-{
-	{ 22050, 24000, 16000, 0 }, /*V2*/
-	{ 44100, 48000, 32000, 0 }  /*V1*/
-};
-
-static const uint32_t MPG123_BITRT[2][4][16] =
-{
-	{
-		{ 0,  0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 0 }, /*V2*/
-		{ 0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0 }, /*L3*/
-		{ 0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0 }, /*L2*/
-		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 144, 160, 176, 192, 224, 256, 0 }, /*L1*/
-	},
-	{
-		{ 0,  0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 0 }, /*V1*/
-		{ 0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 0 }, /*L3*/
-		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0 }, /*L2*/
-		{ 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 }, /*L1*/
-	}
-};
-
-static const uint32_t MPG123_FSIZE[2][4]
-{
-	{ 0,  72, 144, 48 }, /*V2*/
-	{ 0, 144, 144, 48 }  /*V1*/
-};
-
-static bool detectMpg123Sync(const uint8_t *const buffer, const size_t &fpos)
-{
-	return (buffer[fpos] == ((uint8_t)0xFF)) && ((buffer[fpos + 1] & ((uint8_t)0xF0)) == ((uint8_t)0xF0));
-}
-
-static uint32_t detectMpg123Sequ(const uint8_t *const buffer, const size_t &count, uint32_t &max_sequence)
-{
-	const size_t limit = count - MPG123_HDR_SIZE;
-	uint32_t sequence_len = 0;
-	uint8_t prev_idx[3] = { 0, 0, 0 };
-	size_t fpos = 0;
-	while (fpos < limit)
-	{
-		if (detectMpg123Sync(buffer, fpos))
+		if (g_audioIO_mapping[i].id == id)
 		{
-			const uint8_t versn_idx = ((buffer[fpos + 1U] & ((uint8_t)0x08)) >> 3U);
-			const uint8_t layer_idx = ((buffer[fpos + 1U] & ((uint8_t)0x06)) >> 1U);
-			const uint8_t bitrt_idx = ((buffer[fpos + 2U] & ((uint8_t)0xF0)) >> 4U);
-			const uint8_t srate_idx = ((buffer[fpos + 2U] & ((uint8_t)0x0C)) >> 2U);
-			const uint8_t padd_byte = ((buffer[fpos + 2U] & ((uint8_t)0x02)) >> 1U);
-			if ((layer_idx > 0x00) && (layer_idx <= 0x03) && (bitrt_idx > 0x00) && (bitrt_idx < 0x0F) && (srate_idx < 0x03))
-			{
-				const uint32_t bitrt = MPG123_BITRT[versn_idx][layer_idx][bitrt_idx];
-				const uint32_t srate = MPG123_SRATE[versn_idx][srate_idx];
-				const uint32_t fsize = (MPG123_FSIZE[versn_idx][layer_idx] * bitrt * 1000U / srate) + padd_byte;
-				if ((sequence_len < 1U) || ((prev_idx[0] == versn_idx) && (prev_idx[1] == layer_idx) && (prev_idx[2] == srate_idx)))
-				{
-					prev_idx[0] = versn_idx; prev_idx[1] = layer_idx; prev_idx[2] = srate_idx;
-					max_sequence = std::max(max_sequence, ++sequence_len);
-					if ((fsize > 0) && ((fpos + fsize) < limit) && detectMpg123Sync(buffer, fpos + fsize))
-					{
-						fpos += fsize;
-						continue;
-					}
-				}
-			}
-		}
-		sequence_len = 0;
-		prev_idx[0] = prev_idx[1] = prev_idx[2] = 0;
-		fpos++;
-	}
-	return max_sequence;
-}
-
-static bool detectMpg123File(const CHR *const fileName)
-{
-	static const uint32_t THRESHOLD = 13U;
-	uint32_t max_sequence = 0;
-	if ((fileName) && (fileName[0]))
-	{
-		static const size_t BUFF_SIZE = 128U * 1024U;
-		const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
-		const bool bIsPipe = bStdIn && (!FILE_ISREG(stdin));
-		if (FILE *const file = bStdIn ? (bIsPipe ? NULL : stdin) : FOPEN(fileName, TXT("rb")))
-		{
-			uint8_t *buffer = new uint8_t[BUFF_SIZE];
-			size_t count = BUFF_SIZE;
-			for (int chunk = 0; (chunk < 64) && (count >= BUFF_SIZE); ++chunk)
-			{
-				if ((count = fread(buffer, sizeof(uint8_t), BUFF_SIZE, file)) >= MPG123_HDR_SIZE)
-				{
-					if (detectMpg123Sequ(buffer, count, max_sequence) >= THRESHOLD)
-					{
-						break; /*early termination*/
-					}
-				}
-			}
-			if (bStdIn ? fseek(stdin, 0L, SEEK_SET) : fclose(file))
-			{
-				PRINT2_WRN(TXT("Failed to rewind input stream!"));
-			}
-			MY_DELETE_ARRAY(buffer);
+			return g_audioIO_mapping[i].libraryVersion();
 		}
 	}
-	return (max_sequence >= THRESHOLD);
+	throw "Unsupported audio I/O library!";
 }
 
 const CHR *AudioIO::detectSourceType(const CHR *const fileName)
 {
-	return getName(detectMpg123File(fileName) ? AUDIO_LIB_LIBMPG123 : AUDIO_LIB_NULL);
+	uint8_t type = AUDIO_LIB_NULL;
+	const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
+	const bool isPipe = bStdIn && (!FILE_ISREG(stdin));
+	if (FILE *const file = bStdIn ? (isPipe ? NULL : stdin) : FOPEN(fileName, TXT("rb")))
+	{
+		for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
+		{
+			if (checkFileType(g_audioIO_mapping[i].checkFileType, file))
+			{
+				type = g_audioIO_mapping[i].id;
+				break;
+			}
+		}
+		if (!bStdIn)
+		{
+			fclose(file);
+		}
+	}
+	return getLibName(type);
 }

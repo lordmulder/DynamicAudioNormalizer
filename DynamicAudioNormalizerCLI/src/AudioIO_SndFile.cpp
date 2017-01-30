@@ -96,6 +96,7 @@ public:
 	//Library info
 	static const CHR *libraryVersion(void);
 	static const CHR *const *supportedFormats(const CHR **const list, const uint32_t maxLen);
+	static bool checkFileType(FILE *const file);
 
 private:
 	//libsndfile
@@ -194,6 +195,11 @@ const CHR *AudioIO_SndFile::libraryVersion(void)
 const CHR *const *AudioIO_SndFile::supportedFormats(const CHR **const list, const uint32_t maxLen)
 {
 	return AudioIO_SndFile_Private::supportedFormats(list, maxLen);
+}
+
+bool AudioIO_SndFile::checkFileType(FILE *const file)
+{
+	return AudioIO_SndFile_Private::checkFileType(file);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -486,6 +492,33 @@ const CHR *const *AudioIO_SndFile_Private::supportedFormats(const CHR **const li
 		list[(nextPos < maxLen) ? nextPos : (maxLen - 1)] = NULL;
 	}
 	return list;
+}
+
+bool AudioIO_SndFile_Private::checkFileType(FILE *const file)
+{
+	static const size_t BUFF_SIZE = 40;
+	uint8_t buffer[BUFF_SIZE];
+	const size_t count = fread(buffer, sizeof(uint8_t), BUFF_SIZE, file);
+	if (count >= BUFF_SIZE)
+	{
+		if (((memcmp(&buffer[0], "RIFF", 4) == 0) || (memcmp(&buffer[0], "RF64", 4) == 0)) && (memcmp(&buffer[8], "WAVE", 4) == 0))
+		{
+			return true;
+		}
+		if ((memcmp(&buffer[0], "riff\x2E\x91\xCF\x11\xA5\xD6\x28\xDB\x04\xC1\x00\x00", 16) == 0) && (memcmp(&buffer[24], "wave\xF3\xAC\xD3\x11\x8C\xD1\x00\xC0\x4F\x8E\xDB\x8A", 16) == 0))
+		{
+			return true;
+		}
+		if ((memcmp(&buffer[0], "FORM", 4) == 0) && (memcmp(&buffer[8], "AIFF", 4) == 0))
+		{
+			return true;
+		}
+		if ((memcmp(&buffer[0], "fLaC\0", 5) == 0) || (memcmp(&buffer[0], "OggS\0", 5) == 0) || (memcmp(&buffer[0], ".snd\0", 5) == 0))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 int AudioIO_SndFile_Private::formatToBitDepth(const int &format)

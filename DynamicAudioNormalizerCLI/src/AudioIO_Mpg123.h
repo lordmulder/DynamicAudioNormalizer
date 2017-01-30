@@ -47,7 +47,9 @@ public:
 	//Static functions
 	static const CHR *libraryVersion(void);
 	static const CHR *const *supportedFormats(const CHR **const list, const uint32_t maxLen);
-	
+	static bool checkFileType(FILE *const file);
+	static AudioIO *createInstance() { return new AudioIO_Mpg123(); }
+
 private:
 	AudioIO_Mpg123 &operator=(const AudioIO_Mpg123 &) { throw 666; }
 	AudioIO_Mpg123_Private *const p;

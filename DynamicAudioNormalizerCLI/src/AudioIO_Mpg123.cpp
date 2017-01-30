@@ -60,6 +60,40 @@ while(0)
 #define MY_THROW(X) throw std::runtime_error((X))
 
 ///////////////////////////////////////////////////////////////////////////////
+// Const
+///////////////////////////////////////////////////////////////////////////////
+
+static const size_t MPG123_HDR_SIZE = 4U;
+
+static const uint32_t MPG123_SRATE[2][4] =
+{
+	{ 22050, 24000, 16000, 0 }, /*V2*/
+	{ 44100, 48000, 32000, 0 }  /*V1*/
+};
+
+static const uint32_t MPG123_BITRT[2][4][16] =
+{
+	{
+		{ 0,  0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 0 }, /*V2*/
+		{ 0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0 }, /*L3*/
+		{ 0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0 }, /*L2*/
+		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 144, 160, 176, 192, 224, 256, 0 }, /*L1*/
+	},
+	{
+		{ 0,  0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 0 }, /*V1*/
+		{ 0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 0 }, /*L3*/
+		{ 0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0 }, /*L2*/
+		{ 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 }, /*L1*/
+	}
+};
+
+static const uint32_t MPG123_FSIZE[2][4]
+{
+	{ 0,  72, 144, 48 }, /*V2*/
+	{ 0, 144, 144, 48 }  /*V1*/
+};
+
+///////////////////////////////////////////////////////////////////////////////
 // Private Data
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +119,7 @@ public:
 	//Library info
 	static const CHR *libraryVersion(void);
 	static const CHR *const *supportedFormats(const CHR **const list, const uint32_t maxLen);
+	static bool checkFileType(FILE *const);
 
 private:
 	//libmpg123
@@ -103,10 +138,11 @@ private:
 	static pthread_mutex_t mutex_lock;
 
 	//Helper functions
+	static uint32_t checkMpg123Sequence(const uint8_t *const buffer, const size_t &count, uint32_t &max_sequence);
+	static bool checkMpg123SyncWord(const uint8_t *const buffer, const size_t &fpos);
+	template<typename T> static void deinterleave(double **destination, const int64_t offset, const T *const source, const int &channels, const int64_t &len);
 	static void libraryInit(void);
 	static void libraryExit(void);
-	template<typename T> static void deinterleave(double **destination, const int64_t offset, const T *const source, const int &channels, const int64_t &len);
-	static int encodingToBitDepth(const int &encoding);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -189,6 +225,11 @@ const CHR *AudioIO_Mpg123::libraryVersion(void)
 const CHR *const *AudioIO_Mpg123::supportedFormats(const CHR **const list, const uint32_t maxLen)
 {
 	return AudioIO_Mpg123_Private::supportedFormats(list, maxLen);
+}
+
+bool AudioIO_Mpg123::checkFileType(FILE *const file)
+{
+	return AudioIO_Mpg123_Private::checkFileType(file);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -377,7 +418,7 @@ bool AudioIO_Mpg123_Private::queryInfo(uint32_t &channels, uint32_t &sampleRate,
 		{
 			length = INT64_MAX;
 		}
-		bitDepth = encodingToBitDepth(format.encoding);
+		bitDepth = MPG123_SAMPLESIZE(format.encoding) * 8U;
 		return true;
 	}
 
@@ -420,6 +461,71 @@ const CHR *const *AudioIO_Mpg123_Private::supportedFormats(const CHR **const lis
 	return list;
 }
 
+bool AudioIO_Mpg123_Private::checkFileType(FILE *const file)
+{
+	static const uint32_t THRESHOLD = 13U;
+	static const size_t BUFF_SIZE = 128U * 1024U;
+	uint32_t max_sequence = 0;
+	uint8_t *buffer = new uint8_t[BUFF_SIZE];
+	size_t count = BUFF_SIZE;
+	for (int chunk = 0; (chunk < 64) && (count >= BUFF_SIZE); ++chunk)
+	{
+		if ((count = fread(buffer, sizeof(uint8_t), BUFF_SIZE, file)) >= MPG123_HDR_SIZE)
+		{
+			if (checkMpg123Sequence(buffer, count, max_sequence) >= THRESHOLD)
+			{
+				break; /*early termination*/
+			}
+		}
+	}
+	MY_DELETE_ARRAY(buffer);
+	return (max_sequence >= THRESHOLD);
+}
+
+uint32_t AudioIO_Mpg123_Private::checkMpg123Sequence(const uint8_t *const buffer, const size_t &count, uint32_t &max_sequence)
+{
+	const size_t limit = count - MPG123_HDR_SIZE;
+	uint32_t sequence_len = 0;
+	uint8_t prev_idx[3] = { 0, 0, 0 };
+	size_t fpos = 0;
+	while (fpos < limit)
+	{
+		if (checkMpg123SyncWord(buffer, fpos))
+		{
+			const uint8_t versn_idx = ((buffer[fpos + 1U] & ((uint8_t)0x08)) >> 3U);
+			const uint8_t layer_idx = ((buffer[fpos + 1U] & ((uint8_t)0x06)) >> 1U);
+			const uint8_t bitrt_idx = ((buffer[fpos + 2U] & ((uint8_t)0xF0)) >> 4U);
+			const uint8_t srate_idx = ((buffer[fpos + 2U] & ((uint8_t)0x0C)) >> 2U);
+			const uint8_t padd_byte = ((buffer[fpos + 2U] & ((uint8_t)0x02)) >> 1U);
+			if ((layer_idx > 0x00) && (layer_idx <= 0x03) && (bitrt_idx > 0x00) && (bitrt_idx < 0x0F) && (srate_idx < 0x03))
+			{
+				const uint32_t bitrt = MPG123_BITRT[versn_idx][layer_idx][bitrt_idx];
+				const uint32_t srate = MPG123_SRATE[versn_idx][srate_idx];
+				const uint32_t fsize = (MPG123_FSIZE[versn_idx][layer_idx] * bitrt * 1000U / srate) + padd_byte;
+				if ((sequence_len < 1U) || ((prev_idx[0] == versn_idx) && (prev_idx[1] == layer_idx) && (prev_idx[2] == srate_idx)))
+				{
+					prev_idx[0] = versn_idx; prev_idx[1] = layer_idx; prev_idx[2] = srate_idx;
+					max_sequence = std::max(max_sequence, ++sequence_len);
+					if ((fsize > 0) && ((fpos + fsize) < limit) && checkMpg123SyncWord(buffer, fpos + fsize))
+					{
+						fpos += fsize;
+						continue;
+					}
+				}
+			}
+		}
+		sequence_len = 0;
+		prev_idx[0] = prev_idx[1] = prev_idx[2] = 0;
+		fpos++;
+	}
+	return max_sequence;
+}
+
+bool AudioIO_Mpg123_Private::checkMpg123SyncWord(const uint8_t *const buffer, const size_t &fpos)
+{
+	return (buffer[fpos] == ((uint8_t)0xFF)) && ((buffer[fpos + 1] & ((uint8_t)0xF0)) == ((uint8_t)0xF0));
+}
+
 template<typename T>
 void AudioIO_Mpg123_Private::deinterleave(double **destination, const int64_t offset, const T *const source, const int &channels, const int64_t &len)
 {
@@ -429,32 +535,6 @@ void AudioIO_Mpg123_Private::deinterleave(double **destination, const int64_t of
 		{
 			destination[c][i + offset] = source[(i * channels) + c];
 		}
-	}
-}
-
-int AudioIO_Mpg123_Private::encodingToBitDepth(const int &encoding)
-{
-	switch (encoding)
-	{
-	case MPG123_ENC_UNSIGNED_8:
-	case MPG123_ENC_SIGNED_8:
-	case MPG123_ENC_ULAW_8:
-	case MPG123_ENC_ALAW_8:
-		return 8;
-	case MPG123_ENC_SIGNED_16:
-	case MPG123_ENC_UNSIGNED_16:
-		return 16;
-	case MPG123_ENC_SIGNED_24:
-	case MPG123_ENC_UNSIGNED_24:
-		return 24;
-	case MPG123_ENC_SIGNED_32:
-	case MPG123_ENC_UNSIGNED_32:
-	case MPG123_ENC_FLOAT_32:
-		return 32;
-	case MPG123_ENC_FLOAT_64:
-		return 64;
-	default:
-		return 16;
 	}
 }
 
