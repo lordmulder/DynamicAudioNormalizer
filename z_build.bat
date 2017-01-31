@@ -138,7 +138,6 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c"
 	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c\x64"
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll" "%PACK_PATH%\%%c"
-	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll" "%PACK_PATH%\%%c\x64"
 
 	if /I "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\include"
@@ -187,15 +186,16 @@ REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress
 REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
-	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
-	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
-	"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
+	"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
+	"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
+	"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
 	
 	if /I "%%c"=="DLL" (
-		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
-		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
-		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
-		"%~dp0\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
+		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
+		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
+		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
+		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
+		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\libmpg123.dll"
 	)
 )
 
