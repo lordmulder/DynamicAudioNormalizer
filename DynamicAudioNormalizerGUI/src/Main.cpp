@@ -6,12 +6,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
@@ -53,60 +53,96 @@ static void makeAxisBold(QCPAxis *axis)
 
 }
 
-static bool parseHeader(QTextStream &textStream, unsigned int &channels)
+static QString readNextLine(QTextStream &textStream)
 {
-	QRegExp header("^DynamicAudioNormalizer Logfile v(\\d).(\\d\\d)-(\\d)$");
-	QRegExp channelCount("^CHANNEL_COUNT:(\\d+)$");
-
-	QString headerLine = textStream.readLine();
-	if(header.indexIn(headerLine) < 0)
-	{
-		return false;
-	}
-	if(header.cap(1).toUInt() != 2)
-	{
-		return false;
-	}
-
-	QString channelLine = textStream.readLine();
-	if(channelCount.indexIn(channelLine) < 0)
-	{
-		return false;
-	}
-
-	bool ok = false;
-	channels = channelCount.cap(1).toUInt(&ok);
-	
-	return ok && (channels > 0);
-}
-
-static void parseData(QTextStream &textStream, unsigned int &channels, LogFileData *data, double &minValue, double &maxValue)
-{
-	while((!textStream.atEnd()) && (textStream.status() == QTextStream::Ok))
+	while ((!textStream.atEnd()) && (textStream.status() == QTextStream::Ok))
 	{
 		const QString line = textStream.readLine().simplified();
+		if (!line.isEmpty())
+		{
+			return line;
+		}
+	}
+	return QString();
+}
+
+static bool parseHeader(QTextStream &textStream, quint32 &channels, const uint32_t versionMajor, const uint32_t versionMinor)
+{
+	QRegExp header("^\\s*DynamicAudioNormalizer\\s+Logfile\\s+v(\\d).(\\d\\d)-(\\d)\\s*$");
+	QRegExp channelCount("^\\s*CHANNEL_COUNT\\s*:\\s*(\\d+)\\s*$");
+
+	const QString headerLine = readNextLine(textStream);
+	if(headerLine.isEmpty() || (header.indexIn(headerLine) < 0))
+	{
+		return false;
+	}
+
+	bool okay[2] = { false, false };
+	uint32_t fileVersion[2];
+	fileVersion[0] = header.cap(1).toUInt(&okay[0]);
+	fileVersion[1] = header.cap(2).toUInt(&okay[1]);
+
+	if ((!(okay[0] && okay[1])) || (fileVersion[0] != versionMajor) || (fileVersion[1] > versionMinor))
+	{
+		return false;
+	}
+
+	const QString channelLine = readNextLine(textStream);
+	if(channelLine.isEmpty() || (channelCount.indexIn(channelLine) < 0))
+	{
+		return false;
+	}
+
+	bool haveChannels = false;
+	channels = channelCount.cap(1).toUInt(&haveChannels);
+	return haveChannels && (channels > 0);
+}
+
+static bool parseLine(const quint32 channels, const QStringList &input, QVector<double> &output)
+{
+	const int minLength = qMin(input.count(), output.count());
+	QVector<double>::Iterator outputIter = output.begin();
+	QStringList::ConstIterator inputIter = input.constBegin();
+	for (int i = 0; i < minLength; ++i)
+	{
+		bool okay = false;
+		*(outputIter++) = (inputIter++)->toDouble(&okay);
+		if (!okay)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+static void parseData(QTextStream &textStream, const quint32 channels, LogFileData *data, double &minValue, double &maxValue)
+{
+	const QRegExp spaces("\\s+");
+	QVector<double> temp(channels * 3U);
+	forever
+	{
+		const QString line = readNextLine(textStream);
 		if(!line.isEmpty())
 		{
-			const QStringList tokens = line.split(QChar(0x20), QString::SkipEmptyParts);
-			if(((unsigned int) tokens.count()) == (channels * 3))
+			const QStringList tokens = line.split(spaces, QString::SkipEmptyParts);
+			if ((quint32)tokens.count() >= (channels * 3U))
 			{
-				QStringList::ConstIterator iter = tokens.constBegin();
-				for(unsigned int c = 0; c < channels; c++)
+				if (parseLine(channels, tokens, temp))
 				{
-					data[c].original.append((iter++)->toDouble());
-					data[c].minimal .append((iter++)->toDouble());
-					data[c].smoothed.append((iter++)->toDouble());
-
-					minValue = qMin(minValue, data[c].original.back());
-					minValue = qMin(minValue, data[c].minimal .back());
-					minValue = qMin(minValue, data[c].smoothed.back());
-
-					maxValue = qMax(maxValue, data[c].original.back());
-					maxValue = qMax(maxValue, data[c].minimal .back());
-					maxValue = qMax(maxValue, data[c].smoothed.back());
+					QVector<double>::ConstIterator tempIter = temp.constBegin();
+					for (quint32 c = 0; c < channels; c++)
+					{
+						data[c].original.append(*(tempIter++));
+						data[c].minimal .append(*(tempIter++));
+						data[c].smoothed.append(*(tempIter++));
+						minValue = qMin(qMin(minValue, data[c].original.back()), qMin(data[c].minimal.back(), data[c].smoothed.back()));
+						maxValue = qMax(qMax(maxValue, data[c].original.back()), qMax(data[c].minimal.back(), data[c].smoothed.back()));
+					}
 				}
 			}
+			continue;
 		}
+		break; /*end of file*/
 	}
 }
 
@@ -165,12 +201,12 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 	QTextStream textStream(&logFile);
 	textStream.setCodec("UTF-8");
 
+	quint32 channels = 0;
 	double minValue = DBL_MAX;
 	double maxValue = 0.0;
-	unsigned int channels = 0;
 
 	//parse header
-	if(!parseHeader(textStream, channels))
+	if(!parseHeader(textStream, channels, versionMajor, versionMinor))
 	{
 		QMessageBox::critical(&window, QString("Dynamic Audio Normalizer"), QString("Error: Failed to parse the header of the log file!\nProbably the file is of an unsupported type."));
 		return EXIT_FAILURE;
@@ -194,23 +230,23 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 	}
 
 	//determine length of data
-	unsigned int length = UINT_MAX;
-	for(unsigned int c = 0; c < channels; c++)
+	quint32 length = UINT_MAX;
+	for(quint32 c = 0; c < channels; c++)
 	{
-		length = qMin(length, (unsigned int) data[c].original.count());
-		length = qMin(length, (unsigned int) data[c].minimal .count());
-		length = qMin(length, (unsigned int) data[c].smoothed.count());
+		length = qMin(length, (quint32)data[c].original.count());
+		length = qMin(length, (quint32)data[c].minimal .count());
+		length = qMin(length, (quint32)data[c].smoothed.count());
 	}
 
 	//create x-axis steps
 	QVector<double> steps(length);
-	for(unsigned int i = 0; i < length; i++)
+	for(quint32 i = 0; i < length; i++)
 	{
 		steps[i] = double(i);
 	}
 
 	//now create the plots
-	for(unsigned int c = 0; c < channels; c++)
+	for(quint32 c = 0; c < channels; c++)
 	{
 		//init the legend
 		plot[c].legend->setVisible(true);
