@@ -133,50 +133,78 @@ for %%c in (DLL, Static) do (
 	mkdir "%PACK_PATH%\%%c\img"
 	mkdir "%PACK_PATH%\%%c\img\dyauno"
 
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerCLI.exe" "%PACK_PATH%\%%c"
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerGUI.exe" "%PACK_PATH%\%%c"
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c"
-	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll" "%PACK_PATH%\%%c\x64"
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll" "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerCLI.exe"           "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerGUI.exe"           "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"           "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"           "%PACK_PATH%\%%c\x64"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll"           "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
 
 	if /I "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\include"
 		mkdir "%PACK_PATH%\%%c\redist"
 		
 		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"       "%PACK_PATH%\%%c"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"       "%PACK_PATH%\%%c"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"       "%PACK_PATH%\%%c"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"       "%PACK_PATH%\%%c\x64"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"       "%PACK_PATH%\%%c\x64"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"       "%PACK_PATH%\%%c\x64"
-		
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                                     "%PACK_PATH%\%%c\include"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                                   "%PACK_PATH%\%%c\include"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                                       "%PACK_PATH%\%%c"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\LibSndFile\bin\Win32\libsndfile-1.dll"                    "%PACK_PATH%\%%c"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"        "%PACK_PATH%\%%c\libmpg123.dll"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\Win32\pthreadVC2.v%TOOLS_VER%_xp.dll"     "%PACK_PATH%\%%c\pthreadVC2.dll"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\x64\.\pthreadVC2.v%TOOLS_VER%_xp.dll"     "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
-		                                                                                      
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"                "%PACK_PATH%\%%c"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"               "%PACK_PATH%\%%c"
-		
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                        "%PACK_PATH%\%%c\redist"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c\x64"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		
 		if %TOOLS_VER% GEQ 140 (
 			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll" "%PACK_PATH%\%%c"
+			if not "!ERRORLEVEL!"=="0" goto BuildError
 			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll" "%PACK_PATH%\%%c\x64"
+			if not "!ERRORLEVEL!"=="0" goto BuildError
 			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                      "%PACK_PATH%\%%c"
+			if not "!ERRORLEVEL!"=="0" goto BuildError
 			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x64\*.dll"                      "%PACK_PATH%\%%c\x64"
+			if not "!ERRORLEVEL!"=="0" goto BuildError
 		)
 	)
 
-	copy "%~dp0\LICENSE-LGPL.html" "%PACK_PATH%\%%c"
-	copy "%~dp0\LICENSE-GPL2.html" "%PACK_PATH%\%%c"
-	copy "%~dp0\LICENSE-GPL3.html" "%PACK_PATH%\%%c"
-	copy "%~dp0\img\dyauno\*.png"  "%PACK_PATH%\%%c\img\dyauno"
+	copy "%~dp0\LICENSE-LGPL.html"                                                             "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\LICENSE-GPL2.html"                                                             "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\LICENSE-GPL3.html"                                                             "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\img\dyauno\*.png"                                                              "%PACK_PATH%\%%c\img\dyauno"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
 
 	"%~dp0\..\Prerequisites\Pandoc\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone -H "%~dp0\..\Prerequisites\Pandoc\css\github-pandoc.inc" "%~dp0\README.md" | "%JAVA_HOME%\bin\java.exe" -jar "%~dp0\..\Prerequisites\HTMLCompressor\bin\htmlcompressor-1.5.3.jar" --compress-css -o "%PACK_PATH%\%%c\README.html"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
@@ -186,16 +214,24 @@ REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress
 REM ///////////////////////////////////////////////////////////////////////////
 for %%c in (DLL, Static) do (
-	"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\*.exe"
-	"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\DynamicAudioNormalizer???.dll"
-	"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\DynamicAudioNormalizer???.dll"
-	
+	for %%i in (DynamicAudioNormalizerCLI.exe,DynamicAudioNormalizerGUI.exe,DynamicAudioNormalizerVST.dll,DynamicAudioNormalizerWA5.dll) do (
+		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\%%~i"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+	)
+	for %%i in (DynamicAudioNormalizerVST.dll) do (
+		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\%%~i"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+	)
+
 	if /I "%%c"=="DLL" (
-		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\Qt*.dll"
-		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\pthread*.dll"
-		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\pthread*.dll"
-		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\libsndfile-?.dll"
-		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\libmpg123.dll"
+		for %%i in (DynamicAudioNormalizerAPI.dll,libmpg123.dll,libsndfile-1.dll,pthreadVC2.dll,QtCore4.dll,QtGui4.dll) do (
+			"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\%%~i"
+			if not "!ERRORLEVEL!"=="0" goto BuildError
+		)
+		for %%i in (DynamicAudioNormalizerAPI.dll,pthreadVC2.dll) do (
+			"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\%%~i"
+			if not "!ERRORLEVEL!"=="0" goto BuildError
+		)
 	)
 )
 
