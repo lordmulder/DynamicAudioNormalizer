@@ -179,6 +179,9 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 	uint32_t versionMajor, versionMinor, versionPatch;
 	MDynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
 
+	const char *buildDate, *buildTime, *buildCompiler, *buildArch; bool buildDebug;
+	MDynamicAudioNormalizer::getBuildInfo(&buildDate, &buildTime, &buildCompiler, &buildArch, buildDebug);
+
 	//initialize application
 	QApplication app(argc, argv);
 	app.setWindowIcon(QIcon(QLatin1String(":/res/chart_curve.png")));
@@ -191,13 +194,13 @@ static int dynamicNormalizerGuiMain(int argc, char* argv[])
 	window.setMinimumSize(640, 480);
 	window.setContentsMargins(5, 5, 5, 5);
 	
-	//create statusbar
+	//create statusbar widget
 	QStatusBar statusbar;
-	QLabel info(QLatin1String("Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de> | License: GNU General Public License v3"));
+	QLabel info(QString("Copyright (c) 2014-%1 LoRd_MuldeR <mulder2@gmx.de> | License: GNU General Public License v3").arg(QString::fromLatin1(&buildDate[7])));
 	statusbar.addPermanentWidget(&info);
 	window.setStatusBar(&statusbar);
 
-	//Show the window
+	//show the window
 	window.show();
 
 	//get arguments
