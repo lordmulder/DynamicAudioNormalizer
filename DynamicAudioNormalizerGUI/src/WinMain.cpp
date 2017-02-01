@@ -23,17 +23,16 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-int main(int argc, char* argv[]);
-
 //===================================================================
 // WinMain entry point
 //===================================================================
 
-#ifdef _DEBUG
-#define RELEASE_BUILD 0
-#else
-#define RELEASE_BUILD 1
-#endif
+static LONG WINAPI my_exception_handler(struct _EXCEPTION_POINTERS*)
+{
+	FatalAppExitW(0, L"GURU MEDITATION: Unhandeled exception handler invoked, application will exit!\n");
+	TerminateProcess(GetCurrentProcess(), 666);
+	return EXCEPTION_EXECUTE_HANDLER;
+}
 
 extern "C"
 {
@@ -41,27 +40,11 @@ extern "C"
 
 	int win32EntryPoint(void)
 	{
-		if(RELEASE_BUILD)
-		{
-			BOOL debuggerPresent = TRUE;
-			if(!CheckRemoteDebuggerPresent(GetCurrentProcess(), &debuggerPresent))
-			{
-				debuggerPresent = FALSE;
-			}
-			if(debuggerPresent || IsDebuggerPresent())
-			{
-				MessageBoxW(NULL, L"Not a debug build. Unload debugger and try again!", L"Debugger", MB_TOPMOST | MB_ICONSTOP);
-				return -1;
-			}
-			else
-			{
-				return mainCRTStartup();
-			}
-		}
-		else
-		{
-			return mainCRTStartup();
-		}
+#ifndef _DEBUG
+		SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+		SetUnhandledExceptionFilter(my_exception_handler);
+#endif
+		return mainCRTStartup();
 	}
 }
 
