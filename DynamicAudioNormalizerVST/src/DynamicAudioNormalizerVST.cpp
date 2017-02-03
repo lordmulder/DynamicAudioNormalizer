@@ -910,7 +910,7 @@ static bool showAboutScreen(const uint32_t & major, const uint32_t & minor, cons
 {
 	wchar_t text[1024] = { '\0' };
 	appendStr(text, 1024, L"Dynamic Audio Normalizer, VST Wrapper, Version %u.%02u-%u, %s\n", major, minor, patch, (debug ? L"DEBGU" : L"Release"));
-	appendStr(text, 1024, L"Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
+	appendStr(text, 1024, L"Copyright (c) 2014-%S LoRd_MuldeR <mulder2@gmx.de>.\n", &date[7]);
 	appendStr(text, 1024, L"Built on %S at %S with %S for %S.\n\n", date, time, compiler, arch);
 	appendStr(text, 1024, L"This library is free software; you can redistribute it and/or\n");
 	appendStr(text, 1024, L"modify it under the terms of the GNU Lesser General Public\n");
@@ -922,7 +922,7 @@ static bool showAboutScreen(const uint32_t & major, const uint32_t & minor, cons
 	appendStr(text, 1024, L"Lesser General Public License for more details.\n\n");
 	appendStr(text, 1024, L"Please click 'OK' if you agree to the above notice or 'Cancel' otherwise...\n");
 
-	return (MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_TOPMOST | MB_TASKMODAL | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK);
+	return (MessageBoxW(NULL, text, L"Dynamic Audio Normalizer", MB_SYSTEMMODAL | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK);
 }
 
 static bool initializeCoreLibrary(void)
