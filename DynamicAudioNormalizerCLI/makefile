@@ -63,7 +63,7 @@ LDXFLAGS += -L../DynamicAudioNormalizerAPI/lib
 LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
 
 #Externel libraries
-LDXFLAGS += -lsndfile
+LDXFLAGS += -lsndfile -lmpg123
 
 ##############################################################################
 # File Names

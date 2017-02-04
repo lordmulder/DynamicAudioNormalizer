@@ -86,7 +86,7 @@ static const uint32_t MPG123_BITRT[2][4][16] =
 	}
 };
 
-static const uint32_t MPG123_FSIZE[2][4]
+static const uint32_t MPG123_FSIZE[2][4] =
 {
 	{ 0,  72, 144, 48 }, /*V2*/
 	{ 0, 144, 144, 48 }  /*V1*/
@@ -544,7 +544,7 @@ bool AudioIO_Mpg123_Private::checkMpg123SyncWord(const uint8_t *const buffer, co
 template<typename T>
 void AudioIO_Mpg123_Private::deinterleave(double **destination, const int64_t offset, const T *const source, const int &channels, const int64_t &len)
 {
-	for (size_t i = 0; i < len; i++)
+	for (int64_t i = 0; i < len; i++)
 	{
 		for (int c = 0; c < channels; c++)
 		{
