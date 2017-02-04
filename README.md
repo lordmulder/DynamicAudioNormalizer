@@ -720,11 +720,9 @@ Windows users are recommended to download our pre-compiled "all-in-one" prerequi
 * <https://www.mediafire.com/folder/ygv9qoqv11kvk/Prerequisites>
 
 Linux users should install the prerequisites via their package manager. Here is a list of required packages for Ubuntu:
-* `apt install build-essential`
-* `apt install openjdk-8-jdk`
-* `apt install libsndfile-dev`
-* `apt install libmpg123-dev`
-* **TODO**
+* `apt install build-essential openjdk-8-jdk`
+* `apt install libsndfile-dev libmpg123-dev qt4-default`
+* `apt install ant pandoc`
 
 Additional prerequisites:
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)

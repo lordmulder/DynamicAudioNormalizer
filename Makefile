@@ -168,7 +168,8 @@ CreateDocuments:
 	@$(ECHO) "\n\e[1;34m-----------------------------------------------------------------------------\e[0m"
 	@$(ECHO) "\e[1;34mCreate Documents\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
+	wget -c -O /tmp/htmlcompressor-1.5.2.jar https://repo1.maven.org/maven2/com/googlecode/htmlcompressor/htmlcompressor/1.5.2/htmlcompressor-1.5.2.jar
 	mkdir -p $(TARGET_PATH)/img/dyauno
-	$(PANDOC) --from $(PANDOC_FLAGS) --to html5 --toc -N --standalone -H ./img/dyauno/Style.inc ./README.md --output $(TARGET_PATH)/README.html || cp ./README.md $(TARGET_PATH)/README.md
+	$(PANDOC) --from $(PANDOC_FLAGS) --to html5 --toc -N --standalone -H ./img/dyauno/Style.inc ./README.md | java -jar /tmp/htmlcompressor-1.5.2.jar -o $(TARGET_PATH)/README.html || cp ./README.md $(TARGET_PATH)/README.md
 	cp ./img/dyauno/*.png $(TARGET_PATH)/img/dyauno
 
