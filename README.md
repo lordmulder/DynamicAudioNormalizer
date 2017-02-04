@@ -713,27 +713,26 @@ The following build environments are currently supported:
 
 ## Build Prerequisites ##
 
-Building the *Dynamic Audio Normalizer* requires some third-party tools and libraries!
-
-Windows users are recommended to download our pre-compiled "all-in-one" prerequisites package from here:
-* <https://sourceforge.net/projects/muldersoft/files/Prerequisites/>
-* <https://www.mediafire.com/folder/ygv9qoqv11kvk/Prerequisites>
-
-Linux users should install the prerequisites via their package manager. Here is a list of required packages for Ubuntu:
-* `apt install build-essential openjdk-8-jdk`
-* `apt install libsndfile-dev libmpg123-dev qt4-default`
-* `apt install ant pandoc`
-
-Additional prerequisites:
+Building the *Dynamic Audio Normalizer* requires some third-party tools and libraries:
 * [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
 * [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
+* [*libmpg123*](https://www.mpg123.de/), by Michael Hipp et al., is required for building the command-line program
 * [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
-* [*Ant*](http://ant.apache.org/), by Apache Software Foundation, is required for building the JNI bindings (recommended version: 1.9.x)
 * [*Java Develpment Kit (JDK)*](http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html), by Oracle, is required for building the JNI bindings (recommended version: JDK 8)
+* [*Ant*](http://ant.apache.org/), by Apache Software Foundation, is required for building the JNI bindings (recommended version: 1.9.x)
 * [*VST SDK v2.4*](http://www.steinberg.de/en/company/developer.html), by Steinberg GmbH, is required for building the VST plug-in (it's still included in the VST 3.x SDK!)
 * [*Winamp SDK*](http://forums.winamp.com/showthread.php?t=252090), by Nullsoft Inc, is required for building the Winamp plug-in (recommended version: 5.55)
 * [*Pandoc*](http://johnmacfarlane.net/pandoc/), by  John MacFarlane, is required for generating the HTML documentation
 * [*UPX*](http://upx.sourceforge.net/), by Markus Franz Xaver Johannes Oberhumer et al., is required for "packing" the libraries/executables
+
+**Windows** users are recommended to download our pre-compiled "all-in-one" prerequisites package:
+* <https://sourceforge.net/projects/muldersoft/files/Prerequisites/>
+* <https://www.mediafire.com/folder/ygv9qoqv11kvk/Prerequisites>
+
+**Linux** users should install the prerequisites via their package manager. Here is a list of required packages for [*Ubuntu*](https://www.ubuntu.com/):
+* `apt install build-essential openjdk-8-jdk`
+* `apt install libsndfile-dev libmpg123-dev qt4-default`
+* `apt install ant pandoc wget`
 
 
 # Changelog #
