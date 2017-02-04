@@ -35,7 +35,7 @@
 #define MPG123CLOSE(X)  mpg123_close((X))
 #endif
 
-#include <fmt123.h>
+//#include <fmt123.h>
 #include <stdexcept>
 #include <algorithm>
 

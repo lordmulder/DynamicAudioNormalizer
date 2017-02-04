@@ -44,7 +44,7 @@ public:
 	virtual void getFormatInfo(CHR *buffer, const uint32_t buffSize) = 0;
 	
 	//Static "factory" functions
-	static const CHR *const *AudioIO::getSupportedLibraries(const CHR **const list, const uint32_t maxLen);
+	static const CHR *const *getSupportedLibraries(const CHR **const list, const uint32_t maxLen);
 	static AudioIO *createInstance(const CHR *const name = NULL);
 	static const CHR *const *getSupportedFormats(const CHR **const list, const uint32_t maxLen, const CHR *const name = NULL);
 	static const CHR *getLibraryVersion(const CHR *const name = NULL);

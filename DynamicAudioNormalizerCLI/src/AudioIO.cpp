@@ -19,8 +19,6 @@
 // http://www.gnu.org/licenses/gpl-2.0.txt
 //////////////////////////////////////////////////////////////////////////////////
 
-#pragma once
-
 #include "AudioIO.h"
 #include "AudioIO_SndFile.h"
 #include "AudioIO_Mpg123.h"

@@ -21,10 +21,6 @@
 
 #pragma once
 
-//============================================================================
-// COMMON
-//============================================================================
-
 #ifdef _DYNAUDNORM_PLATFORM_SUPPORT
 #undef _DYNAUDNORM_PLATFORM_SUPPORT
 #endif
@@ -41,16 +37,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#define PRINT_NFO(X)       do { PRINT(TXT("INFO: ")    X TXT("\n"));              } while(0)
-#define PRINT_WRN(X)       do { PRINT(TXT("WARNING: ") X TXT("\n"));              } while(0)
-#define PRINT_ERR(X)       do { PRINT(TXT("ERROR: ")   X TXT("\n"));              } while(0)
-
-#define PRINT2_NFO(X, ...) do { PRINT(TXT("INFO: ")    X TXT("\n"), __VA_ARGS__); } while(0)
-#define PRINT2_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
-#define PRINT2_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
-
-void SYSTEM_INIT(const bool &debugMode);
 
 //============================================================================
 // WINDOWS | MSVC
@@ -169,16 +155,6 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 {
 	wcsncat_s(buff, len, str, _TRUNCATE);
 	return buff;
-}
-
-inline static bool FILE_ISREG(FILE *const stream)
-{
-	struct _stat64 stat;
-	if (_fstat64(_fileno(stream), &stat) == 0)
-	{
-		return ((stat.st_mode & _S_IFMT) == _S_IFREG);
-	}
-	return false;
 }
 
 #endif //_WIN32
@@ -302,16 +278,6 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 	return buff;
 }
 
-inline static bool FILE_ISREG(FILE *const stream)
-{
-	struct _stat64 stat;
-	if (_fstat64(_fileno(stream), &stat) == 0)
-	{
-		return ((stat.st_mode & _S_IFMT) == _S_IFREG);
-	}
-	return false;
-}
-
 #endif //_WIN32
 
 //============================================================================
@@ -419,7 +385,7 @@ inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
 
 inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const uint32_t len)
 {
-	const size_t offset = strlen(buffer);
+	const size_t offset = strlen(buff);
 	if (len >= 1)
 	{
 		return strncat(buff, str, len - offset - 1);
@@ -427,17 +393,31 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 	return buff;
 }
 
+#endif //__linux
+
+//============================================================================
+// COMMON
+//============================================================================
+
+void SYSTEM_INIT(const bool &debugMode);
+
+#define PRINT_NFO(X)       do { PRINT(TXT("INFO: ")    X TXT("\n"));              } while(0)
+#define PRINT_WRN(X)       do { PRINT(TXT("WARNING: ") X TXT("\n"));              } while(0)
+#define PRINT_ERR(X)       do { PRINT(TXT("ERROR: ")   X TXT("\n"));              } while(0)
+
+#define PRINT2_NFO(X, ...) do { PRINT(TXT("INFO: ")    X TXT("\n"), __VA_ARGS__); } while(0)
+#define PRINT2_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
+#define PRINT2_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
+
 inline static bool FILE_ISREG(FILE *const stream)
 {
-	struct fstat64 stat;
-	if (fstat64(fileno(stream), &stat) == 0)
+	STAT64 stat;
+	if (FSTAT64(fileno(stream), &stat) == 0)
 	{
 		return ((stat.st_mode & S_IFMT) == S_IFREG);
 	}
 	return false;
 }
-
-#endif //__linux
 
 //============================================================================
 // VALIDATION
