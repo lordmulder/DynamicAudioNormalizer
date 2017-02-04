@@ -278,7 +278,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 		{
 			const double delta_fract = double(samples_delta) / double(length);
 			error = (delta_fract >= 0.25); /*read error*/
-			PRINT2_WRN(TXT("Audio reader got ") TXT(PRIi64) TXT(" (%.1f%%) ") FMT_CHR TXT(" samples than projected!\n"), samples_delta, delta_fract, (remaining > 0) ? TXT("less") : TXT("more"));
+			PRINT2_WRN(TXT("Audio reader got %g (%.1f%%) ") FMT_CHR TXT(" samples than projected!\n"), double(samples_delta), delta_fract, (remaining > 0) ? TXT("less") : TXT("more"));
 		}
 	}
 
