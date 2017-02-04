@@ -35,7 +35,6 @@
 #define MPG123CLOSE(X)  mpg123_close((X))
 #endif
 
-//#include <fmt123.h>
 #include <stdexcept>
 #include <algorithm>
 
@@ -92,6 +91,22 @@ static const uint32_t MPG123_FSIZE[2][4]
 	{ 0,  72, 144, 48 }, /*V2*/
 	{ 0, 144, 144, 48 }  /*V1*/
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// FMT123.H COMPAT
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef MPG123_ENC_H
+#define MPG123_SAMPLESIZE(enc) ((enc) & MPG123_ENC_8 ? 1 : ((enc) & \
+   MPG123_ENC_16 ? 2 : ((enc) & MPG123_ENC_24 ? 3 : (((enc) & MPG123_ENC_32 || \
+  (enc) == MPG123_ENC_FLOAT_32) ? 4 : ((enc) == MPG123_ENC_FLOAT_64 ? 8 : 0)))))
+struct mpg123_fmt
+{
+	long rate;
+	int channels;
+	int encoding;
+};
+#endif //MPG123_ENC_H
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private Data

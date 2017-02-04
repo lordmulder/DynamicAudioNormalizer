@@ -412,7 +412,7 @@ void SYSTEM_INIT(const bool &debugMode);
 inline static bool FILE_ISREG(FILE *const stream)
 {
 	STAT64 stat;
-	if (FSTAT64(fileno(stream), &stat) == 0)
+	if (FSTAT64(FILENO(stream), &stat) == 0)
 	{
 		return ((stat.st_mode & S_IFMT) == S_IFREG);
 	}

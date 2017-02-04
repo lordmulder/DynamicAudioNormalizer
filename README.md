@@ -721,6 +721,9 @@ Windows users are recommended to download our pre-compiled "all-in-one" prerequi
 
 Linux users should install the prerequisites via their package manager. Here is a list of required packages for Ubuntu:
 * `apt install build-essential`
+* `apt install openjdk-8-jdk`
+* `apt install libsndfile-dev`
+* `apt install libmpg123-dev`
 * **TODO**
 
 Additional prerequisites:
