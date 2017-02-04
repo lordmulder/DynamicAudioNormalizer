@@ -223,7 +223,11 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 			}
 
 			int64_t outputSize;
-			normalizer->processInplace(buffer, samplesRead, outputSize);
+			if (!normalizer->processInplace(buffer, samplesRead, outputSize))
+			{
+				error = true;
+				break; /*internal error*/
+			}
 
 			if(outputSize > 0)
 			{
@@ -242,14 +246,18 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 	}
 
 	//Flush all the delayed samples
-	for(;;)
+	while (!error)
 	{
 		int64_t outputSize;
-		normalizer->flushBuffer(buffer, int64_t(FRAME_SIZE), outputSize);
-
-		if(outputSize > 0)
+		if (!normalizer->flushBuffer(buffer, int64_t(FRAME_SIZE), outputSize))
 		{
-			if(outputFile->write(buffer, outputSize) != outputSize)
+			error = true;
+			break; /*internal error*/
+		}
+
+		if (outputSize > 0)
+		{
+			if (outputFile->write(buffer, outputSize) != outputSize)
 			{
 				error = true;
 				break; /*write error must have ocurred*/
@@ -261,25 +269,28 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 		}
 	}
 
-
 	//Completed
 	printProgress(length, remaining, spinnerPos, (!error));
-	PRINT(TXT("\n") FMT_CHR TXT(".\n\n"), error ? TXT("Finished") : TXT("Aborted"));
+	PRINT(TXT("\n") FMT_CHR TXT(".\n\n"), error ? TXT("Aborted") : TXT("Finished"));
 
-	//Error checking
-	if(error)
-	{
-		PRINT_ERR(TXT("I/O error encountered -> stopping!\n"));
-	}
-	else
+	//Check remaining samples
+	if (!error)
 	{
 		const int64_t samples_delta = (length != INT64_MAX) ? abs(remaining) : (-1);
 		if (samples_delta > 0)
 		{
 			const double delta_fract = double(samples_delta) / double(length);
-			error = (delta_fract >= 0.25); /*read error*/
-			PRINT2_WRN(TXT("Audio reader got %g (%.1f%%) ") FMT_CHR TXT(" samples than projected!\n"), double(samples_delta), delta_fract, (remaining > 0) ? TXT("less") : TXT("more"));
+			if (!(error = (delta_fract >= 0.25)))
+			{
+				PRINT2_WRN(TXT("Audio reader got %g (~%.1f%%) ") FMT_CHR TXT(" samples than projected!\n"), double(samples_delta), 100.0 * delta_fract, (remaining > 0) ? TXT("less") : TXT("more"));
+			}
 		}
+	}
+
+	//Error checking
+	if(error)
+	{
+		PRINT_ERR(TXT("I/O error encountered -> stopping!\n"));
 	}
 
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
