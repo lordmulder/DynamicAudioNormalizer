@@ -237,11 +237,7 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 
 		if(samplesRead < int64_t(FRAME_SIZE))
 		{
-			if ((length != INT64_MAX) && (double(remaining) / double(length) >= 0.25))
-			{
-				error = true; /*read error must have ocurred*/
-			}
-			break;
+			break; /*end of file*/
 		}
 	}
 
@@ -265,21 +261,25 @@ static int processingLoop(MDynamicAudioNormalizer *normalizer, AudioIO *const so
 		}
 	}
 
+
+	//Completed
+	printProgress(length, remaining, spinnerPos, (!error));
+	PRINT(TXT("\n") FMT_CHR TXT(".\n\n"), error ? TXT("Finished") : TXT("Aborted"));
+
 	//Error checking
-	if(!error)
+	if(error)
 	{
-		printProgress(length, remaining, spinnerPos, true);
-		PRINT(TXT("\nFinished.\n\n"));
-		if ((length != INT64_MAX) && remaining)
-		{
-			const unsigned long samples_delta = static_cast<unsigned long>(abs(remaining));
-			PRINT2_WRN(TXT("Audio reader got %lu ") FMT_CHR TXT(" samples than projected!\n"), samples_delta, (remaining > 0) ? TXT("less") : TXT("more"));
-		}
+		PRINT_ERR(TXT("I/O error encountered -> stopping!\n"));
 	}
 	else
 	{
-		PRINT(TXT("\n\n"));
-		PRINT_ERR(TXT("I/O error encountered -> stopping!\n"));
+		const int64_t samples_delta = (length != INT64_MAX) ? abs(remaining) : (-1);
+		if (samples_delta > 0)
+		{
+			const double delta_fract = double(samples_delta) / double(length);
+			error = (delta_fract >= 0.25); /*read error*/
+			PRINT2_WRN(TXT("Audio reader got ") TXT(PRIi64) TXT(" (%.1f%%) ") FMT_CHR TXT(" samples than projected!\n"), samples_delta, delta_fract, (remaining > 0) ? TXT("less") : TXT("more"));
+		}
 	}
 
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
