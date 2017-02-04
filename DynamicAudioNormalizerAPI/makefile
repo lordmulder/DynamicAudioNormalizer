@@ -22,7 +22,7 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
-JDK_PATH ?= $(shell update-java-alternatives -l 2>/dev/null | grep -oE '[^[:space:]]+$$' || echo "/usr/lib/jvm/default")
+JAVA_HOME ?= $(shell update-java-alternatives -l 2>/dev/null | grep -oE '[^[:space:]]+$$' || echo "/usr/lib/jvm/default")
 
 ##############################################################################
 # Constants
@@ -40,9 +40,9 @@ endif
 
 ifneq ($(MAKECMDGOALS),clean)
    ifneq ($(ENABLE_JNI),false)
-      JDK_CHECK := $(shell [ -f $(JDK_PATH)/include/jni.h ] && echo true || echo false)
+      JDK_CHECK := $(shell [ -f $(JAVA_HOME)/include/jni.h ] && echo true || echo false)
       ifneq ($(JDK_CHECK),true)
-         $(error File "include/jni.h" not found in JDK_PATH path!)
+         $(error File "include/jni.h" not found in JAVA_HOME path!)
       endif
    endif
 endif
@@ -76,11 +76,11 @@ CXXFLAGS += -I../DynamicAudioNormalizerShared/include
 CXXFLAGS += -I../DynamicAudioNormalizerJNI/include
 
 ifneq ($(ENABLE_JNI),false)
-   CXXFLAGS += -I$(JDK_PATH)/include
+   CXXFLAGS += -I$(JAVA_HOME)/include
    ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
-      CXXFLAGS += -I$(JDK_PATH)/include/win32
+      CXXFLAGS += -I$(JAVA_HOME)/include/win32
    else
-      CXXFLAGS += -I$(JDK_PATH)/include/linux
+      CXXFLAGS += -I$(JAVA_HOME)/include/linux
    endif
 else
    CXXFLAGS += -DNO_JAVA_SUPPORT
