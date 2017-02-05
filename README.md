@@ -77,9 +77,9 @@ For the *Windows* platform, the release packages already contain *all* required 
 
 ### Linux
 
-For the *Linux* platform, the release packages do ***not*** contain any third-party libraries. That's because, on Linux, it is highly recommended to install those libraries via the *package manager* of your Linux distribution. The details depend on the particular Linux distribution and the particular package manager, but we give an example for [*Ubuntu*](https://www.ubuntu.com/) and its **APT** here:
+For the *Linux* platform, the release packages do ***not*** contain any third-party libraries. That's because, on Linux, it is highly recommended to install those libraries via the *package manager*. Usually, most of the required third-party libraries will already be installed on your Linux-based system, but some may need to be installed explicitly. The details depend on the particular Linux distribution and on the particular package manager. We give an example for [*Ubuntu*](https://www.ubuntu.com/) and **APT** here:
 ```
-sudo apt install libstdc++6 libsndfile libmpg123 libqtgui4
+sudo apt install libstdc++6 libsndfile1 libmpg123-0 libqtgui4
 ```
 
 **Note:** There are some additional *indirect* dependencies that will be resolved automatically by the package manager.
