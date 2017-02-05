@@ -64,14 +64,30 @@ The Dynamic Audio Normalizer "core" library and CLI front-end are written in pla
 
 *Pre-compiled* binaries are provided for the *Windows* and *GNU/Linux* platforms. The 32-Bit Windows binaries should work on Windows XP (with Service Pack 2) or any later version (32-Bit or 64-Bit), while the 64-Bit Windows binaries require the "x64" edition of Windows Vista or any later 64-Bit Windows. Linux binaries are provided for some popular distributions (latest "Long Term Support" version at the time of release). Those Linux binaries *may* work on other distributions too, or not. Therefore, Linux users are generally recommended to compile the Dynamic Audio Normalizer themselves, from the source codes.
 
-For the *Windows* platform, separate "Static" and "DLL" download packages are provided. The "Static" binaries have all the required libraries *built-in* (including third-party libraries and the C-Runtime) and thus they do *not* depend on any separate DLL files. At the same time, the "DLL" package uses separate DLL files for the "core" functions as well as for the third-party libraries and the C-Runtime. If you don't understand what this means, then just go with the "Static" version. If you are a programmer and want to invoke the Dynamic Audio Normalizer from your own program, you need to use the "DLL" version.
-
 All *pre-compiled* binaries have been optimized for processors that support *at least* the [*SSE2*](https://en.wikipedia.org/wiki/SSE2) instruction set, so an SSE2-enabled processor (Pentium 4, Athlon 64, or later) is required. For *legacy* processors you will need to compile Dynamic Audio Normalizer and all the third-party libraries *yourself*, from the sources &ndash; with appropriate compiler settings.
+
+
+## Dependencies
+
+The Dynamic Audio Normalizer depends on some *third-party* libraries. Those libraries need to be present at runtime! How to obtain the required *third-party* libraries, if not already installed, depends on the operating system.
+
+### Windows
+
+For the *Windows* platform, the release packages already contain *all* required third-party libraries. We provide separate **Static** and **DLL** packages though. The "Static" binaries have all the required libraries *built-in* (including third-party libraries and C-Runtime) and thus they do *not* depend on any separate DLL files. At the same time, the "DLL" package contains separate DLL files for the Dynamic Audio Normalizer "core" library as well as for the required third-party libraries and the C-Runtime. If you don't understand what this means, then simply go with the "Static" version. If you are a programmer and you want to invoke the Dynamic Audio Normalizer "core" library from your own program, then you need to go with the "DLL" version.
+
+### Linux
+
+For the *Linux* platform, the release packages do ***not*** contain any third-party libraries. That's because, on Linux, it is highly recommended to install those libraries via the *package manager* of your Linux distribution. The details depend on the particular Linux distribution and the particular package manager, but we give an example for [*Ubuntu*](https://www.ubuntu.com/) and its **APT** here:
+```
+sudo apt install libstdc++6 libsndfile libmpg123 libqtgui4
+```
+
+**Note:** There are some additional *indirect* dependencies that will be resolved automatically by the package manager.
 
 
 ## Package Contents ##
 
-The following files are included in the Dynamic Audio Normalizer release package (Windows "DLL" version):
+The following files are included in the Dynamic Audio Normalizer release package (Windows, "DLL" version):
 
 	api-ms-win-*                  - Microsoft Universal CRT redistributable
 	DynamicAudioNormalizer.h      - Header file for the Dynamic Audio Normalizer library
