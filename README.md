@@ -77,7 +77,7 @@ For the *Windows* platform, the release packages already contain *all* required 
 
 ### Linux
 
-For the *Linux* platform, the release packages do ***not*** contain any third-party libraries. That's because, on Linux, it is highly recommended to install those libraries via the *package manager*. Usually, most of the required third-party libraries will already be installed on your Linux-based system, but some may need to be installed explicitly. The details depend on the particular Linux distribution and on the particular package manager. We give examples for [*Ubuntu*](https://www.ubuntu.com/) and [*openSUSE*](https://www.opensuse.org/) here:
+For the *Linux* platform, the release packages do ***not*** contain any third-party libraries. That's because, on Linux, it is highly recommended to install those libraries via the *package manager*. Usually, most of the required third-party libraries will already be installed on your Linux-based system, but some may need to be installed explicitly. The details depend on the particular Linux distribution and on the particular package manager. We give examples for [*Ubuntu*](https://www.ubuntu.com/), [*openSUSE*](https://www.opensuse.org/) and [*CentOS*](https://www.centos.org/) here:
 
 * **Ubuntu 16.04 LTS**:
 ```
@@ -86,10 +86,17 @@ sudo apt install libsndfile1 libmpg123-0 libqtgui4
 
 * **openSUSE Leap 42.2**:
 ```
-sudo zypper ar -f
+sudo zypper ar -f \
   http://download.opensuse.org/repositories/multimedia:/libs/openSUSE_Leap_42.2/ multimedia:libs
 sudo zypper refresh
-sudo zypper install libmpg123-0 libsndfile1 libqt4-x11
+sudo zypper install libsndfile1 libmpg123-0 libqt4-x11
+```
+
+* **CentOS/RHEL 7.3**:
+```
+sudo yum -y install epel-release
+sudo rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+sudo yum install libsndfile libmpg123 qt-x11
 ```
 
 **Note:** There are some additional *indirect* dependencies that will be resolved automatically by the package manager.
@@ -761,7 +768,7 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 
 ### Linux ###
 
-**Linux** developers can install the prerequisites via package manager. We give examples for [*Ubuntu*](https://www.ubuntu.com/) and [*openSUSE*](https://www.opensuse.org/) here:
+**Linux** developers install prerequisites via package manager. We give examples for [*Ubuntu*](https://www.ubuntu.com/), [*openSUSE*](https://www.opensuse.org/) and [*CentOS*](https://www.centos.org/) here:
 
 * **Ubuntu 16.04 LTS**:
     * `sudo apt install build-essential openjdk-8-jdk`
@@ -769,11 +776,17 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
     * `sudo apt install ant pandoc wget`
 
 * **openSUSE Leap 42.2**:
-    * `sudo zypper install make gcc-c++ java-1_8_0-openjdk-devel`
+    * `sudo zypper install -t pattern devel_basis`
+    * `sudo zypper install gcc-c++ java-1_8_0-openjdk-devel`
     * `sudo zypper install libsndfile-devel mpg123-devel libqt4-devel`
     * `sudo zypper install ant pandoc wget`
     * **Note:** The [*mutlimedia:libs*](http://download.opensuse.org/repositories/multimedia:/color_management/openSUSE_Leap_42.2/) repository is required for the *mpg123-devel* package!
 
+* **CentOS/RHEL 7.3**:
+    * `sudo yum groupinstall "Development Tools"`
+    * `sudo yum install java-1.8.0-openjdk-devel`
+    * `sudo yum install libsndfile-devel libmpg123-devel qt-devel`
+    * `sudo yum install ant pandoc wget`
 
 # Changelog #
 
