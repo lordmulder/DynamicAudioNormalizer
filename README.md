@@ -77,9 +77,19 @@ For the *Windows* platform, the release packages already contain *all* required 
 
 ### Linux
 
-For the *Linux* platform, the release packages do ***not*** contain any third-party libraries. That's because, on Linux, it is highly recommended to install those libraries via the *package manager*. Usually, most of the required third-party libraries will already be installed on your Linux-based system, but some may need to be installed explicitly. The details depend on the particular Linux distribution and on the particular package manager. We give an example for [*Ubuntu*](https://www.ubuntu.com/) and **APT** here:
+For the *Linux* platform, the release packages do ***not*** contain any third-party libraries. That's because, on Linux, it is highly recommended to install those libraries via the *package manager*. Usually, most of the required third-party libraries will already be installed on your Linux-based system, but some may need to be installed explicitly. The details depend on the particular Linux distribution and on the particular package manager. We give examples for [*Ubuntu*](https://www.ubuntu.com/) and [*openSUSE*](https://www.opensuse.org/) here:
+
+* **Ubuntu 16.04 LTS**:
 ```
-sudo apt install libstdc++6 libsndfile1 libmpg123-0 libqtgui4
+sudo apt install libsndfile1 libmpg123-0 libqtgui4
+```
+
+* **openSUSE Leap 42.2**:
+```
+sudo zypper ar -f
+  http://download.opensuse.org/repositories/multimedia:/libs/openSUSE_Leap_42.2/ multimedia:libs
+sudo zypper refresh
+sudo zypper install libmpg123-0 libsndfile1 libqt4-x11
 ```
 
 **Note:** There are some additional *indirect* dependencies that will be resolved automatically by the package manager.
@@ -712,19 +722,21 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 
 The following build environments are currently supported:
 
-* Microsoft Windows with Visual C++, tested under [Windows 7](http://windows.microsoft.com/) and [*Visual Studio 2013*](http://www.visualstudio.com/downloads/download-visual-studio-vs)
+* **Microsoft Windows** with Visual C++, tested with [*Visual Studio 2013*](http://www.visualstudio.com/) and [*Visual Studio 2015*](http://www.visualstudio.com/):
 
-    - You can build *Dynamic Audio Normalizer* manually, by using the provided *solution* file `DynamicAudioNormalizer.sln`
+    - You can build *Dynamic Audio Normalizer* by using the provided *solution* file: `DynamicAudioNormalizer.sln`
 
-    - Optionally, you may run the deployment script ``z_build.bat``, which will also create deployment packages. You may need to edit the paths in the build script first!
+    - Optionally, you may run the deployment script ``z_build.bat``, which will build the application in various configurations also create deployment packages. Note that you may need to edit the paths in the build script first!
 
-* Linux with GCC/G++ and GNU Make, tested under [*Ubuntu 16.04 LTS*](https://ubuntu-mate.org/download/)
+    - Be sure that your environment variables `JAVA_HOME` (JDK path) and `QTDIR` (Qt4 path) are set correctly!
 
-    - The provided Makefile assumes that the essential build utilities (*make*, *g++*, *libc-dev*, etc), as contained in Debian's ``build-essential`` package, are installed
+* **Linux** with GCC/G++ and GNU Make, tested under [*Ubuntu 16.04 LTS*](https://www.ubuntu.com/) and [*openSUSE Leap 42.2*](https://www.opensuse.org/):
 
-    - You may need to install additional packages (*libsndfile*, *Qt*, *Apache Ant*, *JDK*, *Pandoc*, etc), in order to create a "full" build of *Dynamic Audio Normalizer*
+    - You can build *Dynamic Audio Normalizer* by invoking the provided *Makefile* via `make` command. We assume that the essential build tools (*make*, *g++*, *libc*, etc), as contained in Debian's `build-essential` package, are installed.
 
-    - Use `make MODE=no-gui` or `make MODE=mininmal` in order to build *without GUI* or to create a *minimal* build (core library + CLI front-end only), respectively
+    - Optionally, you may pass the `MODE=no-gui` or `MODE=mininmal` options to Make in order to build the software *without* the GUI program or to create a *minimal* build (core library + CLI front-end only), respectively
+
+    - Be sure that your environment variables `JAVA_HOME` (JDK path) and `QTDIR` (Qt4 path) are set correctly!
 
 
 ## Build Prerequisites ##
@@ -741,14 +753,26 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 * [*Pandoc*](http://johnmacfarlane.net/pandoc/), by  John MacFarlane, is required for generating the HTML documentation
 * [*UPX*](http://upx.sourceforge.net/), by Markus Franz Xaver Johannes Oberhumer et al., is required for "packing" the libraries/executables
 
-**Windows** users are recommended to download our pre-compiled "all-in-one" prerequisites package:
+### Windows ###
+
+**Windows** developers are recommended to download our pre-compiled "all-in-one" prerequisites package:
 * <https://sourceforge.net/projects/muldersoft/files/Prerequisites/>
 * <https://www.mediafire.com/folder/ygv9qoqv11kvk/Prerequisites>
 
-**Linux** users should install the prerequisites via their package manager. Here is a list of required packages for [*Ubuntu*](https://www.ubuntu.com/):
-* `apt install build-essential openjdk-8-jdk`
-* `apt install libsndfile-dev libmpg123-dev qt4-default`
-* `apt install ant pandoc wget`
+### Linux ###
+
+**Linux** developers can install the prerequisites via package manager. We give examples for [*Ubuntu*](https://www.ubuntu.com/) and [*openSUSE*](https://www.opensuse.org/) here:
+
+* **Ubuntu 16.04 LTS**:
+    * `sudo apt install build-essential openjdk-8-jdk`
+    * `sudo apt install libsndfile-dev libmpg123-dev qt4-default`
+    * `sudo apt install ant pandoc wget`
+
+* **openSUSE Leap 42.2**:
+    * `sudo zypper install make gcc-c++ java-1_8_0-openjdk-devel`
+    * `sudo zypper install libsndfile-devel mpg123-devel libqt4-devel`
+    * `sudo zypper install ant pandoc wget`
+    * **Note:** The [*mutlimedia:libs*](http://download.opensuse.org/repositories/multimedia:/color_management/openSUSE_Leap_42.2/) repository is required for the *mpg123-devel* package!
 
 
 # Changelog #
