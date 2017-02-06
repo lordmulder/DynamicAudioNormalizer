@@ -780,20 +780,23 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
     * `sudo zypper install gcc-c++ java-1_8_0-openjdk-devel`
     * `sudo zypper install libsndfile-devel mpg123-devel libqt4-devel`
     * `sudo zypper install ant pandoc wget`
-    * **Note:** The [*mutlimedia:libs*](http://download.opensuse.org/repositories/multimedia:/color_management/openSUSE_Leap_42.2/) repository is required for the *mpg123-devel* package!
+    * ***Note:*** The [*mutlimedia:libs*](http://download.opensuse.org/repositories/multimedia:/color_management/openSUSE_Leap_42.2/) repository is required for the *mpg123-devel* package!
 
 * **CentOS/RHEL 7.3**:
     * `sudo yum groupinstall "Development Tools"`
     * `sudo yum install java-1.8.0-openjdk-devel`
     * `sudo yum install libsndfile-devel libmpg123-devel qt-devel`
     * `sudo yum install ant pandoc wget`
+    * ***Note:*** The [*EPEL*](https://fedoraproject.org/wiki/EPEL) and [*Nux Dextop*](https://li.nux.ro/repos.html) repositories are required for some packages!
 
 # Changelog #
 
-## Version 2.10 (2017-01-??) ## {-}
-* CLI front-end: Added new CLI option `-t` to specify the desired output format
-* CLI front-end: Added new CLI option `-d` to specify the desired input decoder library
+## Version 2.10 (2017-02-??) ## {-}
+* CLI front-end: Added new CLI option `-t` to explicitly specify the desired *output* format
+* CLI front-end: Added new CLI option `-d` to explicitly specify the desired *input* library
 * CLI front-end: Added support for decoding input files via *libmpg123* library
+* CLI front-end: Implemented automatic/heuristic selection of the suitable *input* library
+* CLI front-end: Properly handle files that provide more/less samples than what was projected
 * Windows binaries: Updated the included *libsndfile* version to 1.0.27 (2016-06-19)
 * Windows binaries: Updated build environment to Visual Studio 2015 (MSVC 14.0)
 
