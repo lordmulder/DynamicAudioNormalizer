@@ -299,11 +299,11 @@ Incomplete list of VST hosts that have been tested to *work correctly* with the 
     - License: Proprietary, fully functional "evaluation" version available
     - *Note: <span style="color:FireBrick">VST support is currently broken in 6.x versions!</span>*
 
-* **[Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro") v2017, by Adobe Systems Inc.**  
+* **[Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro") v10.0.1, by Adobe Systems Inc.**  
     - Status: <span style="color:SeaGreen">VST support working</span>
     - License: Proprietary, free *trial* version available
 
-* **[WaveLab](http://www.steinberg.net/en/products/wavelab/start.html), by Steinberg Media Technologies GmbH**
+* **[WaveLab](http://www.steinberg.net/en/products/wavelab/start.html) v9.0, by Steinberg Media Technologies GmbH**
     - Status: <span style="color:SeaGreen">VST support working</span>
     - License: Proprietary, free *trial* version available
 
@@ -321,26 +321,33 @@ Incomplete list of VST hosts that have been tested to *work correctly* with the 
 
 List of VST hosts with *known problems* that do **not** work correctly with VST plug-ins like the Dynamic Audio Normalizer:
   
-* **[Waveosaur](http://www.wavosaur.com/) v1.1.0**  
+* **[Waveosaur](http://www.wavosaur.com/) v1.2.0**  
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated
-  
-* **[Ocenaudio](http://www.ocenaudio.com.br/) v2.0.9**  
+    - License: Proprietary, freeware version available
+
+* **[Ocenaudio](http://www.ocenaudio.com.br/) v3.2.2**  
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + some plug-in settings are displayed incorrectly
+    - License: Proprietary, freeware version available
   
-* **[WavePad](http://www.nch.com.au/wavepad/), by NCH Software**  
+* **[WavePad](http://www.nch.com.au/wavepad/) v6.53, by NCH Software**  
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
+    - License: Proprietary, freeware version available
   
 * **[Nero WaveEditor](http://www.nero.com/enu/downloads/) v12.5, by Nero AG**  
     - Status: <span style="color:FireBrick">VST support broken</span> → application crashes when trying to load *any* VST plug-in for some unknown reason
+    - License: Proprietary, freeware version available
   
-* **[AudioDope](http://www.audiodope.org/) v0.26**  
+* **[Audiodope](http://www.audiodope.org/) v0.26**, by Audiodope team  
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + plug-in settings are displayed incorrectly
+    - License: Proprietary, freeware version available
   
-* **[Dexster Audio Editor](http://www.dexster.net/) v4.3, by Softdiv Software**  
+* **[Dexster Audio Editor](http://www.dexster.net/) v4.5, by Softdiv**  
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
+    - License: Proprietary, free *trial* version available
   
 * **[AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v4, by CyberLink Corp**  
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated by a very large amount
+    - License: Proprietary, free *trial* version available
 
 *<u>Disclaimer:</u> There is absolutely **no** guarantee for the completeness or correctness of the above information!*
 
