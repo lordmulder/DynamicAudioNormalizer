@@ -708,11 +708,11 @@ This *static* function can be called to register a *callback* function that will
 * *logFunction*: A pointer to the new callback function to be registered. This can be ``NULL`` to disable logging entirely.
 
 **Return value:**
-* Returns a pointer to the *previous* callback function. This can be ``NULL``, e.g. if **no** callback function had been registered before.
+* Returns a pointer to the *previous* callback function. This can be `NULL`, if **no** callback function was registered before.
 
 #### Callback Function #### {-}
 
-The signature of the callback function must be *exactly* as follows, with standard ``cdecl`` calling convention:
+The signature of the callback function must be *exactly* as follows, with standard `cdecl` calling convention:
 ```
 void LogFunction(
 	const int logLevel,
@@ -721,8 +721,8 @@ void LogFunction(
 ```
 
 **Parameters:**
-* *logLevel*: Specifies the level of the current log message. This can be either ``LOG_LEVEL_NFO``, ``LOG_LEVEL_WRN`` or ``LOG_LEVEL_ERR``, which indicates an <i>information</i>, <i>warning</i> or <i>error</i> message, respectively. The application may use this value to filter the log messages according to their importance. Messages of level ``LOG_LEVEL_NFO`` are for debugging purposes only, messages of level ``LOG_LEVEL_WRN`` indicate that there might be a problem of some sort and messages of ``LOG_LEVEL_ERR`` indicate that a serious malfunction has occurred.
-* *message*: The log message. This is a pointer to a buffer, which contains a NULL-terminated C string. The character encoding of the string is UTF-8. The application should regard this string buffer as *read-only*. Also, this string buffer remains valid *only* until the callback function returns. Therefore, do *not* save a pointer to this buffer! If you need to retain the log message *after* the callback function returns, it must be *copied*, e.g. via ``strcpy()`` or ``strdup()``, into a *separate* buffer which is owned by the application.
+* *logLevel*: Specifies the "level" of the current log message. This can be either `LOG_LEVEL_DBG = 0`, `LOG_LEVEL_WRN = 1` or `LOG_LEVEL_ERR = 2`. The application may evaluate this value to filter the log messages according to their importance. Log messages of level `LOG_LEVEL_DBG` are for debugging purposes, log messages of level `LOG_LEVEL_WRN` indicate potential problems, and log messages of level `LOG_LEVEL_ERR` indicate serious errors.
+* *message*: The log message. This is a pointer to a buffer, which contains a NULL-terminated C string. The character encoding of the string is UTF-8. The application should regard this string buffer as *read-only*. Also, this buffer remains valid *only* until the callback function returns. Do **not** save a pointer to this buffer! If you need to retain the log message *after* the callback function returns, it must be *copied*, e.g. via ``strcpy()`` or ``strdup()``, into a *separate* buffer.
 
 
 
@@ -745,7 +745,7 @@ The following build environments are currently supported:
 
     - You can build *Dynamic Audio Normalizer* by using the provided *solution* file: `DynamicAudioNormalizer.sln`
 
-    - Optionally, you may run the deployment script ``z_build.bat``, which will build the application in various configurations also create deployment packages. Note that you may need to edit the paths in the build script first!
+    - Optionally, you may run the deployment script `z_build.bat`, which will build the application in various configurations also create deployment packages. Note that you may need to edit the paths in the build script first!
 
     - Be sure that your environment variables `JAVA_HOME` (JDK path) and `QTDIR` (Qt4 path) are set correctly!
 
