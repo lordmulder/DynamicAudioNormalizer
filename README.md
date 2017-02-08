@@ -297,7 +297,7 @@ Incomplete list of VST hosts that have been tested to *work correctly* with the 
 * **[GoldWave](http://www.goldwave.com/) v5.70, by GoldWave Inc.**  
     - Status: <span style="color:SeaGreen">VST support working</span>
     - License: Proprietary, fully functional "evaluation" version available
-    - *Note: <span style="color:FireBrick">VST support is currently broken in 6.x versions!</span>*
+    - *Note: <span style="color:FireBrick">There currently is a VST regression in version 6.x that inserts silence at the beginning of the file!</span>*
 
 * **[Audition](https://creative.adobe.com/products/audition) (formerly "Cool Edit Pro") v10.0.1, by Adobe Systems Inc.**  
     - Status: <span style="color:SeaGreen">VST support working</span>
@@ -307,11 +307,11 @@ Incomplete list of VST hosts that have been tested to *work correctly* with the 
     - Status: <span style="color:SeaGreen">VST support working</span>
     - License: Proprietary, free *trial* version available
 
-* **[REAPER](http://www.reaper.fm/), by Cockos Inc.**  
+* **[REAPER](http://www.reaper.fm/) v5.33, by Cockos Inc.**  
     - Status: <span style="color:SeaGreen">VST support working</span>
     - License: Proprietary, free *trial* version available
 
-* **[Sound Forge Pro](http://www.sonycreativesoftware.com/soundforgesoftware), by Sony (formerly Sonic Foundry)**  
+* **[Sound Forge Pro](http://www.magix-audio.com/de/sound-forge/), by Magix (formerly Sony)**  
     - Status: <span style="color:SeaGreen">VST support working</span>
     - License: Proprietary, free *trial* version available
 
@@ -345,7 +345,7 @@ List of VST hosts with *known problems* that do **not** work correctly with VST 
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated + doesn't expose the plug-in's settings
     - License: Proprietary, free *trial* version available
   
-* **[AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v4, by CyberLink Corp**  
+* **[AudioDirector](http://www.cyberlink.com/products/audiodirector/features_en_US.html) v7.0, by CyberLink Corp**  
     - Status: <span style="color:FireBrick">VST support broken</span> → audio will be shifted and truncated by a very large amount
     - License: Proprietary, free *trial* version available
 
@@ -469,7 +469,7 @@ The log file can be displayed as a graphical chart using, for example, the *Log 
 
 # API Documentation #
 
-This chapter describes the **MDynamicAudioNormalizer** application programming interface (API), as defined in the ``DynamicAudioNormalizer.h`` header file. It allows software developer to call the Dynamic Audio Normalizer library from their own application code.
+This chapter describes the **MDynamicAudioNormalizer** application programming interface (API), as defined in the ``DynamicAudioNormalizer.h`` header file. It allows software developer to call the Dynamic Audio Normalizer library.
 
 
 ## Thread Safety ##
@@ -556,12 +556,12 @@ Destructor. Destroys the *MDynamicAudioNormalizer* instance and releases all mem
 bool initialize(void);
 ```
 
-Initializes the MDynamicAudioNormalizer instance. Validates the parameters and allocates/initializes the required memory buffers.
+Initializes the MDynamicAudioNormalizer instance. Validates the parameters and allocates the required memory buffers.
 
-This function *must* be called once for each new MDynamicAudioNormalizer instance. It *must* be called before ``processInplace()`` or ``setPass()`` are called.
+This function *must* be called once for each new MDynamicAudioNormalizer instance. It *must* be called *before the `processInplace()` function can be called for the first time. Do **not** call `processInplace()`, if this function has failed!
 
 **Return value:**
-* Returns ``true`` if everything was successfull or ``false`` if something went wrong.
+* Returns `true` if everything was successful or `false` if something went wrong.
 
 
 ### MDynamicAudioNormalizer::processInplace() ### {-}
@@ -573,19 +573,19 @@ bool processInplace(
 );
 ```
 
-This is the main processing function. It usually is called in a loop by the application until all input audio samples have been processed.
+This is the "main" processing function. It shall be called *in a loop* until all input audio samples have been processed.
 
-The function works "in place": It *reads* the original input samples from the specified buffer and then *writes* the normalized output samples, if any, back into the *same* buffer. The content of ``samplesInOut`` will **not** be preserved!
+The function works "in place": It *reads* the original input samples from the specified buffer and then *writes* the normalized output samples, if any, back into the *same* buffer. So, the content of `samplesInOut` will **not** be preserved!
 
-It's possible that a specific call to this function returns *fewer* output samples than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent function call. This also means that the *i*-th output sample does **not** necessarily correspond to the *i*-th input sample. However, the samples are always returned in a strict FIFO (first in, first out) order. At the end of the process, when all input samples have been read, to application should call ``flushBuffer()`` in order to *flush* all pending output samples.
+***Note:*** A call to this function reads *all* provided input samples from the buffer, but the number of output samples that are written back to the buffer may actually be *smaller* than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent call. In other words, samples are returned with a certain "delay". This means that the *i*-th output sample does **not** necessarily correspond to the *i*-th input sample! Still, the samples are returned in strict [FIFO](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)) order. The exact delay can be determined by calling the `getInternalDelay()` function. At the end of the process, when all input samples have been read, to application shall call `flushBuffer()` in order to *flush* all pending samples.
 
 **Parameters:**
-* *samplesInOut*: The buffer that contains the original input samples and that will receive the normalized output samples. The *i*-th input sample for the *c*-th channel is assumed to be stored at ``samplesInOut[c][i]``, as a double-precision floating point number in the **-1.00** to **1.00** range. All indices are zero-based. The output samples, if any, will be stored at the corresponding locations, thus *overwriting* the input data. Consequently, the *i*-th output sample for the *c*-th channel will be stored at ``samplesInOut[c][i]`` and is guaranteed to be inside the **-1.00** to **1.00** range.
-* *inputSize*: The number of *input* samples that are available in the ``samplesInOut`` buffer. This also specifies the *maximum* number of output samples to be stored in the buffer.
-* *outputSize*: Receives the number of *output* samples that have been stored in the ``samplesInOut`` buffer. Please note that this value can be *smaller* than ``inputSize`` size. It can even be *zero*!
+* *samplesInOut*: The input/output buffer. This buffer initially contains the original input samples to be read. Also, the processed output samples will be written back to this buffer. The *i*-th input sample for the *c*-th channel is assumed to be stored at `samplesInOut[c][i]`, as a double-precision floating point number. The output samples, if any, will be stored at the corresponding locations, thus *overwriting* the input data. Consequently, the *i*-th output sample for the *c*-th channel will be stored at `samplesInOut[c][i]`. All indices are *zero*-based. All sample values live in the **-1.0** to **+1.0** range.
+* *inputSize*: The number of original *input* samples that are available in the `samplesInOut` buffer, per channel. This also specifies the *maximum* number of output samples that can be written back to the buffer.
+* *outputSize*: Receives the number of *output* samples that have actually been written back to the `samplesInOut` buffer, per channel. Please note that this value can be *smaller* than the `inputSize` value. It can even be *zero*!
 
 **Return value:**
-* Returns ``true`` if everything was successful or ``false`` if something went wrong.
+* Returns `true` if everything was successful or `false` if something went wrong.
 
 
 ### MDynamicAudioNormalizer::flushBuffer() ### {-}
@@ -597,12 +597,12 @@ bool flushBuffer(
 );
 ```
 
-This function can be called at the end of the process, after all input samples have been processed, in order to flush the pending samples from the internal buffer. It writes the next pending output samples into the output buffer, in FIFO (first in, first out) order, iff there are any pending output samples left in the internal buffer. Once this function has been called, you must call ``reset()`` before calling ``processInplace()`` again! If this function returns fewer output samples than the specified output buffer size, then this indicates that the internal buffer is empty now.
+This function shall be called at the end of the process, after all input samples have been processed via `processInplace()` function, in order to flush the *pending* samples from the internal buffer. It writes the next pending output samples into the output buffer, in FIFO order, if and only if there are still any pending output samples left in the internal buffer. Once this function has been called, you must call `reset()` before the `processInplace()` function may be called again! If this function returns fewer output samples than the specified output buffer size, then this indicates that the internal buffer is empty now.
 
 **Parameters:**
-* *samplesOut*: The buffer that will receive the normalized output samples. The *i*-th output sample for the *c*-th channel will be stored at ``samplesOut[c][i]`` and is guaranteed to be inside the **-1.00** to **1.00** range. All indices are zero-based.
-* *bufferSize*: Specifies the *maximum* number of output samples to be stored in the buffer.
-* *outputSize*: Receives the number of *output* samples that have been stored in the ``samplesOut`` buffer. Please note that this value can be *smaller* than ``bufferSize`` size. It can even be *zero*! A value smaller than ``bufferSize`` indicates that all samples have been flushed now.
+* *samplesOut*: The output buffer that will receive the normalized output samples. The *i*-th output sample for the *c*-th channel will be stored at `samplesOut[c][i]`. All indices are *zero*-based. All sample values live in the **-1.0** to **+1.0** range.
+* *bufferSize*: Specifies the *maximum* number of output samples to be stored in the output buffer.
+* *outputSize*: Receives the number of *output* samples that have actually been written to the `samplesOut` buffer. Please note that this value can be *smaller* than `bufferSize` size, if no more pending samples are left. It can even be *zero*!
 
 **Return value:**
 * Returns ``true`` if everything was successfull or ``false`` if something went wrong.
@@ -613,7 +613,7 @@ This function can be called at the end of the process, after all input samples h
 bool reset(void);
 ```
 
-Resets the internal state of the *MDynamicAudioNormalizer* instance. It normally is **not** required to call this function at all! The only exception is when you want to process *multiple* independent audio files with the *same* normalizer instance. In the latter case, call ``reset()`` *after* all samples of the ``n``-th audio file have been processed and *before* processing the first sample of the ``(n+1)``-th audio file. Also do *not* forget to flush the pending samples of the ``n``-th file from the internal buffer *before* calling ``reset()``; those samples would be lost permanently otherwise!
+Resets the internal state of the *MDynamicAudioNormalizer* instance. It normally is **not** required or recommended to call this function! The only exception here is: If you really want to process *multiple* independent audio files with the *same* normalizer instance, then you *must* call the `reset()` function *after* all samples of the **current** audio file have been processed (and all of its pending samples have been flushed), but *before* processing the first sample of the **next** audio file.
 
 **Return value:**
 * Returns ``true`` if everything was successfull or ``false`` if something went wrong.
@@ -648,7 +648,7 @@ bool getInternalDelay(
 );
 ```
 
-This function can be used to determine the internal delay of the *MDynamicAudioNormalizer* instance. The internal delay is the (maximum) number of samples, per channel, that will be buffered internally. The ``processInplace()`` function will **not** return any output samples, until (at least) *this* number of input samples have been processed. It also specifies the (maximum) number of samples that can be – and should be – flushed from the internal buffer, at the end of the process, using the ``flushBuffer()`` function.
+This function can be used to determine the internal "delay" of the *MDynamicAudioNormalizer* instance. This is the (maximum) number of samples, per channel, that will be buffered internally. The `processInplace()` function will **not** return any output samples, until (at least) *this* number of input samples have been read. This also specifies the (maximum) number of samples, per channel, that need to be flushed from the internal buffer, at the end of the process, using the `flushBuffer()` function.
 
 **Parameters:**
 * *delayInSamples*: Receives the size of the internal buffer, in samples (per channel).
@@ -669,7 +669,7 @@ static void getVersionInfo(
 This *static* function can be called to determine the Dynamic Audio Normalizer library version.
 
 **Parameters:**
-* *major*: Receives the major version number. Value will currently be **1**.
+* *major*: Receives the major version number. Currently this value is **2**.
 * *minor*: Receives the minor version number. Value will be in the **0** to **99** range.
 * *patch*: Receives the patch level. Value will be in the **0** to **9** range.
 
@@ -688,11 +688,11 @@ static void getBuildInfo(
 This *static* function can be called to determine more detailed information about the specific Dynamic Audio Normalizer build.
 
 **Parameters:**
-* *date*: Receives a pointer to a *read-only* string buffer containing the build date, standard ```__DATE__``` format.
-* *time*: Receives a pointer to a *read-only* string buffer containing the build time, standard ```__TIME__``` format.
-* *compiler*: Receives a pointer to a *read-only* string buffer containing the compiler identifier (e.g. "MSVC 2013.2").
-* *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. "x86" for IA32/x86 or "x64" for AMD64/EM64T).
-* *debug*: Will be set to ``true`` if this is a *debug* build or to ``false`` otherwise. Don't use the *debug* version production!
+* *date*: Receives a pointer to a *read-only* string buffer containing the build date, standard `__DATE__` format.
+* *time*: Receives a pointer to a *read-only* string buffer containing the build time, standard `__TIME__` format.
+* *compiler*: Receives a pointer to a *read-only* string buffer containing the compiler identifier (e.g. `MSVC 2013.2`).
+* *arch*: Receives a pointer to a *read-only* string buffer containing the architecture identifier (e.g. `x86` or `x64`).
+* *debug*: Will be set to `true` if this is a ***debug*** build; otherwise it will be set to `false`.
 
 
 ### MDynamicAudioNormalizer::setLogFunction() [static] ### {-}
@@ -702,7 +702,7 @@ static LogFunction *setLogFunction(
 );
 ```
 
-This *static* function can be called to register a *callback* function that will be called by the Dynamic Audio Normalizer in order to provide additional log messages. Note that initially *no* callback function will be registered. This means that until a callback function is registered by the application, all log messages will be *discarded*. Thus it is recommend to register your callback function *before* creating the first *MDynamicAudioNormalizer* instance. Also note that <i>at most</i> one callback function can be registered. This means that registering another callback function will <i>replace</i> the previous one. However, since a pointer to the previous callback function will be returned, multiple callback function can be chained. Finally note that this function is **not** thread-safe! This means that the application must ensure that all calls to this functions are properly serialized. In particular, calling this function while there exists at least one instance of *MDynamicAudioNormalizer* can result in race conditions and has to be avoided! Usually, an application will call this function early in its "main" function in order to register its callback function and then does **not** call it again.
+This *static* function can be called to register a *callback* function that will be called by the Dynamic Audio Normalizer in order to provide additional log messages. Note that initially **no** callback function will be registered. This means that until a callback function is registered by the application, all log messages will be *discarded*. It is recommend to register your callback function *before* creating the first *MDynamicAudioNormalizer* instance. Also note that <i>at most</i> one callback function can be registered. Registering another callback function <i>replaces</i> the previous one. However, since a pointer to the previous callback function will be returned, multiple callback function can be chained – simply call the previous callback from the new one.
 
 **Parameters:**
 * *logFunction*: A pointer to the new callback function to be registered. This can be ``NULL`` to disable logging entirely.
