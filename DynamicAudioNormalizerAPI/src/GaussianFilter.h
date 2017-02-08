@@ -25,17 +25,20 @@
 #include <stdint.h>
 #include <deque>
 
-class MDynamicAudioNormalizer_GaussianFilter
+namespace MDynamicAudioNormalizer_Internal
 {
-public:
-	MDynamicAudioNormalizer_GaussianFilter(const uint32_t &filterSize, const double &sigma);
-	virtual ~MDynamicAudioNormalizer_GaussianFilter(void);
+	class GaussianFilter
+	{
+	public:
+		GaussianFilter(const uint32_t &filterSize, const double &sigma);
+		virtual ~GaussianFilter(void);
 
-	double apply(const std::deque<double> &values);
+		double apply(const std::deque<double> &values);
 
-private:
-	const uint32_t m_filterSize;
-	double *m_weights;
+	private:
+		const uint32_t m_filterSize;
+		double *m_weights;
 
-	MDynamicAudioNormalizer_GaussianFilter &operator=(const MDynamicAudioNormalizer_GaussianFilter &) { throw 666; }
-};
+		GaussianFilter &operator=(const GaussianFilter &) { throw 666; }
+	};
+}

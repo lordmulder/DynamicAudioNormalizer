@@ -94,7 +94,7 @@ public:
 
 	/*Type definitions*/
 	typedef MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) LogFunction;
-	enum { LOG_LEVEL_NFO = 0, LOG_LEVEL_WRN = 1, LOG_LEVEL_ERR = 2 };
+	enum { LOG_LEVEL_DBG = 0, LOG_LEVEL_WRN = 1, LOG_LEVEL_ERR = 2 };
 
 	/*Static functions*/
 	static void getVersionInfo(uint32_t &major, uint32_t &minor, uint32_t &patch);

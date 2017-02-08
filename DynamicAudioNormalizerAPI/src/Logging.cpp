@@ -35,7 +35,7 @@
 #include <cstdarg>
 
 //Globals
-static MDynamicAudioNormalizer_LogHandler *g_loggingCallback = NULL;
+static MDynamicAudioNormalizer_Internal::LoggingCallback *g_loggingCallback = NULL;
 static char g_messageBuffer[1024];
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -43,9 +43,9 @@ static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 // Logging Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-MDynamicAudioNormalizer_LogHandler *MDynamicAudioNormalizer_setLogHandler(MDynamicAudioNormalizer_LogHandler *const callback)
+MDynamicAudioNormalizer_Internal::LoggingCallback *MDynamicAudioNormalizer_Internal::setLoggingHandler(LoggingCallback *const callback)
 {
-	MDynamicAudioNormalizer_LogHandler *oldValue;
+	LoggingCallback *oldValue;
 
 	MY_CRITSEC_ENTER(g_mutex);
 	oldValue = g_loggingCallback;
@@ -55,7 +55,7 @@ MDynamicAudioNormalizer_LogHandler *MDynamicAudioNormalizer_setLogHandler(MDynam
 	return oldValue;
 }
 
-void MDynamicAudioNormalizer_postLogMessage(const int &logLevel, const char *const message, ...)
+void MDynamicAudioNormalizer_Internal::postLogMessage(const int &logLevel, const char *const message, ...)
 {
 	MY_CRITSEC_ENTER(g_mutex);
 

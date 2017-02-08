@@ -21,14 +21,17 @@
 
 #pragma once
 
-typedef void (MDynamicAudioNormalizer_LogHandler)(const int logLevel, const char *const message);
-MDynamicAudioNormalizer_LogHandler *MDynamicAudioNormalizer_setLogHandler(MDynamicAudioNormalizer_LogHandler *const callback);
-void MDynamicAudioNormalizer_postLogMessage(const int &logLevel, const char *const message, ...);
+namespace MDynamicAudioNormalizer_Internal
+{
+	typedef void (LoggingCallback)(const int logLevel, const char *const message);
+	LoggingCallback *setLoggingHandler(LoggingCallback *const callback);
+	void postLogMessage(const int &logLevel, const char *const message, ...);
+}
 
-#define LOG1_DBG(X) MDynamicAudioNormalizer_postLogMessage(0, (X))
-#define LOG1_WRN(X) MDynamicAudioNormalizer_postLogMessage(1, (X))
-#define LOG1_ERR(X) MDynamicAudioNormalizer_postLogMessage(2, (X))
+#define LOG1_DBG(X) MDynamicAudioNormalizer_Internal::postLogMessage(0, (X))
+#define LOG1_WRN(X) MDynamicAudioNormalizer_Internal::postLogMessage(1, (X))
+#define LOG1_ERR(X) MDynamicAudioNormalizer_Internal::postLogMessage(2, (X))
 
-#define LOG2_DBG(X,...) MDynamicAudioNormalizer_postLogMessage(0, (X), __VA_ARGS__)
-#define LOG2_WRN(X,...) MDynamicAudioNormalizer_postLogMessage(1, (X), __VA_ARGS__)
-#define LOG2_ERR(X,...) MDynamicAudioNormalizer_postLogMessage(2, (X), __VA_ARGS__)
+#define LOG2_DBG(X,...) MDynamicAudioNormalizer_Internal::postLogMessage(0, (X), __VA_ARGS__)
+#define LOG2_WRN(X,...) MDynamicAudioNormalizer_Internal::postLogMessage(1, (X), __VA_ARGS__)
+#define LOG2_ERR(X,...) MDynamicAudioNormalizer_Internal::postLogMessage(2, (X), __VA_ARGS__)

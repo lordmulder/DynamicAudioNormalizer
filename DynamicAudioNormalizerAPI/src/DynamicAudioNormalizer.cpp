@@ -44,20 +44,25 @@
 // Static Initializer
 ///////////////////////////////////////////////////////////////////////////////
 
-class MDynamicAudioNormalizer_StaticInitializer
-{
-public:
-	MDynamicAudioNormalizer_StaticInitializer(void)
-	{
-#if defined(_MSC_VER) && (_MSC_VER >= 1800) && (_MSC_VER < 1900) && defined(_M_X64) && (_M_X64 >= 100)
-		// FMA3 support in the MSVC 2013 CRT is broken on Vista and Windows 7 RTM (fixed in SP1).
-		// See https://connect.microsoft.com/VisualStudio/feedback/details/987093/x64-log-function-uses-vpsrlq-avx-instruction-without-regard-to-operating-system-so-it-crashes-on-vista-x64
-		_set_FMA3_enable(0);
-#endif
-	}
-};
+#define INTENAL_NS MDynamicAudioNormalizer_Internal
 
-static const MDynamicAudioNormalizer_StaticInitializer g_static_init;
+namespace INTENAL_NS
+{
+	class StaticInitializer
+	{
+	public:
+		StaticInitializer(void)
+		{
+#if defined(_MSC_VER) && (_MSC_VER >= 1800) && (_MSC_VER < 1900) && defined(_M_X64) && (_M_X64 >= 100)
+			// FMA3 support in the MSVC 2013 CRT is broken on Vista and Windows 7 RTM (fixed in SP1).
+			// See https://connect.microsoft.com/VisualStudio/feedback/details/987093/x64-log-function-uses-vpsrlq-avx-instruction-without-regard-to-operating-system-so-it-crashes-on-vista-x64
+			_set_FMA3_enable(0);
+#endif
+		}
+	};
+}
+
+static const INTENAL_NS::StaticInitializer g_static_init;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -182,7 +187,7 @@ private:
 	std::queue<double> *m_loggingData_minimum;
 	std::queue<double> *m_loggingData_smoothed;
 
-	MDynamicAudioNormalizer_GaussianFilter *m_gaussianFilter;
+	INTENAL_NS::GaussianFilter *m_gaussianFilter;
 
 	double *m_prevAmplificationFactor;
 	double *m_dcCorrectionValue;
@@ -370,7 +375,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	m_loggingData_smoothed = new std::queue<double>[m_channels];
 
 	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
-	m_gaussianFilter = new MDynamicAudioNormalizer_GaussianFilter(m_filterSize, sigma);
+	m_gaussianFilter = new INTENAL_NS::GaussianFilter(m_filterSize, sigma);
 
 	m_dcCorrectionValue       = new double[m_channels];
 	m_prevAmplificationFactor = new double[m_channels];
@@ -693,7 +698,7 @@ void MDynamicAudioNormalizer::getBuildInfo(const char **date, const char **time,
 
 MDynamicAudioNormalizer::LogFunction *MDynamicAudioNormalizer::setLogFunction(MDynamicAudioNormalizer::LogFunction *const logFunction)
 {
-	return MDynamicAudioNormalizer_setLogHandler(logFunction);
+	return INTENAL_NS::setLoggingHandler(logFunction);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
