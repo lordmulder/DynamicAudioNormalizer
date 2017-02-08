@@ -35,7 +35,7 @@
 #include <cstdarg>
 
 //Globals
-static DYNAUDNORM_LOG_CALLBACK *g_loggingCallback = NULL;
+static MDynamicAudioNormalizer_LogHandler *g_loggingCallback = NULL;
 static char g_messageBuffer[1024];
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -43,17 +43,19 @@ static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 // Logging Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-DYNAUDNORM_LOG_CALLBACK *DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback)
+MDynamicAudioNormalizer_LogHandler *MDynamicAudioNormalizer_setLogHandler(MDynamicAudioNormalizer_LogHandler *const callback)
 {
+	MDynamicAudioNormalizer_LogHandler *oldValue;
+
 	MY_CRITSEC_ENTER(g_mutex);
-	DYNAUDNORM_LOG_CALLBACK *const oldCallback = g_loggingCallback;
+	oldValue = g_loggingCallback;
 	g_loggingCallback = callback;
 	MY_CRITSEC_LEAVE(g_mutex);
 
-	return oldCallback;
+	return oldValue;
 }
 
-void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...)
+void MDynamicAudioNormalizer_postLogMessage(const int &logLevel, const char *const message, ...)
 {
 	MY_CRITSEC_ENTER(g_mutex);
 

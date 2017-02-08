@@ -161,7 +161,7 @@ while(0)
 // Create Boxed Type
 ///////////////////////////////////////////////////////////////////////////////
 
-jobject javaNewInteger(JNIEnv *env, const jint &value)
+static jobject javaNewInteger(JNIEnv *env, const jint &value)
 {
 	jclass integerClass;
 	jmethodID valueOfMethod;

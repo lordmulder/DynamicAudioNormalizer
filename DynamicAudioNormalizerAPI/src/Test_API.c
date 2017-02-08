@@ -21,7 +21,7 @@
 
 #include "DynamicAudioNormalizer.h"
 
-static void API_Test(void)
+static void MDynamicAudioNormalizer_API_Tester(void)
 {
 	MDynamicAudioNormalizer_Handle *handle = MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, 1, 0, 0, NULL);
 	if(handle)

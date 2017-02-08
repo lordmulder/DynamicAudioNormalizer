@@ -27,7 +27,7 @@
 // Frame Data
 ///////////////////////////////////////////////////////////////////////////////
 
-FrameData::FrameData(const uint32_t &channels, const uint32_t &frameLength)
+MDynamicAudioNormalizer_FrameData::MDynamicAudioNormalizer_FrameData(const uint32_t &channels, const uint32_t &frameLength)
 :
 	m_channels(channels),
 	m_frameLength(frameLength)
@@ -42,7 +42,7 @@ FrameData::FrameData(const uint32_t &channels, const uint32_t &frameLength)
 	clear();
 }
 
-FrameData::~FrameData(void)
+MDynamicAudioNormalizer_FrameData::~MDynamicAudioNormalizer_FrameData(void)
 {
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
@@ -52,7 +52,7 @@ FrameData::~FrameData(void)
 	MY_DELETE_ARRAY(m_data);
 }
 
-void FrameData::clear(void)
+void MDynamicAudioNormalizer_FrameData::clear(void)
 {
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
@@ -64,18 +64,18 @@ void FrameData::clear(void)
 // Frame FIFO
 ///////////////////////////////////////////////////////////////////////////////
 
-FrameFIFO::FrameFIFO(const uint32_t &channels, const uint32_t &frameLength)
+MDynamicAudioNormalizer_FrameFIFO::MDynamicAudioNormalizer_FrameFIFO(const uint32_t &channels, const uint32_t &frameLength)
 {
-	m_data = new FrameData(channels, frameLength);
+	m_data = new MDynamicAudioNormalizer_FrameData(channels, frameLength);
 	reset(false);
 }
 
-FrameFIFO::~FrameFIFO(void)
+MDynamicAudioNormalizer_FrameFIFO::~MDynamicAudioNormalizer_FrameFIFO(void)
 {
 	MY_DELETE(m_data);
 }
 
-void FrameFIFO::reset(const bool &bForceClear)
+void MDynamicAudioNormalizer_FrameFIFO::reset(const bool &bForceClear)
 {
 	if(bForceClear) m_data->clear();
 	m_posPut = m_posGet = m_leftGet = 0;
@@ -86,7 +86,7 @@ void FrameFIFO::reset(const bool &bForceClear)
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-FrameBuffer::FrameBuffer(const uint32_t &channels, const uint32_t &frameLength, const uint32_t &frameCount)
+MDynamicAudioNormalizer_FrameBuffer::MDynamicAudioNormalizer_FrameBuffer(const uint32_t &channels, const uint32_t &frameLength, const uint32_t &frameCount)
 :
 	m_channels(channels),
 	m_frameLength(frameLength),
@@ -96,15 +96,15 @@ FrameBuffer::FrameBuffer(const uint32_t &channels, const uint32_t &frameLength, 
 	m_framesUsed = 0;
 	m_posPut = m_posGet = 0;
 
-	m_frames = new FrameData*[m_frameCount];
+	m_frames = new MDynamicAudioNormalizer_FrameData*[m_frameCount];
 
 	for(uint32_t i = 0; i < m_frameCount; i++)
 	{
-		m_frames[i] = new FrameData(m_channels, m_frameLength);
+		m_frames[i] = new MDynamicAudioNormalizer_FrameData(m_channels, m_frameLength);
 	}
 }
 
-FrameBuffer::~FrameBuffer(void)
+MDynamicAudioNormalizer_FrameBuffer::~MDynamicAudioNormalizer_FrameBuffer(void)
 {
 	for(uint32_t i = 0; i < m_frameCount; i++)
 	{
@@ -118,7 +118,7 @@ FrameBuffer::~FrameBuffer(void)
 // Reset
 ///////////////////////////////////////////////////////////////////////////////
 
-void FrameBuffer::reset(void)
+void MDynamicAudioNormalizer_FrameBuffer::reset(void)
 {
 	m_framesFree = m_frameCount;
 	m_framesUsed = 0;
@@ -134,7 +134,7 @@ void FrameBuffer::reset(void)
 // Put / Get Frame
 ///////////////////////////////////////////////////////////////////////////////
 
-bool FrameBuffer::putFrame(FrameFIFO *src)
+bool MDynamicAudioNormalizer_FrameBuffer::putFrame(MDynamicAudioNormalizer_FrameFIFO *const src)
 {
 	if((m_framesFree < 1) && (src->samplesLeftGet() < m_frameLength))
 	{
@@ -150,7 +150,7 @@ bool FrameBuffer::putFrame(FrameFIFO *src)
 	return true;
 }
 
-bool FrameBuffer::getFrame(FrameFIFO *dest)
+bool MDynamicAudioNormalizer_FrameBuffer::getFrame(MDynamicAudioNormalizer_FrameFIFO *const dest)
 {
 	if((m_framesUsed < 1) && (dest->samplesLeftPut() < m_frameLength))
 	{

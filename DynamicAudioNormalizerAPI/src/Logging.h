@@ -21,14 +21,14 @@
 
 #pragma once
 
-typedef void (DYNAUDNORM_LOG_CALLBACK)(const int logLevel, const char *const message);
-DYNAUDNORM_LOG_CALLBACK * DYNAUDNORM_LOG_SETCALLBACK(DYNAUDNORM_LOG_CALLBACK *const callback);
-void DYNAUDNORM_LOG_POSTMESSAGE(const int &logLevel, const char *const message, ...);
+typedef void (MDynamicAudioNormalizer_LogHandler)(const int logLevel, const char *const message);
+MDynamicAudioNormalizer_LogHandler *MDynamicAudioNormalizer_setLogHandler(MDynamicAudioNormalizer_LogHandler *const callback);
+void MDynamicAudioNormalizer_postLogMessage(const int &logLevel, const char *const message, ...);
 
-#define LOG1_DBG(X) DYNAUDNORM_LOG_POSTMESSAGE(0, (X))
-#define LOG1_WRN(X) DYNAUDNORM_LOG_POSTMESSAGE(1, (X))
-#define LOG1_ERR(X) DYNAUDNORM_LOG_POSTMESSAGE(2, (X))
+#define LOG1_DBG(X) MDynamicAudioNormalizer_postLogMessage(0, (X))
+#define LOG1_WRN(X) MDynamicAudioNormalizer_postLogMessage(1, (X))
+#define LOG1_ERR(X) MDynamicAudioNormalizer_postLogMessage(2, (X))
 
-#define LOG2_DBG(X,...) DYNAUDNORM_LOG_POSTMESSAGE(0, (X), __VA_ARGS__)
-#define LOG2_WRN(X,...) DYNAUDNORM_LOG_POSTMESSAGE(1, (X), __VA_ARGS__)
-#define LOG2_ERR(X,...) DYNAUDNORM_LOG_POSTMESSAGE(2, (X), __VA_ARGS__)
+#define LOG2_DBG(X,...) MDynamicAudioNormalizer_postLogMessage(0, (X), __VA_ARGS__)
+#define LOG2_WRN(X,...) MDynamicAudioNormalizer_postLogMessage(1, (X), __VA_ARGS__)
+#define LOG2_ERR(X,...) MDynamicAudioNormalizer_postLogMessage(2, (X), __VA_ARGS__)

@@ -25,11 +25,11 @@
 #include <cstring>
 #include <stdint.h>
 
-class FrameData
+class MDynamicAudioNormalizer_FrameData
 {
 public:
-	FrameData(const uint32_t &channels, const uint32_t &frameLength);
-	~FrameData(void);
+	MDynamicAudioNormalizer_FrameData(const uint32_t &channels, const uint32_t &frameLength);
+	~MDynamicAudioNormalizer_FrameData(void);
 	
 	inline double *data(const uint32_t &channel)
 	{
@@ -55,7 +55,7 @@ public:
 		}
 	}
 
-	inline void write(const FrameData *src, const uint32_t &srcOffset, const uint32_t &destOffset, const uint32_t &length)
+	inline void write(const MDynamicAudioNormalizer_FrameData *const src, const uint32_t &srcOffset, const uint32_t &destOffset, const uint32_t &length)
 	{
 		assert(length + destOffset <= m_frameLength);
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -64,7 +64,7 @@ public:
 		}
 	}
 
-	inline void read(double **dest, const uint32_t &destOffset, const uint32_t &srcOffset, const uint32_t &length)
+	inline void read(double *const *const dest, const uint32_t &destOffset, const uint32_t &srcOffset, const uint32_t &length)
 	{
 		assert(length + srcOffset <= m_frameLength);
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -73,7 +73,7 @@ public:
 		}
 	}
 
-	inline void read(FrameData *dest, const uint32_t &destOffset, const uint32_t &srcOffset, const uint32_t &length)
+	inline void read(MDynamicAudioNormalizer_FrameData *const dest, const uint32_t &destOffset, const uint32_t &srcOffset, const uint32_t &length)
 	{
 		assert(length + srcOffset <= m_frameLength);
 		for(uint32_t c = 0; c < m_channels; c++)
@@ -85,8 +85,8 @@ public:
 	void clear(void);
 	
 private:
-	FrameData(const FrameData&) : m_channels(0), m_frameLength(0) { throw "unsupported"; }
-	FrameData &operator=(const FrameData&)                        { throw "unsupported"; }
+	MDynamicAudioNormalizer_FrameData(const MDynamicAudioNormalizer_FrameData&) : m_channels(0), m_frameLength(0) { throw "unsupported"; }
+	MDynamicAudioNormalizer_FrameData &operator=(const MDynamicAudioNormalizer_FrameData&)                        { throw "unsupported"; }
 
 	const uint32_t m_channels;
 	const uint32_t m_frameLength;
@@ -94,11 +94,11 @@ private:
 	double **m_data;
 };
 
-class FrameFIFO
+class MDynamicAudioNormalizer_FrameFIFO
 {
 public:
-	FrameFIFO(const uint32_t &channels, const uint32_t &frameLength);
-	~FrameFIFO(void);
+	MDynamicAudioNormalizer_FrameFIFO(const uint32_t &channels, const uint32_t &frameLength);
+	~MDynamicAudioNormalizer_FrameFIFO(void);
 
 	inline uint32_t samplesLeftPut(void) { return m_leftPut; }
 	inline uint32_t samplesLeftGet(void) { return m_leftGet; }
@@ -112,7 +112,7 @@ public:
 		m_leftGet += length;
 	}
 
-	inline void putSamples(const FrameData *src, const uint32_t &srcOffset,const uint32_t &length)
+	inline void putSamples(const MDynamicAudioNormalizer_FrameData *const src, const uint32_t &srcOffset,const uint32_t &length)
 	{
 		assert(length <= samplesLeftPut());
 		m_data->write(src, srcOffset, m_posPut, length);
@@ -121,7 +121,7 @@ public:
 		m_leftGet += length;
 	}
 
-	inline void getSamples(double **dest, const uint32_t &destOffset, const uint32_t &length)
+	inline void getSamples(double *const *const dest, const uint32_t &destOffset, const uint32_t &length)
 	{
 		assert(length <= samplesLeftGet());
 		m_data->read(dest, destOffset, m_posGet, length);
@@ -129,7 +129,7 @@ public:
 		m_leftGet -= length;
 	}
 	
-	inline void getSamples(FrameData *dest, const uint32_t &destOffset, const uint32_t &length)
+	inline void getSamples(MDynamicAudioNormalizer_FrameData *const dest, const uint32_t &destOffset, const uint32_t &length)
 	{
 		assert(length <= samplesLeftGet());
 		m_data->read(dest, destOffset, m_posGet, length);
@@ -137,7 +137,7 @@ public:
 		m_leftGet -= length;
 	}
 
-	inline FrameData *data(void)
+	inline MDynamicAudioNormalizer_FrameData *data(void)
 	{
 		return m_data;
 	}
@@ -145,7 +145,7 @@ public:
 	void reset(const bool &bForceClear = true);
 
 private:
-	FrameData *m_data;
+	MDynamicAudioNormalizer_FrameData *m_data;
 
 	uint32_t m_posPut;
 	uint32_t m_posGet;
@@ -153,14 +153,14 @@ private:
 	uint32_t m_leftGet;
 };
 
-class FrameBuffer
+class MDynamicAudioNormalizer_FrameBuffer
 {
 public:
-	FrameBuffer(const uint32_t &channels, const uint32_t &frameLength, const uint32_t &frameCount);
-	~FrameBuffer(void);
+	MDynamicAudioNormalizer_FrameBuffer(const uint32_t &channels, const uint32_t &frameLength, const uint32_t &frameCount);
+	~MDynamicAudioNormalizer_FrameBuffer(void);
 
-	bool putFrame(FrameFIFO *src);
-	bool getFrame(FrameFIFO *dest);
+	bool putFrame(MDynamicAudioNormalizer_FrameFIFO *const src);
+	bool getFrame(MDynamicAudioNormalizer_FrameFIFO *const dest);
 
 	inline const uint32_t &channels(void)    { return m_channels;    }
 	inline const uint32_t &frameLength(void) { return m_frameLength; }
@@ -172,8 +172,8 @@ public:
 	void reset(void);
 
 private:
-	FrameBuffer(const FrameBuffer&) : m_channels(0), m_frameLength(0), m_frameCount(0) { throw "unsupported"; }
-	FrameBuffer &operator=(const FrameBuffer&)                                         { throw "unsupported"; }
+	MDynamicAudioNormalizer_FrameBuffer(const MDynamicAudioNormalizer_FrameBuffer&) : m_channels(0), m_frameLength(0), m_frameCount(0) { throw "unsupported"; }
+	MDynamicAudioNormalizer_FrameBuffer &operator=(const MDynamicAudioNormalizer_FrameBuffer&)                                         { throw "unsupported"; }
 
 	const uint32_t m_channels;
 	const uint32_t m_frameLength;
@@ -185,5 +185,5 @@ private:
 	uint32_t m_posPut;
 	uint32_t m_posGet;
 
-	FrameData **m_frames;
+	MDynamicAudioNormalizer_FrameData **m_frames;
 };

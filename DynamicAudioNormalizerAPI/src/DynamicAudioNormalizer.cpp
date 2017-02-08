@@ -163,8 +163,8 @@ private:
 	bool m_initialized;
 	bool m_flushBuffer;
 
-	FrameFIFO *m_buffSrc;
-	FrameFIFO *m_buffOut;
+	MDynamicAudioNormalizer_FrameFIFO *m_buffSrc;
+	MDynamicAudioNormalizer_FrameFIFO *m_buffOut;
 	
 	int64_t m_delayedSamples;
 
@@ -172,7 +172,7 @@ private:
 	uint64_t m_sampleCounterClips;
 	uint64_t m_sampleCounterCompr;
 
-	FrameBuffer *m_frameBuffer;
+	MDynamicAudioNormalizer_FrameBuffer *m_frameBuffer;
 
 	std::deque<double> *m_gainHistory_original;
 	std::deque<double> *m_gainHistory_minimum;
@@ -182,7 +182,7 @@ private:
 	std::queue<double> *m_loggingData_minimum;
 	std::queue<double> *m_loggingData_smoothed;
 
-	GaussianFilter *m_gaussianFilter;
+	MDynamicAudioNormalizer_GaussianFilter *m_gaussianFilter;
 
 	double *m_prevAmplificationFactor;
 	double *m_dcCorrectionValue;
@@ -191,16 +191,16 @@ private:
 	double *m_fadeFactors[2];
 
 protected:
-	void analyzeFrame(FrameData *frame);
-	void amplifyFrame(FrameData *frame);
+	void analyzeFrame(MDynamicAudioNormalizer_FrameData *const frame);
+	void amplifyFrame(MDynamicAudioNormalizer_FrameData *const frame);
 	
-	double getMaxLocalGain(FrameData *const frame, const uint32_t channel = UINT32_MAX);
-	double findPeakMagnitude(FrameData *const frame, const uint32_t channel = UINT32_MAX);
-	double computeFrameRMS(const FrameData *const frame, const uint32_t channel = UINT32_MAX);
-	double computeFrameStdDev(const FrameData *const frame, const uint32_t channel = UINT32_MAX);
+	double getMaxLocalGain(MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel = UINT32_MAX);
+	double findPeakMagnitude(MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel = UINT32_MAX);
+	double computeFrameRMS(const MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel = UINT32_MAX);
+	double computeFrameStdDev(const MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel = UINT32_MAX);
 	void updateGainHistory(const uint32_t &channel, const double &currentGainFactor);
-	void perfromDCCorrection(FrameData *const frame, const bool &isFirstFrame);
-	void perfromCompression(FrameData *const frame, const bool &isFirstFrame);
+	void perfromDCCorrection(MDynamicAudioNormalizer_FrameData *const frame, const bool &isFirstFrame);
+	void perfromCompression(MDynamicAudioNormalizer_FrameData *const frame, const bool &isFirstFrame);
 	void writeLogFile(void);
 	void printParameters(void);
 	
@@ -356,10 +356,10 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 		LOG1_WRN("Specified log file has the error indicator set, no logging information will be created!");
 	}
 
-	m_buffSrc = new FrameFIFO(m_channels, m_frameLen);
-	m_buffOut = new FrameFIFO(m_channels, m_frameLen);
+	m_buffSrc = new MDynamicAudioNormalizer_FrameFIFO(m_channels, m_frameLen);
+	m_buffOut = new MDynamicAudioNormalizer_FrameFIFO(m_channels, m_frameLen);
 
-	m_frameBuffer = new FrameBuffer(m_channels, m_frameLen, m_filterSize + 1);
+	m_frameBuffer = new MDynamicAudioNormalizer_FrameBuffer(m_channels, m_frameLen, m_filterSize + 1);
 
 	m_gainHistory_original = new std::deque<double>[m_channels];
 	m_gainHistory_minimum  = new std::deque<double>[m_channels];
@@ -370,7 +370,7 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 	m_loggingData_smoothed = new std::queue<double>[m_channels];
 
 	const double sigma = (((double(m_filterSize) / 2.0) - 1.0) / 3.0) + (1.0 / 3.0);
-	m_gaussianFilter = new GaussianFilter(m_filterSize, sigma);
+	m_gaussianFilter = new MDynamicAudioNormalizer_GaussianFilter(m_filterSize, sigma);
 
 	m_dcCorrectionValue       = new double[m_channels];
 	m_prevAmplificationFactor = new double[m_channels];
@@ -693,14 +693,14 @@ void MDynamicAudioNormalizer::getBuildInfo(const char **date, const char **time,
 
 MDynamicAudioNormalizer::LogFunction *MDynamicAudioNormalizer::setLogFunction(MDynamicAudioNormalizer::LogFunction *const logFunction)
 {
-	return DYNAUDNORM_LOG_SETCALLBACK(logFunction);
+	return MDynamicAudioNormalizer_setLogHandler(logFunction);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Procesing Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *const frame)
+void MDynamicAudioNormalizer_PrivateData::analyzeFrame(MDynamicAudioNormalizer_FrameData *const frame)
 {
 	//Perform DC Correction (optional)
 	if(m_enableDCCorrection)
@@ -735,7 +735,7 @@ void MDynamicAudioNormalizer_PrivateData::analyzeFrame(FrameData *const frame)
 	writeLogFile();
 }
 
-void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *const frame)
+void MDynamicAudioNormalizer_PrivateData::amplifyFrame(MDynamicAudioNormalizer_FrameData *const frame)
 {
 	for(uint32_t c = 0; c < m_channels; c++)
 	{
@@ -770,14 +770,14 @@ void MDynamicAudioNormalizer_PrivateData::amplifyFrame(FrameData *const frame)
 // Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-double MDynamicAudioNormalizer_PrivateData::getMaxLocalGain(FrameData *const frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::getMaxLocalGain(MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel)
 {
 	const double maximumGain = m_peakValue / findPeakMagnitude(frame, channel);
 	const double rmsGain = (m_targetRms > DBL_EPSILON) ? (m_targetRms / computeFrameRMS(frame, channel)) : DBL_MAX;
 	return BOUND(m_maxAmplification, std::min(maximumGain, rmsGain));
 }
 
-double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *const frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel)
 {
 	double dMax = DBL_EPSILON;
 
@@ -804,7 +804,7 @@ double MDynamicAudioNormalizer_PrivateData::findPeakMagnitude(FrameData *const f
 	return dMax;
 }
 
-double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(const FrameData *const frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(const MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel)
 {
 	double rmsValue = 0.0;
 	
@@ -833,7 +833,7 @@ double MDynamicAudioNormalizer_PrivateData::computeFrameRMS(const FrameData *con
 	return std::max(sqrt(rmsValue), DBL_EPSILON);
 }
 
-double MDynamicAudioNormalizer_PrivateData::computeFrameStdDev(const FrameData *frame, const uint32_t channel)
+double MDynamicAudioNormalizer_PrivateData::computeFrameStdDev(const MDynamicAudioNormalizer_FrameData *const frame, const uint32_t channel)
 {
 	double variance = 0.0;
 
@@ -911,7 +911,7 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 	}
 }
 
-void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *const frame, const bool &isFirstFrame)
+void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(MDynamicAudioNormalizer_FrameData *const frame, const bool &isFirstFrame)
 {
 	const double diff = 1.0 / double(m_frameLen);
 
@@ -935,7 +935,7 @@ void MDynamicAudioNormalizer_PrivateData::perfromDCCorrection(FrameData *const f
 	}
 }
 
-void MDynamicAudioNormalizer_PrivateData::perfromCompression(FrameData *const frame, const bool &isFirstFrame)
+void MDynamicAudioNormalizer_PrivateData::perfromCompression(MDynamicAudioNormalizer_FrameData *const frame, const bool &isFirstFrame)
 {
 	if(m_channelsCoupled)
 	{
