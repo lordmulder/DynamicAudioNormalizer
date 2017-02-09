@@ -43,9 +43,9 @@ OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).tbz2)
 PANDOC_FLAGS := markdown_github+pandoc_title_block+header_attributes+implicit_figures
 
 # Version info
-VER_MAJOR = $(shell sed -n 's/.*DYNAUDNORM_VERSION_MAJOR = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
-VER_MINOR = $(shell sed -n 's/.*DYNAUDNORM_VERSION_MINOR = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
-VER_PATCH = $(shell sed -n 's/.*DYNAUDNORM_VERSION_PATCH = \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
+VER_MAJOR = $(shell sed -n 's/.*DYNAUDNORM_NS::VERSION_MAJOR\s*=\s*\([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
+VER_MINOR = $(shell sed -n 's/.*DYNAUDNORM_NS::VERSION_MINOR\s*=\s*\([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
+VER_PATCH = $(shell sed -n 's/.*DYNAUDNORM_NS::VERSION_PATCH\s*=\s*\([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
 
 # API Version
 export API_VERSION := $(shell sed -n 's/.*define MDYNAMICAUDIONORMALIZER_CORE \([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/include/DynamicAudioNormalizer.h)
@@ -130,7 +130,7 @@ CreateTagFile:
 	@$(ECHO) "\e[1;34mBuild Tag\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
 	echo "Dynamic Audio Normalizer" > $(BUILD_TAG)
-	echo "Copyright (C) 2015 LoRd_MuldeR <MuldeR2@GMX.de>" >> $(BUILD_TAG)
+	echo "Copyright (C) 2014-$(shell date +%Y) LoRd_MuldeR <MuldeR2@GMX.de>. Some rights reserved." >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	echo "Version $$(printf %d.%02d-%d $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH)). Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
