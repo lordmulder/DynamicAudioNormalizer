@@ -26,6 +26,14 @@
 #include <Common.h>
 #include <algorithm>
 
+#ifdef __unix
+#include <unistd.h>
+#else
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -163,7 +171,7 @@ const CHR *AudioIO::detectSourceType(const CHR *const fileName)
 {
 	uint8_t type = AUDIO_LIB_NULL;
 	const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
-	const bool isPipe = bStdIn && (!FILE_ISREG(stdin));
+	const bool isPipe = bStdIn && (!FILE_ISREG(FILENO(stdin)));
 	if (FILE *const file = bStdIn ? (isPipe ? NULL : stdin) : FOPEN(fileName, TXT("rb")))
 	{
 		for (size_t i = 0; g_audioIO_mapping[i].id; ++i)

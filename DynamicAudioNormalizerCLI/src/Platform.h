@@ -409,10 +409,10 @@ void SYSTEM_INIT(const bool &debugMode);
 #define PRINT2_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
 #define PRINT2_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
 
-inline static bool FILE_ISREG(FILE *const stream)
+inline static bool FILE_ISREG(const int fd)
 {
 	STAT64 stat;
-	if (FSTAT64(FILENO(stream), &stat) == 0)
+	if (FSTAT64(fd, &stat) == 0)
 	{
 		return ((stat.st_mode & S_IFMT) == S_IFREG);
 	}

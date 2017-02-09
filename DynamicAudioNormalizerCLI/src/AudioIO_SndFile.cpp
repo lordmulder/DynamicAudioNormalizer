@@ -219,7 +219,7 @@ bool AudioIO_SndFile_Private::openRd(const CHR *const fileName, const uint32_t c
 
 	//Use pipe?
 	const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
-	const bool bPipe = bStdIn && (!FILE_ISREG(stdin));
+	const bool bPipe = bStdIn && (!FILE_ISREG(STDIN_FILENO));
 	
 	//Setup info for "raw" input
 	if(bPipe)
@@ -263,10 +263,10 @@ bool AudioIO_SndFile_Private::openWr(const CHR *const fileName, const uint32_t c
 
 	//Use pipe?
 	const bool bStdOut = (STRCASECMP(fileName, TXT("-")) == 0);
-	const bool bPipe = bStdOut && (!FILE_ISREG(stdout));
+	const bool bPipe = bStdOut && (!FILE_ISREG(STDOUT_FILENO));
 
 	//Setup output format
-	info.format = bPipe ? formatFromExtension(TXT("raw"), bitDepth) : formatFromExtension((format ? format : fileName), bitDepth);
+	info.format = format ? formatFromExtension(format, bitDepth) : formatFromExtension(bPipe ? TXT("raw") : fileName, bitDepth);
 	info.channels = channels;
 	info.samplerate = sampleRate;
 
@@ -562,7 +562,7 @@ int AudioIO_SndFile_Private::formatFromExtension(const CHR *const fileName, cons
 		}
 	}
 
-	return SF_FORMAT_WAV  | getSubFormat(bitDepth, 0, 1);
+	return SF_FORMAT_WAV | getSubFormat(bitDepth, 0, 1);
 }
 
 int AudioIO_SndFile_Private::getSubFormat(const int &bitDepth, const bool &eightBitIsSigned, const bool &hightBitdepthSupported)

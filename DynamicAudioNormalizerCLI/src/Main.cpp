@@ -52,6 +52,10 @@
 
 //Utility macros
 #define BOOLIFY(X) ((X) ? TXT("on") : TXT("off"))
+#define FILENAME_SRC(X) (STRCASECMP((X), TXT("-")) ? (X) : TXT("<STDIN>"))
+#define FILENAME_OUT(X) (STRCASECMP((X), TXT("-")) ? (X) : TXT("<STDOUT>"))
+
+//Const	
 static const size_t FRAME_SIZE = 4096;
 
 static const CHR *appName(const CHR* argv0)
@@ -130,14 +134,14 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 
 	//Print Audio I/O information
 	PRINT(TXT("Using ") FMT_CHR TXT("\n\n"), AudioIO::getLibraryVersion(sourceLibrary));
-	PRINT(TXT("SourceFile: ") FMT_CHR TXT("\n"),   STRCASECMP(parameters.sourceFile(), TXT("-")) ? parameters.sourceFile() : TXT("<STDIN>" ));
-	PRINT(TXT("OutputFile: ") FMT_CHR TXT("\n\n"), STRCASECMP(parameters.outputFile(), TXT("-")) ? parameters.outputFile() : TXT("<STDOUT>"));
+	PRINT(TXT("SourceFile: ") FMT_CHR TXT("\n"),   FILENAME_SRC(parameters.sourceFile()));
+	PRINT(TXT("OutputFile: ") FMT_CHR TXT("\n\n"), FILENAME_OUT(parameters.outputFile()));
 
 	//Open *source* file
 	*sourceFile = AudioIO::createInstance(sourceLibrary);
 	if(!(*sourceFile)->openRd(parameters.sourceFile(), parameters.inputChannels(), parameters.inputSampleRate(), parameters.inputBitDepth()))
 	{
-		PRINT2_WRN(TXT("Failed to open input file \"") FMT_CHR TXT("\" for reading!\n"), parameters.sourceFile());
+		PRINT2_WRN(TXT("Failed to open input file \"") FMT_CHR TXT("\" for reading!\n"), FILENAME_SRC(parameters.sourceFile()));
 		MY_DELETE(*sourceFile);
 		return false;
 	}
@@ -159,7 +163,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	*outputFile = AudioIO::createInstance();
 	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth, parameters.outputFormat()))
 	{
-		PRINT2_WRN(TXT("Failed to open output file \"") FMT_CHR TXT("\" for writing!\n"), parameters.outputFile());
+		PRINT2_WRN(TXT("Failed to open output file \"") FMT_CHR TXT("\" for writing!\n"), FILENAME_OUT(parameters.outputFile()));
 		MY_DELETE(*sourceFile);
 		MY_DELETE(*outputFile);
 		return false;
