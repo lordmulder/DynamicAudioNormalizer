@@ -125,7 +125,7 @@ static void logFunction(const int logLevel, const char *const message)
 {
 	switch (logLevel) 
 	{
-	case MDynamicAudioNormalizer::LOG_LEVEL_NFO:
+	case MDynamicAudioNormalizer::LOG_LEVEL_DBG:
 		outputMessage("[DynAudNorm_WA5] NFO: %s\n", message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:

@@ -22,85 +22,85 @@
 #include "Version.h"
 
 //Version info
-const unsigned int DYNAUDNORM_VERSION_MAJOR =  2;
-const unsigned int DYNAUDNORM_VERSION_MINOR = 10;
-const unsigned int DYNAUDNORM_VERSION_PATCH =  0;
+const unsigned int DYNAUDNORM_NS::VERSION_MAJOR =  2;
+const unsigned int DYNAUDNORM_NS::VERSION_MINOR = 10;
+const unsigned int DYNAUDNORM_NS::VERSION_PATCH =  0;
 
 //Build date/time
-const char *const DYNAUDNORM_BUILD_DATE = __DATE__;
-const char *const DYNAUDNORM_BUILD_TIME = __TIME__;
+const char *const DYNAUDNORM_NS::BUILD_DATE = __DATE__;
+const char *const DYNAUDNORM_NS::BUILD_TIME = __TIME__;
 
 //Compiler detection
 #if defined(__INTEL_COMPILER)
 	#if (__INTEL_COMPILER >= 1600)
-		const char *const DYNAUDNORM_COMPILER = "ICL 16.x";
+		const char *const DYNAUDNORM_NS::BUILD_COMPILER = "ICL 16.x";
 	#elif (__INTEL_COMPILER >= 1500)
-		const char *const DYNAUDNORM_COMPILER = "ICL 15.x";
+		const char *const DYNAUDNORM_NS::BUILD_COMPILER = "ICL 15.x";
 	#elif (__INTEL_COMPILER >= 1400)
-		const char *const DYNAUDNORM_COMPILER = "ICL 14.x";
+		const char *const DYNAUDNORM_NS::BUILD_COMPILER = "ICL 14.x";
 	#elif (__INTEL_COMPILER >= 1300)
-		const char *const DYNAUDNORM_COMPILER = "ICL 13.x";
+		const char *const DYNAUDNORM_NS::BUILD_COMPILER = "ICL 13.x";
 	#elif (__INTEL_COMPILER >= 1200)
-		const char *const DYNAUDNORM_COMPILER = "ICL 12.x";
+		const char *const DYNAUDNORM_NS::BUILD_COMPILER = "ICL 12.x";
 	#elif (__INTEL_COMPILER >= 1100)
-		const char *const DYNAUDNORM_COMPILER = "ICL 11.x";
+		const char *const DYNAUDNORM_NS::BUILD_COMPILER = "ICL 11.x";
 	#elif (__INTEL_COMPILER >= 1000)
-		const char *const DYNAUDNORM_COMPILER = "ICL 10.x";
+		const char *const DYNAUDNORM_NS::BUILD_COMPILER = "ICL 10.x";
 	#else
 		#error Compiler is not supported!
 	#endif
 #elif defined(_MSC_VER)
 	#if (_MSC_VER == 1900)
 		#if (_MSC_FULL_VER == 190023026)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2015";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2015";
 		#elif (_MSC_FULL_VER == 190023506)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.1";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2015.1";
 		#elif (_MSC_FULL_VER == 190023918)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.2";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2015.2";
 		#elif (_MSC_FULL_VER >= 190024210) && (_MSC_FULL_VER <= 190024215)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2015.3";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2015.3";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1800)
 		#if (_MSC_FULL_VER == 180021005)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2013";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2013";
 		#elif (_MSC_FULL_VER == 180030501)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2013.2";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2013.2";
 		#elif (_MSC_FULL_VER == 180030723)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2013.3";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2013.3";
 		#elif (_MSC_FULL_VER == 180031101)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2013.4";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2013.4";
 		#elif (_MSC_FULL_VER == 180040629)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2013.5";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2013.5";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1700)
 		#if (_MSC_FULL_VER == 170050727)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2012";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2012";
 		#elif (_MSC_FULL_VER == 170051106)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2012.1";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2012.1";
 		#elif (_MSC_FULL_VER == 170060315)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2012.2";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2012.2";
 		#elif (_MSC_FULL_VER == 170060610)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2012.3";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2012.3";
 		#elif (_MSC_FULL_VER == 170061030)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2012.4";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2012.4";
 		#else
 			#error Compiler version is not supported yet!
 		#endif
 	#elif (_MSC_VER == 1600)
 		#if (_MSC_FULL_VER >= 160040219)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2010-SP1";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2010-SP1";
 		#else
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2010";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2010";
 		#endif
 	#elif (_MSC_VER == 1500)
 		#if (_MSC_FULL_VER >= 150030729)
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2008-SP1";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2008-SP1";
 		#else
-			const char *const DYNAUDNORM_COMPILER = "MSVC 2008";
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2008";
 		#endif
 	#else
 		#error Compiler is not supported!
@@ -116,16 +116,16 @@ const char *const DYNAUDNORM_BUILD_TIME = __TIME__;
 #elif defined(__GNUC__)
 	#define GCC_VERSION_GLUE1(X,Y,Z) "GCC " #X "." #Y "." #Z
 	#define GCC_VERSION_GLUE2(X,Y,Z) GCC_VERSION_GLUE1(X,Y,Z)
-	const char *const DYNAUDNORM_COMPILER = GCC_VERSION_GLUE2(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+	const char *const DYNAUDNORM_NS::BUILD_COMPILER = GCC_VERSION_GLUE2(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #else
 	#error Compiler is not supported!
 #endif
 
 //Architecture detection
 #if defined(_M_X64) || defined(__x86_64__)
-	const char *const DYNAUDNORM_ARCH = "x64";
+	const char *const DYNAUDNORM_NS::BUILD_ARCH = "x64";
 #elif defined(_M_IX86) || defined(__i386__)
-	const char *const DYNAUDNORM_ARCH = "x86";
+	const char *const DYNAUDNORM_NS::BUILD_ARCH = "x86";
 #else
 	#error Architecture is not supported!
 #endif

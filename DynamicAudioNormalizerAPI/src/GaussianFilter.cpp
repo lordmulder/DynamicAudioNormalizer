@@ -33,7 +33,7 @@ static const double s_pi = 3.141592653589793238462643383279502884197169399375105
 // Constructor & Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-MDynamicAudioNormalizer_Internal::GaussianFilter::GaussianFilter(const uint32_t &filterSize, const double &sigma)
+DYNAUDNORM_NS::GaussianFilter::GaussianFilter(const uint32_t &filterSize, const double &sigma)
 :
 	m_filterSize(filterSize)
 {
@@ -68,7 +68,7 @@ MDynamicAudioNormalizer_Internal::GaussianFilter::GaussianFilter(const uint32_t 
 	}
 }
 
-MDynamicAudioNormalizer_Internal::GaussianFilter::~GaussianFilter(void)
+DYNAUDNORM_NS::GaussianFilter::~GaussianFilter(void)
 {
 	MY_DELETE_ARRAY(m_weights);
 }
@@ -77,7 +77,7 @@ MDynamicAudioNormalizer_Internal::GaussianFilter::~GaussianFilter(void)
 // Apply Filter
 ///////////////////////////////////////////////////////////////////////////////
 
-double MDynamicAudioNormalizer_Internal::GaussianFilter::apply(const std::deque<double> &values)
+double DYNAUDNORM_NS::GaussianFilter::apply(const std::deque<double> &values)
 {
 	if(values.size() != m_filterSize)
 	{

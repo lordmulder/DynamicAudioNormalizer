@@ -101,7 +101,7 @@ static void loggingCallback_verbose(const int logLevel, const char *const messag
 {
 	switch(logLevel)
 	{
-	case MDynamicAudioNormalizer::LOG_LEVEL_NFO:
+	case MDynamicAudioNormalizer::LOG_LEVEL_DBG:
 		PRINT2_NFO(FMT_chr, message);
 		break;
 	case MDynamicAudioNormalizer::LOG_LEVEL_WRN:

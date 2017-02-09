@@ -21,11 +21,12 @@
 
 #pragma once
 
+#include "Common.h"
 #include <cstdlib>
 #include <stdint.h>
 #include <deque>
 
-namespace MDynamicAudioNormalizer_Internal
+namespace DYNAUDNORM_NS
 {
 	class GaussianFilter
 	{

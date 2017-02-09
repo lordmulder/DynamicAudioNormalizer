@@ -29,6 +29,8 @@
 	#error Inconsistent debug defines detected!
 #endif
 
+#define DYNAUDNORM_NS MDynamicAudioNormalizer_InternalStuff
+
 #define MY_DELETE(X) do \
 { \
 	if((X)) \
