@@ -81,9 +81,9 @@ set "VER_MINOR="
 set "VER_PATCH="
 for /F "tokens=4,5,6 delims=; " %%a in (%~dp0\DynamicAudioNormalizerAPI\src\Version.cpp) do (
 	if "%%b"=="=" (
-		if "%%a"=="DYNAUDNORM_VERSION_MAJOR" set "VER_MAJOR=%%c"
-		if "%%a"=="DYNAUDNORM_VERSION_MINOR" set "VER_MINOR=%%c"
-		if "%%a"=="DYNAUDNORM_VERSION_PATCH" set "VER_PATCH=%%c"
+		if "%%a"=="DYNAUDNORM_NS::VERSION_MAJOR" set "VER_MAJOR=%%c"
+		if "%%a"=="DYNAUDNORM_NS::VERSION_MINOR" set "VER_MINOR=%%c"
+		if "%%a"=="DYNAUDNORM_NS::VERSION_PATCH" set "VER_PATCH=%%c"
 	)
 )
 if "%VER_MAJOR%"=="" goto BuildError
