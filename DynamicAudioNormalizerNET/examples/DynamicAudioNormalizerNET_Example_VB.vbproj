@@ -84,7 +84,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DynamicAudioNormalizerNET">
-      <HintPath>..\..\bin\Win32\Release_DLL\DynamicAudioNormalizerNET.dll</HintPath>
+      <HintPath>..\..\bin\Win32\v140_xp\Release_DLL\DynamicAudioNormalizerNET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

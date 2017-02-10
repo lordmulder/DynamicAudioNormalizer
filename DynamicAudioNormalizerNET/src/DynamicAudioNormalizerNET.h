@@ -53,6 +53,7 @@ namespace DynamicAudioNormalizer
 		static void setLogger(DynamicAudioNormalizerNET_Logger ^test);
 
 		//Processing
+		int64_t process(array<double, 2> ^samplesIn, array<double, 2> ^samplesOut, const int64_t inputSize);
 		int64_t processInplace(array<double,2> ^samplesInOut, const int64_t inputSize);
 		int64_t flushBuffer(array<double,2> ^samplesInOut);
 		void reset(void);
@@ -62,6 +63,7 @@ namespace DynamicAudioNormalizer
 		int64_t getInternalDelay(void);
 
 	private:
+		int64_t p_process(array<double, 2> ^samplesIn, array<double, 2> ^samplesOut, const int64_t inputSize);
 		int64_t p_processInplace(array<double,2> ^samplesInOut, const int64_t inputSize);
 		int64_t p_flushBuffer(array<double,2> ^samplesInOut);
 		void p_reset(void);

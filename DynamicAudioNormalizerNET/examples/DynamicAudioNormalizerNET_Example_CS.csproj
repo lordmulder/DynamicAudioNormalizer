@@ -69,7 +69,7 @@
   <ItemGroup>
     <Reference Include="DynamicAudioNormalizerNET, Version=1.0.5410.34124, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\bin\Win32\Release_DLL\DynamicAudioNormalizerNET.dll</HintPath>
+      <HintPath>..\..\bin\Win32\v140_xp\Release_DLL\DynamicAudioNormalizerNET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

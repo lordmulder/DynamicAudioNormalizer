@@ -215,7 +215,6 @@ DynamicAudioNormalizer::DynamicAudioNormalizerNET::!DynamicAudioNormalizerNET(vo
 {
 	try
 	{
-
 		delete m_instace;
 	}
 	catch(...)
@@ -227,6 +226,40 @@ DynamicAudioNormalizer::DynamicAudioNormalizerNET::!DynamicAudioNormalizerNET(vo
 ///////////////////////////////////////////////////////////////////////////////
 // Processing Functions
 ///////////////////////////////////////////////////////////////////////////////
+
+int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::process(array<double, 2> ^samplesIn, array<double, 2> ^samplesOut, const int64_t inputSize)
+{
+	TRY_CATCH(process, samplesIn, samplesOut, inputSize);
+}
+
+int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::p_process(array<double, 2> ^samplesIn, array<double, 2> ^samplesOut, const int64_t inputSize)
+{
+	uint32_t channels, sampleRate, frameLen, filterSize;
+	if (!m_instace->getConfiguration(channels, sampleRate, frameLen, filterSize))
+	{
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Failed to retrieve configuration of native MDynamicAudioNormalizer instance!");
+	}
+
+	PIN_ARRAY_2D(samplesIn, double);
+	if ((samplesIn_dimOuter != channels) || (samplesIn_dimInner < inputSize))
+	{
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
+	}
+
+	PIN_ARRAY_2D(samplesOut, double);
+	if ((samplesOut_dimOuter != channels) || (samplesOut_dimInner < inputSize))
+	{
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Array dimension mismatch: Array must have dimension CHANNEL_COUNT x INPUT_SIZE!");
+	}
+
+	int64_t outputSize = -1;
+	if (!m_instace->process(samplesIn_ptr, samplesOut_ptr, inputSize, outputSize))
+	{
+		throw gcnew DynamicAudioNormalizer::DynamicAudioNormalizerNET_Error("Native MDynamicAudioNormalizer instance failed to process samples!");
+	}
+
+	return outputSize;
+}
 
 int64_t DynamicAudioNormalizer::DynamicAudioNormalizerNET::processInplace(array<double,2> ^samplesInOut, const int64_t inputSize)
 {
