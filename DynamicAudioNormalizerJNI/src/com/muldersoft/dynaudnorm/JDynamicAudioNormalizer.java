@@ -60,22 +60,22 @@ public class JDynamicAudioNormalizer implements Closeable
 	// Native API
 	//------------------------------------------------------------------------------------------------
 	
-	private static class NativeAPI_r7
+	private static class NativeAPI_r8
 	{
-		static NativeAPI_r7 nativeAPI = null;
+		static NativeAPI_r8 nativeAPI = null;
 		
 		//Singelton
-		public static synchronized NativeAPI_r7 getInstance()
+		public static synchronized NativeAPI_r8 getInstance()
 		{
 			if(nativeAPI == null)
 			{
-				nativeAPI = new NativeAPI_r7();
+				nativeAPI = new NativeAPI_r8();
 			}
 			return nativeAPI;
 		}
 		
 		//Load native library at runtime
-		private NativeAPI_r7()
+		private NativeAPI_r8()
 		{
 			try
 			{
@@ -121,6 +121,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		private native boolean destroyInstance(final int handle);
 		
 		//Processing Functions
+		private native long process(final int handle, final double [][] samplesIn, final double [][] samplesOut, final long inputSize);
 		private native long processInplace(final int handle, final double [][] samplesInOut, final long inputSize);
 		private native long flushBuffer(final int handle, final double [][] samplesOut);
 		private native boolean reset(final int handle);
@@ -141,7 +142,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		
 		try
 		{
-			success = NativeAPI_r7.getInstance().getVersionInfo(versionInfo);
+			success = NativeAPI_r8.getInstance().getVersionInfo(versionInfo);
 		}
 		catch(Throwable e)
 		{
@@ -163,7 +164,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		
 		try
 		{
-			success = NativeAPI_r7.getInstance().getBuildInfo(buildInfo);
+			success = NativeAPI_r8.getInstance().getBuildInfo(buildInfo);
 		}
 		catch(Throwable e)
 		{
@@ -184,7 +185,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		
 		try
 		{
-			success = NativeAPI_r7.getInstance().setLoggingHandler(logger);
+			success = NativeAPI_r8.getInstance().setLoggingHandler(logger);
 		}
 		catch(Throwable e)
 		{
@@ -207,7 +208,7 @@ public class JDynamicAudioNormalizer implements Closeable
 	{
 		try
 		{
-			m_instance = NativeAPI_r7.getInstance().createInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+			m_instance = NativeAPI_r8.getInstance().createInstance(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
 		}
 		catch(Throwable e)
 		{
@@ -229,7 +230,7 @@ public class JDynamicAudioNormalizer implements Closeable
 			{
 				try
 				{
-					success = NativeAPI_r7.getInstance().destroyInstance(m_instance);
+					success = NativeAPI_r8.getInstance().destroyInstance(m_instance);
 				}
 				finally
 				{
@@ -257,6 +258,28 @@ public class JDynamicAudioNormalizer implements Closeable
 	// Processing Functions
 	//------------------------------------------------------------------------------------------------
 
+	public synchronized long process(final double [][] samplesIn, final double [][] samplesOut, final long inputSize)
+	{
+		checkInstance(); /*make sure we are properly initialized*/
+
+		long outputSize = 0;
+		try
+		{
+			outputSize = NativeAPI_r8.getInstance().process(m_instance, samplesIn, samplesOut, inputSize);
+		}
+		catch(Throwable e)
+		{
+			handleError(e, "Failed to call native DynamicAudioNormalizerAPI function!");
+		}	
+		
+		if(outputSize < 0)
+		{
+			throw new Error("Failed to process the audio samples!");
+		}
+
+		return outputSize;
+	}
+	
 	public synchronized long processInplace(final double [][] samplesInOut, final long inputSize)
 	{
 		checkInstance(); /*make sure we are properly initialized*/
@@ -264,7 +287,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		long outputSize = 0;
 		try
 		{
-			outputSize = NativeAPI_r7.getInstance().processInplace(m_instance, samplesInOut, inputSize);
+			outputSize = NativeAPI_r8.getInstance().processInplace(m_instance, samplesInOut, inputSize);
 		}
 		catch(Throwable e)
 		{
@@ -286,7 +309,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		long outputSize = 0;
 		try
 		{
-			outputSize = NativeAPI_r7.getInstance().flushBuffer(m_instance, samplesOut);
+			outputSize = NativeAPI_r8.getInstance().flushBuffer(m_instance, samplesOut);
 		}
 		catch(Throwable e)
 		{
@@ -308,7 +331,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		boolean success = false;
 		try
 		{
-			success = NativeAPI_r7.getInstance().reset(m_instance);
+			success = NativeAPI_r8.getInstance().reset(m_instance);
 		}
 		catch(Throwable e)
 		{
@@ -334,7 +357,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		
 		try
 		{
-			success = NativeAPI_r7.getInstance().getConfiguration(m_instance, configuration);
+			success = NativeAPI_r8.getInstance().getConfiguration(m_instance, configuration);
 		}
 		catch(Throwable e)
 		{
@@ -356,7 +379,7 @@ public class JDynamicAudioNormalizer implements Closeable
 		long internalDelay = -1;
 		try
 		{
-			internalDelay = NativeAPI_r7.getInstance().getInternalDelay(m_instance);
+			internalDelay = NativeAPI_r8.getInstance().getInternalDelay(m_instance);
 		}
 		catch(Throwable e)
 		{

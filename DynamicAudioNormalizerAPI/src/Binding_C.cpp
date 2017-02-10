@@ -29,7 +29,7 @@ extern "C"
 	{
 		try
 		{
-			MDynamicAudioNormalizer *instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, INT2BOOL(channelsCoupled), INT2BOOL(enableDCCorrection), INT2BOOL(altBoundaryMode), logFile);
+			MDynamicAudioNormalizer *const instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, INT2BOOL(channelsCoupled), INT2BOOL(enableDCCorrection), INT2BOOL(altBoundaryMode), logFile);
 			if(instance->initialize())
 			{
 				return reinterpret_cast<MDynamicAudioNormalizer_Handle*>(instance);
@@ -46,26 +46,41 @@ extern "C"
 		}
 	}
 
-	MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(MDynamicAudioNormalizer_Handle **handle)
+	MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(MDynamicAudioNormalizer_Handle **const handle)
 	{
-		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(*handle))
+		if(MDynamicAudioNormalizer **const instance = reinterpret_cast<MDynamicAudioNormalizer**>(handle))
 		{
 			try
 			{
-				delete instance;
-				instance = NULL;
+				delete (*instance);
+				(*instance) = NULL;
 			}
 			catch(...)
 			{
 				/*ignore exception*/
 			}
-			*handle = NULL;
 		}
 	}
-
-	int MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(MDynamicAudioNormalizer_Handle *handle, double **samplesInOut, int64_t inputSize, int64_t *outputSize)
+	
+	int  MDYNAMICAUDIONORMALIZER_FUNCTION(process)(MDynamicAudioNormalizer_Handle *const handle, const double *const *const samplesIn, double *const *const samplesOut, const int64_t inputSize, int64_t *const outputSize)
 	{
-		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		if (MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		{
+			try
+			{
+				return instance->process(samplesIn, samplesOut, inputSize, (*outputSize)) ? 1 : 0;
+			}
+			catch (...)
+			{
+				return 0;
+			}
+		}
+		return 0;
+	}
+
+	int MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(MDynamicAudioNormalizer_Handle *const handle, double *const *const samplesInOut, const int64_t inputSize, int64_t *const outputSize)
+	{
+		if(MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
 		{
 			try
 			{
@@ -79,9 +94,9 @@ extern "C"
 		return 0;
 	}
 
-	int  MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(MDynamicAudioNormalizer_Handle *handle, double **samplesOut, const int64_t bufferSize, int64_t *outputSize)
+	int  MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(MDynamicAudioNormalizer_Handle *const handle, double *const *const samplesOut, const int64_t bufferSize, int64_t *const outputSize)
 	{
-		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		if(MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
 		{
 			try
 			{
@@ -95,7 +110,7 @@ extern "C"
 		return 0;
 	}
 
-	int MDYNAMICAUDIONORMALIZER_FUNCTION(reset)(MDynamicAudioNormalizer_Handle *handle)
+	int MDYNAMICAUDIONORMALIZER_FUNCTION(reset)(MDynamicAudioNormalizer_Handle *const handle)
 	{
 		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
 		{
@@ -111,9 +126,9 @@ extern "C"
 		return 0;
 	}
 
-	int MDYNAMICAUDIONORMALIZER_FUNCTION(getConfiguration)(MDynamicAudioNormalizer_Handle *handle, uint32_t *channels, uint32_t *sampleRate, uint32_t *frameLen, uint32_t *filterSize)
+	int MDYNAMICAUDIONORMALIZER_FUNCTION(getConfiguration)(MDynamicAudioNormalizer_Handle *const handle, uint32_t *const channels, uint32_t *const sampleRate, uint32_t *const frameLen, uint32_t *const filterSize)
 	{
-		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		if(MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
 		{
 			try
 			{
@@ -127,9 +142,9 @@ extern "C"
 		return 0;
 	}
 
-	int MDYNAMICAUDIONORMALIZER_FUNCTION(getInternalDelay)(MDynamicAudioNormalizer_Handle *handle, int64_t *delayInSamples)
+	int MDYNAMICAUDIONORMALIZER_FUNCTION(getInternalDelay)(MDynamicAudioNormalizer_Handle *const handle, int64_t *const delayInSamples)
 	{
-		if(MDynamicAudioNormalizer *instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
+		if(MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(handle))
 		{
 			try
 			{
@@ -148,12 +163,12 @@ extern "C"
 		return MDynamicAudioNormalizer::setLogFunction(logFunction);
 	}
 
-	void MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(uint32_t *major, uint32_t *minor,uint32_t *patch)
+	void MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(uint32_t *const major, uint32_t *const minor, uint32_t *const patch)
 	{
 		MDynamicAudioNormalizer::getVersionInfo((*major), (*minor), (*patch));
 	}
 
-	void MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(const char **date, const char **time, const char **compiler, const char **arch, int *debug)
+	void MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(const char **const date, const char **const time, const char **const compiler, const char **const arch, int *const debug)
 	{
 		bool isDebug;
 		MDynamicAudioNormalizer::getBuildInfo(date, time, compiler, arch, isDebug);

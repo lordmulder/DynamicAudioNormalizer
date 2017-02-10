@@ -564,6 +564,32 @@ This function *must* be called once for each new MDynamicAudioNormalizer instanc
 * Returns `true` if everything was successful or `false` if something went wrong.
 
 
+### MDynamicAudioNormalizer::process() ### {-}
+```
+bool process(
+	const double **samplesIn,
+	double **samplesOut,
+	int64_t inputSize,
+	int64_t &outputSize
+);
+```
+
+This is the "main" processing function. It shall be called *in a loop* until all input audio samples have been processed.
+
+The function works "out-of-place": It *reads* the original input samples from the specified `samplesIn` buffer and then *writes* the normalized output samples, if any, back into the `samplesOut` buffer. The content of `samplesIn` will be preserved.
+
+***Note:*** A call to this function reads *all* provided input samples from the buffer, but the number of output samples that are written back to the buffer may actually be *smaller* than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent call. In other words, samples are returned with a certain "delay". This means that the *i*-th output sample does **not** necessarily correspond to the *i*-th input sample! Still, the samples are returned in strict [FIFO](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)) order. The exact delay can be determined by calling the `getInternalDelay()` function. At the end of the process, when all input samples have been read, to application shall call `flushBuffer()` in order to *flush* all pending samples.
+
+**Parameters:**
+* *samplesIn*: The input buffer. This buffer contains the original input samples to be read. It will be treated as a *read-only* buffer. The *i*-th input sample for the *c*-th channel is assumed to be stored at `samplesIn[c][i]`, as a double-precision floating point number. All indices are *zero*-based. All sample values live in the **-1.0** to **+1.0** range.
+* *samplesOut*: The output buffer. The processed output samples will be written back to this buffer. Its initial contents will therefore be *overwritten*. The *i*-th output sample for the *c*-th channel will be stored at `samplesOut[c][i]`. The size of the buffer must be sufficient! All indices are *zero*-based. All sample values live in the **-1.0** to **+1.0** range.
+* *inputSize*: The number of original *input* samples that are available in the `samplesIn` buffer, per channel. This also specifies the *maximum* number of output samples that can be written back to the `samplesOut` buffer.
+* *outputSize*: Receives the number of *output* samples that have actually been written back to the `samplesOut` buffer, per channel. Please note that this value can be *smaller* than the `inputSize` value. It can even be *zero*!
+
+**Return value:**
+* Returns `true` if everything was successful or `false` if something went wrong.
+
+
 ### MDynamicAudioNormalizer::processInplace() ### {-}
 ```
 bool processInplace(
@@ -575,7 +601,7 @@ bool processInplace(
 
 This is the "main" processing function. It shall be called *in a loop* until all input audio samples have been processed.
 
-The function works "in place": It *reads* the original input samples from the specified buffer and then *writes* the normalized output samples, if any, back into the *same* buffer. So, the content of `samplesInOut` will **not** be preserved!
+The function works "in-place": It *reads* the original input samples from the specified buffer and then *writes* the normalized output samples, if any, back into the *same* buffer. So, the content of `samplesInOut` will **not** be preserved!
 
 ***Note:*** A call to this function reads *all* provided input samples from the buffer, but the number of output samples that are written back to the buffer may actually be *smaller* than the number of input samples that have been read! The pending samples are buffered internally and will be returned in a subsequent call. In other words, samples are returned with a certain "delay". This means that the *i*-th output sample does **not** necessarily correspond to the *i*-th input sample! Still, the samples are returned in strict [FIFO](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)) order. The exact delay can be determined by calling the `getInternalDelay()` function. At the end of the process, when all input samples have been read, to application shall call `flushBuffer()` in order to *flush* all pending samples.
 
@@ -804,11 +830,12 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 # Changelog #
 
 ## Version 2.10 (2017-02-??) ## {-}
+* Core library: Added `process()` function, i.e. an "out-of-place" version of `processInplace()`
 * CLI front-end: Added new CLI option `-t` to explicitly specify the desired *output* format
 * CLI front-end: Added new CLI option `-d` to explicitly specify the desired *input* library
 * CLI front-end: Added support for decoding input files via *libmpg123* library
 * CLI front-end: Implemented automatic/heuristic selection of the suitable *input* library
-* CLI front-end: Properly handle files that provide more/less samples than what was projected
+* CLI front-end: Properly handle files that provide more or less samples than what was projected
 * Windows binaries: Updated the included *libsndfile* version to 1.0.27 (2016-06-19)
 * Windows binaries: Updated build environment to Visual Studio 2015 (MSVC 14.0)
 
@@ -832,7 +859,7 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 * Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used as Winamp plug-in
 * VST wrapper: Fixed potential audio corruptions due to the occasional insertion of "silent" samples
 * VST wrapper: Fixed a potential "double free" crash in the VST wrapper code
-* Core library: Fixed ``reset()`` API to actually work as expected (some state was *not* cleared before)
+* Core library: Fixed `reset()` API to actually work as expected (some state was *not* cleared before)
 * Core library: Make sure the number of delayed samples remains *constant* throughout the process
 
 ## Version 2.05 (2014-09-10) ## {-}

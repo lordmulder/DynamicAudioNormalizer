@@ -57,7 +57,7 @@
 #define MDYNAMICAUDIONORMALIZER_GLUE2(X,Y) MDYNAMICAUDIONORMALIZER_GLUE1(X,Y)
 
 /*Interface version*/
-#define MDYNAMICAUDIONORMALIZER_CORE 7
+#define MDYNAMICAUDIONORMALIZER_CORE 8
 #define MDYNAMICAUDIONORMALIZER_FUNCTION(X) MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_##X##_r, MDYNAMICAUDIONORMALIZER_CORE)
 #define MDynamicAudioNormalizer MDYNAMICAUDIONORMALIZER_GLUE2(MDynamicAudioNormalizer_r,MDYNAMICAUDIONORMALIZER_CORE)
 
@@ -86,8 +86,9 @@ public:
 	
 	/*Public API*/
 	bool initialize(void);
-	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize);
-	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
+	bool process(const double *const *const samplesIn, double *const *const samplesOut, const int64_t inputSize, int64_t &outputSize);
+	bool processInplace(double *const *const samplesInOut, const int64_t inputSize, int64_t &outputSize);
+	bool flushBuffer(double *const *const samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
 	bool getConfiguration(uint32_t &channels, uint32_t &sampleRate, uint32_t &frameLen, uint32_t &filterSize);
 	bool getInternalDelay(int64_t &delayInSamples);
@@ -98,7 +99,7 @@ public:
 
 	/*Static functions*/
 	static void getVersionInfo(uint32_t &major, uint32_t &minor, uint32_t &patch);
-	static void getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug);
+	static void getBuildInfo(const char **const date, const char **const time, const char **const compiler, const char **const arch, bool &debug);
 	static LogFunction *setLogFunction(LogFunction *const logFunction);
 
 private:
@@ -126,14 +127,15 @@ typedef struct MDynamicAudioNormalizer_Handle MDynamicAudioNormalizer_Handle;
 
 /*Global Functions*/
 MDYNAMICAUDIONORMALIZER_DLL MDynamicAudioNormalizer_Handle* MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)(const uint32_t channels, const uint32_t sampleRate, const uint32_t frameLenMsec, const uint32_t filterSize, const double peakValue, const double maxAmplification, const double targetRms, const double compressFactor, const int channelsCoupled, const int enableDCCorrection, const int altBoundaryMode, FILE *const logFile);
-MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(MDynamicAudioNormalizer_Handle **handle);
-MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(MDynamicAudioNormalizer_Handle *handle, double **samplesInOut, int64_t inputSize, int64_t *outputSize);
-MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(MDynamicAudioNormalizer_Handle *handle, double **samplesOut, const int64_t bufferSize, int64_t *outputSize);
-MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(reset)(MDynamicAudioNormalizer_Handle *handle);
-MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(getConfiguration)(MDynamicAudioNormalizer_Handle *handle, uint32_t *channels, uint32_t *sampleRate, uint32_t *frameLen, uint32_t *filterSize);
-MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(getInternalDelay)(MDynamicAudioNormalizer_Handle *handle, int64_t *delayInSamples);
-MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(uint32_t *major, uint32_t *minor,uint32_t *patch);
-MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(const char **date, const char **time, const char **compiler, const char **arch, int *debug);
+MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(destroyInstance)(MDynamicAudioNormalizer_Handle **const handle);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(process)(MDynamicAudioNormalizer_Handle *const handle, const double *const *const samplesIn, double *const *const samplesOut, const int64_t inputSize, int64_t *const outputSize);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(MDynamicAudioNormalizer_Handle *const handle, double *const *const samplesInOut, const int64_t inputSize, int64_t *const outputSize);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(MDynamicAudioNormalizer_Handle *const handle, double *const *const samplesOut, const int64_t bufferSize, int64_t *const outputSize);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(reset)(MDynamicAudioNormalizer_Handle *const handle);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(getConfiguration)(MDynamicAudioNormalizer_Handle *const handle, uint32_t *const channels, uint32_t *const sampleRate, uint32_t *const frameLen, uint32_t *const filterSize);
+MDYNAMICAUDIONORMALIZER_DLL int  MDYNAMICAUDIONORMALIZER_FUNCTION(getInternalDelay)(MDynamicAudioNormalizer_Handle *const handle, int64_t *const delayInSamples);
+MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(uint32_t *const major, uint32_t *const minor, uint32_t *const patch);
+MDYNAMICAUDIONORMALIZER_DLL void MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(const char **const date, const char **const time, const char **const compiler, const char **const arch, int *const debug);
 MDYNAMICAUDIONORMALIZER_DLL MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) *MDYNAMICAUDIONORMALIZER_FUNCTION(setLogFunction)(MDYNAMICAUDIONORMALIZER_FUNCTION(LogFunction) *const logFunction);
 
 #ifdef __cplusplus

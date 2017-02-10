@@ -359,7 +359,7 @@ static jboolean javaGet2DArrayElements(JNIEnv *const env, const jobjectArray out
 // JNI Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-static jboolean JAVA_FUNCIMPL(getVersionInfo)(JNIEnv *env, jintArray versionInfo)
+static jboolean JAVA_FUNCIMPL(getVersionInfo)(JNIEnv *const env, jintArray versionInfo)
 {
 	if(versionInfo == NULL)
 	{
@@ -368,7 +368,7 @@ static jboolean JAVA_FUNCIMPL(getVersionInfo)(JNIEnv *env, jintArray versionInfo
 
 	if(env->GetArrayLength(versionInfo) == 3)
 	{
-		if(jint *versionInfoElements = env->GetIntArrayElements(versionInfo, NULL))
+		if(jint *const versionInfoElements = env->GetIntArrayElements(versionInfo, NULL))
 		{
 			uint32_t major, minor, patch;
 			MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
@@ -472,13 +472,67 @@ static jint JAVA_FUNCIMPL(createInstance)(JNIEnv *const env, const jint &channel
 
 static jboolean JAVA_FUNCIMPL(destroyInstance)(JNIEnv *const env, const jint &handle)
 {
-	if(MDynamicAudioNormalizer *instance = javaHandleToInstance(handle, true))
+	if(MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle, true))
 	{
 		delete instance;
 		return JNI_TRUE;
 	}
 
 	return JNI_FALSE;
+}
+
+static jlong JAVA_FUNCIMPL(process)(JNIEnv *const env, const jint &handle, jobjectArray const samplesIn, jobjectArray const samplesOut, const jlong &inputSize)
+{
+	if ((handle < 0) || (samplesIn == NULL) || (samplesOut == NULL)  || (inputSize < 1))
+	{
+		return -1; /*invalid parameters detected*/
+	}
+
+	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
+	if (instance == NULL)
+	{
+		return -1; /*invalid handle value*/
+	}
+
+	uint32_t channels, sampleRate, frameLen, filterSize;
+	if (!instance->getConfiguration(channels, sampleRate, frameLen, filterSize))
+	{
+		return -1; /*unable to get configuration*/
+	}
+
+	if ((env->GetArrayLength(samplesIn) < jint(channels)) || (env->GetArrayLength(samplesOut) < jint(channels)))
+	{
+		return -1; /*array diemnsion is too small*/
+	}
+
+	double **arrayElementsIn  = (double**)alloca(sizeof(double*) * channels);
+	jsize arrayLengthIn = 0;
+	if (!javaGet2DArrayElements(env, samplesIn, channels, arrayElementsIn, arrayLengthIn))
+	{
+		return -1; /*failed to retrieve the array elements*/
+	}
+
+	double **arrayElementsOut = (double**)alloca(sizeof(double*) * channels);
+	jsize arrayLengthOut = 0;
+	if (!javaGet2DArrayElements(env, samplesOut, channels, arrayElementsOut, arrayLengthOut))
+	{
+		return -1; /*failed to retrieve the array elements*/
+	}
+
+	int64_t outputSize = 0;
+	const bool success = instance->process(arrayElementsIn, arrayElementsOut, std::min(inputSize, std::min(jlong(arrayLengthIn), jlong(arrayLengthOut))), outputSize);
+
+	if (!javaRelease2DArrayElements(env, samplesIn, channels, arrayElementsIn))
+	{
+		return -1; /*failed to release the array elements*/
+	}
+
+	if (!javaRelease2DArrayElements(env, samplesOut, channels, arrayElementsOut))
+	{
+		return -1; /*failed to release the array elements*/
+	}
+
+	return success ? outputSize : (-1);
 }
 
 static jlong JAVA_FUNCIMPL(processInplace)(JNIEnv *const env, const jint &handle, jobjectArray const samplesInOut, const jlong &inputSize)
@@ -488,7 +542,7 @@ static jlong JAVA_FUNCIMPL(processInplace)(JNIEnv *const env, const jint &handle
 		return -1; /*invalid parameters detected*/
 	}
 	
-	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
 		return -1; /*invalid handle value*/
@@ -530,7 +584,7 @@ static jlong JAVA_FUNCIMPL(flushBuffer)(JNIEnv *const env, const jint &handle, j
 		return -1; /*invalid parameters detected*/
 	}
 	
-	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
 		return -1; /*invalid handle value*/
@@ -572,7 +626,7 @@ static jboolean JAVA_FUNCIMPL(reset)(JNIEnv *const env, const jint &handle)
 		return JNI_FALSE;
 	}
 
-	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
 		return JNI_FALSE; /*invalid handle value*/
@@ -588,7 +642,7 @@ static jboolean JAVA_FUNCIMPL(getConfiguration)(JNIEnv *const env, const jint &h
 		return JNI_FALSE;
 	}
 
-	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
 		return JNI_FALSE; /*invalid handle value*/
@@ -630,7 +684,7 @@ static jlong JAVA_FUNCIMPL(getInternalDelay)(JNIEnv *const env, const jint &hand
 		return -1;
 	}
 
-	MDynamicAudioNormalizer *instance = javaHandleToInstance(handle);
+	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
 		return -1; /*invalid handle value*/
@@ -651,52 +705,57 @@ static jlong JAVA_FUNCIMPL(getInternalDelay)(JNIEnv *const env, const jint &hand
 
 extern "C"
 {
-	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getVersionInfo)(JNIEnv *env, jobject, jintArray versionInfo)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getVersionInfo)(JNIEnv *const env, jobject, jintArray versionInfo)
 	{
 		JAVA_TRY_CATCH(getVersionInfo, JNI_FALSE, env, versionInfo)
 	}
 
-	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getBuildInfo)(JNIEnv *env, jobject, jobject buildInfo)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getBuildInfo)(JNIEnv *const env, jobject, jobject buildInfo)
 	{
 		JAVA_TRY_CATCH(getBuildInfo, JNI_FALSE, env, buildInfo)
 	}
 
-	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(setLoggingHandler)(JNIEnv *env, jobject, jobject loggerObject)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(setLoggingHandler)(JNIEnv *const env, jobject, jobject loggerObject)
 	{
 		JAVA_TRY_CATCH(setLoggingHandler, JNI_FALSE, env, loggerObject)
 	}
 
-	JNIEXPORT jint JNICALL JAVA_FUNCTION(createInstance)(JNIEnv *env, jobject, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
+	JNIEXPORT jint JNICALL JAVA_FUNCTION(createInstance)(JNIEnv *const env, jobject, jint channels, jint sampleRate, jint frameLenMsec, jint filterSize, jdouble peakValue, jdouble maxAmplification, jdouble targetRms, jdouble compressFactor, jboolean channelsCoupled, jboolean enableDCCorrection, jboolean altBoundaryMode)
 	{
 		JAVA_TRY_CATCH(createInstance, -1, env, channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode)
 	}
 
-	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(destroyInstance)(JNIEnv *env, jobject, jint instance)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(destroyInstance)(JNIEnv *const env, jobject, jint instance)
 	{
 		JAVA_TRY_CATCH(destroyInstance, JNI_FALSE, env, instance)
 	}
 
-	JNIEXPORT jlong JNICALL JAVA_FUNCTION(processInplace)(JNIEnv *env, jobject, jint handle, jobjectArray samplesInOut, jlong inputSize)
+	JNIEXPORT jlong JNICALL JAVA_FUNCTION(process)(JNIEnv *const env, jobject,  jint handle, jobjectArray samplesIn, jobjectArray samplesOut, jlong inputSize)
+	{
+		JAVA_TRY_CATCH(process, -1, env, handle, samplesIn, samplesOut, inputSize)
+	}
+
+	JNIEXPORT jlong JNICALL JAVA_FUNCTION(processInplace)(JNIEnv *const env, jobject, jint handle, jobjectArray samplesInOut, jlong inputSize)
 	{
 		JAVA_TRY_CATCH(processInplace, -1, env, handle, samplesInOut, inputSize)
 	}
 
-	JNIEXPORT jlong JNICALL JAVA_FUNCTION(flushBuffer)(JNIEnv *env, jobject, jint handle, jobjectArray samplesOut)
+	JNIEXPORT jlong JNICALL JAVA_FUNCTION(flushBuffer)(JNIEnv *const env, jobject, jint handle, jobjectArray samplesOut)
 	{
 		JAVA_TRY_CATCH(flushBuffer, -1, env, handle, samplesOut)
 	}
 
-	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(reset)(JNIEnv *env, jobject, jint handle)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(reset)(JNIEnv *const env, jobject, jint handle)
 	{
 		JAVA_TRY_CATCH(reset, JNI_FALSE, env, handle)
 	}
 
-	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getConfiguration)(JNIEnv *env, jobject, jint handle, jobject configuration)
+	JNIEXPORT jboolean JNICALL JAVA_FUNCTION(getConfiguration)(JNIEnv *const env, jobject, jint handle, jobject configuration)
 	{
 		JAVA_TRY_CATCH(getConfiguration, JNI_FALSE, env, handle, configuration)
 	}
 
-	JNIEXPORT jlong JNICALL JAVA_FUNCTION(getInternalDelay)(JNIEnv *env, jobject, jint handle)
+	JNIEXPORT jlong JNICALL JAVA_FUNCTION(getInternalDelay)(JNIEnv *const env, jobject, jint handle)
 	{
 		JAVA_TRY_CATCH(getInternalDelay, -1, env, handle)
 	}

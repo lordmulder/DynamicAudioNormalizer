@@ -138,8 +138,8 @@ public:
 	~MDynamicAudioNormalizer_PrivateData(void);
 
 	bool initialize(void);
-	bool processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush);
-	bool flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize);
+	bool process(const double *const *const samplesIn, double *const *const samplesOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush);
+	bool flushBuffer(double *const *const samplesOut, const int64_t bufferSize, int64_t &outputSize);
 	bool reset(void);
 	bool getConfiguration(uint32_t &channels, uint32_t &sampleRate, uint32_t &frameLen, uint32_t &filterSize);
 	bool getInternalDelay(int64_t &delayInSamples);
@@ -500,11 +500,24 @@ bool MDynamicAudioNormalizer_PrivateData::getInternalDelay(int64_t &delayInSampl
 	return true;
 }
 
-bool MDynamicAudioNormalizer::processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer::process(const double *const *const samplesIn, double *const *const samplesOut, const int64_t inputSize, int64_t &outputSize)
 {
 	try
 	{
-		return p->processInplace(samplesInOut, inputSize, outputSize, false);
+		return p->process(samplesIn, samplesOut, inputSize, outputSize, false);
+	}
+	catch (std::exception &e)
+	{
+		LOG1_ERR(e.what());
+		return false;
+	}
+}
+
+bool MDynamicAudioNormalizer::processInplace(double *const *const samplesInOut, const int64_t inputSize, int64_t &outputSize)
+{
+	try
+	{
+		return p->process(samplesInOut, samplesInOut, inputSize, outputSize, false);
 	}
 	catch(std::exception &e)
 	{
@@ -513,7 +526,7 @@ bool MDynamicAudioNormalizer::processInplace(double **samplesInOut, const int64_
 	}
 }
 
-bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush)
+bool MDynamicAudioNormalizer_PrivateData::process(const double *const *const samplesIn, double *const *const samplesOut, const int64_t inputSize, int64_t &outputSize, const bool &bFlush)
 {
 	outputSize = 0;
 
@@ -547,7 +560,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 			bStop = false;
 			
 			const uint32_t copyLen = std::min(inputSamplesLeft, m_buffSrc->samplesLeftPut());
-			m_buffSrc->putSamples(samplesInOut, inputPos, copyLen);
+			m_buffSrc->putSamples(samplesIn, inputPos, copyLen);
 
 			inputPos         += copyLen;
 			inputSamplesLeft -= copyLen;
@@ -595,7 +608,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 
 			const uint32_t pending = bFlush ? UINT32_MAX : uint32_t(m_delayedSamples - m_delay);
 			const uint32_t copyLen = std::min(std::min(outputBufferLeft, m_buffOut->samplesLeftGet()), pending);
-			m_buffOut->getSamples(samplesInOut, outputPos, copyLen);
+			m_buffOut->getSamples(samplesOut, outputPos, copyLen);
 
 			outputPos        += copyLen;
 			outputBufferLeft -= copyLen;
@@ -619,7 +632,7 @@ bool MDynamicAudioNormalizer_PrivateData::processInplace(double **samplesInOut, 
 	return true;
 }
 
-bool MDynamicAudioNormalizer::flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer::flushBuffer(double *const *const samplesOut, const int64_t bufferSize, int64_t &outputSize)
 {
 	try
 	{
@@ -632,7 +645,7 @@ bool MDynamicAudioNormalizer::flushBuffer(double **samplesOut, const int64_t buf
 	}
 }
 
-bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const int64_t bufferSize, int64_t &outputSize)
+bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double *const *const samplesOut, const int64_t bufferSize, int64_t &outputSize)
 {
 	outputSize = 0;
 
@@ -667,7 +680,7 @@ bool MDynamicAudioNormalizer_PrivateData::flushBuffer(double **samplesOut, const
 			}
 		}
 
-		success = processInplace(samplesOut, pendingSamples, outputSize, true);
+		success = process(samplesOut, samplesOut, pendingSamples, outputSize, true);
 	}
 	while(success && (outputSize <= 0));
 	
@@ -685,7 +698,7 @@ void MDynamicAudioNormalizer::getVersionInfo(uint32_t &major, uint32_t &minor,ui
 	patch = DYNAUDNORM_NS::VERSION_PATCH;
 }
 
-void MDynamicAudioNormalizer::getBuildInfo(const char **date, const char **time, const char **compiler, const char **arch, bool &debug)
+void MDynamicAudioNormalizer::getBuildInfo(const char **const date, const char **const time, const char **const compiler, const char **const arch, bool &debug)
 {
 	*date     = DYNAUDNORM_NS::BUILD_DATE;
 	*time     = DYNAUDNORM_NS::BUILD_TIME;
