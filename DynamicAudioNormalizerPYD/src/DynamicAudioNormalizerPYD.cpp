@@ -22,3 +22,37 @@
 //
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
+
+#include <Python.h>
+#include <string>
+
+///////////////////////////////////////////////////////////////////////////////
+// Methid Implementation
+///////////////////////////////////////////////////////////////////////////////
+
+static PyObject *PyMDynamicAudioNormalizer_Create(PyObject *const self, PyObject *const args)
+{
+	return PyLong_FromVoidPtr(new std::string());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Module Definition
+///////////////////////////////////////////////////////////////////////////////
+
+static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
+{
+	{ "create", PyMDynamicAudioNormalizer_Create, METH_NOARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it." },
+	{ NULL, NULL, 0, NULL }
+};
+
+static struct PyModuleDef PyDynamicAudioNormalizer_ModuleDef =
+{
+	PyModuleDef_HEAD_INIT, "MDynamicAudioNormalizerAPI", "", -1, PyMDynamicAudioNormalizer_Methods
+};
+
+PyMODINIT_FUNC
+PyInit_MDynamicAudioNormalizerAPI(void)
+{
+	return PyModule_Create(&PyDynamicAudioNormalizer_ModuleDef);
+}
+
