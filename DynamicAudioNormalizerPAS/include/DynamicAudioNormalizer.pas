@@ -50,6 +50,7 @@ type
     constructor Create(const channels: LongWord; const sampleRate: LongWord; const frameLenMsec: LongWord; const filterSize: LongWord; const peakValue: Double; const maxAmplification: Double; const targetRms: Double; const compressFactor: Double; const channelsCoupled: Boolean; const enableDCCorrection: Boolean; const altBoundaryMode: Boolean);
     destructor Destroy; override;
     //Processing Functions
+    function Process(samplesIn: Array of TDoubleArray; samplesOut: Array of TDoubleArray; const sampleCount: Int64): Int64;
     function ProcessInplace(samplesInOut: Array of TDoubleArray; const sampleCount: Int64): Int64;
     function FlushBuffer(samplesOut: Array of TDoubleArray): Int64;
     procedure Reset;
@@ -68,7 +69,7 @@ type
 implementation
 //=============================================================================
 
-const DynamicAudioNormalizerTag = '_r7';
+const DynamicAudioNormalizerTag = '_r8';
 const DynamicAudioNormalizerDLL = 'DynamicAudioNormalizerAPI.dll';
 const DynamicAudioNormalizerPre = 'MDynamicAudioNormalizer_';
 
@@ -78,6 +79,7 @@ const DynamicAudioNormalizerPre = 'MDynamicAudioNormalizer_';
 
 function  DynAudNorm_CreateInstance(const channels: LongWord; const sampleRate: LongWord; const frameLenMsec: LongWord; const filterSize: LongWord; const peakValue: Double; const maxAmplification: Double; const targetRms: Double; const compressFactor: Double; const channelsCoupled: LongBool; const enableDCCorrection: LongBool; const altBoundaryMode: LongBool; const logFile: Pointer): Pointer; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'createInstance' + DynamicAudioNormalizerTag);
 procedure DynAudNorm_DestroyInstance(var handle: Pointer); cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'destroyInstance' + DynamicAudioNormalizerTag);
+function  DynAudNorm_Process(const handle: Pointer; const samplesIn: Pointer; const samplesOut: Pointer; const inputSize: Int64; var outputSize: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'processInplace' + DynamicAudioNormalizerTag);
 function  DynAudNorm_ProcessInplace(const handle: Pointer; const samplesInOut: Pointer; const inputSize: Int64; var outputSize: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'processInplace' + DynamicAudioNormalizerTag);
 function  DynAudNorm_FlushBuffer(const handle: Pointer; const samplesOut: Pointer; const bufferSize: Int64; var outputSize: Int64): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'flushBuffer' + DynamicAudioNormalizerTag);
 function  DynAudNorm_GetConfiguration(const handle: Pointer; var channels: LongWord; var sampleRate: LongWord; var frameLen: LongWord; var filterSize: LongWord): LongBool; cdecl; external DynamicAudioNormalizerDLL name (DynamicAudioNormalizerPre + 'getConfiguration' + DynamicAudioNormalizerTag);
@@ -141,6 +143,53 @@ end;
 //-----------------------------------------------------------------------------
 // Processing Functions
 //-----------------------------------------------------------------------------
+
+function TDynamicAudioNormalizer.Process(samplesIn: Array of TDoubleArray; samplesOut: Array of TDoubleArray; const sampleCount: Int64): Int64;
+var
+  bufferIn, bufferOut: Array of Pointer;
+  i: LongWord;
+  channels, sampleRate, frameLen, filterSize: LongWord;
+  outputSize: Int64;
+begin
+  if not Assigned(instance) then
+  begin
+    Raise Exception.Create('Native instance not created yet!');
+  end;
+
+  GetConfiguration(channels, sampleRate, frameLen, filterSize);
+  if Length(samplesIn) <> Integer(channels) then
+  begin
+    Raise Exception.Create('Array dimension doesn''t match channel count!');
+  end;
+  if Length(samplesOut) <> Integer(channels) then
+  begin
+    Raise Exception.Create('Array dimension doesn''t match channel count!');
+  end;
+
+  SetLength(bufferIn,  Length(samplesIn));
+  SetLength(bufferOut, Length(samplesOut));
+
+  for i := 0 to Length(samplesIn)-1 do
+  begin
+    if Length(samplesIn[i]) < sampleCount then
+    begin
+      Raise Exception.Create('Array length is smaller than specified sample count!');
+    end;
+    if Length(samplesOut[i]) < sampleCount then
+    begin
+      Raise Exception.Create('Array length is smaller than specified sample count!');
+    end;
+    bufferIn[i]  := @samplesIn [i][0];
+    bufferOut[i] := @samplesOut[i][0];
+  end;
+
+  if not DynAudNorm_Process(instance, @bufferIn[0], @bufferOut[0], sampleCount, outputSize) then
+  begin
+    Raise Exception.Create('Failed to process samples in-place!');
+  end;
+
+  Result := outputSize;
+end;
 
 function TDynamicAudioNormalizer.ProcessInplace(samplesInOut: Array of TDoubleArray; const sampleCount: Int64): Int64;
 var

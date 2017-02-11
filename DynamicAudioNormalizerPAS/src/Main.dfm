@@ -49,6 +49,7 @@ object DynamicAudioNormalizerTestApp: TDynamicAudioNormalizerTestApp
     Top = 80
     Width = 249
     Height = 17
+    Smooth = True
     TabOrder = 3
   end
   object ApplicationEvents1: TApplicationEvents
@@ -58,6 +59,22 @@ object DynamicAudioNormalizerTestApp: TDynamicAudioNormalizerTestApp
   end
   object XPManifest1: TXPManifest
     Left = 40
+    Top = 72
+  end
+  object OpenDialog: TOpenDialog
+    DefaultExt = 'pcm'
+    Filter = 'Raw PCM data (*.pcm)|*.pcm'
+    Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Title = 'Select Source File'
+    Left = 72
+    Top = 72
+  end
+  object SaveDialog: TSaveDialog
+    DefaultExt = 'pcm'
+    Filter = 'Raw PCM data (*.pcm)|*.pcm'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofEnableSizing]
+    Title = 'Select Output File'
+    Left = 104
     Top = 72
   end
 end

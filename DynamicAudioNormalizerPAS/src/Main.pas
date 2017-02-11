@@ -29,7 +29,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, AppEvnts, Math, ComCtrls, XPMan;
+  Dialogs, StdCtrls, AppEvnts, Math, DateUtils, ComCtrls, XPMan;
 
 type
   TDynamicAudioNormalizerTestApp = class(TForm)
@@ -39,12 +39,15 @@ type
     ApplicationEvents1: TApplicationEvents;
     ProgressBar1: TProgressBar;
     XPManifest1: TXPManifest;
+    OpenDialog: TOpenDialog;
+    SaveDialog: TSaveDialog;
     procedure ButtonTest1Click(Sender: TObject);
     procedure ButtonExitClick(Sender: TObject);
     procedure ButtonTest2Click(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
     procedure FormCreate(Sender: TObject);
   private
+    LastUpdate: TDateTime;
     procedure StartStopTest(const start: boolean);
     procedure UpdateProgress;
   public
@@ -91,9 +94,14 @@ begin
   if ProgressBar1.Position < ProgressBar1.Max then
   begin
     ProgressBar1.StepBy(1);
+    LastUpdate := Now;
   end else
   begin
-    ProgressBar1.Position := 0;
+    if MilliSecondsBetween(Now, LastUpdate) >= 997 then
+    begin
+      ProgressBar1.Position := 0;
+      LastUpdate := Now;
+    end
   end;
   Application.ProcessMessages;
 end;
@@ -130,6 +138,8 @@ var
   date, time, compiler, arch: PAnsiChar;
   debug: LongBool;
 begin
+  LastUpdate := Now;
+
   TDynamicAudioNormalizer.GetVersionInfo(major, minor, patch);
   WriteLn(Format('Library Version: %s', [StringReplace(Format('%u.%02u-%u', [major, minor, patch]), ' ', '0', [rfReplaceAll])]));
 
@@ -156,7 +166,7 @@ end;
 
 procedure TDynamicAudioNormalizerTestApp.ButtonTest1Click(Sender: TObject);
 const
-  rounds = 64;
+  rounds = 97;
   instances = 16;
 var
   normalizer: Array [1..instances] of TDynamicAudioNormalizer;
@@ -181,6 +191,8 @@ begin
   
   WriteLn('Done.'#10);
   StartStopTest(False);
+  
+  MessageBox(self.WindowHandle, 'Test completed successfully.', PAnsiChar(self.Caption), MB_ICONINFORMATION);
 end;
 
 //-----------------------------------------------------------------------------
@@ -200,15 +212,27 @@ var
   i, j, k, q: Cardinal;
   readSize, writeSize, bytesWritten: Cardinal;
 begin
-  StartStopTest(True);
+  {========================= SELECT FILES ========================}
+
+  if not OpenDialog.Execute then
+  begin
+    Exit;
+  end;
+
+  if not SaveDialog.Execute then
+  begin
+    Exit;
+  end;
 
   {============================ SETUP ============================}
 
+  StartStopTest(True);
+  
   SetLength(samples, channelCount, frameSize);
 
   WriteLn('Open I/O files...');
-  inputFile  := CreateFile('Input.pcm',  GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, 0, 0);
-  outputFile := CreateFile('Output.pcm', GENERIC_WRITE, 0, nil, CREATE_ALWAYS, 0, 0);
+  inputFile  := CreateFile(PAnsiChar(OpenDialog.Files[0]),  GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, 0, 0);
+  outputFile := CreateFile(PAnsiChar(SaveDialog.Files[0]), GENERIC_WRITE, 0, nil, CREATE_ALWAYS, 0, 0);
 
   if (inputFile = INVALID_HANDLE_VALUE) or (outputFile = INVALID_HANDLE_VALUE) then
   begin
@@ -269,7 +293,10 @@ begin
       Break; {End of File}
     end;
 
-    if q mod 64 = 0 then UpdateProgress;
+    if q mod 32 = 0 then
+    begin
+      UpdateProgress;
+    end;
   end;
 
   {============================ FLUSH ============================}
@@ -301,7 +328,10 @@ begin
       Break; {No more samples left}
     end;
 
-    if q mod 64 = 0 then UpdateProgress;
+    if q mod 32 = 0 then
+    begin
+      UpdateProgress;
+    end;
   end;
 
   {============================ CLOSE ============================}
@@ -319,6 +349,8 @@ begin
 
   WriteLn('Done.'#10);
   StartStopTest(False);
+
+  MessageBox(self.WindowHandle, 'Test completed successfully.', PAnsiChar(self.Caption), MB_ICONINFORMATION);
 end;
 
 end.
