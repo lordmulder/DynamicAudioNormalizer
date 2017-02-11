@@ -430,17 +430,18 @@ public class JDynamicAudioNormalizer implements Closeable
 	public static void main(String [] args)
 	{
 		int [] ver = null;
+		Exception error = null;
 		try
 		{
 			ver = getVersionInfo();
 		}
-		catch(Throwable e)
+		catch(Exception ex)
 		{
-			System.out.printf("\nERROR: %s\n\n", e.getMessage());
+			error = ex;
 		}
 		
-		System.out.println("===========================================================================");
-		if(ver != null)
+		System.out.println("\n===========================================================================");
+		if((ver != null) && (ver.length >= 3))
 		{
 			System.out.printf("Dynamic Audio Normalizer, Version %d.%02d-%d\n", ver[0], ver[1], ver[2]);
 		}
@@ -453,6 +454,13 @@ public class JDynamicAudioNormalizer implements Closeable
 		System.out.println("This program is free software: you can redistribute it and/or modify");
 		System.out.println("it under the terms of the GNU General Public License <http://www.gnu.org/>.");
 		System.out.println("Note that this program is distributed with ABSOLUTELY NO WARRANTY.");
-		System.out.println("===========================================================================");
+		System.out.println("===========================================================================\n");
+		
+		if((error != null)) {
+			System.out.printf("ERROR: %s\n%s\n", error.getClass().toString(), error.getMessage());
+		}
+		else {
+			System.out.println("That's all. Goodbye.");
+		}
 	}
 }
