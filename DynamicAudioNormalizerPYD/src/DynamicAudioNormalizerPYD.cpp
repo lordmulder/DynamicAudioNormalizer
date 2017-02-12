@@ -23,16 +23,113 @@
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
 
+//Dynamic Audio Normalizer API
+#include <DynamicAudioNormalizer.h>
+
+//Python API
 #include <Python.h>
-#include <string>
+
+//Version check
+#if PY_MAJOR_VERSION != 3
+#error Python 3 is reuired for this file to be compiled!
+#endif
+
+//CRT
+#include <unordered_set>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Methid Implementation
+// Instance Management
+///////////////////////////////////////////////////////////////////////////////
+
+static std::unordered_set<MDynamicAudioNormalizer*> m_instances;
+
+static MDynamicAudioNormalizer *instance_add(MDynamicAudioNormalizer *const instance)
+{
+	m_instances.insert(instance);
+	return instance;
+}
+
+static bool instance_check(MDynamicAudioNormalizer *const instance)
+{
+	return (m_instances.find(instance) != m_instances.end());
+}
+
+static MDynamicAudioNormalizer *instance_remove(MDynamicAudioNormalizer *const instance)
+{
+	m_instances.erase(instance);
+	return instance;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Helper Macros
+///////////////////////////////////////////////////////////////////////////////
+
+#define PY_BOOLIFY(X) ((X) ? true : false)
+
+#define PY_INIT_LNG(X,Y) (((X) && PyLong_Check((X)))  ? ((uint32_t)PyLong_AsUnsignedLong((X)))  : (Y))
+#define PY_INIT_FLT(X,Y) (((X) && PyFloat_Check((X))) ? PyFloat_AsDouble((X))                   : (Y))
+#define PY_INIT_BLN(X,Y) (((X) && PyBool_Check((X)))  ? PY_BOOLIFY(PyObject_IsTrue((X)))        : (Y))
+
+#define PY_INSTANCE(X) reinterpret_cast<MDynamicAudioNormalizer*>(PyLong_AsVoidPtr((X)))
+
+///////////////////////////////////////////////////////////////////////////////
+// Method Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
 static PyObject *PyMDynamicAudioNormalizer_Create(PyObject *const self, PyObject *const args)
 {
-	return PyLong_FromVoidPtr(new std::string());
+	PyObject *pyChannels = NULL, *pySampleRate = NULL, *pyFrameLenMsec = NULL, *pyFilterSize = NULL;
+	PyObject *pyPeakValue = NULL, *pyMaxAmplification = NULL, *pyTargetRms = NULL, *pyCompressFactor = NULL;
+	PyObject *pyChannelsCoupled = NULL, *pyEnableDCCorrection = NULL, *pyAltBoundaryMode = NULL;
+	
+	if (!PyArg_UnpackTuple(args, "create", 2, 11,
+			&pyChannels, &pySampleRate, &pyFrameLenMsec, &pyFilterSize,
+			&pyPeakValue, &pyMaxAmplification, &pyTargetRms, &pyCompressFactor,
+			&pyChannelsCoupled, &pyEnableDCCorrection, &pyAltBoundaryMode))
+	{
+		Py_RETURN_NONE;
+	}
+
+	const uint32_t channels           = PY_INIT_LNG(pyChannels,             0L  );
+	const uint32_t sampleRate         = PY_INIT_LNG(pySampleRate,           0L  );
+	const uint32_t frameLenMsec       = PY_INIT_LNG(pyFrameLenMsec,       500L  );
+	const uint32_t filterSize         = PY_INIT_LNG(pyFilterSize,          31L  );
+	const double   peakValue          = PY_INIT_FLT(pyPeakValue,            0.95);
+	const double   maxAmplification   = PY_INIT_FLT(pyMaxAmplification,    10.  );
+	const double   targetRms          = PY_INIT_FLT(pyTargetRms,            0.  );
+	const double   compressFactor     = PY_INIT_FLT(pyCompressFactor,       0.  );
+	const bool     channelsCoupled    = PY_INIT_BLN(pyChannelsCoupled ,     true);
+	const bool     enableDCCorrection = PY_INIT_BLN(pyEnableDCCorrection,  false);
+	const bool     altBoundaryMode    = PY_INIT_BLN(pyAltBoundaryMode,     false);
+	
+	if ((channels > 0) && (sampleRate > 0))
+	{
+		MDynamicAudioNormalizer *const instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+		if (instance->initialize())
+		{
+			return PyLong_FromVoidPtr(instance_add(instance));
+		}
+		delete instance;
+	}
+
+	Py_RETURN_NONE;
+}
+
+static PyObject *PyMDynamicAudioNormalizer_Destroy(PyObject *const self, PyObject *const args)
+{
+	if (PyLong_Check(args))
+	{
+		if (MDynamicAudioNormalizer *const instance = PY_INSTANCE(args))
+		{
+			if (instance_check(instance))
+			{
+				delete instance_remove(instance);
+				Py_RETURN_TRUE;
+			}
+		}
+	}
+
+	Py_RETURN_FALSE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,7 +138,8 @@ static PyObject *PyMDynamicAudioNormalizer_Create(PyObject *const self, PyObject
 
 static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
 {
-	{ "create", PyMDynamicAudioNormalizer_Create, METH_NOARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it." },
+	{ "create",  PyMDynamicAudioNormalizer_Create,  METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it." },
+	{ "destroy", PyMDynamicAudioNormalizer_Destroy, METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."            },
 	{ NULL, NULL, 0, NULL }
 };
 
