@@ -29,6 +29,10 @@
 //Python API
 #include <Python.h>
 
+//Commons
+#include <Common.h>
+#include <Threads.h>
+
 //Version check
 #if PY_MAJOR_VERSION != 3
 #error Python 3 is reuired for this file to be compiled!
@@ -42,41 +46,64 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 static std::unordered_set<MDynamicAudioNormalizer*> m_instances;
+static pthread_mutex_t m_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static MDynamicAudioNormalizer *instance_add(MDynamicAudioNormalizer *const instance)
 {
+	MY_CRITSEC_ENTER(m_mutex);
 	m_instances.insert(instance);
+	MY_CRITSEC_LEAVE(m_mutex);
 	return instance;
 }
 
 static bool instance_check(MDynamicAudioNormalizer *const instance)
 {
-	return (m_instances.find(instance) != m_instances.end());
+	bool result;
+	MY_CRITSEC_ENTER(m_mutex);
+	result = (m_instances.find(instance) != m_instances.end());
+	MY_CRITSEC_LEAVE(m_mutex);
+	return result;
 }
 
 static MDynamicAudioNormalizer *instance_remove(MDynamicAudioNormalizer *const instance)
 {
+	MY_CRITSEC_ENTER(m_mutex);
 	m_instances.erase(instance);
+	MY_CRITSEC_LEAVE(m_mutex);
 	return instance;
+}
+
+static MDynamicAudioNormalizer *PY2INSTANCE(PyObject *const obj)
+{
+	if (obj && PyLong_Check(obj))
+	{
+		if (MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(PyLong_AsVoidPtr(obj)))
+		{
+			return instance_check(instance) ? instance : NULL;
+		}
+	}
+	return NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Macros
 ///////////////////////////////////////////////////////////////////////////////
 
+#define PY_METHOD_DECL(X) PyMethodWrap_##X
+#define PY_METHOD_IMPL(X) static PyObject *PyMethodImpl_##X(PyObject *const self, PyObject *const args)
+
 #define PY_BOOLIFY(X) ((X) ? true : false)
+#define PY_ULONG(X) static_cast<unsigned long>((X))
 
 #define PY_INIT_LNG(X,Y) (((X) && PyLong_Check((X)))  ? ((uint32_t)PyLong_AsUnsignedLong((X)))  : (Y))
 #define PY_INIT_FLT(X,Y) (((X) && PyFloat_Check((X))) ? PyFloat_AsDouble((X))                   : (Y))
 #define PY_INIT_BLN(X,Y) (((X) && PyBool_Check((X)))  ? PY_BOOLIFY(PyObject_IsTrue((X)))        : (Y))
 
-#define PY_INSTANCE(X) reinterpret_cast<MDynamicAudioNormalizer*>(PyLong_AsVoidPtr((X)))
-
 ///////////////////////////////////////////////////////////////////////////////
 // Method Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
-static PyObject *PyMDynamicAudioNormalizer_Create(PyObject *const self, PyObject *const args)
+PY_METHOD_IMPL(Create)
 {
 	PyObject *pyChannels = NULL, *pySampleRate = NULL, *pyFrameLenMsec = NULL, *pyFilterSize = NULL;
 	PyObject *pyPeakValue = NULL, *pyMaxAmplification = NULL, *pyTargetRms = NULL, *pyCompressFactor = NULL;
@@ -87,7 +114,7 @@ static PyObject *PyMDynamicAudioNormalizer_Create(PyObject *const self, PyObject
 			&pyPeakValue, &pyMaxAmplification, &pyTargetRms, &pyCompressFactor,
 			&pyChannelsCoupled, &pyEnableDCCorrection, &pyAltBoundaryMode))
 	{
-		Py_RETURN_NONE;
+		return NULL;
 	}
 
 	const uint32_t channels           = PY_INIT_LNG(pyChannels,             0L  );
@@ -115,22 +142,57 @@ static PyObject *PyMDynamicAudioNormalizer_Create(PyObject *const self, PyObject
 	Py_RETURN_NONE;
 }
 
-static PyObject *PyMDynamicAudioNormalizer_Destroy(PyObject *const self, PyObject *const args)
+PY_METHOD_IMPL(Destroy)
 {
 	if (PyLong_Check(args))
 	{
-		if (MDynamicAudioNormalizer *const instance = PY_INSTANCE(args))
+		if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
 		{
-			if (instance_check(instance))
-			{
-				delete instance_remove(instance);
-				Py_RETURN_TRUE;
-			}
+			delete instance_remove(instance);
+			Py_RETURN_TRUE;
 		}
 	}
 
 	Py_RETURN_FALSE;
 }
+
+PY_METHOD_IMPL(GetConfig)
+{
+	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
+	{
+		uint32_t channels, sampleRate, frameLen, filterSize;
+		if (instance->getConfiguration(channels, sampleRate, frameLen, filterSize))
+		{
+			if (PyObject *const result = Py_BuildValue("kkkk", PY_ULONG(channels), PY_ULONG(sampleRate), PY_ULONG(frameLen), PY_ULONG(filterSize)))
+			{
+				return result;
+			}
+		}
+	}
+
+	Py_RETURN_NONE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Method Wrappers
+///////////////////////////////////////////////////////////////////////////////
+
+#define PY_METHOD_WRAP(X) \
+static PyObject *PyMethodWrap_##X(PyObject *const self, PyObject *const args) \
+{ \
+	try \
+	{ \
+		return PyMethodImpl_##X(self, args); \
+	} \
+	catch (...) \
+	{ \
+		Py_RETURN_NONE; \
+	} \
+}
+
+PY_METHOD_WRAP(Create)
+PY_METHOD_WRAP(Destroy)
+PY_METHOD_WRAP(GetConfig)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module Definition
@@ -138,18 +200,19 @@ static PyObject *PyMDynamicAudioNormalizer_Destroy(PyObject *const self, PyObjec
 
 static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
 {
-	{ "create",  PyMDynamicAudioNormalizer_Create,  METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it." },
-	{ "destroy", PyMDynamicAudioNormalizer_Destroy, METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."            },
+	{ "create",    PY_METHOD_DECL(Create),    METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it."       },
+	{ "destroy",   PY_METHOD_DECL(Destroy),   METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                  },
+	{ "getConfig", PY_METHOD_DECL(GetConfig), METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance." },
 	{ NULL, NULL, 0, NULL }
 };
 
 static struct PyModuleDef PyDynamicAudioNormalizer_ModuleDef =
 {
-	PyModuleDef_HEAD_INIT, "MDynamicAudioNormalizerAPI", "", -1, PyMDynamicAudioNormalizer_Methods
+	PyModuleDef_HEAD_INIT, "DynamicAudioNormalizerAPI", "", -1, PyMDynamicAudioNormalizer_Methods
 };
 
 PyMODINIT_FUNC
-PyInit_MDynamicAudioNormalizerAPI(void)
+PyInit_DynamicAudioNormalizerAPI(void)
 {
 	return PyModule_Create(&PyDynamicAudioNormalizer_ModuleDef);
 }
