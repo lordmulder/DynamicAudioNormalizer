@@ -42,50 +42,6 @@
 #include <unordered_set>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instance Management
-///////////////////////////////////////////////////////////////////////////////
-
-static std::unordered_set<MDynamicAudioNormalizer*> m_instances;
-static pthread_mutex_t m_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static MDynamicAudioNormalizer *instance_add(MDynamicAudioNormalizer *const instance)
-{
-	MY_CRITSEC_ENTER(m_mutex);
-	m_instances.insert(instance);
-	MY_CRITSEC_LEAVE(m_mutex);
-	return instance;
-}
-
-static bool instance_check(MDynamicAudioNormalizer *const instance)
-{
-	bool result;
-	MY_CRITSEC_ENTER(m_mutex);
-	result = (m_instances.find(instance) != m_instances.end());
-	MY_CRITSEC_LEAVE(m_mutex);
-	return result;
-}
-
-static MDynamicAudioNormalizer *instance_remove(MDynamicAudioNormalizer *const instance)
-{
-	MY_CRITSEC_ENTER(m_mutex);
-	m_instances.erase(instance);
-	MY_CRITSEC_LEAVE(m_mutex);
-	return instance;
-}
-
-static MDynamicAudioNormalizer *PY2INSTANCE(PyObject *const obj)
-{
-	if (obj && PyLong_Check(obj))
-	{
-		if (MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(PyLong_AsVoidPtr(obj)))
-		{
-			return instance_check(instance) ? instance : NULL;
-		}
-	}
-	return NULL;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Helper Macros
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -99,24 +55,160 @@ static MDynamicAudioNormalizer *PY2INSTANCE(PyObject *const obj)
 #define PY_INIT_FLT(X,Y) (((X) && PyFloat_Check((X))) ? PyFloat_AsDouble((X))                   : (Y))
 #define PY_INIT_BLN(X,Y) (((X) && PyBool_Check((X)))  ? PY_BOOLIFY(PyObject_IsTrue((X)))        : (Y))
 
+#define PY_EXCEPTION(X) do \
+{ \
+	if (!PyErr_Occurred()) \
+	{ \
+		PyErr_SetString(PyExc_RuntimeError, (X)); \
+	} \
+} \
+while(0)
+
+static void PY_FREE(PyObject **const obj)
+{
+	Py_XDECREF(*obj);
+	*obj = NULL;
+}
+
+static void PY_FREE(const size_t n, ...)
+{
+	va_list arg;
+	va_start(arg, n);
+	for (size_t i = 0; i < n ; i++)
+	{
+		PyObject **const iter = va_arg(arg, PyObject**);
+		PY_FREE(iter);
+	}
+	va_end(arg);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Initialization
+///////////////////////////////////////////////////////////////////////////////
+
+static uint64_t g_initialized = 0L;
+static pthread_mutex_t m_initalized_mutex = PTHREAD_MUTEX_INITIALIZER;
+static PyObject *g_arrayModule = NULL, *g_arrayClass = NULL;
+
+static bool global_init_function(void)
+{
+	if (!(g_arrayModule = PyImport_ImportModule("array")))
+	{
+		return false;
+	}
+	if (!(g_arrayClass = PyObject_GetAttrString(g_arrayModule, "array")))
+	{
+		PY_FREE(&g_arrayModule);
+		return false;
+	}
+	if (!PyType_Check(g_arrayClass))
+	{
+		PY_FREE(2, &g_arrayClass, &g_arrayModule);
+		return false;
+	}
+	return true;
+}
+
+static bool global_exit_function(void)
+{
+	PY_FREE(2, &g_arrayClass, &g_arrayModule);
+	return true;
+}
+
+static bool global_init(void)
+{
+	bool success = false;
+	MY_CRITSEC_ENTER(m_initalized_mutex);
+	if (success = (g_initialized ? true : global_init_function()))
+	{
+		g_initialized++;
+	}
+	MY_CRITSEC_LEAVE(m_initalized_mutex);
+	return success;
+}
+
+static bool global_exit(void)
+{
+	bool success = false;
+	MY_CRITSEC_ENTER(m_initalized_mutex);
+	if (g_initialized)
+	{
+		success = (--g_initialized) ? true : global_exit_function();
+	}
+	return success;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Instance Management
+///////////////////////////////////////////////////////////////////////////////
+
+static std::unordered_set<MDynamicAudioNormalizer*> g_instances;
+static pthread_mutex_t g_instances_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static MDynamicAudioNormalizer *instance_add(MDynamicAudioNormalizer *const instance)
+{
+	MY_CRITSEC_ENTER(g_instances_mutex);
+	g_instances.insert(instance);
+	MY_CRITSEC_LEAVE(g_instances_mutex);
+	return instance;
+}
+
+static bool instance_check(MDynamicAudioNormalizer *const instance)
+{
+	bool result;
+	MY_CRITSEC_ENTER(g_instances_mutex);
+	result = (g_instances.find(instance) != g_instances.end());
+	MY_CRITSEC_LEAVE(g_instances_mutex);
+	return result;
+}
+
+static MDynamicAudioNormalizer *instance_remove(MDynamicAudioNormalizer *const instance)
+{
+	MY_CRITSEC_ENTER(g_instances_mutex);
+	g_instances.erase(instance);
+	MY_CRITSEC_LEAVE(g_instances_mutex);
+	return instance;
+}
+
+static MDynamicAudioNormalizer *PY2INSTANCE(PyObject *const obj)
+{
+	if (obj && PyLong_Check(obj))
+	{
+		if (MDynamicAudioNormalizer *const instance = reinterpret_cast<MDynamicAudioNormalizer*>(PyLong_AsVoidPtr(obj)))
+		{
+			if (instance_check(instance))
+			{
+				return instance;
+			}
+		}
+	}
+	PY_EXCEPTION("Invalid MDynamicAudioNormalizer handle value!");
+	return (NULL);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Method Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
 PY_METHOD_IMPL(Create)
 {
-	PyObject *pyChannels = NULL, *pySampleRate = NULL, *pyFrameLenMsec = NULL, *pyFilterSize = NULL;
-	PyObject *pyPeakValue = NULL, *pyMaxAmplification = NULL, *pyTargetRms = NULL, *pyCompressFactor = NULL;
-	PyObject *pyChannelsCoupled = NULL, *pyEnableDCCorrection = NULL, *pyAltBoundaryMode = NULL;
-	
-	if (!PyArg_UnpackTuple(args, "create", 2, 11,
-			&pyChannels, &pySampleRate, &pyFrameLenMsec, &pyFilterSize,
-			&pyPeakValue, &pyMaxAmplification, &pyTargetRms, &pyCompressFactor,
-			&pyChannelsCoupled, &pyEnableDCCorrection, &pyAltBoundaryMode))
+	//Perform gloabl initialization first
+	if (!global_init())
 	{
-		return NULL;
+		PY_EXCEPTION("Global library initialization has failed!");
+		return (NULL);
 	}
 
+	//Unpack the function arguments (references are "borrowed"!)
+	PyObject *pyChannels = NULL, *pySampleRate = NULL, *pyFrameLenMsec = NULL, *pyFilterSize = NULL, *pyPeakValue = NULL, *pyMaxAmplification = NULL, *pyTargetRms = NULL, *pyCompressFactor = NULL, *pyChannelsCoupled = NULL, *pyEnableDCCorrection = NULL, *pyAltBoundaryMode = NULL;
+	if (!PyArg_UnpackTuple(args, "create", 2, 11, &pyChannels, &pySampleRate, &pyFrameLenMsec, &pyFilterSize, &pyPeakValue, &pyMaxAmplification, &pyTargetRms, &pyCompressFactor, &pyChannelsCoupled, &pyEnableDCCorrection, &pyAltBoundaryMode))
+	{
+		PY_EXCEPTION("Failed to unpack MDynamicAudioNormalizer arguments!");
+		global_exit();
+		return (NULL);
+	}
+
+	//Parse the input parameters
 	const uint32_t channels           = PY_INIT_LNG(pyChannels,             0L  );
 	const uint32_t sampleRate         = PY_INIT_LNG(pySampleRate,           0L  );
 	const uint32_t frameLenMsec       = PY_INIT_LNG(pyFrameLenMsec,       500L  );
@@ -128,32 +220,42 @@ PY_METHOD_IMPL(Create)
 	const bool     channelsCoupled    = PY_INIT_BLN(pyChannelsCoupled ,     true);
 	const bool     enableDCCorrection = PY_INIT_BLN(pyEnableDCCorrection,  false);
 	const bool     altBoundaryMode    = PY_INIT_BLN(pyAltBoundaryMode,     false);
-	
-	if ((channels > 0) && (sampleRate > 0))
+
+	//Validate parameters
+	if (PyErr_Occurred() || (!channels) || (!sampleRate))
 	{
-		MDynamicAudioNormalizer *const instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode);
+		PY_EXCEPTION("Invalid or incomplete MDynamicAudioNormalizer arguments!");
+		global_exit();
+		return (NULL);
+	}
+
+	//Create and initialize the instance
+	if (MDynamicAudioNormalizer *const instance = new MDynamicAudioNormalizer(channels, sampleRate, frameLenMsec, filterSize, peakValue, maxAmplification, targetRms, compressFactor, channelsCoupled, enableDCCorrection, altBoundaryMode))
+	{
 		if (instance->initialize())
 		{
 			return PyLong_FromVoidPtr(instance_add(instance));
 		}
+		PY_EXCEPTION("Failed to initialize MDynamicAudioNormalizer instance!");
 		delete instance;
 	}
 
-	Py_RETURN_NONE;
+	//Failure
+	PY_EXCEPTION("Failed to create MDynamicAudioNormalizer instance!");
+	global_exit();
+	return (NULL);
 }
 
 PY_METHOD_IMPL(Destroy)
 {
-	if (PyLong_Check(args))
+	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
 	{
-		if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
-		{
-			delete instance_remove(instance);
-			Py_RETURN_TRUE;
-		}
+		delete instance_remove(instance);
+		global_exit();
+		Py_RETURN_TRUE;
 	}
-
-	Py_RETURN_FALSE;
+	PY_EXCEPTION("Failed to destory MDynamicAudioNormalizer instance!");
+	return (NULL);
 }
 
 PY_METHOD_IMPL(GetConfig)
@@ -169,8 +271,8 @@ PY_METHOD_IMPL(GetConfig)
 			}
 		}
 	}
-
-	Py_RETURN_NONE;
+	PY_EXCEPTION("Failed to get MDynamicAudioNormalizer configuration!");
+	return (NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -186,7 +288,8 @@ static PyObject *PyMethodWrap_##X(PyObject *const self, PyObject *const args) \
 	} \
 	catch (...) \
 	{ \
-		Py_RETURN_NONE; \
+		PyErr_SetString(PyExc_SystemError, "Internal C++ exception error!"); \
+		return NULL; \
 	} \
 }
 
