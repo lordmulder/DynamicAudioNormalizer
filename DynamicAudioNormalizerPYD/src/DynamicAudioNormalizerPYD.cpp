@@ -40,6 +40,7 @@
 
 //CRT
 #include <unordered_set>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Macros
@@ -87,54 +88,54 @@ static void PY_FREE(const size_t n, ...)
 ///////////////////////////////////////////////////////////////////////////////
 
 static uint64_t g_initialized = 0L;
-static pthread_mutex_t m_initalized_mutex = PTHREAD_MUTEX_INITIALIZER;
-static PyObject *g_arrayModule = NULL, *g_arrayClass = NULL;
+static pthread_mutex_t m_initalization_mutex = PTHREAD_MUTEX_INITIALIZER;
+static PyObject *g_arrayClass = NULL;
 
 static bool global_init_function(void)
 {
-	if (!(g_arrayModule = PyImport_ImportModule("array")))
+	bool success = false;
+	if (PyObject *const arrayModule = PyImport_ImportModule("array"))
 	{
-		return false;
+		if (PyObject *arrayClass = PyObject_GetAttrString(arrayModule, "array"))
+		{
+			if (success = PyType_Check(arrayClass))
+			{
+				std::swap(g_arrayClass, arrayClass);
+			}
+			Py_XDECREF(arrayClass);
+		}
+		Py_XDECREF(arrayModule);
 	}
-	if (!(g_arrayClass = PyObject_GetAttrString(g_arrayModule, "array")))
-	{
-		PY_FREE(&g_arrayModule);
-		return false;
-	}
-	if (!PyType_Check(g_arrayClass))
-	{
-		PY_FREE(2, &g_arrayClass, &g_arrayModule);
-		return false;
-	}
-	return true;
+	return success;
 }
 
 static bool global_exit_function(void)
 {
-	PY_FREE(2, &g_arrayClass, &g_arrayModule);
+	PY_FREE(&g_arrayClass);
 	return true;
 }
 
 static bool global_init(void)
 {
 	bool success = false;
-	MY_CRITSEC_ENTER(m_initalized_mutex);
+	MY_CRITSEC_ENTER(m_initalization_mutex);
 	if (success = (g_initialized ? true : global_init_function()))
 	{
 		g_initialized++;
 	}
-	MY_CRITSEC_LEAVE(m_initalized_mutex);
+	MY_CRITSEC_LEAVE(m_initalization_mutex);
 	return success;
 }
 
 static bool global_exit(void)
 {
 	bool success = false;
-	MY_CRITSEC_ENTER(m_initalized_mutex);
+	MY_CRITSEC_ENTER(m_initalization_mutex);
 	if (g_initialized)
 	{
 		success = (--g_initialized) ? true : global_exit_function();
 	}
+	MY_CRITSEC_LEAVE(m_initalization_mutex);
 	return success;
 }
 
@@ -143,31 +144,35 @@ static bool global_exit(void)
 ///////////////////////////////////////////////////////////////////////////////
 
 static std::unordered_set<MDynamicAudioNormalizer*> g_instances;
-static pthread_mutex_t g_instances_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_instance_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static MDynamicAudioNormalizer *instance_add(MDynamicAudioNormalizer *const instance)
 {
-	MY_CRITSEC_ENTER(g_instances_mutex);
+	MY_CRITSEC_ENTER(g_instance_mutex);
 	g_instances.insert(instance);
-	MY_CRITSEC_LEAVE(g_instances_mutex);
+	MY_CRITSEC_LEAVE(g_instance_mutex);
+	return instance;
+}
+
+static MDynamicAudioNormalizer *instance_remove(MDynamicAudioNormalizer *const instance)
+{
+	MY_CRITSEC_ENTER(g_instance_mutex);
+	const std::unordered_set<MDynamicAudioNormalizer*>::iterator iter = g_instances.find(instance);
+	if (iter != g_instances.end())
+	{
+		g_instances.erase(iter);
+	}
+	MY_CRITSEC_LEAVE(g_instance_mutex);
 	return instance;
 }
 
 static bool instance_check(MDynamicAudioNormalizer *const instance)
 {
 	bool result;
-	MY_CRITSEC_ENTER(g_instances_mutex);
+	MY_CRITSEC_ENTER(g_instance_mutex);
 	result = (g_instances.find(instance) != g_instances.end());
-	MY_CRITSEC_LEAVE(g_instances_mutex);
+	MY_CRITSEC_LEAVE(g_instance_mutex);
 	return result;
-}
-
-static MDynamicAudioNormalizer *instance_remove(MDynamicAudioNormalizer *const instance)
-{
-	MY_CRITSEC_ENTER(g_instances_mutex);
-	g_instances.erase(instance);
-	MY_CRITSEC_LEAVE(g_instances_mutex);
-	return instance;
 }
 
 static MDynamicAudioNormalizer *PY2INSTANCE(PyObject *const obj)
@@ -184,6 +189,90 @@ static MDynamicAudioNormalizer *PY2INSTANCE(PyObject *const obj)
 	}
 	PY_EXCEPTION("Invalid MDynamicAudioNormalizer handle value!");
 	return (NULL);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Buffer Management
+///////////////////////////////////////////////////////////////////////////////
+
+static const uint32_t BUFFERS_MAX_CHANNEL = 8;
+
+typedef struct
+{
+	uint32_t size;
+	double *buffers[BUFFERS_MAX_CHANNEL];
+	Py_buffer views[BUFFERS_MAX_CHANNEL];
+}
+buffers_t;
+
+static bool unwrap_buffers(MDynamicAudioNormalizer *const instance, buffers_t &buffers, PyObject *const data, bool writable)
+{
+	memset(&buffers, 0, sizeof(buffers_t));
+
+	uint32_t channels, sampleRate, frameLen, filterSize;
+	if (!instance->getConfiguration(channels, sampleRate, frameLen, filterSize))
+	{
+		PY_EXCEPTION("Failed to get MDynamicAudioNormalizer configuration!");
+		return false;
+	}
+
+	if (!(PyTuple_Check(data) && (channels <= BUFFERS_MAX_CHANNEL) && (static_cast<uint32_t>(PyTuple_Size(data)) < channels)))
+	{
+		PY_EXCEPTION("Input object does not appear to be a tuple or proper size!");
+		return false;
+	}
+
+	PyObject *pyArrays[BUFFERS_MAX_CHANNEL];
+	for (uint32_t c = 0; c < channels; ++c)
+	{
+		if (!(pyArrays[c] = PyTuple_GetItem(data, static_cast<Py_ssize_t>(c))))
+		{
+			PY_EXCEPTION("Failed to get array object from input tuple!");
+			return false;
+		}
+		if (!PyObject_IsSubclass(pyArrays[c], g_arrayClass))
+		{
+			PY_EXCEPTION("Input object does not appear to be an array!");
+			return false;
+		}
+	}
+
+	for (uint32_t c = 0; c < channels; ++c)
+	{
+		if (!PyObject_GetBuffer(pyArrays[c], &buffers.views[c], (writable ? PyBUF_WRITABLE : 0)))
+		{
+			for (uint32_t k = 0; k < c; ++k)
+			{
+				PyBuffer_Release(&buffers.views[k]);
+				memset(&buffers.views[k], 0, sizeof(Py_buffer));
+			}
+			PY_EXCEPTION("Failed to get buffer from array object!");
+			return false;
+		}
+	}
+
+	buffers.size = UINT32_MAX;
+	for (uint32_t c = 0; c < channels; ++c)
+	{
+		buffers.buffers[c] = reinterpret_cast<double*>(buffers.views[c].buf);
+		buffers.size = std::min(buffers.size, static_cast<uint32_t>(buffers.views[c].len / buffers.views[c].itemsize));
+	}
+
+	return true;
+}
+
+static void release_buffers(buffers_t &buffers)
+{
+	buffers.size = 0;
+	memset(&buffers.buffers, 0, sizeof(double*) * BUFFERS_MAX_CHANNEL);
+	for (uint32_t c = 0; c < BUFFERS_MAX_CHANNEL; ++c)
+	{
+		if ((buffers.views[c].buf) && (buffers.views[c].obj))
+		{
+			PyBuffer_Release(&buffers.views[c]);
+		}
+		memset(&buffers.views[c], 0, sizeof(Py_buffer));
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -275,6 +364,35 @@ PY_METHOD_IMPL(GetConfig)
 	return (NULL);
 }
 
+PY_METHOD_IMPL(ProcessInplace)
+{
+	long long inputSize = NULL;
+	PyObject *pyInstance = NULL, *pySamplesInOut = NULL;
+
+	if (!PyArg_ParseTuple(args, "OOK", &pyInstance, &pySamplesInOut, &inputSize))
+	{
+		return NULL;
+	}
+
+	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
+	{
+		buffers_t samplesInOut;
+		if (unwrap_buffers(instance, samplesInOut, pySamplesInOut, true))
+		{
+			int64_t outputSize;
+			const bool success = instance->processInplace(samplesInOut.buffers, static_cast<int64_t>(inputSize), outputSize);
+			release_buffers(samplesInOut);
+			if(success)
+			{
+				return PyLong_FromLongLong(static_cast<long long>(outputSize));
+			}
+		}
+	}
+
+	PY_EXCEPTION("Failed to process audio samples in-place!");
+	return (NULL);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Method Wrappers
 ///////////////////////////////////////////////////////////////////////////////
@@ -296,6 +414,7 @@ static PyObject *PyMethodWrap_##X(PyObject *const self, PyObject *const args) \
 PY_METHOD_WRAP(Create)
 PY_METHOD_WRAP(Destroy)
 PY_METHOD_WRAP(GetConfig)
+PY_METHOD_WRAP(ProcessInplace)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module Definition
@@ -303,9 +422,10 @@ PY_METHOD_WRAP(GetConfig)
 
 static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
 {
-	{ "create",    PY_METHOD_DECL(Create),    METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it."       },
-	{ "destroy",   PY_METHOD_DECL(Destroy),   METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                  },
-	{ "getConfig", PY_METHOD_DECL(GetConfig), METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance." },
+	{ "create",         PY_METHOD_DECL(Create),         METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it."       },
+	{ "destroy",        PY_METHOD_DECL(Destroy),        METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                  },
+	{ "getConfig",      PY_METHOD_DECL(GetConfig),      METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance." },
+	{ "processInplace", PY_METHOD_DECL(ProcessInplace), METH_VARARGS,  "Process next chunk audio samples, in-place."                            },
 	{ NULL, NULL, 0, NULL }
 };
 
