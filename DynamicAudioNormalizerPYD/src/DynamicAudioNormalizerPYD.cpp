@@ -41,6 +41,8 @@
 //CRT
 #include <unordered_set>
 #include <algorithm>
+#include <stdexcept>
+#include <cstdio>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Macros
@@ -195,85 +197,118 @@ static MDynamicAudioNormalizer *PY2INSTANCE(PyObject *const obj)
 // Buffer Management
 ///////////////////////////////////////////////////////////////////////////////
 
-static const uint32_t BUFFERS_MAX_CHANNEL = 8;
-
-typedef struct
+class PyBufferWrapper
 {
-	uint32_t size;
-	double *buffers[BUFFERS_MAX_CHANNEL];
-	Py_buffer views[BUFFERS_MAX_CHANNEL];
-}
-buffers_t;
-
-static bool unwrap_buffers(MDynamicAudioNormalizer *const instance, buffers_t &buffers, PyObject *const data, bool writable)
-{
-	memset(&buffers, 0, sizeof(buffers_t));
-
-	uint32_t channels, sampleRate, frameLen, filterSize;
-	if (!instance->getConfiguration(channels, sampleRate, frameLen, filterSize))
+public:
+	PyBufferWrapper(PyObject *const data, const uint32_t count, const bool writable)
+	:
+		m_count(count),
+		m_length(UINT32_MAX)
 	{
-		PY_EXCEPTION("Failed to get MDynamicAudioNormalizer configuration!");
-		return false;
-	}
+		memset(m_buffers, 0, sizeof(double*) * MAX_BUFFERS);
+		memset(m_views, 0, sizeof(Py_buffer) * MAX_BUFFERS);
 
-	if (!(PyTuple_Check(data) && (channels <= BUFFERS_MAX_CHANNEL) && (static_cast<uint32_t>(PyTuple_Size(data)) < channels)))
-	{
-		PY_EXCEPTION("Input object does not appear to be a tuple or proper size!");
-		return false;
-	}
-
-	PyObject *pyArrays[BUFFERS_MAX_CHANNEL];
-	for (uint32_t c = 0; c < channels; ++c)
-	{
-		if (!(pyArrays[c] = PyTuple_GetItem(data, static_cast<Py_ssize_t>(c))))
+		if (!((data) && PyTuple_Check(data)))
 		{
-			PY_EXCEPTION("Failed to get array object from input tuple!");
-			return false;
+			PY_EXCEPTION("Input Python object does not appear to be a tuple!");
+			throw std::invalid_argument("Invalid buffer object!");
 		}
-		if (!PyObject_IsSubclass(pyArrays[c], g_arrayClass))
+		if (!((count > 0) && (count <= MAX_BUFFERS) && (static_cast<uint32_t>(PyTuple_Size(data)) >= count)))
 		{
-			PY_EXCEPTION("Input object does not appear to be an array!");
-			return false;
+			PY_EXCEPTION("Input tuple does not have the required minimum size!");
+			throw std::invalid_argument("Invalid buffer count!");
 		}
-	}
 
-	for (uint32_t c = 0; c < channels; ++c)
-	{
-		if (!PyObject_GetBuffer(pyArrays[c], &buffers.views[c], (writable ? PyBUF_WRITABLE : 0)))
+		PyObject *pyArrays[MAX_BUFFERS];
+		for (uint32_t c = 0; c < count; ++c)
 		{
-			for (uint32_t k = 0; k < c; ++k)
+			if (!(pyArrays[c] = PyTuple_GetItem(data, static_cast<Py_ssize_t>(c))))
 			{
-				PyBuffer_Release(&buffers.views[k]);
-				memset(&buffers.views[k], 0, sizeof(Py_buffer));
+				PY_EXCEPTION("Failed to obtain the n-th element of the given input tuple!");
+				throw std::invalid_argument("PyTuple_GetItem() error!");
 			}
-			PY_EXCEPTION("Failed to get buffer from array object!");
-			return false;
+			if (PyObject_IsInstance(pyArrays[c], g_arrayClass) <= 0)
+			{
+				PY_EXCEPTION("The n-th element of the given tuple is not an array object!");
+				throw std::invalid_argument("PyObject_IsInstance() error!");
+			}
 		}
-	}
 
-	buffers.size = UINT32_MAX;
-	for (uint32_t c = 0; c < channels; ++c)
-	{
-		buffers.buffers[c] = reinterpret_cast<double*>(buffers.views[c].buf);
-		buffers.size = std::min(buffers.size, static_cast<uint32_t>(buffers.views[c].len / buffers.views[c].itemsize));
-	}
-
-	return true;
-}
-
-static void release_buffers(buffers_t &buffers)
-{
-	buffers.size = 0;
-	memset(&buffers.buffers, 0, sizeof(double*) * BUFFERS_MAX_CHANNEL);
-	for (uint32_t c = 0; c < BUFFERS_MAX_CHANNEL; ++c)
-	{
-		if ((buffers.views[c].buf) && (buffers.views[c].obj))
+		for (uint32_t c = 0; c < count; ++c)
 		{
-			PyBuffer_Release(&buffers.views[c]);
+			if (!PyObject_CheckBuffer(pyArrays[c]))
+			{
+				PY_EXCEPTION("The provided array object does not support the 'buffer' protocol!");
+				releaseBuffers();
+				throw std::invalid_argument("PyObject_CheckBuffer() error!");
+			}
+			if (PyObject_GetBuffer(pyArrays[c], &m_views[c], (writable ? PyBUF_WRITABLE : 0)) < 0)
+			{
+				PY_EXCEPTION("Failed to get the internal buffer from array object!");
+				releaseBuffers();
+				throw std::invalid_argument("PyObject_GetBuffer() error!");
+			}
+			if (m_views[c].itemsize != sizeof(double))
+			{
+				fprintf(stderr, "Itemsize: %u\n", (unsigned int)m_views[c].itemsize);
+				PY_EXCEPTION("The provided array has an invalid item size! Not 'double' array?");
+				releaseBuffers();
+				throw std::invalid_argument("Py_buffer.itemsize is invalid!");
+			}
+			if ((m_length = std::min(m_length, static_cast<uint32_t>(m_views[c].len / m_views[c].itemsize))) < 1)
+			{
+				PY_EXCEPTION("The size of the provided buffers is way too small!");
+				releaseBuffers();
+				throw std::invalid_argument("Py_buffer.len is invalid!");
+			}
+			if (!(m_buffers[c] = reinterpret_cast<double*>(m_views[c].buf)))
+			{
+				PY_EXCEPTION("Pointer to the arrays's buffer appears to be NULL!");
+				releaseBuffers();
+				throw std::invalid_argument("Py_buffer.buf is invalid!");
+			}
 		}
-		memset(&buffers.views[c], 0, sizeof(Py_buffer));
 	}
-}
+
+	~PyBufferWrapper(void)
+	{
+		releaseBuffers();
+	}
+
+	uint32_t getLength(void) const
+	{
+		return m_length;
+	}
+
+	double *const *getBuffer(void) const
+	{
+		return m_buffers;
+	}
+
+private:
+	static const uint32_t MAX_BUFFERS = 8;
+	const uint32_t m_count;
+	uint32_t m_length;
+	double *m_buffers[MAX_BUFFERS];
+	Py_buffer m_views[MAX_BUFFERS];
+
+	void releaseBuffers(void)
+	{
+		for (uint32_t k = 0; k < m_count; ++k)
+		{
+			if ((m_views[k].buf) && (m_views[k].obj))
+			{
+				PyBuffer_Release(&m_views[k]);
+			}
+		}
+
+		memset(m_buffers, 0, sizeof(double*) * MAX_BUFFERS);
+		memset(m_views, 0, sizeof(Py_buffer) * MAX_BUFFERS);
+	}
+
+	PyBufferWrapper& operator=(const PyBufferWrapper&) { throw 666; }
+	PyBufferWrapper(const PyBufferWrapper&):m_count(0) { throw 666; }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Method Implementation
@@ -374,18 +409,33 @@ PY_METHOD_IMPL(ProcessInplace)
 		return NULL;
 	}
 
-	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
+	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(pyInstance))
 	{
-		buffers_t samplesInOut;
-		if (unwrap_buffers(instance, samplesInOut, pySamplesInOut, true))
+		uint32_t channels, ignored[3];
+		if (!instance->getConfiguration(channels, ignored[0], ignored[1], ignored[2]))
 		{
+			PY_EXCEPTION("Failed to get number of channels from instance!");
+			return (NULL);
+		}
+		try
+		{
+			PyBufferWrapper samplesInOut(pySamplesInOut, channels, true);
+			if (static_cast<uint64_t>(inputSize) > static_cast<uint64_t>(samplesInOut.getLength()))
+			{
+				PY_EXCEPTION("Specified input size exceeds the size of the given array!");
+				return (NULL);
+			}
 			int64_t outputSize;
-			const bool success = instance->processInplace(samplesInOut.buffers, static_cast<int64_t>(inputSize), outputSize);
-			release_buffers(samplesInOut);
-			if(success)
+			if(instance->processInplace(samplesInOut.getBuffer(), static_cast<uint64_t>(inputSize), outputSize))
 			{
 				return PyLong_FromLongLong(static_cast<long long>(outputSize));
 			}
+		}
+		catch (const std::invalid_argument &ex)
+		{
+			fprintf(stderr, "std::invalid_argument: %s\n", ex.what());
+			PY_EXCEPTION("Failed to get buffers from inpout arrays!");
+			return (NULL);
 		}
 	}
 
