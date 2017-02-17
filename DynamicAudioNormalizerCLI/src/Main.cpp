@@ -55,7 +55,7 @@
 #define FILENAME_SRC(X) (STRCASECMP((X), TXT("-")) ? (X) : TXT("<STDIN>"))
 #define FILENAME_OUT(X) (STRCASECMP((X), TXT("-")) ? (X) : TXT("<STDOUT>"))
 
-//Const	
+//Const
 static const size_t FRAME_SIZE = 4096;
 
 static const CHR *appName(const CHR* argv0)

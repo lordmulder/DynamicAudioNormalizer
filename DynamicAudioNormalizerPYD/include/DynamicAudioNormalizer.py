@@ -25,12 +25,21 @@
 
 #import stdlib modules
 import sys
+import array
+import struct
+import wave
 
 #import the "C" module
 import DynamicAudioNormalizerAPI 
 
+
+#----------------------------------------------------------------------
+# DynamicAudioNormalizer
+#----------------------------------------------------------------------
+
 class DynamicAudioNormalizer:
 	"""Wrapper class around the DynamicAudioNormalizerAPI library"""
+	
 	def __str__(self):
 		versionInfo = self.getVersion()
 		buildStr = "built: {} {}, compiler: {}, arch: {}, {}".format(*versionInfo[1])
@@ -67,7 +76,7 @@ class DynamicAudioNormalizer:
 			raise RuntimeError("Instance not initialized!")
 		return DynamicAudioNormalizerAPI.getConfig(self._instance)
 	
-	def processInplace(self):
+	def processInplace(self, samplesInOut, count):
 		print("processInplace()")
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
@@ -77,11 +86,122 @@ class DynamicAudioNormalizer:
 	def getVersion():
 		return DynamicAudioNormalizerAPI.getVersion()
 
+
+#----------------------------------------------------------------------
+# WaveAudioReader
+#----------------------------------------------------------------------
+
+class _WaveFileBase:
+	def _unpack_samples(self, samples, buffers, channels, sampwidth):
+		cidx, sidx = 0, 0
+		type = self._get_sample_type(sampwidth)
+		for sample in struct.iter_unpack(type[0], samples):
+			buffers[cidx][sidx] = sample[0] / type[1]
+			cidx += 1
+			if cidx >= channels:
+				cidx, sidx = 0, sidx + 1
+		return sidx
+	
+	def _minimum_buff_length(self, buffers):
+		result = sys.maxsize
+		for b in buffers:
+			result = min(result, len(b))
+		if result < 1:
+			raise ValueError("Buffer length is zero!")
+		return result
+	
+	def _get_sample_type(self, sampwidth):
+		if sampwidth == 1:
+			return ('B', 0xFF)
+		elif sampwidth == 2:
+			return ('<h', 0x7FFF)
+		elif sampwidth == 4:
+			return ('<f', 1.0)
+		elif sampwidth == 8:
+			return ('<d', 1.0)
+		else:
+			raise ValueError("Unknown sample size!")
+
+
+class WaveFileReader(_WaveFileBase):
+	"""Helper class to read samples from Wave file"""
+	
+	def __init__(self,filename):
+		self._filename = filename
+		self._wavefile = None
+		self._channels = None
+		self._samplewidth = None
+		self._samplerate = None
+	
+	def __enter__(self):
+		self._wavefile = wave.open(self._filename, 'rb')
+		if self._wavefile:
+			self._channels = self._wavefile.getnchannels()
+			self._samplewidth =  self._wavefile.getsampwidth()
+			self._samplerate = self._wavefile.getframerate()
+		return self
+	
+	def __exit__(self, type, value, traceback):
+		if not self._wavefile:
+			raise RuntimeError("Instance not initialized!")
+		self._wavefile.close()
+		self._wavefile = None
+		self._channels = None
+		self._samplewidth = None
+		self._samplerate = None
+	
+	def __del__(self):
+		if self._wavefile:
+			print("RESOURCE LEAK: WaveFileReader object was not de-initialized properly!", file=sys.stderr)
+			
+	def getChannels(self):
+		if not self._wavefile:
+			raise RuntimeError("Instance not initialized!")
+		return self._channels
+		
+	def getSamplerate(self):
+		if not self._wavefile:
+			raise RuntimeError("Instance not initialized!")
+		return self._samplerate
+		
+	def read(self, buffers):
+		if not self._wavefile:
+			raise RuntimeError("Instance not initialized!")
+		if len(buffers) < self._channels:
+			raise RuntimeError("Number of buffers is insufficient!")
+		frames = self._wavefile.readframes(self._minimum_buff_length(buffers))
+		if frames:
+			return self._unpack_samples(frames, buffers, self._channels, self._samplewidth)
+		return None
+
+
+#----------------------------------------------------------------------
+# Utility Functions
+#----------------------------------------------------------------------
+
+def alloc_buffers(channles, length):
+	buffers = ()
+	for i in range(0, channles):
+		arr = array.array('d')
+		for j in range(0, length):
+			arr.append(0.0)
+		buffers += (arr,)
+	return buffers
+
+
+#----------------------------------------------------------------------
+# Main
+#----------------------------------------------------------------------
+
 print(DynamicAudioNormalizer)
 print(DynamicAudioNormalizer.getVersion())
 
-with DynamicAudioNormalizer(2,44100) as test:
-	print(test)
-	x = test.getConfig()
-	print(x)
-
+with WaveFileReader('The Root of All Evil.wav') as wav_reader:
+	with DynamicAudioNormalizer(wav_reader.getChannels(), wav_reader.getSamplerate()) as normalizer:
+		buffers = alloc_buffers(wav_reader.getChannels(), 4096)
+		while True:
+			count = wav_reader.read(buffers)
+			if count:
+				print(normalizer.processInplace(buffers, count))
+				continue
+			break;
