@@ -443,6 +443,30 @@ PY_METHOD_IMPL(ProcessInplace)
 	return (NULL);
 }
 
+PY_METHOD_IMPL(GetVersion)
+{
+	const char *date, *time, *compiler, *arch;
+	uint32_t versionMajor, versionMinor, versionPatch;
+	bool debug;
+
+	MDynamicAudioNormalizer::getVersionInfo(versionMajor, versionMinor, versionPatch);
+	MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
+
+	PyObject *const pyVersionInfo = Py_BuildValue("III", static_cast<unsigned int>(versionMajor), static_cast<unsigned int>(versionMinor), static_cast<unsigned int>(versionPatch));
+	PyObject *const pyBuildInfo   = Py_BuildValue("sssss", date, time, compiler, arch, debug ? "DEBUG" : "RELEASE");
+
+	PyObject *result = NULL;
+	if ((pyVersionInfo) && (pyBuildInfo))
+	{
+		result = PyTuple_Pack(2, pyVersionInfo, pyBuildInfo);
+	}
+
+	Py_XDECREF(pyVersionInfo);
+	Py_XDECREF(pyBuildInfo);
+
+	return result;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Method Wrappers
 ///////////////////////////////////////////////////////////////////////////////
@@ -465,6 +489,7 @@ PY_METHOD_WRAP(Create)
 PY_METHOD_WRAP(Destroy)
 PY_METHOD_WRAP(GetConfig)
 PY_METHOD_WRAP(ProcessInplace)
+PY_METHOD_WRAP(GetVersion)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module Definition
@@ -476,6 +501,7 @@ static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
 	{ "destroy",        PY_METHOD_DECL(Destroy),        METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                  },
 	{ "getConfig",      PY_METHOD_DECL(GetConfig),      METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance." },
 	{ "processInplace", PY_METHOD_DECL(ProcessInplace), METH_VARARGS,  "Process next chunk audio samples, in-place."                            },
+	{ "getVersion",     PY_METHOD_DECL(GetVersion),     METH_NOARGS,   "Returns version and build info. Thi is a static method."                },
 	{ NULL, NULL, 0, NULL }
 };
 
