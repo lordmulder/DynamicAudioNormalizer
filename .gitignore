@@ -10,6 +10,7 @@
 *.suo
 *.user
 *.~*
+*__pycache__*
 /DynamicAudioNormalizerGUI/tmp
 /DynamicAudioNormalizerJNI/.settings
 /DynamicAudioNormalizerJNI/bin
