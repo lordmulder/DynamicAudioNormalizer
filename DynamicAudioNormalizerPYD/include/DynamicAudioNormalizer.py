@@ -25,6 +25,7 @@
 
 #import stdlib modules
 import sys
+import os
 import array
 import struct
 import wave
@@ -53,7 +54,6 @@ class DynamicAudioNormalizer:
 	
 	def __enter__(self):
 		self._instance = DynamicAudioNormalizerAPI.create(self._channels, self._samplerate)
-		print(self._instance)
 		return self
 	
 	def __exit__(self, type, value, traceback):
@@ -82,10 +82,15 @@ class DynamicAudioNormalizer:
 
 
 #----------------------------------------------------------------------
-# WaveAudioReader
+# Wave Audio Reader/Writer
 #----------------------------------------------------------------------
 
 class _WaveFileBase:
+	"""Base class for Wave file sample processing"""
+	
+	def __init__(self):
+		self._samples = None
+	
 	def _unpack_samples(self, samples, buffers, channels, sampwidth):
 		cidx, sidx = 0, 0
 		type = self._get_sample_type(sampwidth)
@@ -97,15 +102,20 @@ class _WaveFileBase:
 		return sidx
 	
 	def _repack_samples(self, buffers, channels, sampwidth, length):
+		byte_count = channels * length * sampwidth
 		type = self._get_sample_type(sampwidth)
-		samples = b""
+		if (not self._samples) or (len(self._samples) != byte_count):
+			self._samples = bytearray(byte_count)
+		offset = 0
 		for sidx in range(0, length):
 			for cidx in range(0, channels):
 				if type[1] > 1.4142:
-					samples += struct.pack(type[0], int(round(buffers[cidx][sidx] * type[1])))
+					value = int(round(buffers[cidx][sidx] * type[1]))
 				else:
-					samples += struct.pack(type[0], buffers[cidx][sidx])
-		return samples
+					value = buffers[cidx][sidx]
+				struct.pack_into(type[0], self._samples, offset, value)
+				offset += sampwidth
+		return self._samples
 	
 	def _minimum_buff_length(self, buffers):
 		result = sys.maxsize
@@ -130,6 +140,7 @@ class WaveFileReader(_WaveFileBase):
 	"""Helper class to read samples from Wave file"""
 	
 	def __init__(self,filename):
+		super().__init__()
 		self._filename = filename
 		self._wavefile = None
 		self._channels = None
@@ -187,6 +198,7 @@ class WaveFileWriter(_WaveFileBase):
 	"""Helper class to write samples to Wave file"""
 	
 	def __init__(self,filename,channels,samplewidth,samplerate):
+		super().__init__()
 		self._filename = filename
 		self._wavefile = None
 		self._channels = channels
@@ -248,7 +260,7 @@ class WaveFileWriter(_WaveFileBase):
 # Utility Functions
 #----------------------------------------------------------------------
 
-def alloc_buffers(channles, length):
+def alloc_sample_buffers(channles, length):
 	buffers = ()
 	for i in range(0, channles):
 		arr = array.array('d')
@@ -262,15 +274,40 @@ def alloc_buffers(channles, length):
 # Main
 #----------------------------------------------------------------------
 
-print(DynamicAudioNormalizer.getVersion())
+version = DynamicAudioNormalizer.getVersion()
+print("Dynamic Audio Normalizer, Version {}.{}-{}".format(*version[0]))
+print("Copyright (c) 2014-{} LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.".format(version[1][0][7:]))
+print("Built on {} at {} with {} for Python-{}.\n".format(*version[1]))
 
-with WaveFileReader('The Answer Lies Within.wav') as wav_reader:
-	with WaveFileWriter('Output.wav', wav_reader.getChannels(), wav_reader.getSampleWidth(), wav_reader.getSamplerate()) as wav_writer:
+if (len(sys.argv) < 3):
+	print("Usage:\n  {} {} <input.wav> <output.wav>\n".format(os.path.basename(sys.executable), os.path.basename(__file__)), file=sys.stderr)
+	sys.exit(1)
+
+source_file =os.path.abspath(sys.argv[1])
+output_file =os.path.abspath(sys.argv[2])
+
+if not os.path.isfile(source_file):
+	print("Input file \"{}\" not found!\n".format(source_file), file=sys.stderr)
+	sys.exit(1)
+
+print("Source file: \"{}\""  .format(source_file))
+print("Output file: \"{}\"\n".format(output_file))
+
+print("\nInitializing...", end = '', flush = True)
+with WaveFileReader(source_file) as wav_reader:
+	with WaveFileWriter(output_file, wav_reader.getChannels(), wav_reader.getSampleWidth(), wav_reader.getSamplerate()) as wav_writer:
 		with DynamicAudioNormalizer(wav_reader.getChannels(), wav_reader.getSamplerate()) as normalizer:
-			buffers = alloc_buffers(wav_reader.getChannels(), 4096)
+			print(" Done!\n\nProcessing...", end = '', flush = True)
+			buffers = alloc_sample_buffers(wav_reader.getChannels(), 4096)
+			indicator = 0
 			while True:
 				count = wav_reader.read(buffers)
 				if count:
 					wav_writer.write(buffers, count)
+					indicator += 1
+					if indicator >= 7:
+						print('.', end = '', flush = True)
+						indicator = 0
 					continue
+				print(' Done!\n')
 				break;
