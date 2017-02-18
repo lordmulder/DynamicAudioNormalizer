@@ -5,7 +5,7 @@
 	</target>
 	<target name="compile" depends="clean">
 		<mkdir dir="bin"/>
-		<javac target="1.6" source="1.6" srcdir="src" destdir="bin" includeantruntime="false" excludes="**/test/**">
+		<javac target="1.6" source="1.6" srcdir="src" destdir="bin" includeantruntime="false" excludes="**/samples/**">
 			<compilerarg value="-Xlint:-options"/>
 		</javac>
 	</target>

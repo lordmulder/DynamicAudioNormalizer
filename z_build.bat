@@ -116,6 +116,7 @@ for %%c in (DLL, Static) do (
 )
 
 call "%ANT_HOME%\bin\ant.bat" -buildfile "%~dp0\DynamicAudioNormalizerJNI\build.xml"
+if not "!ERRORLEVEL!"=="0" goto BuildError
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Copy program files
@@ -132,10 +133,17 @@ for %%c in (DLL, Static) do (
 	mkdir "%PACK_PATH%\%%c\x64"
 	mkdir "%PACK_PATH%\%%c\img"
 	mkdir "%PACK_PATH%\%%c\img\dyauno"
+	mkdir "%PACK_PATH%\%%c\include"
+	mkdir "%PACK_PATH%\%%c\samples"
+	mkdir "%PACK_PATH%\%%c\samples\python"
 
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerCLI.exe"           "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerGUI.exe"           "%PACK_PATH%\%%c"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"           "%PACK_PATH%\%%c\DynamicAudioNormalizerAPI.pyd"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"           "%PACK_PATH%\%%c\x64\DynamicAudioNormalizerAPI.pyd"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"           "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
@@ -143,10 +151,15 @@ for %%c in (DLL, Static) do (
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll"           "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\DynamicAudioNormalizerPYD\include\DynamicAudioNormalizer.py"                   "%PACK_PATH%\%%c\include"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
+	copy "%~dp0\DynamicAudioNormalizerPYD\src\*.py"                                            "%PACK_PATH%\%%c\samples\python"
+	if not "!ERRORLEVEL!"=="0" goto BuildError
 
 	if /I "%%c"=="DLL" (
-		mkdir "%PACK_PATH%\%%c\include"
 		mkdir "%PACK_PATH%\%%c\redist"
+		mkdir "%PACK_PATH%\%%c\samples\delphi"
+		mkdir "%PACK_PATH%\%%c\samples\java"
 		
 		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"       "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
@@ -183,6 +196,12 @@ for %%c in (DLL, Static) do (
 		copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c\x64"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\DynamicAudioNormalizerPAS\src\*.pas"                                       "%PACK_PATH%\%%c\samples\delphi"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\DynamicAudioNormalizerPAS\src\*.dfm"                                       "%PACK_PATH%\%%c\samples\delphi"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\DynamicAudioNormalizerJNI\src\com\muldersoft\dynaudnorm\samples\*.java"    "%PACK_PATH%\%%c\samples\java"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		
 		if %TOOLS_VER% GEQ 140 (
