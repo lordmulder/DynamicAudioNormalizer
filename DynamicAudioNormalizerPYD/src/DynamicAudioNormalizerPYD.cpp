@@ -42,7 +42,6 @@
 #include <unordered_set>
 #include <algorithm>
 #include <stdexcept>
-#include <cstdio>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper Macros
@@ -250,7 +249,6 @@ public:
 			}
 			if (m_views[c].itemsize != sizeof(double))
 			{
-				fprintf(stderr, "Itemsize: %u\n", (unsigned int)m_views[c].itemsize);
 				PY_EXCEPTION("The provided array has an invalid item size! Not 'double' array?");
 				releaseBuffers();
 				throw std::invalid_argument("Py_buffer.itemsize is invalid!");
@@ -431,9 +429,8 @@ PY_METHOD_IMPL(ProcessInplace)
 				return PyLong_FromLongLong(static_cast<long long>(outputSize));
 			}
 		}
-		catch (const std::invalid_argument &ex)
+		catch (const std::invalid_argument&)
 		{
-			fprintf(stderr, "std::invalid_argument: %s\n", ex.what());
 			PY_EXCEPTION("Failed to get buffers from inpout arrays!");
 			return (NULL);
 		}
@@ -443,7 +440,44 @@ PY_METHOD_IMPL(ProcessInplace)
 	return (NULL);
 }
 
-PY_METHOD_IMPL(GetVersion)
+PY_METHOD_IMPL(FlushBuffer)
+{
+	PyObject *pyInstance = NULL, *pySamplesOut = NULL;
+
+	if (!PyArg_ParseTuple(args, "OO", &pyInstance, &pySamplesOut))
+	{
+		return NULL;
+	}
+
+	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(pyInstance))
+	{
+		uint32_t channels, ignored[3];
+		if (!instance->getConfiguration(channels, ignored[0], ignored[1], ignored[2]))
+		{
+			PY_EXCEPTION("Failed to get number of channels from instance!");
+			return (NULL);
+		}
+		try
+		{
+			PyBufferWrapper samplesOut(pySamplesOut, channels, true);
+			int64_t outputSize;
+			if (instance->flushBuffer(samplesOut.getBuffer(), samplesOut.getLength(), outputSize))
+			{
+				return PyLong_FromLongLong(static_cast<long long>(outputSize));
+			}
+		}
+		catch (const std::invalid_argument&)
+		{
+			PY_EXCEPTION("Failed to get buffers from inpout arrays!");
+			return (NULL);
+		}
+	}
+
+	PY_EXCEPTION("Failed to process audio samples in-place!");
+	return (NULL);
+}
+
+PY_METHOD_IMPL(GetVersionInfo)
 {
 	const char *date, *time, *compiler, *arch;
 	uint32_t versionMajor, versionMinor, versionPatch;
@@ -465,6 +499,11 @@ PY_METHOD_IMPL(GetVersion)
 	Py_XDECREF(pyBuildInfo);
 
 	return result;
+}
+
+PY_METHOD_IMPL(GetCoreVersion)
+{
+	return PyLong_FromUnsignedLong(static_cast<unsigned long>(MDYNAMICAUDIONORMALIZER_CORE));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -489,7 +528,9 @@ PY_METHOD_WRAP(Create)
 PY_METHOD_WRAP(Destroy)
 PY_METHOD_WRAP(GetConfig)
 PY_METHOD_WRAP(ProcessInplace)
-PY_METHOD_WRAP(GetVersion)
+PY_METHOD_WRAP(FlushBuffer)
+PY_METHOD_WRAP(GetVersionInfo)
+PY_METHOD_WRAP(GetCoreVersion)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module Definition
@@ -501,7 +542,9 @@ static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
 	{ "destroy",        PY_METHOD_DECL(Destroy),        METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                  },
 	{ "getConfig",      PY_METHOD_DECL(GetConfig),      METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance." },
 	{ "processInplace", PY_METHOD_DECL(ProcessInplace), METH_VARARGS,  "Process next chunk audio samples, in-place."                            },
-	{ "getVersion",     PY_METHOD_DECL(GetVersion),     METH_NOARGS,   "Returns version and build info. Thi is a static method."                },
+	{ "flushBuffer",    PY_METHOD_DECL(FlushBuffer),    METH_VARARGS,  "Flushes pending samples out of the MDynamicAudioNormalizer instance."   },
+	{ "getVersionInfo", PY_METHOD_DECL(GetVersionInfo), METH_NOARGS,   "Returns version and build info. This is a \"static\" method."           },
+	{ "getCoreVersion", PY_METHOD_DECL(GetCoreVersion), METH_NOARGS,   "Returns the API version. This is a \"static\" method."                  },
 	{ NULL, NULL, 0, NULL }
 };
 
