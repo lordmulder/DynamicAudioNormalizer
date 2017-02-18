@@ -23,7 +23,7 @@
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
 
-package com.muldersoft.dynaudnorm.test;
+package com.muldersoft.dynaudnorm.samples;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

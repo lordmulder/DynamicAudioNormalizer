@@ -23,7 +23,7 @@
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
 
-package com.muldersoft.dynaudnorm.test;
+package com.muldersoft.dynaudnorm.samples;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;

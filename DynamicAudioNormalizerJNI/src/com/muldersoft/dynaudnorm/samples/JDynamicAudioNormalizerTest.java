@@ -23,7 +23,7 @@
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
 
-package com.muldersoft.dynaudnorm.test;
+package com.muldersoft.dynaudnorm.samples;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
