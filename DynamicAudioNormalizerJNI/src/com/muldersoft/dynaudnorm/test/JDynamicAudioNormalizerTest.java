@@ -28,16 +28,9 @@ package com.muldersoft.dynaudnorm.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -58,102 +51,6 @@ import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer.Logger;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JDynamicAudioNormalizerTest {
-	// ------------------------------------------------------------------------------------------------
-	// PCM File Reader
-	// ------------------------------------------------------------------------------------------------
-
-	static class PCMFileReader {
-		private static final int FRAME_SIZE = 4;
-		private final BufferedInputStream inputStream;
-		private byte[] tempBuffer = null;
-
-		public PCMFileReader(final String fileName) throws IOException {
-			inputStream = new BufferedInputStream(new FileInputStream(new File(fileName)));
-		}
-
-		public int read(double[][] buffer) throws IOException {
-			if (buffer.length != 2) {
-				throw new RuntimeException("Output array dimension must be two!");
-			}
-
-			final int maxReadSize = buffer[0].length * FRAME_SIZE;
-			if ((tempBuffer == null) || (tempBuffer.length < maxReadSize)) {
-				tempBuffer = new byte[maxReadSize];
-			}
-
-			final int sampleCount = inputStream.read(tempBuffer, 0, maxReadSize) / FRAME_SIZE;
-
-			if (sampleCount > 0) {
-				ByteBuffer byteBuffer = ByteBuffer.wrap(tempBuffer);
-				byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-				for (int i = 0; i < sampleCount; i++) {
-					for (int c = 0; c < 2; c++) {
-						buffer[c][i] = ShortToDouble(byteBuffer.getShort());
-					}
-				}
-			}
-
-			return sampleCount;
-		}
-
-		public void close() throws IOException {
-			inputStream.close();
-		}
-
-		private static double ShortToDouble(final short x) {
-			return ((double) x) / ((double) Short.MAX_VALUE);
-		}
-	}
-
-	// ------------------------------------------------------------------------------------------------
-	// PCM File Writer
-	// ------------------------------------------------------------------------------------------------
-
-	static class PCMFileWriter {
-		private static final int FRAME_SIZE = 4;
-		private final BufferedOutputStream outputStream;
-		private byte[] tempBuffer = null;
-
-		public PCMFileWriter(final String fileName) throws IOException {
-			outputStream = new BufferedOutputStream(new FileOutputStream(new File(fileName)));
-		}
-
-		public void write(double[][] buffer, final int sampleCount) throws IOException {
-			if (buffer.length != 2) {
-				throw new IOException("Input array dimension must be two!");
-			}
-
-			final int writeSize = sampleCount * FRAME_SIZE;
-			if ((tempBuffer == null) || (tempBuffer.length < writeSize)) {
-				tempBuffer = new byte[writeSize];
-			}
-
-			if (sampleCount > 0) {
-				ByteBuffer byteBuffer = ByteBuffer.wrap(tempBuffer);
-				byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-				for (int i = 0; i < sampleCount; i++) {
-					for (int c = 0; c < 2; c++) {
-						byteBuffer.putShort(doubleToShort(buffer[c][i]));
-					}
-				}
-			}
-
-			outputStream.write(tempBuffer, 0, writeSize);
-		}
-
-		public void flush() throws IOException {
-			outputStream.flush();
-		}
-
-		public void close() throws IOException {
-			flush();
-			outputStream.close();
-		}
-
-		private static short doubleToShort(final double x) {
-			return (short) Math.round(Math.max(-1.0, Math.min(1.0, x)) * ((double) Short.MAX_VALUE));
-		}
-	}
 
 	// ------------------------------------------------------------------------------------------------
 	// Randomization
@@ -289,7 +186,7 @@ public class JDynamicAudioNormalizerTest {
 				instances.add(instance);
 			}
 
-			// Process
+			// Process at least one chunk of data with every instance
 			double[][] sampleBuffer = new double[2][4096];
 			for (Iterator<JDynamicAudioNormalizer> k = instances.iterator(); k.hasNext(); /* next */) {
 				k.next().processInplace(sampleBuffer, sampleBuffer[0].length);
@@ -304,7 +201,7 @@ public class JDynamicAudioNormalizerTest {
 	@Test
 	public void test7_processRandomData() {
 		final int MAX_PASS = 2;
-		final int MAX_LENGTH = 29989;
+		final int MAX_LENGTH = 9973;
 		
 		final double[] TARGET_RMS = { 0.0, 0.75 };
 		final double[] COMPRESS = { 0.0, 5.0 };
@@ -329,89 +226,71 @@ public class JDynamicAudioNormalizerTest {
 	}
 	
 	@Test
-	public void test8_processAudioFile() throws NoSuchAlgorithmException {
+	public void test8_processAudioFile() throws NoSuchAlgorithmException, IOException {
 		// Open input and output files
 		System.out.println("Opening input and out files...");
-		PCMFileReader reader = null;
-		try {
-			reader = new PCMFileReader("Input.pcm");
-		}
-		catch (Exception e) {
-			fail("Failed to open ionput audio file!");
-		}
+		try(AudioFileIO.PCMFileReader reader = new AudioFileIO.PCMFileReader("Input.pcm", 2, AudioFileIO.PCMFileType.PCM_16BIT_LE)) {
+			try (AudioFileIO.PCMFileWriter writer =  new AudioFileIO.PCMFileWriter("Output.pcm", 2, AudioFileIO.PCMFileType.PCM_16BIT_LE)) {
+				double[][] sampleBuffer = new double[2][4096];
+				
+				System.out.println("Creating normalizer instance...");
+				try(final JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false)) {
+					// Process samples
+					System.out.println("Processing input samples...");
+					for (;;) {
+						int sampleCount = 0;
+						try {
+							sampleCount = reader.read(sampleBuffer);
+						}
+						catch (IOException e) {
+							fail("Failed to read from input file!");
+						}
 
-		PCMFileWriter writer = null;
-		try {
-			writer = new PCMFileWriter("Output.pcm");
-		}
-		catch (Exception e) {
-			fail("Failed to open ionput audio file!");
-		}
+						if (sampleCount > 0) {
+							final long outputSamples = instance.processInplace(sampleBuffer, sampleCount);
+							if (outputSamples > 0) {
+								try {
+									writer.write(sampleBuffer, (int) outputSamples);
+								}
+								catch (IOException e) {
+									fail("Failed to write to output file!");
+								}
+							}
+						}
 
-		double[][] sampleBuffer = new double[2][4096];
-		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
-
-		// Process samples
-		System.out.println("Processing input samples...");
-		for (;;) {
-			int sampleCount = 0;
-			try {
-				sampleCount = reader.read(sampleBuffer);
-			}
-			catch (IOException e) {
-				fail("Failed to read from input file!");
-			}
-
-			if (sampleCount > 0) {
-				final long outputSamples = instance.processInplace(sampleBuffer, sampleCount);
-				if (outputSamples > 0) {
-					try {
-						writer.write(sampleBuffer, (int) outputSamples);
+						if (sampleCount < sampleBuffer[0].length) {
+							break; /* EOF reached */
+						}
 					}
-					catch (IOException e) {
-						fail("Failed to write to output file!");
+
+					// Flush pending samples
+					System.out.println("Flushing remaining samples...");
+					for (;;) {
+						final long outputSamples = instance.flushBuffer(sampleBuffer);
+						if (outputSamples > 0) {
+							try {
+								writer.write(sampleBuffer, (int) outputSamples);
+							}
+							catch (IOException e) {
+								fail("Failed to write to output file!");
+							}
+						}
+						else {
+							break; /* No more samples */
+						}
 					}
+
+					// Reset
+					System.out.println("Resetting normalizer instance...");
+					instance.reset(); /* This is NOT normally required, but we do it here to test the reset() API */
+					
+					// Close input and output
+					System.out.println("Shutting down..."); /*Implicitly, due to AutoCloseable*/
 				}
 			}
-
-			if (sampleCount < sampleBuffer[0].length) {
-				break; /* EOF reached */
-			}
 		}
-
-		// Flush pending samples
-		System.out.println("Flushing remaining samples...");
-		for (;;) {
-			final long outputSamples = instance.flushBuffer(sampleBuffer);
-			if (outputSamples > 0) {
-				try {
-					writer.write(sampleBuffer, (int) outputSamples);
-				}
-				catch (IOException e) {
-					fail("Failed to write to output file!");
-				}
-			}
-			else {
-				break; /* No more samples */
-			}
-		}
-
-		// Reset
-		System.out.println("Resetting normalizer instance...");
-		instance.reset(); /* This is NOT normally required, but we do it here to test the reset() API */
-
-		// Close input and output
-		System.out.println("Shutting down...");
-		try {
-			reader.close();
-			writer.close();
-		}
-		catch (IOException e) {
-			fail("Failed to close/flush the files!");
-		}
-
+		
 		// Finished
-		instance.close();
 		System.out.println("Completed.");
 	}
 
@@ -419,91 +298,73 @@ public class JDynamicAudioNormalizerTest {
 	public void test9_processAudioFile_outOfPlace() throws NoSuchAlgorithmException, IOException {
 		// Open input and output files
 		System.out.println("Opening input and out files...");
-		PCMFileReader reader = null;
-		try {
-			reader = new PCMFileReader("Input.pcm");
-		}
-		catch (Exception e) {
-			fail("Failed to open ionput audio file!");
-		}
+		try(AudioFileIO.PCMFileReader reader = new AudioFileIO.PCMFileReader("Input.pcm", 2, AudioFileIO.PCMFileType.PCM_16BIT_LE)) {
+			try (AudioFileIO.PCMFileWriter writer =  new AudioFileIO.PCMFileWriter("Output.pcm", 2, AudioFileIO.PCMFileType.PCM_16BIT_LE)) {
+				double[][] sampleBufferSrc = new double[2][4096];
+				double[][] sampleBufferDst = new double[2][4096];
+				
+				System.out.println("Creating normalizer instance...");
+				try(final JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false)) {
+					// Process samples
+					System.out.println("Processing input samples...");
+					for (;;) {
+						int sampleCount = 0;
+						try {
+							sampleCount = reader.read(sampleBufferSrc);
+						}
+						catch (IOException e) {
+							fail("Failed to read from input file!");
+						}
 
-		PCMFileWriter writer = null;
-		try {
-			writer = new PCMFileWriter("Output.pcm");
-		}
-		catch (Exception e) {
-			fail("Failed to open ionput audio file!");
-		}
+						final String hashOrig = sha1sum(sampleBufferSrc);
+						if (sampleCount > 0) {
+							final long outputSamples = instance.process(sampleBufferSrc, sampleBufferDst, sampleCount);
+							if (outputSamples > 0) {
+								try {
+									writer.write(sampleBufferDst, (int) outputSamples);
+								}
+								catch (IOException e) {
+									fail("Failed to write to output file!");
+								}
+							}
+						}
 
-		double[][] sampleBufferSrc = new double[2][4096];
-		double[][] sampleBufferDst = new double[2][4096];
-		JDynamicAudioNormalizer instance = new JDynamicAudioNormalizer(2, 44100, 500, 31, 0.95, 10.0, 0.0, 0.0, true, false, false);
+						final String hashFinal = sha1sum(sampleBufferSrc);
+						assertEquals("Input buffer contents have been distrubed!", hashOrig, hashFinal);
 
-		// Process samples
-		System.out.println("Processing input samples...");
-		for (;;) {
-			int sampleCount = 0;
-			try {
-				sampleCount = reader.read(sampleBufferSrc);
-			}
-			catch (IOException e) {
-				fail("Failed to read from input file!");
-			}
-
-			final String hashOrig = sha1sum(sampleBufferSrc);
-			if (sampleCount > 0) {
-				final long outputSamples = instance.process(sampleBufferSrc, sampleBufferDst, sampleCount);
-				if (outputSamples > 0) {
-					try {
-						writer.write(sampleBufferDst, (int) outputSamples);
+						if (sampleCount < sampleBufferSrc[0].length) {
+							break; /* EOF reached */
+						}
 					}
-					catch (IOException e) {
-						fail("Failed to write to output file!");
+
+					// Flush pending samples
+					System.out.println("Flushing remaining samples...");
+					for (;;) {
+						final long outputSamples = instance.flushBuffer(sampleBufferDst);
+						if (outputSamples > 0) {
+							try {
+								writer.write(sampleBufferDst, (int) outputSamples);
+							}
+							catch (IOException e) {
+								fail("Failed to write to output file!");
+							}
+						}
+						else {
+							break; /* No more samples */
+						}
 					}
+
+					// Reset
+					System.out.println("Resetting normalizer instance...");
+					instance.reset(); /* This is NOT normally required, but we do it here to test the reset() API */
+
+					// Close input and output
+					System.out.println("Shutting down..."); /*Implicitly, due to AutoCloseable*/
 				}
 			}
-
-			final String hashFinal = sha1sum(sampleBufferSrc);
-			assertEquals("Input buffer contents have been distrubed!", hashOrig, hashFinal);
-
-			if (sampleCount < sampleBufferSrc[0].length) {
-				break; /* EOF reached */
-			}
 		}
-
-		// Flush pending samples
-		System.out.println("Flushing remaining samples...");
-		for (;;) {
-			final long outputSamples = instance.flushBuffer(sampleBufferDst);
-			if (outputSamples > 0) {
-				try {
-					writer.write(sampleBufferDst, (int) outputSamples);
-				}
-				catch (IOException e) {
-					fail("Failed to write to output file!");
-				}
-			}
-			else {
-				break; /* No more samples */
-			}
-		}
-
-		// Reset
-		System.out.println("Resetting normalizer instance...");
-		instance.reset(); /* This is NOT normally required, but we do it here to test the reset() API */
-
-		// Close input and output
-		System.out.println("Shutting down...");
-		try {
-			reader.close();
-			writer.close();
-		}
-		catch (IOException e) {
-			fail("Failed to close/flush the files!");
-		}
-
+		
 		// Finished
-		instance.close();
 		System.out.println("Completed.");
 	}
 }

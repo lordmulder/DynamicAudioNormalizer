@@ -25,13 +25,12 @@
 
 package com.muldersoft.dynaudnorm;
 
-import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class JDynamicAudioNormalizer implements Closeable
+public class JDynamicAudioNormalizer implements AutoCloseable
 {
 	//------------------------------------------------------------------------------------------------
 	// Exception class
