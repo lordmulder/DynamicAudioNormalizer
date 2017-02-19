@@ -474,29 +474,35 @@ This chapter describes the **MDynamicAudioNormalizer** application programming i
 
 ## Language Bindings ##
 
-The Dynamic Audio Normalizer "core" library is written in [***C++***](http://en.wikipedia.org/wiki/C%2B%2B). Therefore the *native* application programming interface (API) is provided in the form of a *C++* class, which is called **MDynamicAudioNormalizer** and which is defined in the `DynamicAudioNormalizer.h` header file. Applications written in *C++* should use the MDynamicAudioNormalizer class directly.
+The Dynamic Audio Normalizer "core" library is written in [***C++***](http://en.wikipedia.org/wiki/C%2B%2B). Therefore the *native* application programming interface (API) is provided in the form of a *C++* class. Furthermore, language bindings for the [***Microsoft.NET***]() platform (*C#*, *VB.NET*, etc.) as well as for [***Java***](http://en.wikipedia.org/wiki/Java_%28programming_language%29) (JRE 1.7 or later), [***Python***](https://www.python.org/) (CPython 3.0 or later) and [***Object Pascal***](http://en.wikipedia.org/wiki/Object_Pascal) (*Delphi 7.0* or later) are provided. For each of these languages, a suitable "wrapper" is provided, which exposes – to the greatest extend possible – the same functions as the native *C++* class. Calls to the language-specific wrapper will be forwarded, *internally*, to the corresponding native method of to the underlying *C++* class. Native library calls are handled *transparently* by the individual language wrapper, so that application developers do **not** need to worry about interoperability issues. In particular, the language wrapper will take care of data marshalling as well as the management of the native *MDynamicAudioNormalizer* instances.
 
-In addition to that, [bindings](http://en.wikipedia.org/wiki/Language_binding) for various other programming languages are provided. The [**C99**](http://en.wikipedia.org/wiki/C99) API is defined in the same header file as the *C++* API. It provides *C* "wrapper" functions for each method of the native *C++* class. These wrapper functions provide the same functionality as the underlying *C++* methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) parameter needs to be passed to each "wrapper" function, in order to identify the particular MDynamicAudioNormalizer instance. The *C* functions `createInstance()` and `destroyInstance()` correspond to the *C++* class' constructor and destructor, respectively.
+### C++ interface
 
-Furthermore, language bindings for the [***Microsoft.NET***]() platform (*C#*, *VisualBasic.NET*, etc.) as well as for [***Java***](http://en.wikipedia.org/wiki/Java_%28programming_language%29) (JRE 1.7 or later), [***Python***](https://www.python.org/) (CPython 3.0 or later) and [***Object Pascal***](http://en.wikipedia.org/wiki/Object_Pascal) (*Delphi 7.0* or later) are provided. For each of these languages, a suitable "wrapper" is provided, which exposes the same functions as the native *C++* class. Any method call to those language wrappers will be forwarded, *internally*, to the corresponding native method of to the underlying *C++* class. Note, however, that any calls to the native Dynamic Audio Normalizer library are handled *transparently* by the individual language wrapper, which means that the application developer will **not** have to worry about interoperability issues. In particular, the language wrapper will take care of data marshalling as well as the management of the native *MDynamicAudioNormalizer* instances.
+*C++* applications shall use the native **MDynamicAudioNormalizer** C++ class *directly*, which is declared in the `DynamicAudioNormalizerAPI.h` header file. It is implemented by the shared library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux). A detailed description of the *C++* class is given [*below*](#function-reference).
 
-### Details on Language Bindings
+***Note***: On the Windows platform, you will need to link your binary against the *import* library `DynamicAudioNormalizerAPI.lib`.
 
-* ***C++* interface:**
-  Use the native ``MDynamicAudioNormalizer`` C++ class *directly*, provided by the ``DynamicAudioNormalizerAPI.dll`` library, corresponding header file is ``DynamicAudioNormalizerAPI.h``
-  
-* ***C99* interface:**
-  Use the C99-based wrapper functions, also provided by the ``DynamicAudioNormalizerAPI.dll`` library, corresponding header file is ``DynamicAudioNormalizerAPI.h``
-  
-* ***Microsoft.NET* interface:**
-  Use the ``DynamicAudioNormalizerNET`` [C++/CLI](http://en.wikipedia.org/wiki/C%2B%2B/CLI) wrapper class, provided by the ``DynamicAudioNormalizerNET.dll`` assembly, requires ``DynamicAudioNormalizerAPI.dll`` at runtime
-  
-* ***Java* interface:**
-  Use the ``JDynamicAudioNormalizer`` [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) wrapper class, provided by the ``DynamicAudioNormalizerJNI.jar`` package, requires ``DynamicAudioNormalizerAPI.dll`` at runtime
-  
-* ***Object Pascal* interface:**
-  Use the ``TDynamicAudioNormalizer`` Object Pascal wrapper class, provided by the ``DynamicAudioNormalizer.pas`` file, requires ``DynamicAudioNormalizerAPI.dll`` at runtime
+### C99 interface
 
+*C* applications can use the *C99* "wrapper" functions, which are also declared in the `DynamicAudioNormalizerAPI.h` header file. Those "wrapper" functions are implemented by the shared library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux), just like the native *C++* interface. There exists a corresponding *C99* "wrapper" function for each method of the native *C++* class. The "wrapper" functions provide the same functionality and take the same parameters as the underlying *C++* methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) parameter needs to be passed to each "wrapper" function. The handle corresponds to the "this" pointer that is *implicitly* passed to C++ methods. The *C*-only functions `createInstance()` and `destroyInstance()` correspond to the *C++* class' constructor and destructor, respectively.
+
+***Note***: On the Windows platform, you will need to link your binary against the *import* library `DynamicAudioNormalizerAPI.lib`.
+
+### Microsoft.NET interface
+
+*Microsoft.NET* (*C#*, *VB.NET*, etc.) applications can use the **DynamicAudioNormalizerNET** [*C++/CLI*](http://en.wikipedia.org/wiki/C%2B%2B/CLI) "wrapper" class, which is implemented by the `DynamicAudioNormalizerNET.dll` assembly. There exists an equivalent method in the *C++/CLI* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizerNET.dll` assembly is really just a thin "wrapper" and it requires the *native* "core" library `DynamicAudioNormalizerAPI.dll` at runtime!
+
+### Java interface
+
+*Java* applications can use the **JDynamicAudioNormalizer** [*JNI*](https://en.wikipedia.org/wiki/Java_Native_Interface) "wrapper" class, which is implemented by the `DynamicAudioNormalizerJNI.jar` library. There exists an equivalent method in the *JNI* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizerJNI.jar` *JNI* "wrapper" requires the *native* "core" library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux) at runtime!
+
+### Python interface
+
+*Python* applications can use our [*C extension for CPython*](https://docs.python.org/3/extending/building.html), which is implemented by the `DynamicAudioNormalizerAPI.pyd` library. We also provide the **DynamicAudioNormalizer** *Python* "wrapper" class for convenience, which is declared in the `DynamicAudioNormalizer.py` module. There exists an equivalent method in the *Python* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizerJNI.pyd` *C extension* module requires the *native* "core" library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux) at runtime!
+
+### Object Pascal interface
+
+*Object Pascal* (Delphi) applications can use the **TDynamicAudioNormalizer** [*Object Pascal*](https://en.wikipedia.org/wiki/Object_Pascal) "wrapper" class, which is implemented by the `DynamicAudioNormalizer.pas` unit file. There exists an equivalent method in the *Object Pascal* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizer.pas` *Object Pascal* "wrapper" is built on top of the *C99* API and it requires the *native* library `DynamicAudioNormalizerAPI.dll` at runtime!
 
 ## Thread Safety ##
 
@@ -512,11 +518,11 @@ The following listing summarizes the steps that an application needs to follow w
 1. Create a new *MDynamicAudioNormalizer* instance. This allocates required resources.
 2. Call the ``initialize()`` method, *once*, in order to initialize the MDynamicAudioNormalizer instance.
 3. Call the ``processInplace()`` method, *in a loop*, until all input samples have been processed.  
-   **Note:** At the beginning, this function returns *less* output samples than input have been passed. Samples are guaranteed to be returned in FIFO order, but there is a certain "delay"; call `getInternalDelay()` to determine.
+    - **Note:** At the beginning, this function returns *less* output samples than input samples have been passed. Samples are guaranteed to be returned in FIFO order, but there is a certain "delay"; call `getInternalDelay()` for details.
 4. Call the ``flushBuffer()`` method, *in a loop*, until all the pending "delayed" output samples have been flushed.
 5. Destroy the *MDynamicAudioNormalizer* instance. This will free up all allocated resources.
 
-*Note:* The Dynamic Audio Normalizer library processes audio samples, but it does **not** provide any audio I/O capabilities. Reading or writing the audio samples from or to an audio file is up to the application. A library like [libsndfile](http://www.mega-nerd.com/libsndfile/) may be helpful.
+*Note:* The Dynamic Audio Normalizer library processes audio samples, but it does **not** provide any audio I/O capabilities. Reading or writing the audio samples from or to an audio file is up to the application. A library like [libsndfile](http://www.mega-nerd.com/libsndfile/) is helpful!
 
 
 ## Function Reference ##
