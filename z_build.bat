@@ -137,92 +137,100 @@ for %%c in (DLL, Static) do (
 	mkdir "%PACK_PATH%\%%c\samples"
 	mkdir "%PACK_PATH%\%%c\samples\python"
 
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerCLI.exe"           "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerCLI.exe"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerGUI.exe"           "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerGUI.exe"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"           "%PACK_PATH%\%%c\DynamicAudioNormalizerAPI.pyd"
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"            "%PACK_PATH%\%%c\DynamicAudioNormalizerAPI.pyd"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"           "%PACK_PATH%\%%c\x64\DynamicAudioNormalizerAPI.pyd"
+	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"            "%PACK_PATH%\%%c\x64\DynamicAudioNormalizerAPI.pyd"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"           "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"           "%PACK_PATH%\%%c\x64"
+	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"            "%PACK_PATH%\%%c\x64"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll"           "%PACK_PATH%\%%c"
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\DynamicAudioNormalizerPYD\include\DynamicAudioNormalizer.py"                   "%PACK_PATH%\%%c\include"
+	
+	copy "%~dp0\DynamicAudioNormalizerPYD\include\DynamicAudioNormalizer.py"                    "%PACK_PATH%\%%c\include"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\DynamicAudioNormalizerPYD\src\*.py"                                            "%PACK_PATH%\%%c\samples\python"
+	copy "%~dp0\DynamicAudioNormalizerPYD\samples\*.py"                                         "%PACK_PATH%\%%c\samples\python"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 
 	if /I "%%c"=="DLL" (
 		mkdir "%PACK_PATH%\%%c\redist"
 		mkdir "%PACK_PATH%\%%c\samples\delphi"
+		mkdir "%PACK_PATH%\%%c\samples\dotNet"
 		mkdir "%PACK_PATH%\%%c\samples\java"
 		
-		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"       "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"        "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"       "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"        "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"       "%PACK_PATH%\%%c"
+		copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"        "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"       "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.dll"        "%PACK_PATH%\%%c\x64"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"       "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerAPI.lib"        "%PACK_PATH%\%%c\x64"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"       "%PACK_PATH%\%%c\x64"
+		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"        "%PACK_PATH%\%%c\x64"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                                     "%PACK_PATH%\%%c\include"
+		
+		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                                      "%PACK_PATH%\%%c\include"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                                   "%PACK_PATH%\%%c\include"
+		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                                    "%PACK_PATH%\%%c\include"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                                       "%PACK_PATH%\%%c"
+		copy "%~dp0\DynamicAudioNormalizerJNI\out\*.jar"                                        "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\LibSndFile\bin\Win32\libsndfile-1.dll"                    "%PACK_PATH%\%%c"
+		copy "%~dp0\..\Prerequisites\LibSndFile\bin\Win32\libsndfile-1.dll"                     "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"        "%PACK_PATH%\%%c\libmpg123.dll"
+		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"         "%PACK_PATH%\%%c\libmpg123.dll"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\Win32\pthreadVC2.v%TOOLS_VER%_xp.dll"     "%PACK_PATH%\%%c\pthreadVC2.dll"
+		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\Win32\pthreadVC2.v%TOOLS_VER%_xp.dll"      "%PACK_PATH%\%%c\pthreadVC2.dll"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\x64\.\pthreadVC2.v%TOOLS_VER%_xp.dll"     "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
+		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\x64\.\pthreadVC2.v%TOOLS_VER%_xp.dll"      "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"                "%PACK_PATH%\%%c"
+		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"                 "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"               "%PACK_PATH%\%%c"
+		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"                "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                        "%PACK_PATH%\%%c\redist"
+		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                         "%PACK_PATH%\%%c\redist"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c"
+		copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"          "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"         "%PACK_PATH%\%%c\x64"
+		copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"          "%PACK_PATH%\%%c\x64"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\DynamicAudioNormalizerPAS\src\*.pas"                                       "%PACK_PATH%\%%c\samples\delphi"
+		
+		copy "%~dp0\DynamicAudioNormalizerNET\samples\*.cs"                                     "%PACK_PATH%\%%c\samples\dotNet"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\DynamicAudioNormalizerPAS\src\*.dfm"                                       "%PACK_PATH%\%%c\samples\delphi"
+		copy "%~dp0\DynamicAudioNormalizerNET\samples\*.vb"                                     "%PACK_PATH%\%%c\samples\dotNet"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\DynamicAudioNormalizerJNI\src\com\muldersoft\dynaudnorm\samples\*.java"    "%PACK_PATH%\%%c\samples\java"
+		copy "%~dp0\DynamicAudioNormalizerPAS\src\*.pas"                                        "%PACK_PATH%\%%c\samples\delphi"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\DynamicAudioNormalizerPAS\src\*.dfm"                                        "%PACK_PATH%\%%c\samples\delphi"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\DynamicAudioNormalizerJNI\samples\com\muldersoft\dynaudnorm\samples\*.java" "%PACK_PATH%\%%c\samples\java"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		
 		if %TOOLS_VER% GEQ 140 (
-			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll" "%PACK_PATH%\%%c"
+			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll"  "%PACK_PATH%\%%c"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
-			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll" "%PACK_PATH%\%%c\x64"
+			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll"  "%PACK_PATH%\%%c\x64"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
-			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                      "%PACK_PATH%\%%c"
+			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                       "%PACK_PATH%\%%c"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
-			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x64\*.dll"                      "%PACK_PATH%\%%c\x64"
+			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x64\*.dll"                       "%PACK_PATH%\%%c\x64"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
 		)
 	)
 
-	copy "%~dp0\LICENSE-LGPL.html"                                                             "%PACK_PATH%\%%c"
+	copy "%~dp0\LICENSE-LGPL.html"                                                              "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\LICENSE-GPL2.html"                                                             "%PACK_PATH%\%%c"
+	copy "%~dp0\LICENSE-GPL2.html"                                                              "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\LICENSE-GPL3.html"                                                             "%PACK_PATH%\%%c"
+	copy "%~dp0\LICENSE-GPL3.html"                                                              "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\img\dyauno\*.png"                                                              "%PACK_PATH%\%%c\img\dyauno"
+	copy "%~dp0\img\dyauno\*.png"                                                               "%PACK_PATH%\%%c\img\dyauno"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 
 	"%~dp0\..\Prerequisites\Pandoc\pandoc.exe" --from markdown_github+pandoc_title_block+header_attributes+implicit_figures --to html5 --toc -N --standalone -H "%~dp0\..\Prerequisites\Pandoc\css\github-pandoc.inc" "%~dp0\README.md" | "%JAVA_HOME%\bin\java.exe" -jar "%~dp0\..\Prerequisites\HTMLCompressor\bin\htmlcompressor-1.5.3.jar" --compress-css -o "%PACK_PATH%\%%c\README.html"
