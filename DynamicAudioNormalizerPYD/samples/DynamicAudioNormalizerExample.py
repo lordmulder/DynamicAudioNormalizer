@@ -26,6 +26,7 @@
 #import stdlib modules
 import sys
 import os
+import datetime
 import array
 
 #import DynamicAudioNormalizer
@@ -51,12 +52,27 @@ def alloc_sample_buffers(channles, length):
 
 
 #----------------------------------------------------------------------
+# Logging Callback
+#----------------------------------------------------------------------
+
+logfile = None
+
+def my_log_func(level, message):
+	if logfile:
+		logfile.write("[{}][{}] {}\n".format(datetime.datetime.utcnow().isoformat(), int(level), message))
+		logfile.flush()
+
+
+#----------------------------------------------------------------------
 # Processing Loop
 #----------------------------------------------------------------------
 
-def normalize_samples(wav_reader, wav_writer, config):
+def normalize_samples(wav_reader, wav_writer, logfile, config):
 	print(" Done!\nInitializing...", end = '', flush = True)
+	if logfile:
+		DynamicAudioNormalizer.setLogFunction(my_log_func)
 	with DynamicAudioNormalizer(wav_reader.getChannels(), wav_reader.getSamplerate(), *config) as normalizer:
+		print("Delay:", normalizer.getInternalDelay())
 		indicator, buffers = 0, alloc_sample_buffers(wav_reader.getChannels(), 4096)
 		print(" Done!\nProcessing audio samples...", end = '', flush = True)
 		while True:
@@ -117,9 +133,19 @@ if not os.path.isfile(source_file):
 print("Source file: \"{}\"".format(source_file))
 print("Output file: \"{}\"".format(output_file))
 
+logfilePath = os.environ.get('LOGFILE') 
+if logfilePath:
+	print("Report file: \"{}\"".format(logfilePath))
+	logfile = open(logfilePath, 'w')
+else:
+	logfile = None
+
 print("\nOpening input and output files...", end = '', flush = True)
 with WaveFileReader(source_file) as wav_reader:
 	with WaveFileWriter(output_file, wav_reader.getChannels(), wav_reader.getSampleWidth(), wav_reader.getSamplerate()) as wav_writer:
-		normalize_samples(wav_reader, wav_writer, config)
+		normalize_samples(wav_reader, wav_writer, logfile, config)
 		print('All is done. Goodbye.')
 
+
+if logfile:
+	logfile.close()

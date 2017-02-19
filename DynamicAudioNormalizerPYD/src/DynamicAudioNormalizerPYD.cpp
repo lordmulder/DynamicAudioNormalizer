@@ -85,7 +85,45 @@ static void PY_FREE(const size_t n, ...)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Initialization
+// Logging
+///////////////////////////////////////////////////////////////////////////////
+
+static PyObject *g_log_callback = NULL;
+static pthread_mutex_t g_logging_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static int log_callback_set(PyObject *const callback)
+{
+	int result = (-1);
+	if ((callback) && PyCallable_Check(callback))
+	{
+		MY_CRITSEC_ENTER(g_logging_mutex);
+		result = (g_log_callback) ? 0 : 1;
+		PY_FREE(&g_log_callback);
+		g_log_callback = callback;
+		Py_INCREF(g_log_callback);
+		MY_CRITSEC_LEAVE(g_logging_mutex);
+	}
+	return result;
+}
+
+static void log_callback_invoke(const int logLevel, const char *const message)
+{
+	PyObject *callback;
+	MY_CRITSEC_ENTER(g_logging_mutex);
+	callback = g_log_callback;
+	MY_CRITSEC_LEAVE(g_logging_mutex);
+
+	if (callback)
+	{
+		if (PyObject *const result = PyObject_CallFunction(callback, "is", logLevel, message))
+		{
+			Py_DECREF(result); /*discard result*/
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Global Initialization
 ///////////////////////////////////////////////////////////////////////////////
 
 static uint64_t g_initialized = 0L;
@@ -112,6 +150,7 @@ static bool global_init_function(void)
 
 static bool global_exit_function(void)
 {
+	log_callback_set(NULL);
 	PY_FREE(&g_arrayClass);
 	return true;
 }
@@ -312,7 +351,7 @@ private:
 // Method Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
-PY_METHOD_IMPL(Create)
+PY_METHOD_IMPL(CreateInstance)
 {
 	//Perform gloabl initialization first
 	if (!global_init())
@@ -368,7 +407,7 @@ PY_METHOD_IMPL(Create)
 	return (NULL);
 }
 
-PY_METHOD_IMPL(Destroy)
+PY_METHOD_IMPL(DestroyInstance)
 {
 	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
 	{
@@ -380,7 +419,7 @@ PY_METHOD_IMPL(Destroy)
 	return (NULL);
 }
 
-PY_METHOD_IMPL(GetConfig)
+PY_METHOD_IMPL(GetConfiguration)
 {
 	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
 	{
@@ -394,6 +433,20 @@ PY_METHOD_IMPL(GetConfig)
 		}
 	}
 	PY_EXCEPTION("Failed to get MDynamicAudioNormalizer configuration!");
+	return (NULL);
+}
+
+PY_METHOD_IMPL(GetInternalDelay)
+{
+	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(args))
+	{
+		int64_t delayInSamples;
+		if (instance->getInternalDelay(delayInSamples))
+		{
+			return PyLong_FromLongLong(static_cast<long long>(delayInSamples));
+		}
+	}
+	PY_EXCEPTION("Failed to get MDynamicAudioNormalizer internal delay!");
 	return (NULL);
 }
 
@@ -477,6 +530,22 @@ PY_METHOD_IMPL(FlushBuffer)
 	return (NULL);
 }
 
+PY_METHOD_IMPL(SetLogFunction)
+{
+	const int result = log_callback_set(args);
+	if (result >= 0)
+	{
+		if (result > 0)
+		{
+			MDynamicAudioNormalizer::setLogFunction(log_callback_invoke);
+		}
+		Py_RETURN_TRUE;
+	}
+
+	PY_EXCEPTION("Given argument doesn't appear to be callable!");
+	return (NULL);
+}
+
 PY_METHOD_IMPL(GetVersionInfo)
 {
 	const char *date, *time, *compiler, *arch;
@@ -524,11 +593,13 @@ static PyObject *PyMethodWrap_##X(PyObject *const self, PyObject *const args) \
 	} \
 }
 
-PY_METHOD_WRAP(Create)
-PY_METHOD_WRAP(Destroy)
-PY_METHOD_WRAP(GetConfig)
+PY_METHOD_WRAP(CreateInstance)
+PY_METHOD_WRAP(DestroyInstance)
+PY_METHOD_WRAP(GetConfiguration)
+PY_METHOD_WRAP(GetInternalDelay)
 PY_METHOD_WRAP(ProcessInplace)
 PY_METHOD_WRAP(FlushBuffer)
+PY_METHOD_WRAP(SetLogFunction)
 PY_METHOD_WRAP(GetVersionInfo)
 PY_METHOD_WRAP(GetCoreVersion)
 
@@ -538,13 +609,15 @@ PY_METHOD_WRAP(GetCoreVersion)
 
 static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
 {
-	{ "create",         PY_METHOD_DECL(Create),         METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it."       },
-	{ "destroy",        PY_METHOD_DECL(Destroy),        METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                  },
-	{ "getConfig",      PY_METHOD_DECL(GetConfig),      METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance." },
-	{ "processInplace", PY_METHOD_DECL(ProcessInplace), METH_VARARGS,  "Process next chunk audio samples, in-place."                            },
-	{ "flushBuffer",    PY_METHOD_DECL(FlushBuffer),    METH_VARARGS,  "Flushes pending samples out of the MDynamicAudioNormalizer instance."   },
-	{ "getVersionInfo", PY_METHOD_DECL(GetVersionInfo), METH_NOARGS,   "Returns version and build info. This is a \"static\" method."           },
-	{ "getCoreVersion", PY_METHOD_DECL(GetCoreVersion), METH_NOARGS,   "Returns the API version. This is a \"static\" method."                  },
+	{ "createInstance",   PY_METHOD_DECL(CreateInstance),   METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it."         },
+	{ "destroyInstance",  PY_METHOD_DECL(DestroyInstance),  METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                    },
+	{ "getConfiguration", PY_METHOD_DECL(GetConfiguration), METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance."   },
+	{ "getInternalDelay", PY_METHOD_DECL(GetInternalDelay), METH_O,        "Get the internal delay of an existing MDynamicAudioNormalizer instance."  },
+	{ "processInplace",   PY_METHOD_DECL(ProcessInplace),   METH_VARARGS,  "Process next chunk audio samples, in-place."                              },
+	{ "flushBuffer",      PY_METHOD_DECL(FlushBuffer),      METH_VARARGS,  "Flushes pending samples out of the MDynamicAudioNormalizer instance."     },
+	{ "setLogFunction",   PY_METHOD_DECL(SetLogFunction),   METH_O,        "Set the callback function for log messages. This is a \"static\" method." },
+	{ "getVersionInfo",   PY_METHOD_DECL(GetVersionInfo),   METH_NOARGS,   "Returns version and build info. This is a \"static\" method."             },
+	{ "getCoreVersion",   PY_METHOD_DECL(GetCoreVersion),   METH_NOARGS,   "Returns the API version. This is a \"static\" method."                    },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -553,9 +626,7 @@ static struct PyModuleDef PyDynamicAudioNormalizer_ModuleDef =
 	PyModuleDef_HEAD_INIT, "DynamicAudioNormalizerAPI", "", -1, PyMDynamicAudioNormalizer_Methods
 };
 
-PyMODINIT_FUNC
-PyInit_DynamicAudioNormalizerAPI(void)
+PyMODINIT_FUNC PyInit_DynamicAudioNormalizerAPI(void)
 {
 	return PyModule_Create(&PyDynamicAudioNormalizer_ModuleDef);
 }
-

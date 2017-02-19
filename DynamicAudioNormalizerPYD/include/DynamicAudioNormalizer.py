@@ -73,23 +73,28 @@ class DynamicAudioNormalizer:
 	
 	def __enter__(self):
 		options = (self._peakValue, self._maxAmplification, self._targetRms, self._compressFactor, self._channelsCoupled, self._enableDCCorrection, self._altBoundaryMode)
-		self._instance = DynamicAudioNormalizerAPI.create(self._channels, self._samplerate, self._frameLen, self._filterSize, *options)
+		self._instance = DynamicAudioNormalizerAPI.createInstance(self._channels, self._samplerate, self._frameLen, self._filterSize, *options)
 		return self
 	
 	def __exit__(self, type, value, traceback):
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
-		DynamicAudioNormalizerAPI.destroy(self._instance)
+		DynamicAudioNormalizerAPI.destroyInstance(self._instance)
 		self._instance = None
 	
 	def __del__(self):
 		if self._instance:
 			print("RESOURCE LEAK: DynamicAudioNormalizer object was not de-initialized properly!", file=sys.stderr)
 	
-	def getConfig(self):
+	def getConfiguration(self):
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
-		return DynamicAudioNormalizerAPI.getConfig(self._instance)
+		return DynamicAudioNormalizerAPI.getConfiguration(self._instance)
+	
+	def getInternalDelay(self):
+		if not self._instance:
+			raise RuntimeError("Instance not initialized!")
+		return DynamicAudioNormalizerAPI.getInternalDelay(self._instance)
 	
 	def processInplace(self, samplesInOut, count):
 		if not self._instance:
@@ -102,6 +107,9 @@ class DynamicAudioNormalizer:
 		return DynamicAudioNormalizerAPI.flushBuffer(self._instance, samplesOut)
 	
 	@staticmethod
+	def setLogFunction(callback):
+		return DynamicAudioNormalizerAPI.setLogFunction(callback)
+	
+	@staticmethod
 	def getVersion():
 		return DynamicAudioNormalizerAPI.getVersionInfo()
-
