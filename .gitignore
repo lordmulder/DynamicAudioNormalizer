@@ -4,6 +4,7 @@
 *.dll
 *.exe
 *.local.*
+*.old
 *.opendb
 *.opensdf
 *.sdf
@@ -11,12 +12,13 @@
 *.user
 *.~*
 *__pycache__*
+*_old_*
 /DynamicAudioNormalizerGUI/tmp
 /DynamicAudioNormalizerJNI/.settings
 /DynamicAudioNormalizerJNI/bin
 /DynamicAudioNormalizerJNI/out
-/DynamicAudioNormalizerNET/examples/bin
-/DynamicAudioNormalizerNET/examples/obj
+/DynamicAudioNormalizerNET/samples/bin
+/DynamicAudioNormalizerNET/samples/obj
 /bin
 /doc
 /etc/vst_sdk/pluginterfaces
