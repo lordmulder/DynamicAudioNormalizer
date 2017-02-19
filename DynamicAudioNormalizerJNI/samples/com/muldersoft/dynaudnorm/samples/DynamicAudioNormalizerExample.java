@@ -31,7 +31,7 @@ import java.util.Map;
 
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer;
 
-public class Example {
+public class DynamicAudioNormalizerExample {
 
 	//Default arguments
 	private static final int CHANNELS_DEFAULT = 2;

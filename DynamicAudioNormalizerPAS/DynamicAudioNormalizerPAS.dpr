@@ -27,7 +27,7 @@ program DynamicAudioNormalizerPAS;
 
 uses
   Forms,
-  Main in 'src\Main.pas' {DynamicAudioNormalizerTestApp},
+  DynamicAudioNormalizerExample in 'src\DynamicAudioNormalizerExample.pas' {DynamicAudioNormalizerTestApp},
   DynamicAudioNormalizer in 'include\DynamicAudioNormalizer.pas';
 
 {$R *.res}
