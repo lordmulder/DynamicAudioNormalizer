@@ -23,7 +23,7 @@
 // http://opensource.org/licenses/MIT
 //////////////////////////////////////////////////////////////////////////////////
 
-package com.muldersoft.dynaudnorm.samples;
+package com.muldersoft.dynaudnorm.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -48,6 +48,7 @@ import org.junit.runners.MethodSorters;
 
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer;
 import com.muldersoft.dynaudnorm.JDynamicAudioNormalizer.Logger;
+import com.muldersoft.dynaudnorm.samples.AudioFileIO;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JDynamicAudioNormalizerTest {
