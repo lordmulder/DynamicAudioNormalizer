@@ -7,8 +7,8 @@
     <ProjectGuid>{AC5A5448-A96E-492C-AC9C-81986F418BBB}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DynamicAudioNormalizerNET_Example_CS</RootNamespace>
-    <AssemblyName>DynamicAudioNormalizerNET_Example_CS</AssemblyName>
+    <RootNamespace>DynamicAudioNormalizerExample_CS</RootNamespace>
+    <AssemblyName>DynamicAudioNormalizerExample_CS</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>
@@ -80,7 +80,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DynamicAudioNormalizerNET_Example_CS.cs" />
+    <Compile Include="DynamicAudioNormalizerExample.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

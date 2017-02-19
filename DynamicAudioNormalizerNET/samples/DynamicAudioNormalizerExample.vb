@@ -26,7 +26,7 @@ REM ////////////////////////////////////////////////////////////////////////////
 Imports System.Reflection
 Imports DynamicAudioNormalizer
 
-Module DynamicAudioNormalizerNET_Example_VB
+Module DynamicAudioNormalizerExample
 
     REM --------------------------------------------------------------------------
     REM AudioFileReader Class
