@@ -30,7 +30,7 @@ import datetime
 import array
 
 #import PyDynamicAudioNormalizer
-from PyDynamicAudioNormalizer import PyDynamicAudioNormalizer
+from DynamicAudioNormalizer import PyDynamicAudioNormalizer
 
 #import Wave Reader and Writer
 from WaveFileUtils import WaveFileReader
