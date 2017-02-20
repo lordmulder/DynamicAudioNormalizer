@@ -141,9 +141,9 @@ for %%c in (DLL, Static) do (
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerGUI.exe"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"            "%PACK_PATH%\%%c\DynamicAudioNormalizerAPI.pyd"
+	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.pyd"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
-	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.dll"            "%PACK_PATH%\%%c\x64\DynamicAudioNormalizerAPI.pyd"
+	copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerPYD.pyd"            "%PACK_PATH%\%%c\x64"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerVST.dll"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
@@ -152,7 +152,7 @@ for %%c in (DLL, Static) do (
 	copy "%~dp0\bin\Win32\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerWA5.dll"            "%PACK_PATH%\%%c"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 	
-	copy "%~dp0\DynamicAudioNormalizerPYD\include\DynamicAudioNormalizer.py"                    "%PACK_PATH%\%%c\include"
+	copy "%~dp0\DynamicAudioNormalizerPYD\include\*.py"                                         "%PACK_PATH%\%%c\include"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
 	copy "%~dp0\DynamicAudioNormalizerPYD\samples\*.py"                                         "%PACK_PATH%\%%c\samples\python"
 	if not "!ERRORLEVEL!"=="0" goto BuildError
