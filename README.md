@@ -498,7 +498,7 @@ The Dynamic Audio Normalizer "core" library is written in [***C++***](http://en.
 
 ### Python interface
 
-*Python* applications can use our [*C extension for CPython*](https://docs.python.org/3/extending/building.html), which is implemented by the `DynamicAudioNormalizerAPI.pyd` library. We also provide the **DynamicAudioNormalizer** *Python* "wrapper" class for convenience, which is declared in the `DynamicAudioNormalizer.py` module. There exists an equivalent method in the *Python* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizerJNI.pyd` *C extension* module requires the *native* "core" library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux) at runtime!
+*Python* applications can use our [*C extension for CPython*](https://docs.python.org/3/extending/building.html), which is implemented by the `DynamicAudioNormalizerAPI.pyd` library. We also provide the **PyDynamicAudioNormalizer** *Python* "wrapper" class for convenience, which is declared in the `DynamicAudioNormalizer.py` module. There exists an equivalent method in the *Python* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizerJNI.pyd` *C extension* module requires the *native* "core" library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux) at runtime!
 
 ### Object Pascal interface
 
