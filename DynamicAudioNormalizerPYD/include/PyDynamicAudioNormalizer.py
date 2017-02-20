@@ -31,25 +31,25 @@ DYNAMIC_AUDIONORMALIZER_API = 8
 
 #import the native "C" module
 try:
-	import DynamicAudioNormalizerAPI
+	import DynamicAudioNormalizerPYD
 except:
 	pass
 
 #error checking
-if (not 'DynamicAudioNormalizerAPI' in locals()) or (not hasattr(DynamicAudioNormalizerAPI, 'getCoreVersion')):
-	raise SystemError("The native DynamicAudioNormalizerAPI module is *not* available. Please make sure that 'DynamicAudioNormalizerAPI.pyd' has been installed correctly!")
+if (not 'DynamicAudioNormalizerPYD' in locals()) or (not hasattr(DynamicAudioNormalizerPYD, 'getCoreVersion')):
+	raise SystemError("The native DynamicAudioNormalizerPYD module is *not* available. Please make sure that 'DynamicAudioNormalizerPYD.pyd' has been installed correctly!")
 
 #version checking
-if DynamicAudioNormalizerAPI.getCoreVersion() != DYNAMIC_AUDIONORMALIZER_API:
-	raise SystemError("The native DynamicAudioNormalizerAPI module uses an *unsupported* API version. Please install the matching 'DynamicAudioNormalizerAPI.pyd' library!")
+if DynamicAudioNormalizerPYD.getCoreVersion() != DYNAMIC_AUDIONORMALIZER_API:
+	raise SystemError("The native DynamicAudioNormalizerPYD module uses an *unsupported* API version. Please install the matching 'DynamicAudioNormalizerPYD.pyd' library!")
 
 
 #----------------------------------------------------------------------
 # DynamicAudioNormalizer
 #----------------------------------------------------------------------
 
-class DynamicAudioNormalizer:
-	"""Wrapper class around the DynamicAudioNormalizerAPI library"""
+class PyDynamicAudioNormalizer:
+	"""Wrapper class around the DynamicAudioNormalizerPYD library"""
 	
 	def __str__(self):
 		versionInfo = self.getVersion()
@@ -73,13 +73,13 @@ class DynamicAudioNormalizer:
 	
 	def __enter__(self):
 		options = (self._peakValue, self._maxAmplification, self._targetRms, self._compressFactor, self._channelsCoupled, self._enableDCCorrection, self._altBoundaryMode)
-		self._instance = DynamicAudioNormalizerAPI.createInstance(self._channels, self._samplerate, self._frameLen, self._filterSize, *options)
+		self._instance = DynamicAudioNormalizerPYD.createInstance(self._channels, self._samplerate, self._frameLen, self._filterSize, *options)
 		return self
 	
 	def __exit__(self, type, value, traceback):
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
-		DynamicAudioNormalizerAPI.destroyInstance(self._instance)
+		DynamicAudioNormalizerPYD.destroyInstance(self._instance)
 		self._instance = None
 	
 	def __del__(self):
@@ -89,27 +89,32 @@ class DynamicAudioNormalizer:
 	def getConfiguration(self):
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
-		return DynamicAudioNormalizerAPI.getConfiguration(self._instance)
+		return DynamicAudioNormalizerPYD.getConfiguration(self._instance)
 	
 	def getInternalDelay(self):
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
-		return DynamicAudioNormalizerAPI.getInternalDelay(self._instance)
+		return DynamicAudioNormalizerPYD.getInternalDelay(self._instance)
+	
+	def process(self, samplesIn, samplesOut, count):
+		if not self._instance:
+			raise RuntimeError("Instance not initialized!")
+		return DynamicAudioNormalizerPYD.process(self._instance, samplesIn, samplesOut, count)
 	
 	def processInplace(self, samplesInOut, count):
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
-		return DynamicAudioNormalizerAPI.processInplace(self._instance, samplesInOut, count)
+		return DynamicAudioNormalizerPYD.processInplace(self._instance, samplesInOut, count)
 	
 	def flushBuffer(self, samplesOut):
 		if not self._instance:
 			raise RuntimeError("Instance not initialized!")
-		return DynamicAudioNormalizerAPI.flushBuffer(self._instance, samplesOut)
+		return DynamicAudioNormalizerPYD.flushBuffer(self._instance, samplesOut)
 	
 	@staticmethod
 	def setLogFunction(callback):
-		return DynamicAudioNormalizerAPI.setLogFunction(callback)
+		return DynamicAudioNormalizerPYD.setLogFunction(callback)
 	
 	@staticmethod
 	def getVersion():
-		return DynamicAudioNormalizerAPI.getVersionInfo()
+		return DynamicAudioNormalizerPYD.getVersionInfo()

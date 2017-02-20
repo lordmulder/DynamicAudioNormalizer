@@ -29,8 +29,8 @@ import os
 import datetime
 import array
 
-#import DynamicAudioNormalizer
-from DynamicAudioNormalizer import DynamicAudioNormalizer
+#import PyDynamicAudioNormalizer
+from PyDynamicAudioNormalizer import PyDynamicAudioNormalizer
 
 #import Wave Reader and Writer
 from WaveFileUtils import WaveFileReader
@@ -70,17 +70,16 @@ def my_log_func(level, message):
 def normalize_samples(wav_reader, wav_writer, logfile, config):
 	print(" Done!\nInitializing...", end = '', flush = True)
 	if logfile:
-		DynamicAudioNormalizer.setLogFunction(my_log_func)
-	with DynamicAudioNormalizer(wav_reader.getChannels(), wav_reader.getSamplerate(), *config) as normalizer:
-		print("Delay:", normalizer.getInternalDelay())
-		indicator, buffers = 0, alloc_sample_buffers(wav_reader.getChannels(), 4096)
+		PyDynamicAudioNormalizer.setLogFunction(my_log_func)
+	with PyDynamicAudioNormalizer(wav_reader.getChannels(), wav_reader.getSamplerate(), *config) as normalizer:
+		indicator, buffersIn, buffersOut = 0, alloc_sample_buffers(wav_reader.getChannels(), 4096), alloc_sample_buffers(wav_reader.getChannels(), 4096)
 		print(" Done!\nProcessing audio samples...", end = '', flush = True)
 		while True:
-			count = wav_reader.read(buffers)
+			count = wav_reader.read(buffersIn)
 			if count:
-				count = normalizer.processInplace(buffers, count)
+				count = normalizer.process(buffersIn, buffersOut, count)
 				if count:
-					wav_writer.write(buffers, count)
+					wav_writer.write(buffersOut, count)
 				indicator += 1
 				if indicator >= 7:
 					print('.', end = '', flush = True)
@@ -89,9 +88,9 @@ def normalize_samples(wav_reader, wav_writer, logfile, config):
 			break;
 		print(" Done!\nFlushing buffers...", end = '', flush = True)
 		while True:
-			count = normalizer.flushBuffer(buffers)
+			count = normalizer.flushBuffer(buffersOut)
 			if count:
-				wav_writer.write(buffers, count)
+				wav_writer.write(buffersOut, count)
 				indicator += 1
 				if indicator >= 7:
 					print('.', end = '', flush = True)
@@ -105,7 +104,7 @@ def normalize_samples(wav_reader, wav_writer, logfile, config):
 # Main
 #----------------------------------------------------------------------
 
-version = DynamicAudioNormalizer.getVersion()
+version = PyDynamicAudioNormalizer.getVersion()
 print("Dynamic Audio Normalizer, Version {}.{}-{} [{}]".format(*version[0], version[1][4]))
 print("Copyright (c) 2014-{} LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.".format(version[1][0][7:]))
 print("Built on {} at {} with {} for Python-{}.\n".format(*version[1]))
@@ -145,7 +144,6 @@ with WaveFileReader(source_file) as wav_reader:
 	with WaveFileWriter(output_file, wav_reader.getChannels(), wav_reader.getSampleWidth(), wav_reader.getSamplerate()) as wav_writer:
 		normalize_samples(wav_reader, wav_writer, logfile, config)
 		print('All is done. Goodbye.')
-
 
 if logfile:
 	logfile.close()

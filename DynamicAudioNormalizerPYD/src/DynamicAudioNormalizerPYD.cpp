@@ -493,6 +493,55 @@ PY_METHOD_IMPL(ProcessInplace)
 	return (NULL);
 }
 
+PY_METHOD_IMPL(Process)
+{
+	long long inputSize = NULL;
+	PyObject *pyInstance = NULL, *pySamplesIn = NULL, *pySamplesOut = NULL;
+
+	if (!PyArg_ParseTuple(args, "OOOK", &pyInstance, &pySamplesIn, &pySamplesOut, &inputSize))
+	{
+		return NULL;
+	}
+
+	if (MDynamicAudioNormalizer *const instance = PY2INSTANCE(pyInstance))
+	{
+		uint32_t channels, ignored[3];
+		if (!instance->getConfiguration(channels, ignored[0], ignored[1], ignored[2]))
+		{
+			PY_EXCEPTION("Failed to get number of channels from instance!");
+			return (NULL);
+		}
+		try
+		{
+			PyBufferWrapper samplesIn(pySamplesIn, channels, false);
+			if (static_cast<uint64_t>(inputSize) > static_cast<uint64_t>(samplesIn.getLength()))
+			{
+				PY_EXCEPTION("Specified input size exceeds the size of the given array!");
+				return (NULL);
+			}
+			PyBufferWrapper samplesOut(pySamplesOut, channels, true);
+			if (static_cast<uint64_t>(inputSize) > static_cast<uint64_t>(samplesOut.getLength()))
+			{
+				PY_EXCEPTION("Specified input size exceeds the size of the given array!");
+				return (NULL);
+			}
+			int64_t outputSize;
+			if (instance->process(samplesIn.getBuffer(), samplesOut.getBuffer(), static_cast<uint64_t>(inputSize), outputSize))
+			{
+				return PyLong_FromLongLong(static_cast<long long>(outputSize));
+			}
+		}
+		catch (const std::invalid_argument&)
+		{
+			PY_EXCEPTION("Failed to get buffers from inpout arrays!");
+			return (NULL);
+		}
+	}
+
+	PY_EXCEPTION("Failed to process audio samples in-place!");
+	return (NULL);
+}
+
 PY_METHOD_IMPL(FlushBuffer)
 {
 	PyObject *pyInstance = NULL, *pySamplesOut = NULL;
@@ -597,6 +646,7 @@ PY_METHOD_WRAP(CreateInstance)
 PY_METHOD_WRAP(DestroyInstance)
 PY_METHOD_WRAP(GetConfiguration)
 PY_METHOD_WRAP(GetInternalDelay)
+PY_METHOD_WRAP(Process)
 PY_METHOD_WRAP(ProcessInplace)
 PY_METHOD_WRAP(FlushBuffer)
 PY_METHOD_WRAP(SetLogFunction)
@@ -607,13 +657,14 @@ PY_METHOD_WRAP(GetCoreVersion)
 // Module Definition
 ///////////////////////////////////////////////////////////////////////////////
 
-static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
+static PyMethodDef DynamicAudioNormalizer_Methods[] =
 {
 	{ "createInstance",   PY_METHOD_DECL(CreateInstance),   METH_VARARGS,  "Create a new MDynamicAudioNormalizer instance and initialize it."         },
 	{ "destroyInstance",  PY_METHOD_DECL(DestroyInstance),  METH_O,        "Destroy an existing MDynamicAudioNormalizer instance."                    },
 	{ "getConfiguration", PY_METHOD_DECL(GetConfiguration), METH_O,        "Get the configuration of an existing MDynamicAudioNormalizer instance."   },
 	{ "getInternalDelay", PY_METHOD_DECL(GetInternalDelay), METH_O,        "Get the internal delay of an existing MDynamicAudioNormalizer instance."  },
 	{ "processInplace",   PY_METHOD_DECL(ProcessInplace),   METH_VARARGS,  "Process next chunk audio samples, in-place."                              },
+	{ "process",          PY_METHOD_DECL(Process),          METH_VARARGS,  "Process next chunk audio samples, out-of-place." },
 	{ "flushBuffer",      PY_METHOD_DECL(FlushBuffer),      METH_VARARGS,  "Flushes pending samples out of the MDynamicAudioNormalizer instance."     },
 	{ "setLogFunction",   PY_METHOD_DECL(SetLogFunction),   METH_O,        "Set the callback function for log messages. This is a \"static\" method." },
 	{ "getVersionInfo",   PY_METHOD_DECL(GetVersionInfo),   METH_NOARGS,   "Returns version and build info. This is a \"static\" method."             },
@@ -623,10 +674,10 @@ static PyMethodDef PyMDynamicAudioNormalizer_Methods[] =
 
 static struct PyModuleDef PyDynamicAudioNormalizer_ModuleDef =
 {
-	PyModuleDef_HEAD_INIT, "DynamicAudioNormalizerAPI", "", -1, PyMDynamicAudioNormalizer_Methods
+	PyModuleDef_HEAD_INIT, "DynamicAudioNormalizerPYD", "", -1, DynamicAudioNormalizer_Methods
 };
 
-PyMODINIT_FUNC PyInit_DynamicAudioNormalizerAPI(void)
+PyMODINIT_FUNC PyInit_DynamicAudioNormalizerPYD(void)
 {
 	return PyModule_Create(&PyDynamicAudioNormalizer_ModuleDef);
 }
