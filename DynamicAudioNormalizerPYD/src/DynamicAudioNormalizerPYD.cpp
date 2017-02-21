@@ -72,17 +72,6 @@ static void PY_FREE(PyObject **const obj)
 	*obj = NULL;
 }
 
-static void PY_FREE(const size_t n, ...)
-{
-	va_list arg;
-	va_start(arg, n);
-	for (size_t i = 0; i < n ; i++)
-	{
-		PyObject **const iter = va_arg(arg, PyObject**);
-		PY_FREE(iter);
-	}
-	va_end(arg);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Logging
@@ -137,7 +126,7 @@ static bool global_init_function(void)
 	{
 		if (PyObject *arrayClass = PyObject_GetAttrString(arrayModule, "array"))
 		{
-			if (success = PyType_Check(arrayClass))
+			if ((success = PyType_Check(arrayClass)))
 			{
 				std::swap(g_arrayClass, arrayClass);
 			}
@@ -159,7 +148,7 @@ static bool global_init(void)
 {
 	bool success = false;
 	MY_CRITSEC_ENTER(m_initalization_mutex);
-	if (success = (g_initialized ? true : global_init_function()))
+	if ((success = (g_initialized ? true : global_init_function())))
 	{
 		g_initialized++;
 	}
@@ -452,7 +441,7 @@ PY_METHOD_IMPL(GetInternalDelay)
 
 PY_METHOD_IMPL(ProcessInplace)
 {
-	long long inputSize = NULL;
+	long long inputSize = -1LL;
 	PyObject *pyInstance = NULL, *pySamplesInOut = NULL;
 
 	if (!PyArg_ParseTuple(args, "OOK", &pyInstance, &pySamplesInOut, &inputSize))
@@ -495,7 +484,7 @@ PY_METHOD_IMPL(ProcessInplace)
 
 PY_METHOD_IMPL(Process)
 {
-	long long inputSize = NULL;
+	long long inputSize = -1LL;
 	PyObject *pyInstance = NULL, *pySamplesIn = NULL, *pySamplesOut = NULL;
 
 	if (!PyArg_ParseTuple(args, "OOOK", &pyInstance, &pySamplesIn, &pySamplesOut, &inputSize))
@@ -677,7 +666,15 @@ static struct PyModuleDef PyDynamicAudioNormalizer_ModuleDef =
 	PyModuleDef_HEAD_INIT, "DynamicAudioNormalizerPYD", "", -1, DynamicAudioNormalizer_Methods
 };
 
+#ifdef __GNUC__
+#pragma GCC visibility push(default)
+#endif //__GNUC__
+
 PyMODINIT_FUNC PyInit_DynamicAudioNormalizerPYD(void)
 {
 	return PyModule_Create(&PyDynamicAudioNormalizer_ModuleDef);
 }
+
+#ifdef __GNUC__
+#pragma GCC visibility pop
+#endif //__GNUC__

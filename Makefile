@@ -34,6 +34,7 @@ LIBRARY_NAME := DynamicAudioNormalizerAPI
 PROGRAM_NAME := DynamicAudioNormalizerCLI
 LOGVIEW_NAME := DynamicAudioNormalizerGUI
 JNIWRAP_NAME := DynamicAudioNormalizerJNI
+PYDWRAP_NAME := DynamicAudioNormalizerPYD
 PASWRAP_NAME := DynamicAudioNormalizerPAS
 BUILD_DATE   := $(shell date -Idate)
 BUILD_TIME   := $(shell date +%H:%M:%S)
@@ -57,11 +58,11 @@ export API_VERSION := $(shell sed -n 's/.*define MDYNAMICAUDIONORMALIZER_CORE \(
 MY_PROJECTS := NONE
 
 ifeq ($(MODE),full)
-  MY_PROJECTS := API CLI GUI JNI
+  MY_PROJECTS := API CLI GUI JNI PYD
   export ENABLE_JNI := true
 endif
 ifeq ($(MODE),no-gui)
-  MY_PROJECTS := API CLI JNI
+  MY_PROJECTS := API CLI JNI PYD
   export ENABLE_JNI := true
 endif
 ifeq ($(MODE),minimal)
@@ -160,6 +161,7 @@ CopyAllBinaries:
 	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).* $(TARGET_PATH)
 	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME).* $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(LOGVIEW_NAME)\" not found!\e[0m"
 	cp $(JNIWRAP_NAME)/out/$(JNIWRAP_NAME).jar $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(JNIWRAP_NAME).jar\" not found!\e[0m"
+	cp $(PYDWRAP_NAME)/lib/$(PYDWRAP_NAME).so $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(PYDWRAP_NAME).so\" not found!\e[0m"
 	cp $(LIBRARY_NAME)/include/*.h $(TARGET_PATH)/include
 	cp $(PASWRAP_NAME)/include/*.pas $(TARGET_PATH)/include
 	cp ./LICENSE-*.html $(TARGET_PATH)
