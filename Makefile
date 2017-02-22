@@ -42,6 +42,7 @@ BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
 TARGET_PATH  := ./bin/$(BUILD_DATE)
 OUTPUT_FILE  := $(abspath ./bin/DynamicAudioNormalizer.$(BUILD_DATE).tbz2)
 PANDOC_FLAGS := markdown_github+pandoc_title_block+header_attributes+implicit_figures
+JARS_PATH    := tmp/jars
 
 # Version info
 VER_MAJOR = $(shell sed -n 's/.*DYNAUDNORM_NS::VERSION_MAJOR\s*=\s*\([0-9]*\).*/\1/p' < ./DynamicAudioNormalizerAPI/src/Version.cpp)
@@ -157,22 +158,30 @@ CopyAllBinaries:
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
 	rm -rf $(TARGET_PATH) 
 	mkdir -p $(TARGET_PATH)/include
+	mkdir -p $(TARGET_PATH)/samples/java
+	mkdir -p $(TARGET_PATH)/samples/python
+	mkdir -p $(TARGET_PATH)/samples/pascal
 	cp $(PROGRAM_NAME)/bin/$(PROGRAM_NAME).* $(TARGET_PATH)
 	cp $(LIBRARY_NAME)/lib/lib$(LIBRARY_NAME)-$(API_VERSION).* $(TARGET_PATH)
 	cp $(LOGVIEW_NAME)/bin/$(LOGVIEW_NAME).* $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(LOGVIEW_NAME)\" not found!\e[0m"
 	cp $(JNIWRAP_NAME)/out/$(JNIWRAP_NAME).jar $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(JNIWRAP_NAME).jar\" not found!\e[0m"
 	cp $(PYDWRAP_NAME)/lib/$(PYDWRAP_NAME).so $(TARGET_PATH) || $(ECHO) "\e[1;33mWARNING: File \"$(PYDWRAP_NAME).so\" not found!\e[0m"
 	cp $(LIBRARY_NAME)/include/*.h $(TARGET_PATH)/include
+	cp $(PYDWRAP_NAME)/include/*.py $(TARGET_PATH)/include
 	cp $(PASWRAP_NAME)/include/*.pas $(TARGET_PATH)/include
+	cp $(JNIWRAP_NAME)/samples/com/muldersoft/dynaudnorm/samples/*.java $(TARGET_PATH)/samples/java
+	cp $(PYDWRAP_NAME)/samples/*.py $(TARGET_PATH)/samples/python
+	cp $(PASWRAP_NAME)/src/*.pas $(TARGET_PATH)/samples/pascal
+	cp $(PASWRAP_NAME)/src/*.dfm $(TARGET_PATH)/samples/pascal
 	cp ./LICENSE-*.html $(TARGET_PATH)
 
 CreateDocuments:
 	@$(ECHO) "\n\e[1;34m-----------------------------------------------------------------------------\e[0m"
 	@$(ECHO) "\e[1;34mCreate Documents\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
-	wget -N -P /tmp/~jars https://repo1.maven.org/maven2/com/yahoo/platform/yui/yuicompressor/2.4.8/yuicompressor-2.4.8.jar
-	wget -N -P /tmp/~jars https://repo1.maven.org/maven2/com/googlecode/htmlcompressor/htmlcompressor/1.5.2/htmlcompressor-1.5.2.jar
+	wget -N -P $(JARS_PATH) https://repo1.maven.org/maven2/com/yahoo/platform/yui/yuicompressor/2.4.8/yuicompressor-2.4.8.jar
+	wget -N -P $(JARS_PATH) https://repo1.maven.org/maven2/com/googlecode/htmlcompressor/htmlcompressor/1.5.2/htmlcompressor-1.5.2.jar
 	mkdir -p $(TARGET_PATH)/img/dyauno
-	$(PANDOC) --from $(PANDOC_FLAGS) --to html5 --toc -N --standalone -H ./img/dyauno/Style.inc ./README.md | java -jar /tmp/~jars/htmlcompressor-1.5.2.jar --compress-css -o $(TARGET_PATH)/README.html || cp ./README.md $(TARGET_PATH)/README.md
+	$(PANDOC) --from $(PANDOC_FLAGS) --to html5 --toc -N --standalone -H ./img/dyauno/Style.inc ./README.md | java -jar $(JARS_PATH)/htmlcompressor-1.5.2.jar --compress-css -o $(TARGET_PATH)/README.html || cp ./README.md $(TARGET_PATH)/README.md
 	cp ./img/dyauno/*.png $(TARGET_PATH)/img/dyauno
 

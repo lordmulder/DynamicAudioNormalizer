@@ -22,7 +22,7 @@
 ECHO=echo -e
 SHELL=/bin/bash
 
-PYTHON_INC ?= $(shell python3 -c "from distutils import sysconfig; print(sysconfig.get_python_inc())")
+PYTHON_INC ?= $(shell python3 -c "from distutils import sysconfig; print(sysconfig.get_python_inc())" || echo "/usr/include/python3.5")
 
 ##############################################################################
 # Constants
