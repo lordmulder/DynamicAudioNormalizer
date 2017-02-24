@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerWA5",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerNET", "DynamicAudioNormalizerNET\DynamicAudioNormalizerNET_VS2013.vcxproj", "{E1794071-AB51-45C7-B215-028F3DAA2219}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicAudioNormalizerPYD", "DynamicAudioNormalizerPYD\DynamicAudioNormalizerPYD_VS2013.vcxproj", "{5ACB9827-9D3A-4C59-A948-8505D1544A8E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -86,6 +88,18 @@ Global
 		{E1794071-AB51-45C7-B215-028F3DAA2219}.Release_DLL|x64.Build.0 = Release_DLL|x64
 		{E1794071-AB51-45C7-B215-028F3DAA2219}.Release_Static|Win32.ActiveCfg = Release_Static|Win32
 		{E1794071-AB51-45C7-B215-028F3DAA2219}.Release_Static|x64.ActiveCfg = Release_Static|x64
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Debug|Win32.Build.0 = Debug|Win32
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Debug|x64.ActiveCfg = Debug|x64
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Debug|x64.Build.0 = Debug|x64
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_DLL|Win32.ActiveCfg = Release_DLL|Win32
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_DLL|Win32.Build.0 = Release_DLL|Win32
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_DLL|x64.ActiveCfg = Release_DLL|x64
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_DLL|x64.Build.0 = Release_DLL|x64
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_Static|Win32.ActiveCfg = Release_Static|Win32
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_Static|Win32.Build.0 = Release_Static|Win32
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_Static|x64.ActiveCfg = Release_Static|x64
+		{5ACB9827-9D3A-4C59-A948-8505D1544A8E}.Release_Static|x64.Build.0 = Release_Static|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
