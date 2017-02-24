@@ -826,23 +826,26 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 **Linux** developers install prerequisites via package manager. We give examples for [*Ubuntu*](https://www.ubuntu.com/), [*openSUSE*](https://www.opensuse.org/) and [*CentOS*](https://www.centos.org/) here:
 
 * **Ubuntu 16.04 LTS**:
-    * `sudo apt install build-essential openjdk-8-jdk`
+    * `sudo apt install build-essential`
+    * `sudo apt install openjdk-8-jdk python3-dev`
     * `sudo apt install libsndfile-dev libmpg123-dev qt4-default`
     * `sudo apt install ant pandoc wget`
 
 * **openSUSE Leap 42.2**:
     * `sudo zypper install -t pattern devel_basis`
-    * `sudo zypper install gcc-c++ java-1_8_0-openjdk-devel`
+    * `sudo zypper install gcc-c++ java-1_8_0-openjdk-devel python3-devel`
     * `sudo zypper install libsndfile-devel mpg123-devel libqt4-devel`
     * `sudo zypper install ant pandoc wget`
     * ***Note:*** The [*mutlimedia:libs*](http://download.opensuse.org/repositories/multimedia:/color_management/openSUSE_Leap_42.2/) repository is required for the *mpg123-devel* package!
 
 * **CentOS/RHEL 7.3**:
     * `sudo yum groupinstall "Development Tools"`
-    * `sudo yum install java-1.8.0-openjdk-devel`
+    * `sudo yum install java-1.8.0-openjdk-devel python3-devel`
     * `sudo yum install libsndfile-devel libmpg123-devel qt-devel`
     * `sudo yum install ant pandoc wget`
     * ***Note:*** The [*EPEL*](https://fedoraproject.org/wiki/EPEL) and [*Nux Dextop*](https://li.nux.ro/repos.html) repositories are required for some packages!
+
+
 
 # Changelog #
 
