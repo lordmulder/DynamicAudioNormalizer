@@ -1,47 +1,63 @@
- src/dynaudnorm_sox.c | 456 +++++++++++++++++++++++++++++++++++++++++++++++++++
- src/effects.h        |   1 +
- 2 files changed, 457 insertions(+)
+ src/DynamicAudioNormalizerSoX.c | 479 ++++++++++++++++++++++++++++++++++++++++
+ src/effects.h                   |   1 +
+ 2 files changed, 480 insertions(+)
 
-diff --git a/src/dynaudnorm_sox.c b/src/dynaudnorm_sox.c
+diff --git a/src/DynamicAudioNormalizerSoX.c b/src/DynamicAudioNormalizerSoX.c
 new file mode 100644
-index 0000000..a08d552
+index 00000000..4c0bc728
 --- /dev/null
-+++ b/src/dynaudnorm_sox.c
-@@ -0,0 +1,456 @@
-+//////////////////////////////////////////////////////////////////////////////////
-+// Dynamic Audio Normalizer - Effect Wrapper for SoX
-+// Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
-+//
-+// This library is free software; you can redistribute it and/or
-+// modify it under the terms of the GNU Lesser General Public
-+// License as published by the Free Software Foundation; either
-+// version 2.1 of the License, or (at your option) any later version.
-+//
-+// This library is distributed in the hope that it will be useful,
-+// but WITHOUT ANY WARRANTY; without even the implied warranty of
-+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+// Lesser General Public License for more details.
-+//
-+// You should have received a copy of the GNU Lesser General Public
-+// License along with this library; if not, write to the Free Software
-+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-+//
-+// http://www.gnu.org/licenses/lgpl-2.1.txt
-+//////////////////////////////////////////////////////////////////////////////////
++++ b/src/DynamicAudioNormalizerSoX.c
+@@ -0,0 +1,479 @@
++/* ================================================================================== */
++/* Dynamic Audio Normalizer - SoX Effect Wrapper                                      */
++/* Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.        */
++/*                                                                                    */
++/* Permission is hereby granted, free of charge, to any person obtaining a copy       */
++/* of this software and associated documentation files (the "Software"), to deal      */
++/* in the Software without restriction, including without limitation the rights       */
++/* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell          */
++/* copies of the Software, and to permit persons to whom the Software is              */
++/* furnished to do so, subject to the following conditions:                           */
++/*                                                                                    */
++/* The above copyright notice and this permission notice shall be included in         */
++/* all copies or substantial portions of the Software.                                */
++/*                                                                                    */
++/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR         */
++/* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,           */
++/* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE        */
++/* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER             */
++/* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,      */
++/* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN          */
++/* THE SOFTWARE.                                                                      */
++/*                                                                                    */
++/* http://opensource.org/licenses/MIT                                                 */
++/* ================================================================================== */
 +
-+//Shut up warnings
++/*Shut up warnings*/
 +#define _CRT_SECURE_NO_WARNINGS
 +
-+//SoX internal stuff
-+#include "sox_i.h"
-+#include "unicode_support.h"
++/*printf() macros*/
++#ifndef __STDC_FORMAT_MACROS
++#define __STDC_FORMAT_MACROS 1
++#endif
 +
-+//StdLib
++/*SoX internal stuff*/
++#include "sox_i.h"
++
++/*Win32 Unicode support*/
++#ifdef _WIN32
++#include "unicode_support.h"
++#else
++#define lsx_fopen(X,Y) fopen((X),(Y))
++#endif /*_WIN32*/
++
++/*StdLib*/
 +#include <string.h>
 +#include <stdarg.h>
 +#include <ctype.h>
++#include <inttypes.h>
 +
-+//Linkage
++/*Linkage*/
 +#if defined(_MSC_VER) && defined(_MT)
 +#define MDYNAMICAUDIONORMALIZER_STATIC
 +static const char *LINKAGE = "Static";
@@ -49,12 +65,12 @@ index 0000000..a08d552
 +static const char *LINKAGE = "Shared";
 +#endif
 +
-+//Dynamic Audio Normalizer
++/*Dynamic Audio Normalizer*/
 +#include <DynamicAudioNormalizer.h>
 +
-+// =============================================================================
-+// Private Data
-+// =============================================================================
++/* ================================================================================== */
++/* Private Data                                                                       */
++/* ================================================================================== */
 +
 +typedef struct
 +{
@@ -63,7 +79,7 @@ index 0000000..a08d552
 +	double peakValue;
 +	double maxAmplification;
 +	double targetRms;
-+	double compressThresh;
++	double compressFactor;
 +	int channelsCoupled;
 +	int enableDCCorrection;
 +	int altBoundaryMode;
@@ -80,9 +96,9 @@ index 0000000..a08d552
 +}
 +priv_t;
 +
-+// =============================================================================
-+// Internal Functions
-+// =============================================================================
++/* ================================================================================== */
++/* Internal Functions                                                                 */
++/* ================================================================================== */
 +
 +static int parseArgInt(const char *const str, uint32_t *parameter, const uint32_t min_val, const uint32_t max_val)
 +{
@@ -126,7 +142,7 @@ index 0000000..a08d552
 +	settings->peakValue          =   0.95;
 +	settings->maxAmplification   =  10.0;
 +	settings->targetRms          =   0.0;
-+	settings->compressThresh     =   0.0;
++	settings->compressFactor     =   0.0;
 +	settings->channelsCoupled    =   1;
 +	settings->enableDCCorrection =   0;
 +	settings->altBoundaryMode    =   0;
@@ -168,7 +184,7 @@ index 0000000..a08d552
 +			settings->altBoundaryMode = 1;
 +			break;
 +		case 's':
-+			TRY_PARSE(Dbl, settings->compressThresh, 0.0, 1.0);
++			TRY_PARSE(Dbl, settings->compressFactor, 0.0, 30.0);
 +			break;
 +		case 'l':
 +			if(!settings->logFile)
@@ -188,26 +204,26 @@ index 0000000..a08d552
 +	return 1;
 +}
 +
-+static void dynaudnorm_deinterleave(double **temp, const sox_sample_t *const in, const size_t samples_per_channel, const size_t channels)
++static void dynaudnorm_deinterleave(double **temp, const sox_sample_t *const in, const size_t samples_per_channel, const unsigned channels)
 +{
-+	size_t in_pos = 0;
++	size_t i, c, in_pos = 0;
 +
-+	for(size_t i = 0; i < samples_per_channel; i++)
++	for(i = 0; i < samples_per_channel; i++)
 +	{
-+		for(size_t c = 0; c < channels; c++)
++		for(c = 0; c < channels; c++)
 +		{
 +			temp[c][i] = ((double)in[in_pos++]) / ((double)SOX_INT32_MAX);
 +		}
 +	}
 +}
 +
-+static void dynaudnorm_interleave(sox_sample_t *const out, const double *const *const temp, const size_t samples_per_channel, const size_t channels)
++static void dynaudnorm_interleave(sox_sample_t *const out, const double *const *const temp, const size_t samples_per_channel, const unsigned channels)
 +{
-+	size_t out_pos = 0;
++	size_t i, c, out_pos = 0;
 +
-+	for(size_t i = 0; i < samples_per_channel; i++)
++	for(i = 0; i < samples_per_channel; i++)
 +	{
-+		for(size_t c = 0; c < channels; c++)
++		for(c = 0; c < channels; c++)
 +		{
 +			out[out_pos++] = (sox_sample_t) round(min(1.0, max(-1.0, temp[c][i])) * ((double)SOX_INT32_MAX));
 +		}
@@ -225,7 +241,7 @@ index 0000000..a08d552
 +	}
 +}
 +
-+void dynaudnorm_log(const int logLevel, const char *const message)
++static void dynaudnorm_log(const int logLevel, const char *const message)
 +{
 +	switch(logLevel)
 +	{
@@ -241,12 +257,13 @@ index 0000000..a08d552
 +	}
 +}
 +
-+void dynaudnorm_update_buffsize(const sox_effect_t *const effp, priv_t *const p, const size_t input_samples)
++static void dynaudnorm_update_buffsize(const sox_effect_t *const effp, priv_t *const p, const size_t input_samples)
 +{
++	size_t c;
 +	if(input_samples > p->tempSize)
 +	{
-+		lsx_warn("Increasing buffer size: %u -> %u", p->tempSize, input_samples);
-+		for(size_t c = 0; c < effp->in_signal.channels; c++)
++		lsx_warn("Increasing buffer size: %" PRIu64 " -> %" PRIu64, (uint64_t)p->tempSize, (uint64_t)input_samples);
++		for(c = 0; c < effp->in_signal.channels; c++)
 +		{
 +			p->temp[c] = lsx_realloc(p->temp[c], input_samples * sizeof(double));
 +		}
@@ -254,23 +271,25 @@ index 0000000..a08d552
 +	}
 +}
 +
-+// =============================================================================
-+// SoX Callback Functions
-+// =============================================================================
++/* ================================================================================== */
++/* SoX Callback Functions                                                             */
++/* ================================================================================== */
 +
 +static int dynaudnorm_kill(sox_effect_t *effp)
 +{
 +	lsx_report("dynaudnorm_kill()");
-+	priv_t * p = (priv_t *)effp->priv;
++	lsx_report("flows=%" PRIu64 ", flow=%" PRIu64 , (uint64_t)effp->flows, (uint64_t)effp->flow);
 +	return SOX_SUCCESS;
 +}
 +
 +static int dynaudnorm_create(sox_effect_t *effp, int argc, char **argv)
 +{
++	priv_t *const p = (priv_t *)effp->priv;
++
 +	lsx_report("dynaudnorm_create()");
++	lsx_report("flows=%" PRIu64 ", flow=%" PRIu64 , (uint64_t)effp->flows, (uint64_t)effp->flow);
 +
 +	memset(effp->priv, 0, sizeof(priv_t));
-+	priv_t *const p = (priv_t *)effp->priv;
 +	dynaudnorm_defaults(&p->settings);
 +
 +	if(!dynaudnorm_parse_args(&p->settings, argc, argv))
@@ -283,8 +302,10 @@ index 0000000..a08d552
 +
 +static int dynaudnorm_stop(sox_effect_t *effp)
 +{
-+	lsx_report("dynaudnorm_stop()");
 +	priv_t *const p = (priv_t *)effp->priv;
++	size_t c;
++
++	lsx_report("dynaudnorm_stop()");
 +
 +	if(p->instance)
 +	{
@@ -300,7 +321,7 @@ index 0000000..a08d552
 +
 +	if(p->temp)
 +	{
-+		for(size_t c = 0; c < effp->in_signal.channels; c++)
++		for(c = 0; c < effp->in_signal.channels; c++)
 +		{
 +			free(p->temp[c]);
 +			p->temp[c] = NULL;
@@ -314,20 +335,22 @@ index 0000000..a08d552
 +
 +static int dynaudnorm_start(sox_effect_t *effp)
 +{
++	priv_t *const p = (priv_t *)effp->priv;
++
 +	lsx_report("dynaudnorm_start()");
-+	lsx_report("flows=%u, flow=%u, in_signal.rate=%.2f, in_signal.channels=%u", effp->flows, effp->flow, effp->in_signal.rate, effp->in_signal.channels);
++	lsx_report("flows=%" PRIu64 ", flow=%" PRIu64 ", in_signal.rate=%.2f, in_signal.channels=%" PRIu64, (uint64_t)effp->flows, (uint64_t)effp->flow, effp->in_signal.rate, (uint64_t)effp->in_signal.channels);
 +
 +	if((effp->flow == 0) && (effp->global_info->global_info->verbosity > 1))
 +	{
 +		uint32_t versionMajor, versionMinor, versionPatch;
-+		MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(&versionMajor, &versionMinor, &versionPatch);
-+
 +		const char *buildDate, *buildTime, *buildCompiler, *buildArch; int buildDebug;
++
++		MDYNAMICAUDIONORMALIZER_FUNCTION(getVersionInfo)(&versionMajor, &versionMinor, &versionPatch);
 +		MDYNAMICAUDIONORMALIZER_FUNCTION(getBuildInfo)(&buildDate, &buildTime, &buildCompiler, &buildArch, &buildDebug);
 +
 +		dynaudnorm_print(effp, "\n---------------------------------------------------------------------------\n");
 +		dynaudnorm_print(effp, "Dynamic Audio Normalizer (SoX Wrapper), Version %u.%02u-%u, %s\n", versionMajor, versionMinor, versionPatch, LINKAGE);
-+		dynaudnorm_print(effp, "Copyright (c) 2014 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
++		dynaudnorm_print(effp, "Copyright (c) 2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n");
 +		dynaudnorm_print(effp, "Built on %s at %s with %s for %s.\n\n", buildDate, buildTime, buildCompiler, buildArch);
 +		dynaudnorm_print(effp, "This program is free software: you can redistribute it and/or modify\n");
 +		dynaudnorm_print(effp, "it under the terms of the GNU General Public License <http://www.gnu.org/>.\n");
@@ -335,7 +358,6 @@ index 0000000..a08d552
 +		dynaudnorm_print(effp, "---------------------------------------------------------------------------\n\n");
 +	}
 +
-+	priv_t *const p = (priv_t *)effp->priv;
 +	p->tempSize = (size_t) max(ceil(effp->in_signal.rate), 8192.0); /*initial buffer size is one second*/
 +
 +	p->instance = MDYNAMICAUDIONORMALIZER_FUNCTION(createInstance)
@@ -347,7 +369,7 @@ index 0000000..a08d552
 +		p->settings.peakValue,
 +		p->settings.maxAmplification,
 +		p->settings.targetRms,
-+		p->settings.compressThresh,
++		p->settings.compressFactor,
 +		p->settings.channelsCoupled,
 +		p->settings.enableDCCorrection,
 +		p->settings.altBoundaryMode,
@@ -356,8 +378,9 @@ index 0000000..a08d552
 +
 +	if(p->instance)
 +	{
++		size_t c;
 +		p->temp = (double**) lsx_calloc(effp->in_signal.channels, sizeof(double*));
-+		for(size_t c = 0; c < effp->in_signal.channels; c++)
++		for(c = 0; c < effp->in_signal.channels; c++)
 +		{
 +			p->temp[c] = (double*) lsx_calloc(p->tempSize, sizeof(double));
 +		}
@@ -368,23 +391,23 @@ index 0000000..a08d552
 +
 +static int dynaudnorm_flow(sox_effect_t *effp, const sox_sample_t *ibuf, sox_sample_t *obuf, size_t *isamp, size_t *osamp)
 +{
-+	lsx_debug("dynaudnorm_flow()");
 +	priv_t *const p = (priv_t *)effp->priv;
-+
 +	const size_t input_samples = min((*isamp), (*osamp)) / effp->in_signal.channels; /*this is per channel!*/
 +	int64_t output_samples = 0;
++
++	lsx_debug("dynaudnorm_flow()");
 +	dynaudnorm_update_buffsize(effp, p, input_samples);
 +
 +	if(input_samples > 0)
 +	{
 +		dynaudnorm_deinterleave(p->temp, ibuf, input_samples, effp->in_signal.channels);
-+		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(p->instance, p->temp, input_samples, &output_samples))
++		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(processInplace)(p->instance, p->temp, ((int64_t) input_samples), &output_samples))
 +		{
 +			return SOX_EOF;
 +		}
 +		if(output_samples > 0)
 +		{
-+			dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
++			dynaudnorm_interleave(obuf, ((const double**) p->temp), ((size_t) output_samples), effp->in_signal.channels);
 +		}
 +	}
 +
@@ -397,22 +420,22 @@ index 0000000..a08d552
 +
 +static int dynaudnorm_drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 +{
-+	lsx_debug("dynaudnorm_drain()");
 +	priv_t *const p = (priv_t *)effp->priv;
-+
 +	const size_t input_samples = (*osamp) / effp->in_signal.channels; /*this is per channel!*/
 +	int64_t output_samples = 0;
++
++	lsx_debug("dynaudnorm_drain()");
 +	dynaudnorm_update_buffsize(effp, p, input_samples);
 +
 +	if(input_samples > 0)
 +	{
-+		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(p->instance, p->temp, input_samples, &output_samples))
++		if(!MDYNAMICAUDIONORMALIZER_FUNCTION(flushBuffer)(p->instance, p->temp, ((int64_t) input_samples), &output_samples))
 +		{
 +			return SOX_EOF;
 +		}
 +		if(output_samples > 0)
 +		{
-+			dynaudnorm_interleave(obuf, p->temp, ((size_t)output_samples), effp->in_signal.channels);
++			dynaudnorm_interleave(obuf, ((const double**) p->temp), ((size_t) output_samples), effp->in_signal.channels);
 +		}
 +	}
 +	else
@@ -424,9 +447,9 @@ index 0000000..a08d552
 +	return SOX_SUCCESS;
 +}
 +
-+// =============================================================================
-+// SoX Public API
-+// =============================================================================
++/* ================================================================================== */
++/* SoX Public API                                                                     */
++/* ================================================================================== */
 +
 +sox_effect_handler_t const * lsx_dynaudnorm_effect_fn(void)
 +{
@@ -449,7 +472,7 @@ index 0000000..a08d552
 +		"  -n          Disable channel coupling",
 +		"  -c          Enable the DC bias correction",
 +		"  -b          Use alternative boundary mode",
-+		"  -s          Compress the input data",
++		"  -s <value>  Compress the input data",
 +		"",
 +		"Diagnostics:",
 +		"  -l <file>   Create a log file",
@@ -465,7 +488,7 @@ index 0000000..a08d552
 +	return &handler;
 +}
 diff --git a/src/effects.h b/src/effects.h
-index 54ab855..4cf46f0 100644
+index 450a5c2c..773b63bd 100644
 --- a/src/effects.h
 +++ b/src/effects.h
 @@ -33,6 +33,7 @@

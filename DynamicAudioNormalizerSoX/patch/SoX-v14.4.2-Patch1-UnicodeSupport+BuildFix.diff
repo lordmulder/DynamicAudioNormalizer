@@ -1,58 +1,35 @@
- src/8svx.c            |   3 +-
- src/effects_i.c       |   4 +-
- src/formats.c         |   9 ++-
+ src/effects_i.c       |   3 +-
+ src/formats.c         |  51 ++++++-------
  src/libsox_i.c        |   7 +-
  src/noiseprof.c       |   3 +-
- src/sox.c             |  34 +++++++--
+ src/sox.c             |  31 ++++++--
  src/unicode_support.c | 199 ++++++++++++++++++++++++++++++++++++++++++++++++++
- src/unicode_support.h |  50 +++++++++++++
- 8 files changed, 291 insertions(+), 18 deletions(-)
+ src/unicode_support.h |  46 ++++++++++++
+ 7 files changed, 304 insertions(+), 36 deletions(-)
 
-diff --git a/src/8svx.c b/src/8svx.c
-index 63c30e6..ad87cd1 100644
---- a/src/8svx.c
-+++ b/src/8svx.c
-@@ -1,6 +1,7 @@
- /* Amiga 8SVX format handler: W V Neisius, February 1992 */
- 
- #include "sox_i.h"
-+#include "unicode_support.h"
- 
- #include <errno.h>
- #include <string.h>
-@@ -161,7 +162,7 @@ static int startread(sox_format_t * ft)
-         chan1_pos = lsx_tell(ft);
- 
-         for (i = 1; i < channels; i++) {
--                if ((p->ch[i] = fopen(ft->filename, "rb")) == NULL)
-+                if ((p->ch[i] = lsx_fopen(ft->filename, "rb")) == NULL)
-                 {
-                         lsx_fail_errno(ft,errno,"Can't open channel file '%s'",
-                                 ft->filename);
 diff --git a/src/effects_i.c b/src/effects_i.c
-index 7d72166..1b93032 100644
+index 685e962c..deee4443 100644
 --- a/src/effects_i.c
 +++ b/src/effects_i.c
-@@ -20,6 +20,8 @@
+@@ -20,6 +20,7 @@
  
  #define LSX_EFF_ALIAS
  #include "sox_i.h"
 +#include "unicode_support.h"
-+
  #include <string.h>
  #include <ctype.h>
  
-@@ -355,7 +357,7 @@ FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename)
+@@ -463,7 +464,7 @@ FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename, sox_bool
      effp->global_info->global_info->stdin_in_use_by = effp->handler.name;
      file = stdin;
    }
--  else if (!(file = fopen(filename, "r"))) {
-+  else if (!(file = lsx_fopen(filename, "r"))) {
+-  else if (!(file = fopen(filename, text_mode ? "r" : "rb"))) {
++  else if (!(file = lsx_fopen(filename, text_mode ? "r" : "rb"))) {
      lsx_fail("couldn't open file %s: %s", filename, strerror(errno));
      return NULL;
    }
 diff --git a/src/formats.c b/src/formats.c
-index 785eca7..e92167d 100644
+index 724a4cda..b6cecfff 100644
 --- a/src/formats.c
 +++ b/src/formats.c
 @@ -19,6 +19,7 @@
@@ -63,7 +40,7 @@ index 785eca7..e92167d 100644
  
  #include <assert.h>
  #include <ctype.h>
-@@ -397,7 +398,7 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
+@@ -401,32 +402,32 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
  #endif
      return f;
    }
@@ -72,7 +49,53 @@ index 785eca7..e92167d 100644
  }
  
  /* Hack to rewind pipes (a small amount).
-@@ -848,8 +849,8 @@ static sox_format_t * open_write(
+  * Works by resetting the FILE buffer pointer */
+-static void UNUSED rewind_pipe(FILE * fp)
+-{
+-/* _FSTDIO is for Torek stdio (i.e. most BSD-derived libc's)
+- * In theory, we no longer need to check _NEWLIB_VERSION or __APPLE__ */
+-#if defined _FSTDIO || defined _NEWLIB_VERSION || defined __APPLE__
+-  fp->_p -= PIPE_AUTO_DETECT_SIZE;
+-  fp->_r += PIPE_AUTO_DETECT_SIZE;
+-#elif defined __GLIBC__
+-  fp->_IO_read_ptr = fp->_IO_read_base;
+-#elif defined _MSC_VER || defined _WIN32 || defined _WIN64 || \
+-      defined _ISO_STDIO_ISO_H || defined __sgi
+-  fp->_ptr = fp->_base;
+-#else
+-  /* To fix this #error, either simply remove the #error line and live without
+-   * file-type detection with pipes, or add support for your compiler in the
+-   * lines above.  Test with cat monkey.wav | ./sox --info - */
+-  #error FIX NEEDED HERE
+-  #define NO_REWIND_PIPE
+-  (void)fp;
+-#endif
+-}
++//static void UNUSED rewind_pipe(FILE * fp)
++//{
++///* _FSTDIO is for Torek stdio (i.e. most BSD-derived libc's)
++// * In theory, we no longer need to check _NEWLIB_VERSION or __APPLE__ */
++//#if defined _FSTDIO || defined _NEWLIB_VERSION || defined __APPLE__
++//  fp->_p -= PIPE_AUTO_DETECT_SIZE;
++//  fp->_r += PIPE_AUTO_DETECT_SIZE;
++//#elif defined __GLIBC__
++//  fp->_IO_read_ptr = fp->_IO_read_base;
++//#elif defined _MSC_VER || defined _WIN32 || defined _WIN64 || \
++//      defined _ISO_STDIO_ISO_H || defined __sgi
++//  fp->_ptr = fp->_base;
++//#else
++//  /* To fix this #error, either simply remove the #error line and live without
++//   * file-type detection with pipes, or add support for your compiler in the
++//   * lines above.  Test with cat monkey.wav | ./sox --info - */
++//  #error FIX NEEDED HERE
++//  #define NO_REWIND_PIPE
++//  (void)fp;
++//#endif
++//}
+ 
+ static sox_format_t * open_read(
+     char               const * path,
+@@ -853,8 +854,8 @@ static sox_format_t * open_write(
        ft->fp = stdout;
      }
      else {
@@ -83,7 +106,7 @@ index 785eca7..e92167d 100644
            (overwrite_permitted && !overwrite_permitted(path))) {
          lsx_fail("permission to overwrite `%s' denied", path);
          goto error;
-@@ -859,7 +860,7 @@ static sox_format_t * open_write(
+@@ -864,7 +865,7 @@ static sox_format_t * open_write(
          buffer? fmemopen(buffer, buffer_size, "w+b") :
          buffer_ptr? open_memstream(buffer_ptr, buffer_size_ptr) :
  #endif
@@ -93,7 +116,7 @@ index 785eca7..e92167d 100644
          lsx_fail("can't open output file `%s': %s", path, strerror(errno));
          goto error;
 diff --git a/src/libsox_i.c b/src/libsox_i.c
-index 8a7074a..7a7cb1c 100644
+index a5afb8e8..f834136f 100644
 --- a/src/libsox_i.c
 +++ b/src/libsox_i.c
 @@ -20,6 +20,7 @@
@@ -125,7 +148,7 @@ index 8a7074a..7a7cb1c 100644
      lsx_debug(FAKE_MKSTEMP "mkstemp, name=%s (O_TEMPORARY)", name);
  #endif
 diff --git a/src/noiseprof.c b/src/noiseprof.c
-index 603402f..25cab35 100644
+index 8fe6d4fa..fd798ca0 100644
 --- a/src/noiseprof.c
 +++ b/src/noiseprof.c
 @@ -19,6 +19,7 @@
@@ -140,13 +163,13 @@ index 603402f..25cab35 100644
      effp->global_info->global_info->stdout_in_use_by = effp->handler.name;
      data->output_file = stdout;
    }
--  else if ((data->output_file = fopen(data->output_filename, "w")) == NULL) {
-+  else if ((data->output_file = lsx_fopen(data->output_filename, "w")) == NULL) {
+-  else if ((data->output_file = fopen(data->output_filename, "wb")) == NULL) {
++  else if ((data->output_file = lsx_fopen(data->output_filename, "wb")) == NULL) {
      lsx_fail("Couldn't open profile file %s: %s", data->output_filename, strerror(errno));
      return SOX_EOF;
    }
 diff --git a/src/sox.c b/src/sox.c
-index 8160fc1..bf5b481 100644
+index fcdac94d..ebfaf600 100644
 --- a/src/sox.c
 +++ b/src/sox.c
 @@ -24,6 +24,7 @@
@@ -157,10 +180,10 @@ index 8160fc1..bf5b481 100644
  
  #include <ctype.h>
  #include <errno.h>
-@@ -236,10 +237,10 @@ static void cleanup(void)
+@@ -238,10 +239,10 @@ static void cleanup(void)
    if (file_count) {
      if (ofile->ft) {
-       if (!success && ofile->ft->fp) {   /* If we failed part way through */
+       if (!success && ofile->ft->io_type == lsx_io_file) {   /* If we failed part way through */
 -        struct stat st;                  /* writing a normal file, remove it. */
 -        if (!stat(ofile->ft->filename, &st) &&
 +        struct _stat st;                  /* writing a normal file, remove it. */
@@ -171,73 +194,69 @@ index 8160fc1..bf5b481 100644
        }
        sox_close(ofile->ft); /* Assume we can unlink a file before closing it. */
      }
-@@ -293,8 +294,8 @@ static char const * str_time(double seconds)
- 
- static char const * size_and_bitrate(sox_format_t * ft, char const * * text)
- {
--  struct stat st;    /* ft->fp may validly be NULL, so stat not fstat */
--  if (stat(ft->filename, &st) || (st.st_mode & S_IFMT) != S_IFREG)
-+  struct _stat st;    /* ft->fp may validly be NULL, so stat not fstat */
-+  if (lsx_stat(ft->filename, &st) || (st.st_mode & S_IFMT) != S_IFREG)
-     return NULL;
-   if (ft->signal.length && ft->signal.channels && ft->signal.rate && text) {
-     double secs = ft->signal.length / ft->signal.channels / ft->signal.rate;
-@@ -906,7 +907,7 @@ static char * * strtoargv(char * s, int * argc)
+@@ -905,7 +906,7 @@ static char * * strtoargv(char * s, int * argc)
  
  static void read_user_effects(char const *filename)
  {
--    FILE *file = fopen(filename, "rt");
-+    FILE *file = lsx_fopen(filename, "rt");
+-    FILE *file = fopen(filename, "r");
++    FILE *file = lsx_fopen(filename, "r");
      const size_t buffer_size_step = 1024;
      size_t buffer_size = buffer_size_step;
      char *s = lsx_malloc(buffer_size); /* buffer for one input line */
-@@ -2127,7 +2128,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
+@@ -1272,6 +1273,7 @@ static void display_status(sox_bool all_done)
+   }
+   if (all_done)
+     fputc('\n', stderr);
++  fflush(stderr);
+ }
+ 
+ #ifdef HAVE_TERMIOS_H
+@@ -2136,7 +2138,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
    int c;
    size_t text_length = 100;
    char * text = lsx_malloc(text_length + 1);
--  FILE * file = fopen(filename, "rt");
-+  FILE * file = lsx_fopen(filename, "rt");
+-  FILE * file = fopen(filename, "r");
++  FILE * file = lsx_fopen(filename, "r");
  
    if (file == NULL) {
      lsx_fail("Cannot open comment file `%s'", filename);
-@@ -2853,7 +2854,7 @@ static sox_bool cmp_comment_text(char const * c1, char const * c2)
+@@ -2848,7 +2850,7 @@ static sox_bool cmp_comment_text(char const * c1, char const * c2)
    return c1 && c2 && !strcasecmp(c1, c2);
  }
  
 -int main(int argc, char **argv)
-+int sox_main(int argc, char **argv)
++static int sox_main(int argc, char **argv)
  {
    size_t i;
    char mybase[6];
-@@ -3055,3 +3056,20 @@ int main(int argc, char **argv)
+@@ -3051,3 +3053,20 @@ int main(int argc, char **argv)
  
    return 0;
  }
 +
-+int main( int argc, char **argv )
++int main(int argc, char **argv)
 +{
-+  int sox_argc;
-+  char **sox_argv;
-+  int exit_code;
-+  
-+  lsx_init_console();
-+  lsx_init_commandline_arguments(&sox_argc, &sox_argv);
++	int sox_argc;
++	char **sox_argv;
++	int exit_code;
 +
-+  exit_code = sox_main(sox_argc, sox_argv);
-+  
-+  lsx_uninit_console();
-+  lsx_free_commandline_arguments(&sox_argc, &sox_argv);
++	lsx_init_console();
++	lsx_init_commandline_arguments(&sox_argc, &sox_argv);
 +
-+  return exit_code;
++	exit_code = sox_main(sox_argc, sox_argv);
++
++	lsx_uninit_console();
++	lsx_free_commandline_arguments(&sox_argc, &sox_argv);
++
++	return exit_code;
 +}
-\ No newline at end of file
 diff --git a/src/unicode_support.c b/src/unicode_support.c
 new file mode 100644
-index 0000000..7519a8a
+index 00000000..f89aa7b5
 --- /dev/null
 +++ b/src/unicode_support.c
 @@ -0,0 +1,199 @@
-+/* Copyright (c) 2004-2012 LoRd_MuldeR <mulder2@gmx.de>
++/* Copyright (c) 2004-2015 LoRd_MuldeR <mulder2@gmx.de>
 +   File: unicode_support.c
 +
 +   This file was originally part of a patch included with LameXP,
@@ -439,11 +458,11 @@ index 0000000..7519a8a
 \ No newline at end of file
 diff --git a/src/unicode_support.h b/src/unicode_support.h
 new file mode 100644
-index 0000000..36dc0c5
+index 00000000..6abd0b38
 --- /dev/null
 +++ b/src/unicode_support.h
-@@ -0,0 +1,50 @@
-+/* Copyright (c) 2004-2012 LoRd_MuldeR <mulder2@gmx.de>
+@@ -0,0 +1,46 @@
++/* Copyright (c) 2004-2015 LoRd_MuldeR <mulder2@gmx.de>
 +   File: unicode_support.h
 +
 +   This file was originally part of a patch included with LameXP,
@@ -479,10 +498,6 @@ index 0000000..36dc0c5
 +#include <sys/stat.h>
 +
 +#define WIN_UNICODE 1
-+
-+//char *utf16_to_utf8(const wchar_t *input);
-+//char *utf16_to_ansi(const wchar_t *input);
-+//wchar_t *utf8_to_utf16(const char *input);
 +
 +void lsx_init_commandline_arguments(int *argc, char ***argv);
 +void lsx_free_commandline_arguments(int *argc, char ***argv);
