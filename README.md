@@ -849,7 +849,7 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 
 # Changelog #
 
-## Version 2.10 (2017-02-??) ## {-}
+## Version 2.10 (2017-04-14) ## {-}
 * Core library: Added `process()` function, i.e. an "out-of-place" version of `processInplace()`
 * Implemented [Python](https://www.python.org/) API → Dynamic Audio Normalizer can be used in, e .g., *Python*-based applications
 * CLI front-end: Added new CLI option `-t` to explicitly specify the desired *output* format
