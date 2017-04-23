@@ -70,7 +70,7 @@ static const wchar_t *REGISTRY_PATH = L"Software\\MuldeR\\DynAudNorm\\VST";
 
 //Critical Section
 static char g_loggingBuffer[1024];
-static pthread_mutex_t g_loggingMutex = PTHREAD_MUTEX_INITIALIZER;
+static MY_CRITSEC_INIT(g_loggingMutex);
 
 //Enumerations
 enum
@@ -894,7 +894,7 @@ void DynamicAudioNormalizerVST::forceUpdateParameters(void)
 ///////////////////////////////////////////////////////////////////////////////
 
 static int8_t g_initialized = -1;
-static pthread_mutex_t g_createEffMutex = PTHREAD_MUTEX_INITIALIZER;
+static MY_CRITSEC_INIT(g_createEffMutex);
 
 static void appendStr(wchar_t *buffer, const size_t &size, const wchar_t *const text, ...)
 {

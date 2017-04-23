@@ -26,7 +26,6 @@
 #endif
 
 //Internal
-#include <Common.h>
 #include <Threads.h>
 
 //Stdlib
@@ -35,9 +34,9 @@
 #include <cstdarg>
 
 //Globals
+static MY_CRITSEC_INIT(g_mutex);
 static DYNAUDNORM_NS::LoggingCallback *g_loggingCallback = NULL;
 static char g_messageBuffer[1024];
-static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Logging Functions

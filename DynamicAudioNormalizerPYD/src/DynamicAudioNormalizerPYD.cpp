@@ -78,7 +78,7 @@ static void PY_FREE(PyObject **const obj)
 ///////////////////////////////////////////////////////////////////////////////
 
 static PyObject *g_log_callback = NULL;
-static pthread_mutex_t g_logging_mutex = PTHREAD_MUTEX_INITIALIZER;
+static MY_CRITSEC_INIT(g_logging_mutex);
 
 static int log_callback_set(PyObject *const callback)
 {
@@ -116,7 +116,7 @@ static void log_callback_invoke(const int logLevel, const char *const message)
 ///////////////////////////////////////////////////////////////////////////////
 
 static uint64_t g_initialized = 0L;
-static pthread_mutex_t m_initalization_mutex = PTHREAD_MUTEX_INITIALIZER;
+static MY_CRITSEC_INIT(g_initalization_mutex);
 static PyObject *g_arrayClass = NULL;
 
 static bool global_init_function(void)
@@ -147,24 +147,24 @@ static bool global_exit_function(void)
 static bool global_init(void)
 {
 	bool success = false;
-	MY_CRITSEC_ENTER(m_initalization_mutex);
+	MY_CRITSEC_ENTER(g_initalization_mutex);
 	if ((success = (g_initialized ? true : global_init_function())))
 	{
 		g_initialized++;
 	}
-	MY_CRITSEC_LEAVE(m_initalization_mutex);
+	MY_CRITSEC_LEAVE(g_initalization_mutex);
 	return success;
 }
 
 static bool global_exit(void)
 {
 	bool success = false;
-	MY_CRITSEC_ENTER(m_initalization_mutex);
+	MY_CRITSEC_ENTER(g_initalization_mutex);
 	if (g_initialized)
 	{
 		success = (--g_initialized) ? true : global_exit_function();
 	}
-	MY_CRITSEC_LEAVE(m_initalization_mutex);
+	MY_CRITSEC_LEAVE(g_initalization_mutex);
 	return success;
 }
 
@@ -173,7 +173,7 @@ static bool global_exit(void)
 ///////////////////////////////////////////////////////////////////////////////
 
 static std::unordered_set<MDynamicAudioNormalizer*> g_instances;
-static pthread_mutex_t g_instance_mutex = PTHREAD_MUTEX_INITIALIZER;
+static MY_CRITSEC_INIT(g_instance_mutex);
 
 static MDynamicAudioNormalizer *instance_add(MDynamicAudioNormalizer *const instance)
 {

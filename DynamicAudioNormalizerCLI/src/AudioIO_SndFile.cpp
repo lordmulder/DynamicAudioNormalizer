@@ -110,8 +110,8 @@ private:
 	static const size_t BUFF_SIZE = 2048;
 
 	//Library info
+	static MY_CRITSEC_DECL(mutex_lock);
 	static CHR versionBuffer[256];
-	static pthread_mutex_t mutex_lock;
 
 	//Helper functions
 	static int formatToBitDepth(const int &format);
@@ -462,7 +462,7 @@ void AudioIO_SndFile_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize
 ///////////////////////////////////////////////////////////////////////////////
 
 CHR AudioIO_SndFile_Private::versionBuffer[256] = { TXT('\0') };
-pthread_mutex_t AudioIO_SndFile_Private::mutex_lock = PTHREAD_MUTEX_INITIALIZER;
+MY_CRITSEC_INIT(AudioIO_SndFile_Private::mutex_lock);
 
 const CHR *AudioIO_SndFile_Private::libraryVersion(void)
 {

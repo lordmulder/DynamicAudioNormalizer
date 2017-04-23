@@ -148,9 +148,9 @@ private:
 	size_t frameSize, buffSize;
 
 	//Library info
-	static uint32_t instanceCounter;
+	static MY_CRITSEC_DECL(mutex_lock);
 	static CHR versionBuffer[256];
-	static pthread_mutex_t mutex_lock;
+	static uint32_t instanceCounter;
 
 	//Helper functions
 	static uint32_t checkMpg123Sequence(const uint8_t *const buffer, const size_t &count, uint32_t &max_sequence);
@@ -450,7 +450,7 @@ void AudioIO_Mpg123_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
 ///////////////////////////////////////////////////////////////////////////////
 
 CHR AudioIO_Mpg123_Private::versionBuffer[256] = { '\0' };
-pthread_mutex_t AudioIO_Mpg123_Private::mutex_lock = PTHREAD_MUTEX_INITIALIZER;
+MY_CRITSEC_DECL(AudioIO_Mpg123_Private::mutex_lock);
 uint32_t AudioIO_Mpg123_Private::instanceCounter = 0U;
 
 const CHR *AudioIO_Mpg123_Private::libraryVersion(void)

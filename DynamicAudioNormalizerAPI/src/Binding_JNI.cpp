@@ -60,7 +60,7 @@
 #include <Threads.h>
 
 //Globals
-static pthread_mutex_t g_javaLock = PTHREAD_MUTEX_INITIALIZER;
+static MY_CRITSEC_INIT(g_javaLock);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
