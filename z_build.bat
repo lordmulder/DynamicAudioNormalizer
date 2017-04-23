@@ -186,10 +186,6 @@ for %%c in (DLL, Static) do (
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"         "%PACK_PATH%\%%c\libmpg123.dll"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\Win32\pthreadVC2.v%TOOLS_VER%_xp.dll"      "%PACK_PATH%\%%c\pthreadVC2.dll"
-		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%~dp0\..\Prerequisites\PthreadsW32\bin\x64\.\pthreadVC2.v%TOOLS_VER%_xp.dll"      "%PACK_PATH%\%%c\x64\pthreadVC2.dll"
-		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"                 "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"                "%PACK_PATH%\%%c"
@@ -251,11 +247,11 @@ for %%c in (DLL, Static) do (
 	)
 
 	if /I "%%c"=="DLL" (
-		for %%i in (DynamicAudioNormalizerAPI.dll,libmpg123.dll,libsndfile-1.dll,pthreadVC2.dll,QtCore4.dll,QtGui4.dll) do (
+		for %%i in (DynamicAudioNormalizerAPI.dll,libmpg123.dll,libsndfile-1.dll,QtCore4.dll,QtGui4.dll) do (
 			"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\%%~i"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
 		)
-		for %%i in (DynamicAudioNormalizerAPI.dll,pthreadVC2.dll) do (
+		for %%i in (DynamicAudioNormalizerAPI.dll) do (
 			"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\%%~i"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
 		)
