@@ -47,6 +47,7 @@ else
    CXXFLAGS = -O3 -Wall -ffast-math -mfpmath=sse -msse -fomit-frame-pointer -fno-tree-vectorize -DNDEBUG -march=$(MARCH)
 endif
 
+CXXFLAGS += -std=gnu++11
 CXXFLAGS += -I./src
 CXXFLAGS += -I./include
 CXXFLAGS += -I../DynamicAudioNormalizerAPI/include
