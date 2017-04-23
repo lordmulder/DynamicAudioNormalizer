@@ -209,9 +209,9 @@ for %%c in (DLL, Static) do (
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		
 		if %TOOLS_VER% GEQ 140 (
-			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll"  "%PACK_PATH%\%%c"
+			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                     "%PACK_PATH%\%%c"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
-			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\vcruntime%TOOLS_VER%.dll"  "%PACK_PATH%\%%c\x64"
+			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                     "%PACK_PATH%\%%c\x64"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
 			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                       "%PACK_PATH%\%%c"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
