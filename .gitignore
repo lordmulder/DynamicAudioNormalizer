@@ -1,13 +1,17 @@
 *.VC.db
+*.bin
 *.dcu
 *.ddp
 *.dll
+*.dylib
 *.exe
 *.local.*
+*.o
 *.old
 *.opendb
 *.opensdf
 *.sdf
+*.so
 *.suo
 *.user
 *.~*

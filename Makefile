@@ -36,7 +36,7 @@ LOGVIEW_NAME := DynamicAudioNormalizerGUI
 JNIWRAP_NAME := DynamicAudioNormalizerJNI
 PYDWRAP_NAME := DynamicAudioNormalizerPYD
 PASWRAP_NAME := DynamicAudioNormalizerPAS
-BUILD_DATE   := $(shell date -Idate)
+BUILD_DATE   := $(shell date +%Y-%m-%d)
 BUILD_TIME   := $(shell date +%H:%M:%S)
 BUILD_TAG    := $(addprefix /tmp/,$(shell echo $$RANDOM$$RANDOM$$RANDOM))
 TARGET_PATH  := ./bin/$(BUILD_DATE)
@@ -137,8 +137,13 @@ CreateTagFile:
 	echo "Version $$(printf %d.%02d-%d $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH)). Built on $(BUILD_DATE), at $(BUILD_TIME)" >> $(BUILD_TAG)
 	echo "" >> $(BUILD_TAG)
 	g++ --version | head -n1 | sed 's/^/Compiler version:   /' >> $(BUILD_TAG)
+ifeq ($(shell uname), Darwin)
+	uname -v | sed 's/^/Build platform:     /' >> $(BUILD_TAG)
+	echo "System description: Darwin" >> $(BUILD_TAG)
+else
 	uname -srmo | sed 's/^/Build platform:     /' >> $(BUILD_TAG)
 	(lsb_release -s -d || ([ -n "$$MSYSTEM" ] && echo "$$MSYSTEM") || echo "Unknown") | sed 's/\"//g' | sed 's/^/System description: /' >> $(BUILD_TAG)
+endif
 	echo "" >> $(BUILD_TAG)
 	echo "This library is free software; you can redistribute it and/or" >> $(BUILD_TAG)
 	echo "modify it under the terms of the GNU Lesser General Public" >> $(BUILD_TAG)
@@ -156,7 +161,7 @@ CopyAllBinaries:
 	@$(ECHO) "\n\e[1;34m-----------------------------------------------------------------------------\e[0m"
 	@$(ECHO) "\e[1;34mCopy Binaries\e[0m"
 	@$(ECHO) "\e[1;34m-----------------------------------------------------------------------------\n\e[0m"
-	rm -rf $(TARGET_PATH) 
+	rm -rf $(TARGET_PATH)
 	mkdir -p $(TARGET_PATH)/include
 	mkdir -p $(TARGET_PATH)/samples/java
 	mkdir -p $(TARGET_PATH)/samples/python

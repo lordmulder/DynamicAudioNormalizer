@@ -396,6 +396,121 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 #endif //__linux
 
 //============================================================================
+// OS X
+//============================================================================
+
+#ifdef __APPLE__ // OS X
+
+#ifndef _DYNAUDNORM_PLATFORM_SUPPORT
+#define _DYNAUDNORM_PLATFORM_SUPPORT 1
+#else
+#error Whoops, more than one platform has been detected!
+#endif
+
+#include <unistd.h>
+
+#define _TXT(X) X
+#define TXT(X) _TXT(X)
+#define OS_TYPE TXT("OS X")
+#define FMT_CHR TXT("%s")
+#define FMT_chr TXT("%s")
+#define MAIN main
+#define TRY_SEH if(1)
+#define CATCH_SEH else
+
+typedef char CHR;
+typedef struct stat STAT64;
+
+inline static int PRINT(const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = vfprintf(stderr, format, ap);
+	va_end(ap);
+	return result;
+}
+
+inline static void FLUSH(void)
+{
+	fflush(stderr);
+}
+
+inline static FILE *FOPEN(const CHR *const fileName, const CHR *const mode)
+{
+	return fopen(fileName, mode);
+}
+
+inline static int FILENO(FILE *const file)
+{
+	return fileno(file);
+}
+
+inline static int FSTAT64(const int fd, STAT64 *_stat)
+{
+	return fstat(fd, _stat);
+}
+
+inline static int FSEEK64(FILE *const file, int64_t offset, const int origin)
+{
+	return fseeko(file, offset, origin);
+}
+
+inline static int64_t FTELL64(FILE *const file)
+{
+	return ftello(file);
+}
+
+inline static int ACCESS(const CHR *const fileName, const int mode)
+{
+	return access(fileName, mode);
+}
+
+inline static int STRCASECMP(const CHR *const s1, const CHR *const s2)
+{
+	return strcasecmp(s1, s2);
+}
+
+inline static const CHR *STRCHR(const CHR *const str, const CHR c)
+{
+	return strchr(str, c);
+}
+
+inline static const CHR *STRRCHR(const CHR *const str, const CHR c)
+{
+	return strrchr(str, c);
+}
+
+inline static int SNPRINTF(CHR *const buffer, size_t buffSize, const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = vsnprintf(buffer, buffSize, format, ap);
+	va_end(ap);
+	return result;
+}
+
+inline static int SSCANF(const CHR *const str, const CHR *const format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	const int result = vsscanf(str, format, ap);
+	va_end(ap);
+	return result;
+}
+
+inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const uint32_t len)
+{
+	const size_t offset = strlen(buff);
+	if (len >= 1)
+	{
+		return strncat(buff, str, len - offset - 1);
+	}
+	return buff;
+}
+
+#endif // __APPLE__
+
+//============================================================================
 // COMMON
 //============================================================================
 
@@ -411,10 +526,10 @@ void SYSTEM_INIT(const bool &debugMode);
 
 inline static bool FILE_ISREG(const int fd)
 {
-	STAT64 stat;
-	if (FSTAT64(fd, &stat) == 0)
+	STAT64 _stat;
+	if (FSTAT64(fd, &_stat) == 0)
 	{
-		return ((stat.st_mode & S_IFMT) == S_IFREG);
+		return ((_stat.st_mode & S_IFMT) == S_IFREG);
 	}
 	return false;
 }

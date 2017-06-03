@@ -79,6 +79,8 @@ ifneq ($(ENABLE_JNI),false)
    CXXFLAGS += -I$(JAVA_HOME)/include
    ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
       CXXFLAGS += -I$(JAVA_HOME)/include/win32
+   else ifeq ($(shell uname), Darwin)
+      CXXFLAGS += -I$(JAVA_HOME)/include/darwin
    else
       CXXFLAGS += -I$(JAVA_HOME)/include/linux
    endif
@@ -93,8 +95,13 @@ endif
 ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
    SO_EXT = dll
    LDXFLAGS += -Wl,--out-implib,$@.a
+   SHAREDFLAG = -shared
+else ifeq ($(shell uname), Darwin)
+   SO_EXT = dylib
+   SHAREDFLAG = -dynamiclib
 else
    SO_EXT = so
+   SHAREDFLAG = -shared
 endif
 
 SOURCES_CPP = $(wildcard src/*.cpp)
@@ -119,13 +126,21 @@ all: $(LIBRARY_DBG) $(LIBRARY_BIN)
 $(LIBRARY_BIN): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[STR] $@\e[0m"
 	@mkdir -p $(dir $@)
-	g++ -shared -g0 -o $@ $+ $(LDXFLAGS)
+	g++ $(SHAREDFLAG) -g0 -o $@ $+ $(LDXFLAGS)
+ifeq ($(shell uname), Darwin)
+	install_name_tool -id "@loader_path/$(notdir $@)" $@
+	strip -u -r -x $@
+else
 	strip --strip-unneeded $@
+endif
 
 $(LIBRARY_DBG): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[LNK] $@\e[0m"
 	@mkdir -p $(dir $@)
-	g++ -shared -o $@ $+ $(LDXFLAGS)
+	g++ $(SHAREDFLAG) -o $@ $+ $(LDXFLAGS)
+ifeq ($(shell uname), Darwin)
+	install_name_tool -id "@loader_path/$(notdir $@)" $@
+endif
 
 #-------------------------------------------------------------
 # Compile
