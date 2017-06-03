@@ -78,6 +78,11 @@ endif
 
 LDXFLAGS += -L../DynamicAudioNormalizerAPI/lib
 LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
+ifeq ($(shell uname), Darwin)
+	PYTHON_LIB := $(shell python3 -c "from distutils import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+	PYTHON_VERSION := $(shell python3 -c "from distutils import sysconfig; print(sysconfig.get_config_var('VERSION'))")
+	LDXFLAGS += -lpython$(PYTHON_VERSION) -L$(PYTHON_LIB)
+endif
 
 ##############################################################################
 # File Names
@@ -86,8 +91,14 @@ LDXFLAGS += -lDynamicAudioNormalizerAPI-$(API_VERSION)
 ifeq ($(findstring MINGW,$(shell uname -s)),MINGW)
    SO_EXT = pyd
    LDXFLAGS += -Wl,--out-implib,$@.a
+   SHAREDFLAG = -shared
+else ifeq ($(shell uname), Darwin)
+   SO_EXT = so
+#   SHAREDFLAG = -dynamiclib
+   SHAREDFLAG = -shared
 else
    SO_EXT = so
+   SHAREDFLAG = -shared
 endif
 
 SOURCES_CPP = $(wildcard src/*.cpp)
@@ -112,13 +123,21 @@ all: $(LIBRARY_DBG) $(LIBRARY_BIN)
 $(LIBRARY_BIN): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[STR] $@\e[0m"
 	@mkdir -p $(dir $@)
-	g++ -shared -g0 -o $@ $+ $(LDXFLAGS)
+	g++ $(SHAREDFLAG) -g0 -o $@ $+ $(LDXFLAGS)
+ifeq ($(shell uname), Darwin)
+	install_name_tool -id "@rpath/$(notdir $@)" $@
+	strip -u -r -x $@
+else
 	strip --strip-unneeded $@
+endif
 
 $(LIBRARY_DBG): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[LNK] $@\e[0m"
 	@mkdir -p $(dir $@)
-	g++ -shared -o $@ $+ $(LDXFLAGS)
+	g++ $(SHAREDFLAG) -o $@ $+ $(LDXFLAGS)
+ifeq ($(shell uname), Darwin)
+	install_name_tool -id "@rpath/$(notdir $@)" $@
+endif
 
 #-------------------------------------------------------------
 # Compile

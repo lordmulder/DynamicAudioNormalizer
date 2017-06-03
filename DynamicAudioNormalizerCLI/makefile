@@ -98,7 +98,11 @@ all: $(PROGRAM_BIN)
 $(PROGRAM_BIN): $(PROGRAM_DBG)
 	@$(ECHO) "\e[1;36m[STR] $@\e[0m"
 	@mkdir -p $(dir $@)
+ifeq ($(shell uname), Darwin)
+	strip -u -r -x -o $@ $<
+else
 	strip --strip-unneeded -o $@ $<
+endif
 
 $(PROGRAM_DBG): $(SOURCES_OBJ)
 	@$(ECHO) "\e[1;36m[LNK] $@\e[0m"

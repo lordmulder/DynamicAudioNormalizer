@@ -29,7 +29,12 @@
 #include <stdexcept>
 #include <queue>
 #include <climits>
+
+#ifdef __APPLE__
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif //__APPLE__
 
 //C++11 support
 #if (__cplusplus >= 201100L) || (defined(_MSC_VER) && (_MSC_VER > 1600))
@@ -254,7 +259,7 @@ static jint javaCreateHandle(MDynamicAudioNormalizer *const instance)
 		}
 		handleValue = MY_RANDOMIZE(g_nextHandleValue);
 	}
-	
+
 	if(handleValue >= 0)
 	{
 		g_instances.insert(std::pair<jint, MDynamicAudioNormalizer*>(handleValue, instance));
@@ -267,7 +272,7 @@ static jint javaCreateHandle(MDynamicAudioNormalizer *const instance)
 static MDynamicAudioNormalizer *javaHandleToInstance(const jint &handleValue, const bool remove = false)
 {
 	MY_CRITSEC_ENTER(g_javaLock);
-	
+
 	MDynamicAudioNormalizer *instance = NULL;
 	if(g_instances.find(handleValue) != g_instances.end())
 	{
@@ -350,7 +355,7 @@ static jboolean javaGet2DArrayElements(JNIEnv *const env, const jobjectArray out
 	{
 		javaRelease2DArrayElements(env, outerArray, countOuter, arrayElementsOut);
 	}
-	
+
 	env->DeleteLocalRef(doubleArrayClass);
 	return success;
 }
@@ -372,7 +377,7 @@ static jboolean JAVA_FUNCIMPL(getVersionInfo)(JNIEnv *const env, jintArray versi
 		{
 			uint32_t major, minor, patch;
 			MDynamicAudioNormalizer::getVersionInfo(major, minor, patch);
-			
+
 			versionInfoElements[0] = (int32_t) std::min(major, uint32_t(INT32_MAX));
 			versionInfoElements[1] = (int32_t) std::min(minor, uint32_t(INT32_MAX));
 			versionInfoElements[2] = (int32_t) std::min(patch, uint32_t(INT32_MAX));
@@ -541,7 +546,7 @@ static jlong JAVA_FUNCIMPL(processInplace)(JNIEnv *const env, const jint &handle
 	{
 		return -1; /*invalid parameters detected*/
 	}
-	
+
 	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
@@ -583,7 +588,7 @@ static jlong JAVA_FUNCIMPL(flushBuffer)(JNIEnv *const env, const jint &handle, j
 	{
 		return -1; /*invalid parameters detected*/
 	}
-	
+
 	MDynamicAudioNormalizer *const instance = javaHandleToInstance(handle);
 	if(instance == NULL)
 	{
@@ -690,7 +695,7 @@ static jlong JAVA_FUNCIMPL(getInternalDelay)(JNIEnv *const env, const jint &hand
 		return -1; /*invalid handle value*/
 	}
 
-	jlong delayInSamples = 0;
+	int64_t delayInSamples = 0;
 	if(!instance->getInternalDelay(delayInSamples))
 	{
 		delayInSamples = -1;

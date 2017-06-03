@@ -101,6 +101,18 @@ sudo yum install libsndfile libmpg123 qt-x11
 
 **Note:** There are some additional *indirect* dependencies that will be resolved automatically by the package manager.
 
+### Mac OS X
+
+There is preliminary support for building on Mac OS X:
+
+```
+brew cask install java
+brew install python3
+brew install libsndfile mpg123
+brew install ant pandoc wget
+export JAVA_HOME=$(/usr/libexec/java_home)
+make MODE=no-gui
+```
 
 ## Package Contents ##
 
