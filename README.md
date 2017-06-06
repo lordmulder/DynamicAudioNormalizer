@@ -370,6 +370,7 @@ List of VST hosts with *known problems* that do **not** work correctly with VST 
 # Winamp Plug-In Usage #
 
 The Dynamic Audio Normalizer is also available in the form of a **DSP/Effect** plug-in for [Winamp](http://www.winamp.com/), the popular media player created by Nullsoft. This way, the Dynamic Audio Normalizer can be applied to your audio files during playback, in *real-time*.
+Note that as a result of an apparent WinAMP plug-in system bug, songs will be truncated by several seconds when this plug-in is active.
 
 ![The Winamp DSP/Effect plug-in (Winamp is Copyright © 1997-2013 Nullsoft, Inc)](img/dyauno/WAPlugIn.png)
 
