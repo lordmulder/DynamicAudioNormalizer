@@ -24,7 +24,7 @@
 //Version info
 const unsigned int DYNAUDNORM_NS::VERSION_MAJOR =  2;
 const unsigned int DYNAUDNORM_NS::VERSION_MINOR = 10;
-const unsigned int DYNAUDNORM_NS::VERSION_PATCH =  0;
+const unsigned int DYNAUDNORM_NS::VERSION_PATCH =  1;
 
 //Build date/time
 const char *const DYNAUDNORM_NS::BUILD_DATE = __DATE__;
