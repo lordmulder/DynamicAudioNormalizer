@@ -391,7 +391,11 @@ Furthermore, note that – unless you are using the *static* build of the Dynami
 
 ## Known Limitations ##
 
-The Dynamic Audio Normalizer plug-in for Winamp does *not* provide a configuration dialogue yet, so always the *default* settings are used. This will be addressed in a future version. Patches are welcome ;-)
+Unfortunately, the programming interface (API) that Winamp offers to *DSP/Effect* plug-in is ***very*** limited. In particular, Winamp does **not** report to the plug-in when playback starts or stops, it does **not** report to the plug-in when switching to another track, and it does **not** report to the plug-in when seeking within the current track. Also, in **none** of the aforementioned situations Winamp is going to re-initialize the plug-in. Instead, Winamp just feeds the plug-in with an "unbroken" stream of audio samples &ndash; even when the user seeks to a different position in the current track or switches to a completely different track.
+
+Consequently, it is **not** technically possible for the plug-in to "flush" its internal buffer in the relevant situations! As a result, users will experience a delay of approximately 15 seconds when the Dynamic Audio Normalizer plug-in for Winamp is active. If, for example, you move the slider on Winamp's seek bar, it will take about 15 seconds until you actually hear the audio from the new position. Similarly, if you switch to another track, it will take about 15 seconds until you actually hear the audio from the new track. *To make it clear again:* Only the Winamp developers could fix this annoyance &ndash; by providing DSP/Effect plug-in developers with a more suitable API. However, given the current state of Winamp development, this is unlikely to happen.
+
+Furthermore, the Dynamic Audio Normalizer plug-in for Winamp does *not* currently provide a configuration dialogue, so the *default* settings will always be used. This is going to be addressed in a future version. Patches are welcome ;-)
 
 
 
