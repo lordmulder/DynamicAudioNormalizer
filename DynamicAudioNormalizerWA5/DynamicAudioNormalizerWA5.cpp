@@ -200,8 +200,6 @@ static double *allocBuffer(size_t size)
 static MDynamicAudioNormalizer *g_instance = NULL;
 static size_t g_sampleBufferSize = 0;
 static double *g_sampleBuffer[MAX_CHANNELS];
-static long int g_lastPosition = -1;
-static DWORD g_lastTickNmbr = -1;
 
 static void updateBufferSize(const int &numsamples)
 {
@@ -315,7 +313,6 @@ static bool createNewInstance(const uint32_t sampleRate, const uint32_t channelC
 		return false;
 	}
 
-	g_lastPosition = -1;
 	return true;
 }
 
@@ -353,40 +350,6 @@ static bool detectWinampVersion(const HWND &hwndParent)
 	}
 
 	return true;
-}
-
-static bool checkTimestampContinuity(const HWND &hwndParent)
-{
-	bool discontinuityDetected = false;
-	long int currentPos;
-	if(SendMessageTimeout(hwndParent, WM_WA_IPC, 0, IPC_GETOUTPUTTIME, SMTO_ABORTIFHUNG, 150, reinterpret_cast<unsigned long*>(&currentPos)))
-	{
-		if(currentPos >= 0)
-		{
-			const DWORD tickNumber = GetTickCount();
-			if(g_lastPosition >= 0)
-			{
-				if(currentPos > g_lastPosition)
-				{
-					const long int tickDelta = static_cast<long int>((tickNumber > g_lastTickNmbr) ? (tickNumber - g_lastTickNmbr) : 0UL);
-					if((currentPos - g_lastPosition) > (125L + tickDelta))
-					{
-						discontinuityDetected = true;
-					}
-				}
-				else if(currentPos < g_lastPosition)
-				{
-					if((g_lastPosition - currentPos) > 32)
-					{
-						discontinuityDetected = true;
-					}
-				}
-			}
-			g_lastTickNmbr = tickNumber;
-			g_lastPosition = currentPos;
-		}
-	}
-	return (!discontinuityDetected);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -469,11 +432,6 @@ static int modify_samples(struct winampDSPModule *this_mod, short int *samples, 
 		{
 			return 0; /*creating the new instance failed!*/
 		}
-	}
-	else if(!checkTimestampContinuity(this_mod->hwndParent))
-	{
-		outputMessage("[DynAudNorm_WA5] SEEK detected -> resetting!");
-		g_instance->reset();
 	}
 
 	deinterleave(samples, numsamples, bps, nch);
