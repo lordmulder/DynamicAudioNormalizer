@@ -389,13 +389,31 @@ Note that copying the plug-in DLL into the ``Plugins`` directory may require adm
 Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the Winamp plug-in DLL also requires the Dynamic Audio Normalizer *core* library, i.e. ``DynamicAudioNormalizerAPI.dll``. This means that the *core* library **must** be made available to Winamp *in addition* to the DSP/Effect plug-in itself. Otherwise, loading the DSP/Effect plug-in DLL is going to fail! Though, copying the *core* library to the same directory, where the plug-in DLL is located, i.e. the ``Plugins`` directory, generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the ``DynamicAudioNormalizerAPI.dll`` file into the same directory where the Winamp "main" executable (EXE file) is located.
 
 
+## Registry Settings
+
+The Dynamic Audio Normalizer plug-in for Winamp does *not* currently provide a configuration dialogue. However, the most important settings are stored in the Windows registry and can be edited using the Registry Editor (`regedit.exe`):
+
+* The settings are stored in the following key:
+```
+HKEY_CURRENT_USER\Software\MuldeR\DynAudNorm\WA5
+```
+
+* The following reg-values are currently supported:
+
+    - **`FilterSize`**: Controlls the [*Gaussian filter window size*](#gaussian-filter-window-size), in frames (DWORD)
+
+    - **`FrameLenMsec`**: Controlls the [*frame length*](#frame-length), in milliseconds (DWORD)
+
+**Note:** If any of the registry values do not exist yet, simply create them. Restart Winamp to make your changes take effect!
+
+
 ## Known Limitations ##
 
 Unfortunately, the programming interface (API) that Winamp offers to *DSP/Effect* plug-in is ***very*** limited. In particular, Winamp does **not** report to the plug-in when playback starts or stops, it does **not** report to the plug-in when switching to another track, and it does **not** report to the plug-in when seeking within the current track. Also, in **none** of the aforementioned situations Winamp is going to re-initialize the plug-in. Instead, Winamp just feeds the plug-in with an "unbroken" stream of audio samples &ndash; even when the user seeks to a different position in the current track or switches to a completely different track.
 
 Consequently, it is **not** technically possible for the plug-in to "flush" its internal buffer in the relevant situations! As a result, users will experience a delay of approximately 15 seconds when the Dynamic Audio Normalizer plug-in for Winamp is active. If, for example, you move the slider on Winamp's seek bar, it will take about 15 seconds until you actually hear the audio from the new position. Similarly, if you switch to another track, it will take about 15 seconds until you actually hear the audio from the new track. *To make it clear again:* Only the Winamp developers could fix this annoyance &ndash; by providing DSP/Effect plug-in developers with a more suitable API. However, given the current state of Winamp development, this is unlikely to happen.
 
-Furthermore, the Dynamic Audio Normalizer plug-in for Winamp does *not* currently provide a configuration dialogue, so the *default* settings will always be used. This is going to be addressed in a future version. Patches are welcome ;-)
+
 
 
 

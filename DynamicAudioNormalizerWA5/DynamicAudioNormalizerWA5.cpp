@@ -49,8 +49,14 @@
 #define DLL_EXPORT __declspec(dllexport)
 
 //Reg key
-static const wchar_t *REGISTRY_PATH = L"Software\\MuldeR\\DynAudNorm\\WA5";
-static const wchar_t *REGISTRY_NAME = L"Version";
+static const wchar_t *REGISTRY_BASEPATH = L"Software\\MuldeR\\DynAudNorm\\WA5";
+static const wchar_t *REGISTRY_VERSION  = L"Version";
+static const wchar_t *REGISTRY_FRAMELEN = L"FrameLenMsec";
+static const wchar_t *REGISTRY_FLTRSIZE = L"FilterSize";
+
+//Defaults
+static const DWORD FRAMELEN_DEFAULT = 500;
+static const DWORD FLTRSIZE_DEFAULT = 31;
 
 //Critical Section
 static char g_loggingBuffer[1024];
@@ -104,6 +110,10 @@ g_properties =
 	44100, 16, 2
 };
 
+static volatile WNDPROC g_oldWndProc = NULL;
+static volatile LONG g_forceReset = 0;
+static volatile DWORD g_lastResetTick = 0;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -148,7 +158,7 @@ static void showErrorMsg(const char *const text)
 static DWORD regValueGet(const wchar_t *const name)
 {
 	DWORD result = 0; HKEY hKey = NULL;
-	if(RegCreateKeyExW(HKEY_CURRENT_USER, REGISTRY_PATH, 0, NULL, 0, KEY_READ, NULL, &hKey, NULL) == ERROR_SUCCESS)
+	if(RegCreateKeyExW(HKEY_CURRENT_USER, REGISTRY_BASEPATH, 0, NULL, 0, KEY_READ, NULL, &hKey, NULL) == ERROR_SUCCESS)
 	{
 		DWORD type = 0, value = 0, size = sizeof(DWORD);
 		if(RegQueryValueExW(hKey, name, 0, &type, ((LPBYTE) &value), &size) == ERROR_SUCCESS)
@@ -166,7 +176,7 @@ static DWORD regValueGet(const wchar_t *const name)
 static bool regValueSet(const wchar_t *const name, const DWORD &value)
 {
 	bool result = false; HKEY hKey = NULL;
-	if(RegCreateKeyExW(HKEY_CURRENT_USER, REGISTRY_PATH, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+	if(RegCreateKeyExW(HKEY_CURRENT_USER, REGISTRY_BASEPATH, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
 	{
 		if(RegSetValueExW(hKey, name, 0, REG_DWORD, ((LPBYTE) &value), sizeof(DWORD)) == ERROR_SUCCESS)
 		{
@@ -293,12 +303,17 @@ static bool createNewInstance(const uint32_t sampleRate, const uint32_t channelC
 		g_instance = NULL;
 	}
 
+	const DWORD optionFrameLen = regValueGet(REGISTRY_FRAMELEN);
+	const DWORD optionFltrSize = regValueGet(REGISTRY_FLTRSIZE);
+
 	try
 	{
 		g_instance = new MDynamicAudioNormalizer
 		(
 			channelCount,
-			sampleRate
+			sampleRate,
+			optionFrameLen ? optionFrameLen : FRAMELEN_DEFAULT,
+			optionFltrSize ? optionFltrSize : FLTRSIZE_DEFAULT
 		);
 	}
 	catch(...)
@@ -352,6 +367,21 @@ static bool detectWinampVersion(const HWND &hwndParent)
 	return true;
 }
 
+static LRESULT CALLBACK winampWindowHook(const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
+{
+	if ((lParam == IPC_CB_MISC) && ((wParam == IPC_CB_MISC_STATUS) || (wParam == IPC_CB_MISC_TITLE)))
+	{
+		InterlockedIncrement(&g_forceReset);
+	}
+
+	if (g_oldWndProc)
+	{
+		return g_oldWndProc(hwnd, uMsg, wParam, lParam);
+	}
+
+	return 0L;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Public Functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -388,12 +418,25 @@ static int init(struct winampDSPModule *this_mod)
 		return 1;
 	}
 
+	if (!(g_oldWndProc = (WNDPROC)SetWindowLong(this_mod->hwndParent, GWL_WNDPROC, (LONG_PTR)winampWindowHook)))
+	{
+		outputMessage("[DynAudNorm_WA5] WARNING: Failed to hook Winamp window!");
+	}
+
 	return 0;
 }
 
 static void quit(struct winampDSPModule *this_mod)
 {
 	outputMessage("[DynAudNorm_WA5] WinampDSP::quit(%p)", this_mod);
+
+	if (g_oldWndProc)
+	{
+		if (SetWindowLong(this_mod->hwndParent, GWL_WNDPROC, (LONG_PTR)g_oldWndProc))
+		{
+			g_oldWndProc = NULL;
+		}
+	}
 
 	if(g_sampleBufferSize > 0)
 	{
@@ -420,7 +463,7 @@ static int modify_samples(struct winampDSPModule *this_mod, short int *samples, 
 		return 0;
 	}
 
-	if((g_properties.bitsPerSample != bps) || (g_properties.channels != nch) || (g_properties.sampleRate != srate))
+	if((!g_instance) || (g_properties.bitsPerSample != bps) || (g_properties.channels != nch) || (g_properties.sampleRate != srate))
 	{
 		outputMessage("[DynAudNorm_WA5] WinampDSP::modify_samples(mod=%p, num=%d, bps=%d, nch=%d, srate=%d)", this_mod, numsamples, bps, nch, srate);
 
@@ -430,7 +473,20 @@ static int modify_samples(struct winampDSPModule *this_mod, short int *samples, 
 
 		if(!createNewInstance(g_properties.sampleRate, g_properties.channels))
 		{
-			return 0; /*creating the new instance failed!*/
+			return 0; /*creating instance failed!*/
+		}
+	}
+	else if (InterlockedExchange(&g_forceReset, 0L) > 0L)
+	{
+		const DWORD tickCount = GetTickCount();
+		if ((tickCount < g_lastResetTick) || ((tickCount - g_lastResetTick) > 250L))
+		{
+			if (g_lastResetTick)
+			{
+				outputMessage("[DynAudNorm_WA5] Reset has been triggered!");
+				g_instance->reset();
+			}
+			g_lastResetTick = tickCount;
 		}
 	}
 
@@ -499,7 +555,7 @@ static bool initializeCoreLibrary(void)
 	_snprintf_s(g_description, 256, _TRUNCATE, "Dynamic Audio Normalizer v%u.%02u-%u [by LoRd_MuldeR]", major, minor, patch);
 
 	const DWORD version = (1000u * major) + (10u * minor) + patch;
-	if(regValueGet(REGISTRY_NAME) != version)
+	if(regValueGet(REGISTRY_VERSION) != version)
 	{
 		const char *date, *time, *compiler, *arch; bool debug;
 		MDynamicAudioNormalizer::getBuildInfo(&date, &time, &compiler, &arch, debug);
@@ -508,7 +564,9 @@ static bool initializeCoreLibrary(void)
 		{
 			return false;
 		}
-		regValueSet(REGISTRY_NAME, version);
+		regValueSet(REGISTRY_VERSION, version);
+		regValueSet(REGISTRY_FRAMELEN, FRAMELEN_DEFAULT);
+		regValueSet(REGISTRY_FLTRSIZE, FLTRSIZE_DEFAULT);
 	}
 
 	return true;
