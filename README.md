@@ -393,7 +393,7 @@ Furthermore, note that – unless you are using the *static* build of the Dynami
 
 The Dynamic Audio Normalizer plug-in for Winamp does *not* currently provide a configuration dialogue. However, the most important settings are stored in the Windows registry and can be edited using the Registry Editor (`regedit.exe`):
 
-* The settings are stored in the following key:
+* The settings are stored under the following key:
 ```
 HKEY_CURRENT_USER\Software\MuldeR\DynAudNorm\WA5
 ```
