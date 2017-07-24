@@ -910,10 +910,10 @@ void MDynamicAudioNormalizer_PrivateData::updateGainHistory(const uint32_t &chan
 				m_gainHistory_minimum[channel].push_back(initial_value);
 			}
 		}
-		const std::deque<double>::iterator minimum = std::min_element(m_gainHistory_original[channel].begin(), m_gainHistory_original[channel].end());
+		const double minimum = *std::min_element(m_gainHistory_original[channel].begin(), m_gainHistory_original[channel].end());
 		m_gainHistory_original[channel].pop_front();
-		m_gainHistory_minimum[channel].push_back(*minimum);
-		m_loggingData_minimum[channel].push(*minimum);
+		m_gainHistory_minimum[channel].push_back(minimum);
+		m_loggingData_minimum[channel].push(minimum);
 	}
 
 	//Apply the Gaussian filter
