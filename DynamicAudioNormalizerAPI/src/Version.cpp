@@ -50,7 +50,13 @@ const char *const DYNAUDNORM_NS::BUILD_TIME = __TIME__;
 		#error Compiler is not supported!
 	#endif
 #elif defined(_MSC_VER)
-	#if (_MSC_VER == 1900)
+	#if (_MSC_VER == 1910)
+		#if (_MSC_FULL_VER >= 191025017) && (_MSC_FULL_VER <= 191025019)
+			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2017.2";
+		#else
+			#error Compiler version is not supported yet!
+		#endif
+	#elif (_MSC_VER == 1900)
 		#if (_MSC_FULL_VER == 190023026)
 			const char *const DYNAUDNORM_NS::BUILD_COMPILER = "MSVC 2015";
 		#elif (_MSC_FULL_VER == 190023506)
