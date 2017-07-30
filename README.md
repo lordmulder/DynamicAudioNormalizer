@@ -884,7 +884,9 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 # Changelog #
 
 ## Version 2.11 (2017-07-??) ## {-}
-* Core library: Fixed a potential crash due to dereferencing a possible invalidated iterator
+* Core library: Fixed a potential crash due to dereferencing a possibly invalidated iterator
+* Core library: Use C++11 `std::mutex`, if supported → removes the dependency on PThread library
+* Windows binaries: Updated build environment to Visual Studio 2017 Update-2 (MSVC 15.2)
 
 ## Version 2.10 (2017-04-14) ## {-}
 * Core library: Added `process()` function, i.e. an "out-of-place" version of `processInplace()`
