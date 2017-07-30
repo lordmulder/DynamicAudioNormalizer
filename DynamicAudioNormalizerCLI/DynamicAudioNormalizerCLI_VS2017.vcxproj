@@ -46,7 +46,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DynamicAudioNormalizerCLI</RootNamespace>
     <ProjectName>DynamicAudioNormalizerCLI</ProjectName>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -137,6 +137,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,15 +166,17 @@
       <OmitFramePointers>true</OmitFramePointers>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\Win32\static;$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\static;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);$(SolutionDir)\..\Prerequisites\XiphAudioLibs\lib\$(Platform)\static;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\Win32\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libsndfile_msvc.$(PlatformToolset).lib;libogg_static.$(PlatformToolset).lib;libvorbis_static.$(PlatformToolset).lib;libFLAC_static.$(PlatformToolset).lib;libmpg123.$(PlatformToolset).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\EncodePointer\lib;$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\Win32\static;$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\static;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);$(SolutionDir)\..\Prerequisites\XiphAudioLibs\lib\$(Platform)\static;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\Win32\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>EncodePointer.lib;libsndfile_msvc.$(PlatformToolset).lib;libogg_static.$(PlatformToolset).lib;libvorbis_static.$(PlatformToolset).lib;libFLAC_static.$(PlatformToolset).lib;libmpg123.$(PlatformToolset).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
