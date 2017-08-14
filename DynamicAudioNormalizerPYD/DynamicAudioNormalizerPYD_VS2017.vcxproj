@@ -38,7 +38,7 @@
     <ProjectGuid>{5ACB9827-9D3A-4C59-A948-8505D1544A8E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DynamicAudioNormalizerPYD</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
     <ProjectName>DynamicAudioNormalizerPYD</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
