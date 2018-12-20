@@ -886,6 +886,8 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 ## Version 2.11 (2018-12-20) ## {-}
 * Core library: Fixed a potential crash due to dereferencing a possibly invalidated iterator
 * Core library: Use C++11 `std::mutex`, if supported → removes the dependency on PThread library
+* Winamp plug-in: Some fixes and improvements
+* Windows binaries: Updated the included libsndfile version to 1.0.28 (2017-04-02)
 * Windows binaries: Updated build environment to Visual Studio 2017.9 (MSVC 14.16)
 
 ## Version 2.10 (2017-04-14) ## {-}
