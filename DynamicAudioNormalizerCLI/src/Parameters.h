@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - Audio Processing Utility
-// Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License

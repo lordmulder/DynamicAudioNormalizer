@@ -883,10 +883,10 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 
 # Changelog #
 
-## Version 2.11 (2017-07-??) ## {-}
+## Version 2.11 (2018-12-20) ## {-}
 * Core library: Fixed a potential crash due to dereferencing a possibly invalidated iterator
 * Core library: Use C++11 `std::mutex`, if supported → removes the dependency on PThread library
-* Windows binaries: Updated build environment to Visual Studio 2017 Update-2 (MSVC 15.2)
+* Windows binaries: Updated build environment to Visual Studio 2017.9 (MSVC 14.16)
 
 ## Version 2.10 (2017-04-14) ## {-}
 * Core library: Added `process()` function, i.e. an "out-of-place" version of `processInplace()`
@@ -1025,7 +1025,7 @@ The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released
 ***GNU Lesser General Public License, Version 2.1***.
 
 	Dynamic Audio Normalizer - Audio Processing Library
-	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This library is free software; you can redistribute it and/or
 	modify it under the terms of the GNU Lesser General Public
@@ -1050,7 +1050,7 @@ The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI
 ***GNU General Public License, Version 2***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -1076,7 +1076,7 @@ The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) 
 ***GNU General Public License, Version 3***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -1100,7 +1100,7 @@ The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* 
 ***MIT/X11 License***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal

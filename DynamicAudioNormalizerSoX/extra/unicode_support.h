@@ -1,4 +1,4 @@
-/* Copyright (c) 2004-2017 LoRd_MuldeR <mulder2@gmx.de>
+/* Copyright (c) 2004-2018 LoRd_MuldeR <mulder2@gmx.de>
    File: unicode_support.h
 
    This file was originally part of a patch included with LameXP,

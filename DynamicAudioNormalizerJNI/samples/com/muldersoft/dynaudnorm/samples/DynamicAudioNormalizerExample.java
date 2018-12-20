@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - Java/JNI Wrapper
-// Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -70,7 +70,7 @@ public class DynamicAudioNormalizerExample {
 				System.out.printf("Copyright (c) 2014-%s LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.\n", buildInfo.get("BuildDate").substring(7));
 			}
 			else {
-				System.out.println("Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.");
+				System.out.println("Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.");
 			}
 			System.out.println();
 			System.out.println("This program is free software: you can redistribute it and/or modify");

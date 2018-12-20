@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - Microsoft.NET Wrapper
-// Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ using namespace System::Security::Permissions;
 [assembly:AssemblyConfigurationAttribute(L"")];
 [assembly:AssemblyCompanyAttribute(L"Free Software Foundation")];
 [assembly:AssemblyProductAttribute(L"DynamicAudioNormalizerNET")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c) 2014-2017 LoRd_MuldeR <mulder2@gmx.de>")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 
