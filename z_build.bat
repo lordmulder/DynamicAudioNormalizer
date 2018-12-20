@@ -4,9 +4,9 @@ setlocal enabledelayedexpansion
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Set Paths
 REM ///////////////////////////////////////////////////////////////////////////
-set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
-set "TOOLS_VER=140"
-set "SLN_SUFFX=VS2015"
+set "MSVC_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC"
+set "TOOLS_VER=141"
+set "SLN_SUFFX=VS2017"
 
 REM ###############################################
 REM # DO NOT MODIFY ANY LINES BELOW THIS LINE !!! #
@@ -16,12 +16,10 @@ REM ///////////////////////////////////////////////////////////////////////////
 REM // Check environment
 REM ///////////////////////////////////////////////////////////////////////////
 if not exist "%MSVC_PATH%\vcvarsall.bat" (
-	echo MSVC compiler not found. Please check your MSVC_PATH var^^!
-	goto BuildError
-)
-if not exist "%MSVC_PATH%\bin\cl.exe" (
-	echo MSVC compiler not found. Please check your MSVC_PATH var^^!
-	goto BuildError
+	if not exist "%MSVC_PATH%\Auxiliary\Build\vcvarsall.bat" (
+		echo MSVC compiler not found. Please check your MSVC_PATH var^^!
+		goto BuildError
+	)
 )
 
 if not exist "%QTDIR%\bin\moc.exe" (
@@ -56,7 +54,21 @@ REM // Setup environment
 REM ///////////////////////////////////////////////////////////////////////////
 set "ANT_HOME=%~dp0\..\Prerequisites\Ant"
 set "PATH=%QTDIR%\bin;%JAVA_HOME%\bin;%ANT_HOME%\bin;%PATH%"
-call "%MSVC_PATH%\vcvarsall.bat" x86
+
+if exist "%MSVC_PATH%\vcvarsall.bat" (
+	call "%MSVC_PATH%\vcvarsall.bat" x86
+) else (
+	if exist "%MSVC_PATH%\Auxiliary\Build\vcvarsall.bat" (
+		call "%MSVC_PATH%\Auxiliary\Build\vcvarsall.bat" x86
+	)
+)
+
+if not exist "%VCINSTALLDIR%\bin\cl.exe" (
+	if not exist "%VCToolsInstallDir%\bin\Hostx64\x86\cl.exe" (
+		echo MSVC compiler not found. Please check your MSVC_PATH var^^!
+		goto BuildError
+	)
+)
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Get current date and time (in ISO format)
@@ -175,7 +187,6 @@ for %%c in (DLL, Static) do (
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\bin\x64\.\v%TOOLS_VER%_xp\Release_%%c\DynamicAudioNormalizerNET.dll"        "%PACK_PATH%\%%c\x64"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		
 		copy "%~dp0\DynamicAudioNormalizerAPI\include\*.h"                                      "%PACK_PATH%\%%c\include"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\DynamicAudioNormalizerPAS\include\*.pas"                                    "%PACK_PATH%\%%c\include"
@@ -190,13 +201,6 @@ for %%c in (DLL, Static) do (
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"                "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%MSVC_PATH%\redist\1033\vcredist_x??.exe"                                         "%PACK_PATH%\%%c\redist"
-		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"          "%PACK_PATH%\%%c"
-		if not "!ERRORLEVEL!"=="0" goto BuildError
-		copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\msvc?%TOOLS_VER%.dll"          "%PACK_PATH%\%%c\x64"
-		if not "!ERRORLEVEL!"=="0" goto BuildError
-		
 		copy "%~dp0\DynamicAudioNormalizerNET\samples\*.cs"                                     "%PACK_PATH%\%%c\samples\dotNet"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\DynamicAudioNormalizerNET\samples\*.vb"                                     "%PACK_PATH%\%%c\samples\dotNet"
@@ -209,10 +213,21 @@ for %%c in (DLL, Static) do (
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		
 		if %TOOLS_VER% GEQ 140 (
-			copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                     "%PACK_PATH%\%%c"
-			if not "!ERRORLEVEL!"=="0" goto BuildError
-			copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                     "%PACK_PATH%\%%c\x64"
-			if not "!ERRORLEVEL!"=="0" goto BuildError
+			if %TOOLS_VER% GEQ 141 (
+				copy "%VCToolsRedistDir%\x86\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                 "%PACK_PATH%\%%c"
+				if not "!ERRORLEVEL!"=="0" goto BuildError
+				copy "%VCToolsRedistDir%\x64\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                 "%PACK_PATH%\%%c\x64"
+				if not "!ERRORLEVEL!"=="0" goto BuildError
+				copy "%VCToolsRedistDir%\vcredist_*.exe"                                        "%PACK_PATH%\%%c\redist"
+				if not "!ERRORLEVEL!"=="0" goto BuildError
+			) else (
+				copy "%MSVC_PATH%\redist\x86\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                 "%PACK_PATH%\%%c"
+				if not "!ERRORLEVEL!"=="0" goto BuildError
+				copy "%MSVC_PATH%\redist\x64\Microsoft.VC%TOOLS_VER%.CRT\*.dll"                 "%PACK_PATH%\%%c\x64"
+				if not "!ERRORLEVEL!"=="0" goto BuildError
+				copy "%MSVC_PATH%\redist\1033\vcredist_*.exe"                                   "%PACK_PATH%\%%c\redist"
+				if not "!ERRORLEVEL!"=="0" goto BuildError
+			)
 			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x86\*.dll"                       "%PACK_PATH%\%%c"
 			if not "!ERRORLEVEL!"=="0" goto BuildError
 			copy "%~dp0\..\Prerequisites\MSVC\redist\ucrt\DLLs\x64\*.dll"                       "%PACK_PATH%\%%c\x64"
