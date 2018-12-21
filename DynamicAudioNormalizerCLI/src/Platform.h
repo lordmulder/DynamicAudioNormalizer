@@ -67,7 +67,7 @@
 #define R_OK 4
 
 typedef wchar_t CHR;
-typedef struct _stat64 STAT64;
+typedef struct _stat64 STAT64_T;
 
 inline static int PRINT(const CHR *const format, ...)
 {
@@ -98,7 +98,7 @@ inline static int FILENO(FILE *const file)
 	return _fileno(file);
 }
 
-inline static int FSTAT64(const int fd, STAT64 *stat)
+inline static int FSTAT64(const int fd, STAT64_T *stat)
 {
 	return _fstat64(fd, stat);
 }
@@ -116,6 +116,11 @@ inline static int64_t FTELL64(FILE *const file)
 inline static int ACCESS(const CHR *const fileName, const int mode)
 {
 	return _waccess(fileName, mode);
+}
+
+inline static int STAT64(const CHR *const fileName, STAT64_T *stat)
+{
+	return _wstat64(fileName, stat);
 }
 
 inline static int STRCASECMP(const CHR *const s1, const CHR *const s2)
@@ -188,7 +193,7 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 #define R_OK 4
 
 typedef wchar_t CHR;
-typedef struct _stati64 STAT64;
+typedef struct _stati64 STAT64_T;
 
 inline static int PRINT(const CHR *const format, ...)
 {
@@ -214,7 +219,7 @@ inline static int FILENO(FILE *const file)
 	return _fileno(file);
 }
 
-inline static int FSTAT64(const int fd, STAT64 *stat)
+inline static int FSTAT64(const int fd, STAT64_T *stat)
 {
 	return _fstati64(fd, stat);
 }
@@ -232,6 +237,11 @@ inline static int64_t FTELL64(FILE *const file)
 inline static int ACCESS(const CHR *const fileName, const int mode)
 {
 	return _waccess(fileName, mode);
+}
+
+inline static int STAT64(const CHR *const fileName, STAT64_T *stat)
+{
+	return _wstati64(fileName, stat);
 }
 
 inline static int STRCASECMP(const CHR *const s1, const CHR *const s2)
@@ -304,7 +314,7 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 #define CATCH_SEH else
 
 typedef char CHR;
-typedef struct stat64 STAT64;
+typedef struct stat64 STAT64_T;
 
 inline static int PRINT(const CHR *const format, ...)
 {
@@ -330,7 +340,7 @@ inline static int FILENO(FILE *const file)
 	return fileno(file);
 }
 
-inline static int FSTAT64(const int fd, STAT64 *stat)
+inline static int FSTAT64(const int fd, STAT64_T *stat)
 {
 	return fstat64(fd, stat);
 }
@@ -348,6 +358,11 @@ inline static int64_t FTELL64(FILE *const file)
 inline static int ACCESS(const CHR *const fileName, const int mode)
 {
 	return access(fileName, mode);
+}
+
+inline static int STAT64(const CHR *const fileName, STAT64_T *stat)
+{
+	return stat64(fileName, stat);
 }
 
 inline static int STRCASECMP(const CHR *const s1, const CHR *const s2)
@@ -419,7 +434,7 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 #define CATCH_SEH else
 
 typedef char CHR;
-typedef struct stat STAT64;
+typedef struct stat STAT64_T;
 
 inline static int PRINT(const CHR *const format, ...)
 {
@@ -445,7 +460,7 @@ inline static int FILENO(FILE *const file)
 	return fileno(file);
 }
 
-inline static int FSTAT64(const int fd, STAT64 *_stat)
+inline static int FSTAT64(const int fd, STAT64_T *_stat)
 {
 	return fstat(fd, _stat);
 }
@@ -463,6 +478,11 @@ inline static int64_t FTELL64(FILE *const file)
 inline static int ACCESS(const CHR *const fileName, const int mode)
 {
 	return access(fileName, mode);
+}
+
+inline static int STAT64(const CHR *const fileName, STAT64_T *stat)
+{
+	return stat64(fileName, stat);
 }
 
 inline static int STRCASECMP(const CHR *const s1, const CHR *const s2)
@@ -524,10 +544,20 @@ void SYSTEM_INIT(const bool &debugMode);
 #define PRINT2_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)
 #define PRINT2_ERR(X, ...) do { PRINT(TXT("ERROR: ")   X TXT("\n"), __VA_ARGS__); } while(0)
 
-inline static bool FILE_ISREG(const int fd)
+inline static bool FD_ISREG(const int fd)
 {
-	STAT64 _stat;
+	STAT64_T _stat;
 	if (FSTAT64(fd, &_stat) == 0)
+	{
+		return ((_stat.st_mode & S_IFMT) == S_IFREG);
+	}
+	return false;
+}
+
+inline static bool PATH_ISREG(const CHR *const fileName)
+{
+	STAT64_T _stat;
+	if (STAT64(fileName, &_stat) == 0)
 	{
 		return ((_stat.st_mode & S_IFMT) == S_IFREG);
 	}

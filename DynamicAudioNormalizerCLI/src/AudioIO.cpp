@@ -171,20 +171,25 @@ const CHR *AudioIO::detectSourceType(const CHR *const fileName)
 {
 	uint8_t type = AUDIO_LIB_NULL;
 	const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
-	const bool isPipe = bStdIn && (!FILE_ISREG(FILENO(stdin)));
-	if (FILE *const file = bStdIn ? (isPipe ? NULL : stdin) : FOPEN(fileName, TXT("rb")))
+	if (bStdIn || PATH_ISREG(fileName))
 	{
-		for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
+		if (FILE *const file = bStdIn ? stdin : FOPEN(fileName, TXT("rb")))
 		{
-			if (checkFileType(g_audioIO_mapping[i].checkFileType, file))
+			if (FD_ISREG(FILENO(file)))
 			{
-				type = g_audioIO_mapping[i].id;
-				break;
+				for (size_t i = 0; g_audioIO_mapping[i].id; ++i)
+				{
+					if (checkFileType(g_audioIO_mapping[i].checkFileType, file))
+					{
+						type = g_audioIO_mapping[i].id;
+						break;
+					}
+				}
 			}
-		}
-		if (!bStdIn)
-		{
-			fclose(file);
+			if (!bStdIn)
+			{
+				fclose(file);
+			}
 		}
 	}
 	return getLibName(type);

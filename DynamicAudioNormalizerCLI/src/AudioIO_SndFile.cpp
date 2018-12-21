@@ -219,7 +219,7 @@ bool AudioIO_SndFile_Private::openRd(const CHR *const fileName, const uint32_t c
 
 	//Use pipe?
 	const bool bStdIn = (STRCASECMP(fileName, TXT("-")) == 0);
-	const bool bPipe = bStdIn && (!FILE_ISREG(STDIN_FILENO));
+	const bool bPipe = bStdIn && (!FD_ISREG(STDIN_FILENO));
 	
 	//Setup info for "raw" input
 	if(bPipe)
@@ -263,7 +263,7 @@ bool AudioIO_SndFile_Private::openWr(const CHR *const fileName, const uint32_t c
 
 	//Use pipe?
 	const bool bStdOut = (STRCASECMP(fileName, TXT("-")) == 0);
-	const bool bPipe = bStdOut && (!FILE_ISREG(STDOUT_FILENO));
+	const bool bPipe = bStdOut && (!FD_ISREG(STDOUT_FILENO));
 
 	//Setup output format
 	info.format = format ? formatFromExtension(format, bitDepth) : formatFromExtension(bPipe ? TXT("raw") : fileName, bitDepth);

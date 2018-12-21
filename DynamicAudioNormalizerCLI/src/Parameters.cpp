@@ -368,7 +368,7 @@ bool Parameters::validateParameters(void)
 	}
 
 	/*check input properties for raw data*/
-	if((STRCASECMP(m_sourceFile, TXT("-")) == 0) && (!FILE_ISREG(FILENO(stdin))))
+	if((STRCASECMP(m_sourceFile, TXT("-")) == 0) && (!FD_ISREG(FILENO(stdin))))
 	{
 		if((m_inputChannels == 0) || (m_inputSampleRate == 0) || (m_inputBitDepth == 0))
 		{
