@@ -17,6 +17,7 @@
   <ItemGroup>
     <ClCompile Include="src\AudioIO.cpp" />
     <ClCompile Include="src\AudioIO_Mpg123.cpp" />
+    <ClCompile Include="src\AudioIO_OpusFile.cpp" />
     <ClCompile Include="src\AudioIO_SndFile.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Parameters.cpp" />
@@ -27,9 +28,11 @@
     <ClInclude Include="..\DynamicAudioNormalizerShared\include\Common.h" />
     <ClInclude Include="src\AudioIO.h" />
     <ClInclude Include="src\AudioIO_Mpg123.h" />
+    <ClInclude Include="src\AudioIO_OpusFile.h" />
     <ClInclude Include="src\AudioIO_SndFile.h" />
     <ClInclude Include="src\Parameters.h" />
     <ClInclude Include="src\Platform.h" />
+    <ClInclude Include="src\StringUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI_VS2017.vcxproj">
@@ -107,7 +110,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;$(SolutionDir)\..\Prerequisites\XiphAudioLibs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <OmitFramePointers>false</OmitFramePointers>
@@ -132,7 +135,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;$(SolutionDir)\..\Prerequisites\XiphAudioLibs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -161,7 +164,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;MDYNAMICAUDIONORMALIZER_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\DynamicAudioNormalizerShared\include;$(SolutionDir)\DynamicAudioNormalizerAPI\include;$(SolutionDir)\..\Prerequisites\PthreadsW32\include;$(SolutionDir)\..\Prerequisites\LibSndFile\include;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\include;$(SolutionDir)\..\Prerequisites\LibMpg123\include;$(SolutionDir)\..\Prerequisites\XiphAudioLibs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -177,7 +180,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\EncodePointer\lib;$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\Win32\static;$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\static;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);$(SolutionDir)\..\Prerequisites\XiphAudioLibs\lib\$(Platform)\static;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\Win32\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>EncodePointer.lib;libsndfile_msvc.$(PlatformToolset).lib;libogg_static.$(PlatformToolset).lib;libvorbis_static.$(PlatformToolset).lib;libFLAC_static.$(PlatformToolset).lib;libmpg123.$(PlatformToolset).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>EncodePointer.lib;libsndfile_msvc.$(PlatformToolset).lib;libogg_static.$(PlatformToolset).lib;libvorbis_static.$(PlatformToolset).lib;libFLAC_static.$(PlatformToolset).lib;libmpg123.$(PlatformToolset).lib;libopus_static.$(PlatformToolset).lib;libopusfile_static.$(PlatformToolset).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>

@@ -127,7 +127,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 
 	//Auto-detect source file type
 	const CHR *sourceLibrary = parameters.sourceLibrary();
-	if (!sourceLibrary)
+	if (!(sourceLibrary && sourceLibrary[0]))
 	{
 		sourceLibrary = AudioIO::detectSourceType(parameters.sourceFile());
 	}

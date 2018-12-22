@@ -51,6 +51,7 @@
 #endif
 
 #include <io.h>
+#include <fcntl.h>
 
 #define _TXT(X) L##X
 #define TXT(X) _TXT(X)
@@ -91,6 +92,21 @@ inline static FILE *FOPEN(const CHR *const fileName, const CHR *const mode)
 		return temp;
 	}
 	return NULL;
+}
+
+inline static int OPEN(const CHR *const fileName, const int flags)
+{
+	int temp;
+	if (_wsopen_s(&temp, fileName, _O_BINARY | flags, _SH_DENYWR, 0) == 0)
+	{
+		return temp;
+	}
+	return -1;
+}
+
+inline static int CLOSE(const int fd)
+{
+	return _close(fd);
 }
 
 inline static int FILENO(FILE *const file)

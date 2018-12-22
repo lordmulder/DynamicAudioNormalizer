@@ -29,6 +29,7 @@
 #endif
 
 #include "AudioIO_SndFile.h"
+#include "StringUtils.h"
 #include <Common.h>
 #include <Threads.h>
 
@@ -496,7 +497,7 @@ const CHR *const *AudioIO_SndFile_Private::supportedFormats(const CHR **const li
 
 bool AudioIO_SndFile_Private::checkFileType(FILE *const file)
 {
-	static const size_t BUFF_SIZE = 40;
+	static const size_t BUFF_SIZE = 64;
 	uint8_t buffer[BUFF_SIZE];
 	const size_t count = fread(buffer, sizeof(uint8_t), BUFF_SIZE, file);
 	if (count >= BUFF_SIZE)
@@ -505,17 +506,26 @@ bool AudioIO_SndFile_Private::checkFileType(FILE *const file)
 		{
 			return true;
 		}
-		if ((memcmp(&buffer[0], "riff\x2E\x91\xCF\x11\xA5\xD6\x28\xDB\x04\xC1\x00\x00", 16) == 0) && (memcmp(&buffer[24], "wave\xF3\xAC\xD3\x11\x8C\xD1\x00\xC0\x4F\x8E\xDB\x8A", 16) == 0))
+		else if ((memcmp(&buffer[0], "riff\x2E\x91\xCF\x11\xA5\xD6\x28\xDB\x04\xC1\x00\x00", 16) == 0) && (memcmp(&buffer[24], "wave\xF3\xAC\xD3\x11\x8C\xD1\x00\xC0\x4F\x8E\xDB\x8A", 16) == 0))
 		{
 			return true;
 		}
-		if ((memcmp(&buffer[0], "FORM", 4) == 0) && (memcmp(&buffer[8], "AIFF", 4) == 0))
+		else if ((memcmp(&buffer[0], "FORM", 4U) == 0) && (memcmp(&buffer[8], "AIFF", 4U) == 0))
 		{
 			return true;
 		}
-		if ((memcmp(&buffer[0], "fLaC\0", 5) == 0) || (memcmp(&buffer[0], "OggS\0", 5) == 0) || (memcmp(&buffer[0], ".snd\0", 5) == 0))
+		else if ((memcmp(&buffer[0], "fLaC\0", 5U) == 0) || (memcmp(&buffer[0], ".snd\0", 5U) == 0))
 		{
 			return true;
+		}
+		else
+		{
+			const void *pos_oggs = memmem(&buffer[0], count, "OggS\0", 5);
+			const void *pos_vrbs = memmem(&buffer[0], count, "vorbis", 6);
+			if (pos_oggs && pos_vrbs && (pos_vrbs > pos_oggs))
+			{
+				return true;
+			}
 		}
 	}
 	return false;

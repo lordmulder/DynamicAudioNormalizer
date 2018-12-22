@@ -264,6 +264,7 @@ bool AudioIO_Mpg123_Private::openRd(const CHR *const fileName, const uint32_t ch
 	if (!(handle = mpg123_new(NULL, &error)))
 	{
 		PRINT2_ERR(TXT("Failed to create libmpg123 handle:\n") FMT_chr TXT("\n"), mpg123_plain_strerror(error));
+		return false;
 	}
 
 	//Initialize the libmpg123 flags

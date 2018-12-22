@@ -22,6 +22,7 @@
 #include "AudioIO.h"
 #include "AudioIO_SndFile.h"
 #include "AudioIO_Mpg123.h"
+#include "AudioIO_OpusFile.h"
 
 #include <Common.h>
 #include <algorithm>
@@ -39,9 +40,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //AudioIO libraries
-static const uint8_t AUDIO_LIB_NULL       = 0x00u;
-static const uint8_t AUDIO_LIB_LIBSNDFILE = 0x01u;
-static const uint8_t AUDIO_LIB_LIBMPG123  = 0x02u;
+static const uint8_t AUDIO_LIB_NULL        = 0x00u;
+static const uint8_t AUDIO_LIB_LIBSNDFILE  = 0x01u;
+static const uint8_t AUDIO_LIB_LIBOPUSFILE = 0x02u;
+static const uint8_t AUDIO_LIB_LIBMPG123   = 0x03u;
 
 //Function prototypes
 typedef const CHR *       (libraryVersion_t)  (void);
@@ -61,9 +63,10 @@ static const struct
 }
 g_audioIO_mapping[] =
 {
-	{ TXT("libsndfile"), AUDIO_LIB_LIBSNDFILE, AudioIO_SndFile::libraryVersion, AudioIO_SndFile::supportedFormats, AudioIO_SndFile::checkFileType, AudioIO_SndFile::createInstance },
-	{ TXT("libmpg123"),  AUDIO_LIB_LIBMPG123,  AudioIO_Mpg123 ::libraryVersion, AudioIO_Mpg123 ::supportedFormats, AudioIO_Mpg123 ::checkFileType, AudioIO_Mpg123 ::createInstance },
-	{ TXT(""),           AUDIO_LIB_NULL,       NULL,                            NULL,                              NULL,                           NULL                            }
+	{ TXT("libsndfile"),  AUDIO_LIB_LIBSNDFILE,  AudioIO_SndFile ::libraryVersion, AudioIO_SndFile ::supportedFormats, AudioIO_SndFile ::checkFileType, AudioIO_SndFile ::createInstance },
+	{ TXT("libopusfile"), AUDIO_LIB_LIBOPUSFILE, AudioIO_OpusFile::libraryVersion, AudioIO_OpusFile::supportedFormats, AudioIO_OpusFile::checkFileType, AudioIO_OpusFile::createInstance },
+	{ TXT("libmpg123"),   AUDIO_LIB_LIBMPG123,   AudioIO_Mpg123  ::libraryVersion, AudioIO_Mpg123  ::supportedFormats, AudioIO_Mpg123  ::checkFileType, AudioIO_Mpg123  ::createInstance },
+	{ TXT(""),            AUDIO_LIB_NULL,        NULL,                             NULL,                               NULL,                            NULL                             }
 };
 
 //Get id from AudioIO library name
