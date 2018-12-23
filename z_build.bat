@@ -197,6 +197,12 @@ for %%c in (DLL, Static) do (
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libmpg123.v%TOOLS_VER%_xp.dll"         "%PACK_PATH%\%%c\libmpg123.dll"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libopus.v%TOOLS_VER%_xp.dll"           "%PACK_PATH%\%%c\libopus.dll"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libopusfile.v%TOOLS_VER%_xp.dll"       "%PACK_PATH%\%%c\libopusfile.dll"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
+		copy "%~dp0\..\Prerequisites\LibMpg123\bin\Win32\libogg.v%TOOLS_VER%_xp.dll"            "%PACK_PATH%\%%c\libogg.dll"
+		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtGui4.dll"                 "%PACK_PATH%\%%c"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 		copy "%~dp0\..\Prerequisites\Qt4\v%TOOLS_VER%_xp\Shared\bin\QtCore4.dll"                "%PACK_PATH%\%%c"
