@@ -75,13 +75,16 @@ REM // Get current date and time (in ISO format)
 REM ///////////////////////////////////////////////////////////////////////////
 set "ISO_DATE="
 set "ISO_TIME="
+
 if not exist "%~dp0\..\Prerequisites\GnuWin32\date.exe" goto BuildError
+
 for /F "tokens=1,2 delims=:" %%a in ('"%~dp0\..\Prerequisites\GnuWin32\date.exe" +ISODATE:%%Y-%%m-%%d') do (
 	if "%%a"=="ISODATE" set "ISO_DATE=%%b"
 )
 for /F "tokens=1,2,3,4 delims=:" %%a in ('"%~dp0\..\Prerequisites\GnuWin32\date.exe" +ISOTIME:%%T') do (
 	if "%%a"=="ISOTIME" set "ISO_TIME=%%b:%%c:%%d"
 )
+
 if "%ISO_DATE%"=="" goto BuildError
 if "%ISO_TIME%"=="" goto BuildError
 
@@ -91,17 +94,19 @@ REM ///////////////////////////////////////////////////////////////////////////
 set "VER_MAJOR="
 set "VER_MINOR="
 set "VER_PATCH="
-for /F "tokens=4,5,6 delims=; " %%a in (%~dp0\DynamicAudioNormalizerAPI\src\Version.cpp) do (
-	if "%%b"=="=" (
-		if "%%a"=="DYNAUDNORM_NS::VERSION_MAJOR" set "VER_MAJOR=%%c"
-		if "%%a"=="DYNAUDNORM_NS::VERSION_MINOR" set "VER_MINOR=%%c"
-		if "%%a"=="DYNAUDNORM_NS::VERSION_PATCH" set "VER_PATCH=%%c"
+
+for /F "tokens=1,2,3" %%a in (%~dp0\DynamicAudioNormalizerShared\res\version.inc) do (
+	if "%%a"=="#define" (
+		if "%%b"=="VER_DYNAUDNORM_MAJOR"    set "VER_MAJOR=%%c"
+		if "%%b"=="VER_DYNAUDNORM_MINOR_HI" set "VER_MINOR=%%c!VER_MINOR!"
+		if "%%b"=="VER_DYNAUDNORM_MINOR_LO" set "VER_MINOR=!VER_MINOR!%%c"
+		if "%%b"=="VER_DYNAUDNORM_PATCH"    set "VER_PATCH=%%c"
 	)
 )
+
 if "%VER_MAJOR%"=="" goto BuildError
 if "%VER_MINOR%"=="" goto BuildError
 if "%VER_PATCH%"=="" goto BuildError
-if %VER_MINOR% LSS 10 set "VER_MINOR=0%VER_MINOR%
 
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Clean Binaries
