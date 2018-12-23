@@ -884,10 +884,12 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 
 # Changelog #
 
-## Version 2.11 (2018-12-20) ## {-}
+## Version 2.11 (2018-12-23) ## {-}
 * Core library: Fixed a potential crash due to dereferencing a possibly invalidated iterator
-* Core library: Use C++11 `std::mutex`, if supported → removes the dependency on PThread library
-* Winamp plug-in: Some fixes and improvements
+* Core library: Use C++11 `std::mutex`, if supported → removes the dependency PThread library
+* CLI front-end: Added support for decoding Opus input files via *libopusfile* library
+* CLI front-end: Added new CLI option `--output-bps` to specify the desired *output* bit-depth
+* Winamp plug-in: Some fixes and improvements; removed old workarounds
 * Windows binaries: Updated the included libsndfile version to 1.0.28 (2017-04-02)
 * Windows binaries: Updated build environment to Visual Studio 2017.9 (MSVC 14.16)
 
