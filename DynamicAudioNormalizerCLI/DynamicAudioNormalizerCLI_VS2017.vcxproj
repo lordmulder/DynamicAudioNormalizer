@@ -44,6 +44,9 @@
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerCLI.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5B755CC3-EC17-490F-AE82-CBC16E2EB143}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -121,8 +124,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libsndfile-1.lib;libmpg123.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\XiphAudioLibs\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeakDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libsndfile-1.lib;libmpg123.$(PlatformToolset).lib;libopus.$(PlatformToolset).lib;libopusfile.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
@@ -150,10 +153,13 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libsndfile-1.lib;libmpg123.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Prerequisites\PthreadsW32\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibSndFile\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\LibMpg123\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\XiphAudioLibs\lib\$(Platform)\shared;$(SolutionDir)\..\Prerequisites\VisualLeaksDetector\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libsndfile-1.lib;libmpg123.$(PlatformToolset).lib;libopus.$(PlatformToolset).lib;libopusfile.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
     <ClCompile>
@@ -184,6 +190,9 @@
       <ShowProgress>LinkVerboseLib</ShowProgress>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

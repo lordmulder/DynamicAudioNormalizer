@@ -44,7 +44,7 @@
     <CustomBuild Include="DynamicAudioNormalizerGUI.qrc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="DynamicAudioNormalizerGUI.rc">
+    <ResourceCompile Include="res\DynamicAudioNormalizerGUI.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

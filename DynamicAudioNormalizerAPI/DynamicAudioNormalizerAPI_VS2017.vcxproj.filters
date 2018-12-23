@@ -63,4 +63,9 @@
       <Filter>Internal Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerAPI.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>

@@ -50,6 +50,9 @@
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerVST.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A30375E8-AEF7-4531-B372-02328E0B9D43}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -221,6 +224,9 @@
       <AdditionalDependencies>Psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|x64'">
     <ClCompile>
@@ -279,6 +285,9 @@
       <AdditionalDependencies>Psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">
     <ClCompile>

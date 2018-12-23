@@ -20,11 +20,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 #include "Version.h"
+#include "../../DynamicAudioNormalizerShared/res/version.inc"
 
 //Version info
-const unsigned int DYNAUDNORM_NS::VERSION_MAJOR =  2;
-const unsigned int DYNAUDNORM_NS::VERSION_MINOR = 11;
-const unsigned int DYNAUDNORM_NS::VERSION_PATCH =  0;
+const unsigned int DYNAUDNORM_NS::VERSION_MAJOR = VER_DYNAUDNORM_MAJOR;
+const unsigned int DYNAUDNORM_NS::VERSION_MINOR = VER_DYNAUDNORM_MINOR;
+const unsigned int DYNAUDNORM_NS::VERSION_PATCH = VER_DYNAUDNORM_PATCH;
 
 //Build date/time
 const char *const DYNAUDNORM_NS::BUILD_DATE = __DATE__;

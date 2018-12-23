@@ -35,11 +35,6 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="DynamicAudioNormalizerGUI.rc">
-      <FileType>RES</FileType>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="DynamicAudioNormalizerGUI.qrc">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\rcc.exe" -o "$(ProjectDir)tmp\QRC_%(Filename).cpp" -name "%(Filename)" "%(FullPath)"</Command>
@@ -62,6 +57,9 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerGUI.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{131C921A-7144-4C1D-9C97-57C43FA83DFE}</ProjectGuid>
@@ -176,6 +174,9 @@
       <EntryPointSymbol>win32EntryPoint</EntryPointSymbol>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
     <ClCompile>
@@ -206,6 +207,9 @@
       <EntryPointSymbol>win32EntryPoint</EntryPointSymbol>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

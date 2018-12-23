@@ -69,4 +69,9 @@
       <Filter>Header Files\3rd Party Sources</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerCLI.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>

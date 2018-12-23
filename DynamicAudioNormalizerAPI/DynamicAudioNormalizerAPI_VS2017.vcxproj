@@ -44,6 +44,11 @@
     <ClInclude Include="src\Logging.h" />
     <ClInclude Include="src\Version.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerAPI.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">true</ExcludedFromBuild>
+    </ResourceCompile>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{376386EE-8268-47E3-A335-7663716E4C60}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -218,6 +223,9 @@
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">LinkVerboseLib</ShowProgress>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|x64'">
     <ClCompile>
