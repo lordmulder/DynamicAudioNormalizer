@@ -79,6 +79,11 @@ inline static int PRINT(const CHR *const format, ...)
 	return result;
 }
 
+inline static int PUTS(const CHR *const format)
+{
+	return fputws(format, stderr);
+}
+
 inline static void FLUSH(void)
 {
 	fflush(stderr);
@@ -552,9 +557,9 @@ inline static const CHR *STRNCAT(CHR *const buff, const CHR *const str, const ui
 
 void SYSTEM_INIT(const bool &debugMode);
 
-#define PRINT_NFO(X)       do { PRINT(TXT("INFO: ")    X TXT("\n"));              } while(0)
-#define PRINT_WRN(X)       do { PRINT(TXT("WARNING: ") X TXT("\n"));              } while(0)
-#define PRINT_ERR(X)       do { PRINT(TXT("ERROR: ")   X TXT("\n"));              } while(0)
+#define PRINT_NFO(X) do { PUTS(TXT("INFO: ")    X TXT("\n")); } while(0)
+#define PRINT_WRN(X) do { PUTS(TXT("WARNING: ") X TXT("\n")); } while(0)
+#define PRINT_ERR(X) do { PUTS(TXT("ERROR: ")   X TXT("\n")); } while(0)
 
 #define PRINT2_NFO(X, ...) do { PRINT(TXT("INFO: ")    X TXT("\n"), __VA_ARGS__); } while(0)
 #define PRINT2_WRN(X, ...) do { PRINT(TXT("WARNING: ") X TXT("\n"), __VA_ARGS__); } while(0)

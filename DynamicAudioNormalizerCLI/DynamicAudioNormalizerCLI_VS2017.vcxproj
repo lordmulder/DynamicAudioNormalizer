@@ -26,13 +26,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DynamicAudioNormalizerShared\include\Common.h" />
+    <ClInclude Include="src\3rd_party\memmem.h" />
     <ClInclude Include="src\AudioIO.h" />
     <ClInclude Include="src\AudioIO_Mpg123.h" />
     <ClInclude Include="src\AudioIO_OpusFile.h" />
     <ClInclude Include="src\AudioIO_SndFile.h" />
     <ClInclude Include="src\Parameters.h" />
     <ClInclude Include="src\Platform.h" />
-    <ClInclude Include="src\StringUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI_VS2017.vcxproj">

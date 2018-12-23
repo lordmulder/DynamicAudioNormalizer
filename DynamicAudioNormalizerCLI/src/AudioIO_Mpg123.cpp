@@ -393,8 +393,7 @@ int64_t AudioIO_Mpg123_Private::read(double **buffer, const int64_t count)
 			return 0;
 		}
 
-		offset += rdFrames;
-		remaining -= rdFrames;
+		offset += rdFrames, remaining -= rdFrames;
 
 		if (outBytes < rdBytes)
 		{

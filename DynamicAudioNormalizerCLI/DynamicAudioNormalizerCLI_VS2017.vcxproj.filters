@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\3rd Party Sources">
+      <UniqueIdentifier>{bd2e7d56-31ce-46cc-88f9-34740968028e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -62,8 +65,8 @@
     <ClInclude Include="src\AudioIO_OpusFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\StringUtils.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\3rd_party\memmem.h">
+      <Filter>Header Files\3rd Party Sources</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

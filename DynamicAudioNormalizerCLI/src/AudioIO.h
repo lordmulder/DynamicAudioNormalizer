@@ -50,7 +50,7 @@ public:
 	static const CHR *getLibraryVersion(const CHR *const name = NULL);
 
 	//File type auto-detection
-	static const CHR *detectSourceType(const CHR *const fileName = NULL);
+	static const CHR *detectSourceType(const CHR *const fileName = NULL, const bool verbose = false);
 
 private:
 	AudioIO(const AudioIO &)            { throw 666; }

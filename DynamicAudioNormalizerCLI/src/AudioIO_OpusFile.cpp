@@ -28,7 +28,7 @@
 #include <opusfile.h>
 
 //#include <stdexcept>
-//#include <algorithm>
+#include <algorithm>
 
 #ifdef __unix
 #include <unistd.h>
@@ -38,6 +38,7 @@
 #define STDERR_FILENO 2
 #endif
 
+#define OPUS_SRATE 48000U
 #define MY_THROW(X) throw std::runtime_error((X))
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,12 +75,13 @@ private:
 	OpusFileCallbacks callbacks;
 	void *stream;
 
-	//audio format info
-	//struct mpg123_fmt format;
+	//properties
+	int chanCount;
+	bool downmix;
 
 	//(De)Interleaving buffer
-	uint8_t *tempBuff;
-	size_t frameSize, buffSize;
+	float *tempBuff;
+	size_t buffSize;
 
 	//Library info
 	static MY_CRITSEC_DECL(mutex_lock);
@@ -87,8 +89,6 @@ private:
 
 	//Helper functions
 	template<typename T> static void deinterleave(double **destination, const int64_t offset, const T *const source, const int &channels, const int64_t &len);
-	static void libraryInit(void);
-	static void libraryExit(void);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -108,13 +108,12 @@ AudioIO_OpusFile::~AudioIO_OpusFile(void)
 
 AudioIO_OpusFile_Private::AudioIO_OpusFile_Private(void)
 {
-	libraryInit();
-
 	tempBuff  = NULL;
 	handle    = NULL;
 	stream    = NULL;
-	frameSize = 0;
 	buffSize  = 0;
+	chanCount = 0;
+	downmix   = false;
 
 	memset(&callbacks, 0, sizeof(OpusFileCallbacks));
 }
@@ -122,7 +121,6 @@ AudioIO_OpusFile_Private::AudioIO_OpusFile_Private(void)
 AudioIO_OpusFile_Private::~AudioIO_OpusFile_Private(void)
 {
 	close();
-	libraryExit();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -213,11 +211,66 @@ bool AudioIO_OpusFile_Private::openRd(const CHR *const fileName, const uint32_t 
 	{
 		PRINT2_ERR(TXT("Failed to open OggOpus file for reading [error: %d]\n"), error);
 		callbacks.close(stream);
+		stream = NULL;
+		memset(&callbacks, 0, sizeof(OpusFileCallbacks));
 		return false;
 	}
 
-	PRINT_WRN("Unimplemented!");
-	return false;
+	//Is seekable?
+	if (op_seekable(handle))
+	{
+		//Get the number of links
+		const int linkCount = op_link_count(handle);
+		if (linkCount < 1)
+		{
+			MY_THROW("Insanity: Link count is zero or negative!");
+		}
+
+		//Get channel count
+		chanCount = op_channel_count(handle, 0);
+		PRINT(TXT("op_channel_count[%d] = %d\n"), 0, chanCount);
+		if (chanCount < 1)
+		{
+			MY_THROW("Insanity: Channel count is zero or negative!");
+		}
+
+		//Too many channels for us?
+		downmix = false;
+		if (chanCount > 8)
+		{
+			downmix = true, chanCount = 2; /*enforce stereo*/
+		}
+
+		//Check consistency of channel count for *all* links
+		if ((!downmix) && (linkCount > 1))
+		{
+			for (int link = 1; link < linkCount; ++link)
+			{
+				const int chanCountNext = op_channel_count(handle, link);
+				PRINT(TXT("op_channel_count[%d] = %d\n"), link, chanCountNext);
+				if (chanCountNext < 1)
+				{
+					MY_THROW("Insanity: Channel count is zero or negative!");
+				}
+				if (chanCountNext != chanCount)
+				{
+					downmix = true, chanCount = 2; /*enforce stereo*/
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		//For non-seekable stream, we can't do anything but enforce stereo!
+		PUTS(TXT("Not seekable!\n"));
+		downmix = true, chanCount = 2;
+	}
+
+	//Allocate I/O buffer
+	tempBuff = new float[buffSize = (OPUS_SRATE * chanCount)]; /*1 sec per channel*/
+
+	return true;
 }
 
 bool AudioIO_OpusFile_Private::openWr(const CHR *const fileName, const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth, const CHR *const format)
@@ -233,17 +286,15 @@ bool AudioIO_OpusFile_Private::close(void)
 	if (handle)
 	{
 		op_free(handle);
-		handle = NULL;
 		result = true;
 	}
 
-	//Clear callbacks and stream
+	//Clear callbacks
 	memset(&callbacks, 0, sizeof(OpusFileCallbacks));
-	stream = NULL;
 
 	//Free temp buffer
-	buffSize = frameSize = 0;
 	MY_DELETE_ARRAY(tempBuff);
+	buffSize = chanCount = 0, downmix = false, handle = NULL, stream = NULL;
 	return result;
 }
 
@@ -254,7 +305,51 @@ int64_t AudioIO_OpusFile_Private::read(double **buffer, const int64_t count)
 		MY_THROW("Audio file not currently open!");
 	}
 
-	return 0;
+	int64_t offset = 0, remaining = count;
+
+	//Read next chunk of data
+	while (remaining > 0)
+	{
+		int result, link = -1;
+		const int rdSize = static_cast<int>(std::min(remaining * chanCount, static_cast<int64_t>(buffSize)));
+
+		//Read next chunk of data
+		for(int retry = 0; retry < 9999; ++retry)
+		{
+			result = downmix ? op_read_float_stereo(handle, tempBuff, rdSize) : op_read_float(handle, tempBuff, rdSize, &link);
+			if (result != OP_HOLE)
+			{
+				break; /*no more holes*/
+			}
+		}
+
+		//Check result for errors
+		if (result <= 0)
+		{
+			break; /*end of file, or read error*/
+		}
+
+		//Check number of channels
+		if ((!downmix) && (op_channel_count(handle, link) != chanCount))
+		{
+			MY_THROW("Number of channels inconsistent!");
+		}
+
+		//Deinterleaving
+		deinterleave(buffer, offset, tempBuff, chanCount, result);
+		offset += result, remaining -= result;
+	}
+
+	//Zero remaining data
+	if (remaining > 0)
+	{
+		for (int c = 0; c < chanCount; c++)
+		{
+			memset(&buffer[c][offset], 0, sizeof(double) * size_t(remaining));
+		}
+	}
+
+	return count - remaining;
 }
 
 int64_t AudioIO_OpusFile_Private::write(double *const *buffer, const int64_t count)
@@ -269,19 +364,16 @@ bool AudioIO_OpusFile_Private::queryInfo(uint32_t &channels, uint32_t &sampleRat
 		MY_THROW("Audio file not currently open!");
 	}
 
-	//if (format.channels && format.rate && format.encoding)
-	//{
-	//	channels = format.channels;
-	//	sampleRate = format.rate;
-	//	if ((length = mpg123_length(handle)) == MPG123_ERR)
-	//	{
-	//		length = INT64_MAX;
-	//	}
-	//	bitDepth = MPG123_SAMPLESIZE(format.encoding) * 8U;
-	//	return true;
-	//}
+	//Try to compute number of samples
+	const ogg_int64_t samplesTotal = op_pcm_total(handle, -1);
 
-	return false;
+	//Set up audio properties
+	channels   = (uint32_t)chanCount;
+	sampleRate = OPUS_SRATE;
+	length     = (samplesTotal > 0) ? samplesTotal : INT64_MAX;
+	bitDepth   = 32U;
+
+	return true;
 }
 
 void AudioIO_OpusFile_Private::getFormatInfo(CHR *buffer, const uint32_t buffSize)
@@ -321,7 +413,7 @@ const CHR *const *AudioIO_OpusFile_Private::supportedFormats(const CHR **const l
 
 bool AudioIO_OpusFile_Private::checkFileType(FILE *const file)
 {
-	static const size_t BUFF_SIZE = 1024U;
+	static const size_t BUFF_SIZE = 4096U;
 	uint8_t *buffer = new uint8_t[BUFF_SIZE];
 	bool result = false;
 	
@@ -346,16 +438,4 @@ void AudioIO_OpusFile_Private::deinterleave(double **destination, const int64_t 
 			destination[c][i + offset] = source[(i * channels) + c];
 		}
 	}
-}
-
-void AudioIO_OpusFile_Private::libraryInit(void)
-{
-	MY_CRITSEC_ENTER(mutex_lock);
-	MY_CRITSEC_LEAVE(mutex_lock);
-}
-
-void AudioIO_OpusFile_Private::libraryExit(void)
-{
-	MY_CRITSEC_ENTER(mutex_lock);
-	MY_CRITSEC_LEAVE(mutex_lock);
 }

@@ -129,7 +129,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 	const CHR *sourceLibrary = parameters.sourceLibrary();
 	if (!(sourceLibrary && sourceLibrary[0]))
 	{
-		sourceLibrary = AudioIO::detectSourceType(parameters.sourceFile());
+		sourceLibrary = AudioIO::detectSourceType(parameters.sourceFile(), parameters.verboseMode());
 	}
 
 	//Print Audio I/O information
