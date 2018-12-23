@@ -161,7 +161,7 @@ static bool openFiles(const Parameters &parameters, AudioIO **sourceFile, AudioI
 
 	//Open *output* file
 	*outputFile = AudioIO::createInstance();
-	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, bitDepth, parameters.outputFormat()))
+	if(!(*outputFile)->openWr(parameters.outputFile(), channels, sampleRate, parameters.outputBitDepth() ? parameters.outputBitDepth() : bitDepth, parameters.outputFormat()))
 	{
 		PRINT2_WRN(TXT("Failed to open output file \"") FMT_CHR TXT("\" for writing!\n"), FILENAME_OUT(parameters.outputFile()));
 		MY_DELETE(*sourceFile);
@@ -378,16 +378,17 @@ static void printHelpScreen(int argc, CHR* argv[])
 {
 	Parameters defaults;
 
-	PRINT(TXT("Basic Usage:\n"));
+	PUTS (TXT("Basic Usage:\n"));
 	PRINT(TXT("  ") FMT_CHR TXT(" [options] -i <input.wav> -o <output.wav>\n"), appName(argv[0]));
-	PRINT(TXT("\n"));
-	PRINT(TXT("Input/Output:\n"));
-	PRINT(TXT("  -i --input <file>        Input audio file [required]\n"));
-	PRINT(TXT("  -d --input-lib <value>   Input decoder library [default: auto-detect]\n"));
-	PRINT(TXT("  -o --output <file>       Output audio file [required]\n"));
-	PRINT(TXT("  -t --output-fmt <value>  Output format [default: auto-detect]\n"));
-	PRINT(TXT("\n"));
-	PRINT(TXT("Algorithm Tweaks:\n"));
+	PUTS (TXT("\n"));
+	PUTS (TXT("Input/Output:\n"));
+	PUTS (TXT("  -i --input <file>        Input audio file [required]\n"));
+	PUTS (TXT("  -d --input-lib <value>   Input decoder library [default: auto-detect]\n"));
+	PUTS (TXT("  -o --output <file>       Output audio file [required]\n"));
+	PUTS (TXT("  -t --output-fmt <value>  Output format [default: auto-detect]\n"));
+	PUTS (TXT("  -u --output-bps <value>  Output bits per sample [default: like input]\n"));
+	PUTS (TXT("\n"));
+	PUTS (TXT("Algorithm Tweaks:\n"));
 	PRINT(TXT("  -f --frame-len <value>   Frame length, in milliseconds [default: %u]\n"),               defaults.frameLenMsec());
 	PRINT(TXT("  -g --gauss-size <value>  Gauss filter size, in frames [default: %u]\n"),                defaults.filterSize());
 	PRINT(TXT("  -p --peak <value>        Target peak magnitude, 0.1-1 [default: %.2f]\n"),              defaults.peakValue());
@@ -397,17 +398,17 @@ static void printHelpScreen(int argc, CHR* argv[])
 	PRINT(TXT("  -c --correct-dc          Enable the DC bias correction [default: ") FMT_CHR TXT("]\n"), BOOLIFY(defaults.enableDCCorrection()));
 	PRINT(TXT("  -b --alt-boundary        Use alternative boundary mode [default: ") FMT_CHR TXT("]\n"), BOOLIFY(defaults.altBoundaryMode()));
 	PRINT(TXT("  -s --compress <value>    Compress the input data [default: %.2f]\n"),                   defaults.compressFactor());
-	PRINT(TXT("\n"));
-	PRINT(TXT("Diagnostics:\n"));
-	PRINT(TXT("  -v --verbose             Output additional diagnostic info\n"));
-	PRINT(TXT("  -l --log-file <file>     Create a log file\n"));
-	PRINT(TXT("  -h --help                Print *this* help screen\n"));
-	PRINT(TXT("\n"));
-	PRINT(TXT("Raw Data Options:\n"));
-	PRINT(TXT("  --input-bits <value>     Bits per sample, e.g. '16' or '32'\n"));
-	PRINT(TXT("  --input-chan <value>     Number of channels, e.g. '2' for Stereo\n"));
-	PRINT(TXT("  --input-rate <value>     Sample rate in Hertz, e.g. '44100'\n"));
-	PRINT(TXT("\n"));
+	PUTS (TXT("\n"));
+	PUTS (TXT("Diagnostics:\n"));
+	PUTS (TXT("  -v --verbose             Output additional diagnostic info\n"));
+	PUTS (TXT("  -l --log-file <file>     Create a log file\n"));
+	PUTS (TXT("  -h --help                Print *this* help screen\n"));
+	PUTS (TXT("\n"));
+	PUTS (TXT("Raw Data Options:\n"));
+	PUTS (TXT("  --input-bits <value>     Bits per sample, e.g. '16' or '32'\n"));
+	PUTS (TXT("  --input-chan <value>     Number of channels, e.g. '2' for Stereo\n"));
+	PUTS (TXT("  --input-rate <value>     Sample rate in Hertz, e.g. '44100'\n"));
+	PUTS (TXT("\n"));
 }
 
 static void printLogo(void)

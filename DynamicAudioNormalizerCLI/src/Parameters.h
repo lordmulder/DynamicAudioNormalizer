@@ -43,6 +43,7 @@ public:
 	inline const uint32_t &inputChannels(void)      const { return m_inputChannels;      }
 	inline const uint32_t &inputSampleRate(void)    const { return m_inputSampleRate;    }
 	inline const uint32_t &inputBitDepth(void)      const { return m_inputBitDepth;      }
+	inline const uint32_t &outputBitDepth(void)     const { return m_outputBitDepth;     }
 	inline const double   &peakValue(void)          const { return m_peakValue;          }
 	inline const double   &maxAmplification(void)   const { return m_maxAmplification;   }
 	inline const double   &targetRms(void)          const { return m_targetRms;          }
@@ -69,7 +70,8 @@ private:
 	uint32_t m_inputChannels;
 	uint32_t m_inputSampleRate;
 	uint32_t m_inputBitDepth;
-	
+	uint32_t m_outputBitDepth;
+
 	bool m_channelsCoupled;
 	bool m_enableDCCorrection;
 	bool m_altBoundaryMode;

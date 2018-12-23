@@ -146,9 +146,10 @@ void Parameters::setDefaults(void)
 	m_frameLenMsec = 500;
 	m_filterSize   = 31;
 	
-	m_inputChannels   = 0;
-	m_inputSampleRate = 0;
-	m_inputBitDepth   = 0;
+	m_inputChannels   = 0U;
+	m_inputSampleRate = 0U;
+	m_inputBitDepth   = 0U;
+	m_outputBitDepth  = 0U;
 
 	m_channelsCoupled    = true;
 	m_enableDCCorrection = false;
@@ -198,6 +199,12 @@ bool Parameters::parseArgs(const int argc, CHR* argv[])
 		{
 			ENSURE_NEXT_ARG();
 			m_outputFormat = argv[pos];
+			continue;
+		}
+		if (IS_ARG_SHRT("u", "output-bps"))
+		{
+			ENSURE_NEXT_ARG();
+			PARSE_VALUE_UINT(m_outputBitDepth);
 			continue;
 		}
 
@@ -333,6 +340,16 @@ bool Parameters::validateParameters(void)
 		{
 			CHR allFormats[256];
 			PRINT2_WRN(TXT("Unknown output format \"") FMT_CHR TXT("\" specified!\nSupported formats include: ") FMT_CHR TXT("\n"), m_outputFormat, JOIN_STR(allFormats, 256, supportedFormats, TXT(", ")));
+			return false;
+		}
+	}
+
+	/*validate output bit-depth*/
+	if (m_outputBitDepth)
+	{
+		if((m_outputBitDepth != 8U) && (m_outputBitDepth != 16U) && (m_outputBitDepth != 24U) && (m_outputBitDepth != 32U))
+		{
+			PRINT2_WRN(TXT("Invalid output bit-depth %u specified!\nSupported bit-depth include: 8, 16, 24 and 32 bits/sample\n"), m_outputBitDepth);
 			return false;
 		}
 	}

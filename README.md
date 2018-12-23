@@ -177,6 +177,7 @@ The following Dynamic Audio Normalizer command-line options are available:
 -d --input-lib <value>   Input decoder library [default: auto-detect]
 -o --output <file>       Output audio file [required]
 -t --output-fmt <value>  Output format [default: auto-detect]
+-u --output-bps <value>  Output bits per sample [default: like input]
 ```
 
 * **Algorithm Tweaks:**  

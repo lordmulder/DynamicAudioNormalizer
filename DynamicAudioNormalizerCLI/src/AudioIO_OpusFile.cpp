@@ -228,7 +228,6 @@ bool AudioIO_OpusFile_Private::openRd(const CHR *const fileName, const uint32_t 
 
 		//Get channel count
 		chanCount = op_channel_count(handle, 0);
-		PRINT(TXT("op_channel_count[%d] = %d\n"), 0, chanCount);
 		if (chanCount < 1)
 		{
 			MY_THROW("Insanity: Channel count is zero or negative!");
@@ -247,7 +246,6 @@ bool AudioIO_OpusFile_Private::openRd(const CHR *const fileName, const uint32_t 
 			for (int link = 1; link < linkCount; ++link)
 			{
 				const int chanCountNext = op_channel_count(handle, link);
-				PRINT(TXT("op_channel_count[%d] = %d\n"), link, chanCountNext);
 				if (chanCountNext < 1)
 				{
 					MY_THROW("Insanity: Channel count is zero or negative!");
@@ -263,8 +261,13 @@ bool AudioIO_OpusFile_Private::openRd(const CHR *const fileName, const uint32_t 
 	else
 	{
 		//For non-seekable stream, we can't do anything but enforce stereo!
-		PUTS(TXT("Not seekable!\n"));
 		downmix = true, chanCount = 2;
+	}
+
+	//Print warning if downmixing is enabled
+	if (downmix)
+	{
+		PRINT_WRN(TXT("Opus source has inconsistent channel count -> downminxing to stereo! (\n"));
 	}
 
 	//Allocate I/O buffer
