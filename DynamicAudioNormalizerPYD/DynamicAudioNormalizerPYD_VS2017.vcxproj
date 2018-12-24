@@ -34,6 +34,9 @@
       <Project>{376386ee-8268-47e3-a335-7663716e4c60}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerPYD.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5ACB9827-9D3A-4C59-A948-8505D1544A8E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
