@@ -120,6 +120,9 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">
     <ClCompile>
@@ -148,10 +151,10 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="DynamicAudioNormalizerWA5.cpp" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicAudioNormalizerAPI\DynamicAudioNormalizerAPI_VS2017.vcxproj">
       <Project>{376386ee-8268-47e3-a335-7663716e4c60}</Project>
@@ -161,6 +164,12 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\DynamicAudioNormalizerWA5.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\DynamicAudioNormalizerWA5.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

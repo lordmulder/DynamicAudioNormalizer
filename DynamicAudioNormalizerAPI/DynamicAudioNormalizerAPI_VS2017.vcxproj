@@ -47,6 +47,7 @@
   <ItemGroup>
     <ResourceCompile Include="res\DynamicAudioNormalizerAPI.rc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">true</ExcludedFromBuild>
     </ResourceCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -253,6 +254,9 @@
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LinkVerboseLib</ShowProgress>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)DynamicAudioNormalizerShared\res\compat.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
     <ClCompile>

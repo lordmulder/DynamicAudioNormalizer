@@ -20,6 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 #include "Version.h"
+
+#define INC_DYNAUDNORM_VERSION_INTERNAL 0x22b4f8a9
 #include "../../DynamicAudioNormalizerShared/res/version.inc"
 
 //Version info

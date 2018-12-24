@@ -57,12 +57,12 @@ BEGIN
         BEGIN
             VALUE "Comments", "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License <http://www.gnu.org/>."
             VALUE "CompanyName", "LoRd_MuldeR <mulder2@gmx.de>"
-            VALUE "FileDescription", "DynamicAudioNormalizer VST Plugin"
+            VALUE "FileDescription", "DynamicAudioNormalizer .NET Wrapper"
             VALUE "FileVersion", VER_DYNAUDNORM_STR
-            VALUE "InternalName", "DynamicAudioNormalizerVST"
+            VALUE "InternalName", "DynamicAudioNormalizerNET"
             VALUE "LegalCopyright", "Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>"
             VALUE "LegalTrademarks", "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License <http://www.gnu.org/>"
-            VALUE "OriginalFilename", "DynamicAudioNormalizerVST.dll"
+            VALUE "OriginalFilename", "DynamicAudioNormalizerNET.dll"
             VALUE "ProductName", "DynamicAudioNormalizer"
             VALUE "ProductVersion", VER_DYNAUDNORM_STR
         END

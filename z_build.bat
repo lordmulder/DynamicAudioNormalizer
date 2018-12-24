@@ -262,25 +262,14 @@ for %%c in (DLL, Static) do (
 REM ///////////////////////////////////////////////////////////////////////////
 REM // Compress
 REM ///////////////////////////////////////////////////////////////////////////
-for %%c in (DLL, Static) do (
-	for %%i in (DynamicAudioNormalizerCLI.exe,DynamicAudioNormalizerGUI.exe,DynamicAudioNormalizerVST.dll,DynamicAudioNormalizerWA5.dll) do (
+for %%c in (Static) do (
+	for %%i in (DynamicAudioNormalizerCLI.exe,DynamicAudioNormalizerGUI.exe,DynamicAudioNormalizerPYD.pyd,DynamicAudioNormalizerVST.dll,DynamicAudioNormalizerWA5.dll) do (
 		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\%%~i"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
 	)
-	for %%i in (DynamicAudioNormalizerVST.dll) do (
+	for %%i in (DynamicAudioNormalizerPYD.pyd,DynamicAudioNormalizerVST.dll) do (
 		"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\%%~i"
 		if not "!ERRORLEVEL!"=="0" goto BuildError
-	)
-
-	if /I "%%c"=="DLL" (
-		for %%i in (DynamicAudioNormalizerAPI.dll,libmpg123.dll,libsndfile-1.dll,QtCore4.dll,QtGui4.dll) do (
-			"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\%%~i"
-			if not "!ERRORLEVEL!"=="0" goto BuildError
-		)
-		for %%i in (DynamicAudioNormalizerAPI.dll) do (
-			"%~dp0\..\Prerequisites\UPX\upx.exe" --best "%PACK_PATH%\%%c\x64\%%~i"
-			if not "!ERRORLEVEL!"=="0" goto BuildError
-		)
 	)
 )
 
