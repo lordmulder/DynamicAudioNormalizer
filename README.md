@@ -884,7 +884,7 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 
 # Changelog #
 
-## Version 2.11 (2018-12-23) ## {-}
+## Version 2.11 (2019-01-03) ## {-}
 * Core library: Fixed a potential crash due to dereferencing a possibly invalidated iterator
 * Core library: Use C++11 `std::mutex`, if supported → removes the dependency PThread library
 * CLI front-end: Added support for decoding Opus input files via *libopusfile* library
