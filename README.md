@@ -1030,7 +1030,7 @@ The Dynamic Audio Normalizer **library** (DynamicAudioNormalizerAPI) is released
 ***GNU Lesser General Public License, Version 2.1***.
 
 	Dynamic Audio Normalizer - Audio Processing Library
-	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2019 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This library is free software; you can redistribute it and/or
 	modify it under the terms of the GNU Lesser General Public
@@ -1055,7 +1055,7 @@ The Dynamic Audio Normalizer **command-line program** (DynamicAudioNormalizerCLI
 ***GNU General Public License, Version 2***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2019 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -1081,7 +1081,7 @@ The Dynamic Audio Normalizer **log viewer program** (DynamicAudioNormalizerGUI) 
 ***GNU General Public License, Version 3***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2019 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -1105,7 +1105,7 @@ The Dynamic Audio Normalizer **plug-in** wrappers for *SoX*, *VST* and *Winamp* 
 ***MIT/X11 License***.
 
 	Dynamic Audio Normalizer - Audio Processing Utility
-	Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+	Copyright (c) 2014-2019 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 	
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal

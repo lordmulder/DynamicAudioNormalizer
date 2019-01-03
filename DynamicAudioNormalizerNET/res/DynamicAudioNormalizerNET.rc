@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Dynamic Audio Normalizer - Audio Processing Library
-// Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
+// Copyright (c) 2014-2019 LoRd_MuldeR <mulder2@gmx.de>. Some rights reserved.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -60,7 +60,7 @@ BEGIN
             VALUE "FileDescription", "DynamicAudioNormalizer .NET Wrapper"
             VALUE "FileVersion", VER_DYNAUDNORM_STR
             VALUE "InternalName", "DynamicAudioNormalizerNET"
-            VALUE "LegalCopyright", "Copyright (c) 2014-2018 LoRd_MuldeR <mulder2@gmx.de>"
+            VALUE "LegalCopyright", "Copyright (c) 2014-2019 LoRd_MuldeR <mulder2@gmx.de>"
             VALUE "LegalTrademarks", "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License <http://www.gnu.org/>"
             VALUE "OriginalFilename", "DynamicAudioNormalizerNET.dll"
             VALUE "ProductName", "DynamicAudioNormalizer"
