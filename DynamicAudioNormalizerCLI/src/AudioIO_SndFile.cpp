@@ -72,6 +72,12 @@ g_audio_formats[] =
 	{ { NULL }, 0, 0, 0, 0 }
 };
 
+static const uint32_t CHANNELS_MIN =  1U;
+static const uint32_t CHANNELS_MAX = 16U;
+
+static const uint32_t SAMPLERATE_MIN =   8000U;
+static const uint32_t SAMPLERATE_MAX = 192000U;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Private Data
 ///////////////////////////////////////////////////////////////////////////////
@@ -605,19 +611,19 @@ int AudioIO_SndFile_Private::getSubFormat(const int &bitDepth, const bool &eight
 
 bool AudioIO_SndFile_Private::checkRawParameters(const uint32_t channels, const uint32_t sampleRate, const uint32_t bitDepth)
 {
-	if((channels < 1) || (channels > 16))
+	if((channels < CHANNELS_MIN) || (channels > CHANNELS_MAX))
 	{
-		PRINT2_ERR(TXT("Invalid number of channels (%u). Must be in the %u to %u range!\n"), channels, 1, 16);
+		PRINT2_ERR(TXT("Invalid number of channels (%u). Must be in the %u to %u range!\n"), channels, CHANNELS_MIN, CHANNELS_MAX);
 		return false;
 	}
 
-	if((sampleRate < 11025) || (sampleRate > 192000))
+	if((sampleRate < SAMPLERATE_MIN) || (sampleRate > SAMPLERATE_MAX))
 	{
-		PRINT2_ERR(TXT("Invalid sampele rate (%u). Must be in the %u to %u range!\n"), sampleRate, 11025, 192000);
+		PRINT2_ERR(TXT("Invalid sampele rate (%u). Must be in the %u to %u range!\n"), sampleRate, SAMPLERATE_MIN, SAMPLERATE_MAX);
 		return false;
 	}
 
-	if((bitDepth != 8) && (bitDepth != 16) && (bitDepth != 24) && (bitDepth != 32) && (bitDepth != 64))
+	if((bitDepth != 8U) && (bitDepth != 16U) && (bitDepth != 24U) && (bitDepth != 32U) && (bitDepth != 64U))
 	{
 		PRINT2_ERR(TXT("Invalid bit depth (%u). Only 8, 16, 24, 32 and 64 bits/sample are supported!\n"), bitDepth);
 		return false;

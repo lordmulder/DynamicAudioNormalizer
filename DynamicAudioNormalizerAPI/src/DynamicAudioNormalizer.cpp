@@ -41,6 +41,19 @@
 #include <inttypes.h>
 
 ///////////////////////////////////////////////////////////////////////////////
+// Constants
+///////////////////////////////////////////////////////////////////////////////
+
+static const uint32_t CHANNELS_MIN =  1U;
+static const uint32_t CHANNELS_MAX = 16U;
+
+static const uint32_t SAMPLERATE_MIN =   8000U;
+static const uint32_t SAMPLERATE_MAX = 192000U;
+
+static const uint32_t FRAMELEN_MIN =      32U;
+static const uint32_t FRAMELEN_MAX = 2097152U;
+
+///////////////////////////////////////////////////////////////////////////////
 // Static Initializer
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -339,19 +352,19 @@ bool MDynamicAudioNormalizer_PrivateData::initialize(void)
 		return true;
 	}
 
-	if((m_channels < 1) || (m_channels > 8))
+	if((m_channels < CHANNELS_MIN) || (m_channels > CHANNELS_MAX))
 	{
-		LOG2_ERR("Invalid or unsupported channel count. Should be in the %d to %d range!", 1, 8);
+		LOG2_ERR("Invalid or unsupported channel count. Should be in the %u to %u range!", CHANNELS_MIN, CHANNELS_MAX);
 		return false;
 	}
-	if((m_sampleRate < 11025) || (m_channels > 192000))
+	if((m_sampleRate < SAMPLERATE_MIN) || (m_sampleRate > SAMPLERATE_MAX))
 	{
-		LOG2_ERR("Invalid or unsupported sampling rate. Should be in the %d to %d range!", 11025, 192000);
+		LOG2_ERR("Invalid or unsupported sampling rate. Should be in the %u to %u range!", SAMPLERATE_MIN, SAMPLERATE_MAX);
 		return false;
 	}
-	if((m_frameLen < 32) || (m_frameLen > 2097152))
+	if((m_frameLen < FRAMELEN_MIN) || (m_frameLen > FRAMELEN_MAX))
 	{
-		LOG2_ERR("Invalid or unsupported frame size. Should be in the %d to %d range!", 32, 2097152);
+		LOG2_ERR("Invalid or unsupported frame size. Should be in the %u to %u range!", FRAMELEN_MIN, FRAMELEN_MAX);
 		return false;
 	}
 	if(m_logFile && (ferror(m_logFile) != 0))

@@ -30,7 +30,7 @@
 #define VER_DYNAUDNORM_MAJOR      2
 #define VER_DYNAUDNORM_MINOR_HI   1
 #define VER_DYNAUDNORM_MINOR_LO   1
-#define VER_DYNAUDNORM_PATCH      0
+#define VER_DYNAUDNORM_PATCH      1
 
 //////////////////////////////////////////////////////////////////////////////////
 // Helper macros (aka: having fun with the C pre-processor)
