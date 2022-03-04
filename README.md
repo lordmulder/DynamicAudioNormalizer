@@ -1,14 +1,14 @@
-% ![](img/dyauno/DynAudNorm.png)  
+![](img/dyauno/DynAudNorm.png)  
 Dynamic Audio Normalizer
-% by LoRd_MuldeR &lt;<mulder2@gmx>&gt; | <http://muldersoft.com/>
+by LoRd_MuldeR &lt;<mulder2@gmx>&gt; | <https://muldersoft.com/>
 
 # Introduction #
 
 **&#9733; *Free/libre software · This software is provided 100% free of charge · No adware or spyware!* &#9733;**
 
-**Dynamic Audio Normalizer** is a library for *advanced* [audio normalization](http://en.wikipedia.org/wiki/Audio_normalization) purposes. It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* re-adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" sections of the audio while avoiding distortions or clipping the "loud" sections. In other words: The Dynamic Audio Normalizer will "even out" the volume of quiet and loud sections, in the sense that the volume of each section is brought to the same target level. Note, however, that the Dynamic Audio Normalizer achieves this goal *without* applying "dynamic range compressing". It will retain 100% of the dynamic range *within* each "local" region of the audio file.
+**Dynamic Audio Normalizer** is a library for *advanced* [audio normalization](https://en.wikipedia.org/wiki/Audio_normalization) purposes. It applies a certain amount of gain to the input audio in order to bring its peak magnitude to a target level (e.g. 0 dBFS). However, in contrast to more "simple" normalization algorithms, the Dynamic Audio Normalizer *dynamically* re-adjusts the gain factor to the input audio. This allows for applying extra gain to the "quiet" sections of the audio while avoiding distortions or clipping the "loud" sections. In other words: The Dynamic Audio Normalizer will "even out" the volume of quiet and loud sections, in the sense that the volume of each section is brought to the same target level. Note, however, that the Dynamic Audio Normalizer achieves this goal *without* applying "dynamic range compressing". It will retain 100% of the dynamic range *within* each "local" region of the audio file.
 
-The *Dynamic Audio Normalizer* is available as a small standalone [command-line](http://en.wikipedia.org/wiki/Command-line_interface) utility and also as an effect in the [SoX](http://sox.sourceforge.net/) audio processor as well as in the [FFmpeg](https://ffmpeg.org/) audio/video converter. Furthermore, it can be integrated into your favourite DAW (digital audio workstation), as a [VST](http://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in, or into your favourite media player, as a [Winamp](http://www.winamp.com/) plug-in. Last but not least, the "core" library can be integrated into custom applications easily, thanks to a straightforward [API](http://en.wikipedia.org/wiki/Application_programming_interface) (application programming interface). The "native" API is written in *C++*, but language [bindings](http://en.wikipedia.org/wiki/Language_binding) for *C99*, *Microsoft.NET*, *Java*, *Python* and *Pascal* are provided.
+The *Dynamic Audio Normalizer* is available as a small standalone [command-line](https://en.wikipedia.org/wiki/Command-line_interface) utility and also as an effect in the [SoX](http://sox.sourceforge.net/) audio processor as well as in the [FFmpeg](https://ffmpeg.org/) audio/video converter. Furthermore, it can be integrated into your favourite DAW (digital audio workstation), as a [VST](https://de.wikipedia.org/wiki/Virtual_Studio_Technology) plug-in, or into your favourite media player, as a [Winamp](https://www.winamp.com/) plug-in. Last but not least, the "core" library can be integrated into custom applications easily, thanks to a straightforward [API](https://en.wikipedia.org/wiki/Application_programming_interface) (application programming interface). The "native" API is written in *C++*, but language [bindings](https://en.wikipedia.org/wiki/Language_binding) for *C99*, *Microsoft.NET*, *Java*, *Python* and *Pascal* are provided.
 
 
 # How It Works #
@@ -55,7 +55,7 @@ Dynamic Audio Normalizer can be downloaded from one of the following *official* 
 * https://www.mediafire.com/folder/flrb14nitnh8i/Dynamic_Audio_Normalizer
 * https://www.assembla.com/spaces/dynamicaudionormalizer/documents
 
-**Note:** Windows binaries are provided in the compressed *ZIP* format. Simply use [7-Zip](http://www.7-zip.org/) or a similar tool to unzip *all* files to new/empty directory. If in doubt, Windows users should download the "static" version. That's it!
+**Note:** Windows binaries are provided in the compressed *ZIP* format. Simply use [7-Zip](https://www.7-zip.org/) or a similar tool to unzip *all* files to new/empty directory. If in doubt, Windows users should download the "static" version. That's it!
 
 
 ## System Requirements ##
@@ -146,7 +146,7 @@ The following files are included in the Dynamic Audio Normalizer release package
 
 # Command-Line Usage #
 
-The Dynamic Audio Normalizer *standalone* program can be invoked via [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface) (CLI), which can be done either *manually* from the [command prompt](http://en.wikipedia.org/wiki/Command_Prompt) or *automatically* (scripted), e.g. by using a [batch](http://en.wikipedia.org/wiki/Batch_file) file.
+The Dynamic Audio Normalizer *standalone* program can be invoked via [command-line interface](https://en.wikipedia.org/wiki/Command-line_interface) (CLI), which can be done either *manually* from the [command prompt](https://en.wikipedia.org/wiki/Command_Prompt) or *automatically* (scripted), e.g. by using a [batch](https://en.wikipedia.org/wiki/Batch_file) file.
 
 
 ## Basic Command-Line Syntax ##
@@ -162,7 +162,7 @@ Also note that the Dynamic Audio Normalizer uses [libsndfile](http://www.mega-ne
 
 By default, the Dynamic Audio Normalizer program will *guess* the output file format from the file extension of the specified output file. This can be overwritten by using the `-t` option. To create a FLAC file, e.g., you can specify `-t flac`.
 
-Passing "raw" PCM data via [pipe](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported. Specify the file name ``"-"`` in order to read from or write to the [stdin](http://en.wikipedia.org/wiki/Standard_streams) or [stdout](http://en.wikipedia.org/wiki/Standard_streams), respectively. When reading from the *stdin*, you have to specify the *input* sample format, channel count and sampling rate!
+Passing "raw" PCM data via [pipe](https://en.wikipedia.org/wiki/Pipeline_%28Unix%29) is supported. Specify the file name ``"-"`` in order to read from or write to the [stdin](https://en.wikipedia.org/wiki/Standard_streams) or [stdout](https://en.wikipedia.org/wiki/Standard_streams), respectively. When reading from the *stdin*, you have to specify the *input* sample format, channel count and sampling rate!
 
 For a list of *all* available options, see the [list below](#command-line-options) or run ``DynamicAudioNormalizerCLI.exe --help`` from the command prompt. Also, refer to the [**configuration**](#configuration) chapter for more details on the Dynamic Audio Normalizer parameters!
 
@@ -281,7 +281,7 @@ The exact steps that are required to load, activate and configure a VST plug-in 
 
 ![Setting up the new *VST Plug-In* directory (in Acoustica 6.0, Copyright © 2014 Acon AS)](img/dyauno/VSTPlugInDirs.png "Dynamic Audio Normalizer – VST Plug-In")
 
-Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the VST plug-in DLL, i.e. ``DynamicAudioNormalizerVST.dll``, also requires the Dynamic Audio Normalizer *core* library, i.e. ``DynamicAudioNormalizerAPI.dll``. This means that the *core* library **must** be made available to the VST host *in addition* to the VST plug-in itself. Otherwise, loading the VST plug-in DLL is going to fail! Copying the *core* library to the same directory, where the VST plug-in DLL, is located generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the ``DynamicAudioNormalizerAPI.dll`` file into the same directory where the VST host's "main" executable (EXE file) is located.
+Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the VST plug-in DLL, i.e. ``DynamicAudioNormalizerVST.dll``, also requires the Dynamic Audio Normalizer *core* library, i.e. ``DynamicAudioNormalizerAPI.dll``. This means that the *core* library **must** be made available to the VST host *in addition* to the VST plug-in itself. Otherwise, loading the VST plug-in DLL is going to fail! Copying the *core* library to the same directory, where the VST plug-in DLL, is located generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](https://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the ``DynamicAudioNormalizerAPI.dll`` file into the same directory where the VST host's "main" executable (EXE file) is located.
 
 **Important:** Please note that Dynamic Audio Normalizer VST plug-in uses the VST interface version 2.x, which is the most widely supported VST version at this time. VST interface version 3.x is *not* currently used, supported or required. Also note that *32-Bit* (x86) VST host application can <u>only</u> work with *32-Bit* VST plug-ins and, similarly, *64-Bit* (AMD64/Intel64) VST host application can <u>only</u> work with *64-Bit* VST plug-ins. Depending on the "bitness" of your individual VST host application, always the suitable VST plug-in DLL file, 32- or 64-Bit, must be chosen!
 
@@ -298,7 +298,7 @@ The Dynamic Audio Normalizer VST plug-in *does* report its delay to the VST host
 
 Incomplete list of VST hosts that have been tested to *work correctly* with the Dynamic Audio Normalizer VST plug-in:
 
-* **[Audacity](http://sourceforge.net/projects/audacity/files/audacity/) v2.1.2, by Audacity Team** &nbsp;|&nbsp; <span style="color:GoldenRod">**recommended!**</span>
+* **[Audacity](https://sourceforge.net/projects/audacity/files/audacity/) v2.1.2, by Audacity Team** &nbsp;|&nbsp; <span style="color:GoldenRod">**recommended!**</span>
     - Status: <span style="color:SeaGreen">VST support working</span>
     - License: free/libre OpenSource software
     - *Note: See [**here**](http://wiki.audacityteam.org/wiki/VST_Plug-ins) for install instructions and make sure that the "Buffer Delay Compensation" option is enabled!*
@@ -370,7 +370,7 @@ List of VST hosts with *known problems* that do **not** work correctly with VST 
 
 # Winamp Plug-In Usage #
 
-The Dynamic Audio Normalizer is also available in the form of a **DSP/Effect** plug-in for [Winamp](http://www.winamp.com/), the popular media player created by Nullsoft. This way, the Dynamic Audio Normalizer can be applied to your audio files during playback, in *real-time*.
+The Dynamic Audio Normalizer is also available in the form of a **DSP/Effect** plug-in for [Winamp](https://www.winamp.com/), the popular media player created by Nullsoft. This way, the Dynamic Audio Normalizer can be applied to your audio files during playback, in *real-time*.
 
 ![The Winamp DSP/Effect plug-in (Winamp is Copyright © 1997-2013 Nullsoft, Inc)](img/dyauno/WAPlugIn.png)
 
@@ -387,7 +387,7 @@ Be sure to grab the *patched* (aka "Redux") edition of Winamp 5.666, which has s
 
 Note that copying the plug-in DLL into the ``Plugins`` directory may require administrative privileges. That's because ``C:\Program Files (x86)`` is a protected system directory. Also note that the plug-in DLL **must** be *renamed* to ``dsp_dynaudnorm.dll`` in order to make Winmap recognize the DLL. Any other file name of your choice will work just as well, as long as it starts with the ``dsp_`` prefix. Once the plug-in DLL file is located at the correct place, e.g. ``C:\Program Files (x86)\Winamp\Plugins\dsp_dynaudnorm.dll``, it should appear in the Winamp "Preferences" dialogue after the next restart. More specifically, you should find the "Dynamic Audio Normalizer" plug-in on the "Plug-ins" → "DSP/Effect" page. Simply select the desired plug-in from the list of available *DSP/Effect* plug-ins and it will be active from now on.
 
-Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the Winamp plug-in DLL also requires the Dynamic Audio Normalizer *core* library, i.e. ``DynamicAudioNormalizerAPI.dll``. This means that the *core* library **must** be made available to Winamp *in addition* to the DSP/Effect plug-in itself. Otherwise, loading the DSP/Effect plug-in DLL is going to fail! Though, copying the *core* library to the same directory, where the plug-in DLL is located, i.e. the ``Plugins`` directory, generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](http://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the ``DynamicAudioNormalizerAPI.dll`` file into the same directory where the Winamp "main" executable (EXE file) is located.
+Furthermore, note that – unless you are using the *static* build of the Dynamic Audio Normalizer – the Winamp plug-in DLL also requires the Dynamic Audio Normalizer *core* library, i.e. ``DynamicAudioNormalizerAPI.dll``. This means that the *core* library **must** be made available to Winamp *in addition* to the DSP/Effect plug-in itself. Otherwise, loading the DSP/Effect plug-in DLL is going to fail! Though, copying the *core* library to the same directory, where the plug-in DLL is located, i.e. the ``Plugins`` directory, generally is **not** sufficient. Instead, the *core* library must be located in one of those directories that are checked for additional DLL dependencies (see [**here**](https://msdn.microsoft.com/en-us/library/windows/desktop/ms682586%28v=vs.85%29.aspx#standard_search_order_for_desktop_applications) for details). Therefore, it is *recommended* to copy the ``DynamicAudioNormalizerAPI.dll`` file into the same directory where the Winamp "main" executable (EXE file) is located.
 
 
 ## Registry Settings
@@ -434,7 +434,7 @@ Probably the most important parameter of the Dynamic Audio Normalizer is the "wi
 
 ## Target Peak Magnitude ##
 
-The target peak magnitude specifies the highest permissible magnitude level for the *normalized* audio file. It is controlled by the **``--peak``** option. Since the Dynamic Audio Normalizer represents audio samples as floating point values in the *-1.0* to *1.0* range – regardless of the input and output audio format – this value must be in the *0.0* to *1.0* range. Consequently, the value *1.0* is equal to [0 dBFS](http://en.wikipedia.org/wiki/DBFS), i.e. the maximum possible digital signal level (± 32767 in a 16-Bit file). The Dynamic Audio Normalizer will try to approach the target peak magnitude as closely as possible, but at the same time it also makes sure that the normalized signal will *never* exceed the peak magnitude. A frame's maximum local gain factor is imposed directly by the target peak magnitude. The default value is **0.95** and thus leaves a [headroom](http://en.wikipedia.org/wiki/Headroom_%28audio_signal_processing%29) of *5%*. It is **not** recommended to go *above* this value!
+The target peak magnitude specifies the highest permissible magnitude level for the *normalized* audio file. It is controlled by the **``--peak``** option. Since the Dynamic Audio Normalizer represents audio samples as floating point values in the *-1.0* to *1.0* range – regardless of the input and output audio format – this value must be in the *0.0* to *1.0* range. Consequently, the value *1.0* is equal to [0 dBFS](https://en.wikipedia.org/wiki/DBFS), i.e. the maximum possible digital signal level (± 32767 in a 16-Bit file). The Dynamic Audio Normalizer will try to approach the target peak magnitude as closely as possible, but at the same time it also makes sure that the normalized signal will *never* exceed the peak magnitude. A frame's maximum local gain factor is imposed directly by the target peak magnitude. The default value is **0.95** and thus leaves a [headroom](https://en.wikipedia.org/wiki/Headroom_%28audio_signal_processing%29) of *5%*. It is **not** recommended to go *above* this value!
 
 
 ## Channel Coupling ##
@@ -509,7 +509,7 @@ This chapter describes the **MDynamicAudioNormalizer** application programming i
 
 ## Language Bindings ##
 
-The Dynamic Audio Normalizer "core" library is written in [***C++***](http://en.wikipedia.org/wiki/C%2B%2B). Therefore the *native* application programming interface (API) is provided in the form of a *C++* class. Furthermore, language bindings for the [***Microsoft.NET***]() platform (*C#*, *VB.NET*, etc.) as well as for [***Java***](http://en.wikipedia.org/wiki/Java_%28programming_language%29) (JRE 1.7 or later), [***Python***](https://www.python.org/) (CPython 3.0 or later) and [***Object Pascal***](http://en.wikipedia.org/wiki/Object_Pascal) (*Delphi 7.0* or later) are provided. For each of these languages, a suitable "wrapper" is provided, which exposes – to the greatest extend possible – the same functions as the native *C++* class. Calls to the language-specific wrapper will be forwarded, *internally*, to the corresponding native method of to the underlying *C++* class. Native library calls are handled *transparently* by the individual language wrapper, so that application developers do **not** need to worry about interoperability issues. In particular, the language wrapper will take care of data marshalling as well as the management of the native *MDynamicAudioNormalizer* instances.
+The Dynamic Audio Normalizer "core" library is written in [***C++***](https://en.wikipedia.org/wiki/C%2B%2B). Therefore the *native* application programming interface (API) is provided in the form of a *C++* class. Furthermore, language bindings for the [***Microsoft.NET***]() platform (*C#*, *VB.NET*, etc.) as well as for [***Java***](https://en.wikipedia.org/wiki/Java_%28programming_language%29) (JRE 1.7 or later), [***Python***](https://www.python.org/) (CPython 3.0 or later) and [***Object Pascal***](https://en.wikipedia.org/wiki/Object_Pascal) (*Delphi 7.0* or later) are provided. For each of these languages, a suitable "wrapper" is provided, which exposes – to the greatest extend possible – the same functions as the native *C++* class. Calls to the language-specific wrapper will be forwarded, *internally*, to the corresponding native method of to the underlying *C++* class. Native library calls are handled *transparently* by the individual language wrapper, so that application developers do **not** need to worry about interoperability issues. In particular, the language wrapper will take care of data marshalling as well as the management of the native *MDynamicAudioNormalizer* instances.
 
 ### C++ interface
 
@@ -519,13 +519,13 @@ The Dynamic Audio Normalizer "core" library is written in [***C++***](http://en.
 
 ### C99 interface
 
-*C* applications can use the *C99* "wrapper" functions, which are also declared in the `DynamicAudioNormalizerAPI.h` header file. Those "wrapper" functions are implemented by the shared library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux), just like the native *C++* interface. There exists a corresponding *C99* "wrapper" function for each method of the native *C++* class. The "wrapper" functions provide the same functionality and take the same parameters as the underlying *C++* methods, except that an additional [*handle*](http://en.wikipedia.org/wiki/Handle_%28computing%29) parameter needs to be passed to each "wrapper" function. The handle corresponds to the "this" pointer that is *implicitly* passed to C++ methods. The *C*-only functions `createInstance()` and `destroyInstance()` correspond to the *C++* class' constructor and destructor, respectively.
+*C* applications can use the *C99* "wrapper" functions, which are also declared in the `DynamicAudioNormalizerAPI.h` header file. Those "wrapper" functions are implemented by the shared library `DynamicAudioNormalizerAPI.dll` (Windows) or `libDynamicAudioNormalizerAPI-X.so` (Linux), just like the native *C++* interface. There exists a corresponding *C99* "wrapper" function for each method of the native *C++* class. The "wrapper" functions provide the same functionality and take the same parameters as the underlying *C++* methods, except that an additional [*handle*](https://en.wikipedia.org/wiki/Handle_%28computing%29) parameter needs to be passed to each "wrapper" function. The handle corresponds to the "this" pointer that is *implicitly* passed to C++ methods. The *C*-only functions `createInstance()` and `destroyInstance()` correspond to the *C++* class' constructor and destructor, respectively.
 
 ***Note***: On the Windows platform, you will need to link your binary against the *import* library `DynamicAudioNormalizerAPI.lib`.
 
 ### Microsoft.NET interface
 
-*Microsoft.NET* (*C#*, *VB.NET*, etc.) applications can use the **DynamicAudioNormalizerNET** [*C++/CLI*](http://en.wikipedia.org/wiki/C%2B%2B/CLI) "wrapper" class, which is implemented by the `DynamicAudioNormalizerNET.dll` assembly. There exists an equivalent method in the *C++/CLI* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizerNET.dll` assembly is really just a thin "wrapper" and it requires the *native* "core" library `DynamicAudioNormalizerAPI.dll` at runtime!
+*Microsoft.NET* (*C#*, *VB.NET*, etc.) applications can use the **DynamicAudioNormalizerNET** [*C++/CLI*](https://en.wikipedia.org/wiki/C%2B%2B/CLI) "wrapper" class, which is implemented by the `DynamicAudioNormalizerNET.dll` assembly. There exists an equivalent method in the *C++/CLI* "wrapper" class for each method of the native *C++* class. Note, however, that the `DynamicAudioNormalizerNET.dll` assembly is really just a thin "wrapper" and it requires the *native* "core" library `DynamicAudioNormalizerAPI.dll` at runtime!
 
 ### Java interface
 
@@ -819,7 +819,7 @@ The source code of the Dynamic Audio Normalizer is available from one of the off
 
 The following build environments are currently supported:
 
-* **Microsoft Windows** with Visual C++, tested with [*Visual Studio 2013*](http://www.visualstudio.com/) and [*Visual Studio 2015*](http://www.visualstudio.com/):
+* **Microsoft Windows** with Visual C++, tested with [*Visual Studio 2013*](https://www.visualstudio.com/) and [*Visual Studio 2015*](http://www.visualstudio.com/):
 
     - You can build *Dynamic Audio Normalizer* by using the provided *solution* file: `DynamicAudioNormalizer.sln`
 
@@ -839,14 +839,14 @@ The following build environments are currently supported:
 ## Build Prerequisites ##
 
 Building the *Dynamic Audio Normalizer* requires some third-party tools and libraries:
-* [*POSIX Threads (PThreads)*](http://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
+* [*POSIX Threads (PThreads)*](https://en.wikipedia.org/wiki/POSIX_Threads) is *always* required (on Windows use [*pthreads-w32*](https://www.sourceware.org/pthreads-win32/), by Ross P. Johnson)
 * [*libsndfile*](http://www.mega-nerd.com/libsndfile/), by Erik de Castro Lopo, is required for building the command-line program
 * [*libmpg123*](https://www.mpg123.de/), by Michael Hipp et al., is required for building the command-line program
-* [*Qt Framework*](http://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
-* [*Java Develpment Kit (JDK)*](http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html), by Oracle, is required for building the JNI bindings (recommended version: JDK 8)
-* [*Ant*](http://ant.apache.org/), by Apache Software Foundation, is required for building the JNI bindings (recommended version: 1.9.x)
+* [*Qt Framework*](https://qt-project.org/), by Qt Project, is required for building the log viewer GUI program (recommended version: Qt 4.x)
+* [*Java Develpment Kit (JDK)*](https://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html), by Oracle, is required for building the JNI bindings (recommended version: JDK 8)
+* [*Ant*](https://ant.apache.org/), by Apache Software Foundation, is required for building the JNI bindings (recommended version: 1.9.x)
 * [*VST SDK v2.4*](http://www.steinberg.de/en/company/developer.html), by Steinberg GmbH, is required for building the VST plug-in (it's still included in the VST 3.x SDK!)
-* [*Winamp SDK*](http://forums.winamp.com/showthread.php?t=252090), by Nullsoft Inc, is required for building the Winamp plug-in (recommended version: 5.55)
+* [*Winamp SDK*](https://forums.winamp.com/showthread.php?t=252090), by Nullsoft Inc, is required for building the Winamp plug-in (recommended version: 5.55)
 * [*Pandoc*](http://johnmacfarlane.net/pandoc/), by  John MacFarlane, is required for generating the HTML documentation
 * [*UPX*](http://upx.sourceforge.net/), by Markus Franz Xaver Johannes Oberhumer et al., is required for "packing" the libraries/executables
 
@@ -871,7 +871,7 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
     * `sudo zypper install gcc-c++ java-1_8_0-openjdk-devel python3-devel`
     * `sudo zypper install libsndfile-devel mpg123-devel libqt4-devel`
     * `sudo zypper install ant pandoc wget`
-    * ***Note:*** The [*mutlimedia:libs*](http://download.opensuse.org/repositories/multimedia:/color_management/openSUSE_Leap_42.2/) repository is required for the *mpg123-devel* package!
+    * ***Note:*** The [*mutlimedia:libs*](https://download.opensuse.org/repositories/multimedia:/color_management/openSUSE_Leap_42.2/) repository is required for the *mpg123-devel* package!
 
 * **CentOS/RHEL 7.3**:
     * `sudo yum groupinstall "Development Tools"`
@@ -914,14 +914,14 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 * Makefile: Various improvements
 
 ## Version 2.07 (2014-11-01) ## {-}
-* Implemented [.NET](http://en.wikipedia.org/wiki/.NET_Framework) API → Dynamic Audio Normalizer can be used in, e .g., *C#*-based applications
-* Implemented [JNI](http://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can be used in *Java*-based  applications
-* Implemented [Pascal](http://en.wikipedia.org/wiki/Object_Pascal) API → Dynamic Audio Normalizer can be used in *Pascal*-based applications
+* Implemented [.NET](https://en.wikipedia.org/wiki/.NET_Framework) API → Dynamic Audio Normalizer can be used in, e .g., *C#*-based applications
+* Implemented [JNI](https://en.wikipedia.org/wiki/Java_Native_Interface) API → Dynamic Audio Normalizer can be used in *Java*-based  applications
+* Implemented [Pascal](https://en.wikipedia.org/wiki/Object_Pascal) API → Dynamic Audio Normalizer can be used in *Pascal*-based applications
 * Core library: Added new ``getConfiguration()`` API to retrieve the *active* configuration params
 * Core library: Fixed a bug that caused the gain factors to *not* progress as "smoothly" as intended
 
 ## Version 2.06 (2014-09-22) ## {-}
-* Implemented [Winamp](http://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used as Winamp plug-in
+* Implemented [Winamp](https://www.winamp.com/) wrapper → Dynamic Audio Normalizer can now be used as Winamp plug-in
 * VST wrapper: Fixed potential audio corruptions due to the occasional insertion of "silent" samples
 * VST wrapper: Fixed a potential "double free" crash in the VST wrapper code
 * Core library: Fixed `reset()` API to actually work as expected (some state was *not* cleared before)
@@ -929,7 +929,7 @@ Building the *Dynamic Audio Normalizer* requires some third-party tools and libr
 
 ## Version 2.05 (2014-09-10) ## {-}
 * Significant overhaul of the *compression* (thresholding) function
-* Implemented [VST](http://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be integrated in any VST host
+* Implemented [VST](https://en.wikipedia.org/wiki/Virtual_Studio_Technology) wrapper → Dynamic Audio Normalizer can now be integrated in any VST host
 * Added *64-Bit* library and VST plug-in binaries to the Windows release packages
 * No longer use ``__declspec(thread)``, because it can crash libraries on Windows XP ([details](http://www.nynaeve.net/?p=187))
 
@@ -1014,9 +1014,9 @@ Consequently, when working with MPEG audio files, the warning about more/less au
 
 ## Q: Why does the program crash with GURU MEDITATION error? ## {-}
 
-This error message indicates that the program has encountered a serious problem. On possible reason is that your processor does **not** support the [SSE2](http://en.wikipedia.org/wiki/SSE2) instruction set. That's because the official Dynamic Audio Normalizer binaries have been compiled with SSE and SSE2 code enabled – like pretty much any compiler does *by default* nowadays. So without SSE2 support, the program cannot run, obviosuly. This can be fixed either by upgrading your system to a less antiquated processor, or by recompiling Dynamic Audio Normalizer from the sources with SSE2 code generation *disabled*. Note that SSE2 is supported by the Pentium 4 and Athon 64 processors as well as **all** later processors. Also *every* 64-Bit supports SSE2, because [x86-64](http://en.wikipedia.org/wiki/X86-64) has adopted SSE2 as "core" instructions. That means that *every processor from the last decade* almost certainly supports SSE2.
+This error message indicates that the program has encountered a serious problem. On possible reason is that your processor does **not** support the [SSE2](https://en.wikipedia.org/wiki/SSE2) instruction set. That's because the official Dynamic Audio Normalizer binaries have been compiled with SSE and SSE2 code enabled – like pretty much any compiler does *by default* nowadays. So without SSE2 support, the program cannot run, obviosuly. This can be fixed either by upgrading your system to a less antiquated processor, or by recompiling Dynamic Audio Normalizer from the sources with SSE2 code generation *disabled*. Note that SSE2 is supported by the Pentium 4 and Athon 64 processors as well as **all** later processors. Also *every* 64-Bit supports SSE2, because [x86-64](https://en.wikipedia.org/wiki/X86-64) has adopted SSE2 as "core" instructions. That means that *every processor from the last decade* almost certainly supports SSE2.
 
-If your processor *does* support SSE2, but you still get the above error message, you probably have found a bug. In this case it is highly recommended to create a *debug build* and use a [debugger](http://en.wikipedia.org/wiki/Debugger) in order to track down the cause of the problem.
+If your processor *does* support SSE2, but you still get the above error message, you probably have found a bug. In this case it is highly recommended to create a *debug build* and use a [debugger](https://en.wikipedia.org/wiki/Debugger) in order to track down the cause of the problem.
 
 
 # License Terms #
@@ -1145,7 +1145,7 @@ The Dynamic Audio Normalizer **CLI program** (DynamicAudioNormalizerCLI) incorpo
 
 The Dynamic Audio Normalizer **log viewer** (DynamicAudioNormalizerGUI) incorporates the following *third-party* software:
 
-* [**Qt Framework**](http://qt-project.org/)  
+* [**Qt Framework**](https://qt-project.org/)  
   Cross-platform application and UI framework for developers using C++ or QML, a CSS & JavaScript like language  
   Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies)  
   *Applicable license:* GNU Lesser General Public License, Version 2.1
@@ -1168,12 +1168,12 @@ The Dynamic Audio Normalizer can operate as a **plug-in** (effect) using the fol
   Cross-platform command line utility that can convert various formats of computer audio files in to other formats  
   Copyright (C) 1998-2009 Chris Bagwell and SoX contributors
 
-  * [**Virtual Studio Technology (VST 2.x)**](http://en.wikipedia.org/wiki/Virtual_Studio_Technology)  
+  * [**Virtual Studio Technology (VST 2.x)**](https://en.wikipedia.org/wiki/Virtual_Studio_Technology)  
   Software interface that integrates software audio synthesizer and effect Plug-ins with audio editors and recording systems.  
   Copyright (C) 2006 Steinberg Media Technologies. All Rights Reserved.  
   <small>**VST PlugIn Interface Technology by Steinberg Media Technologies GmbH. VST is a trademark of Steinberg Media Technologies GmbH.**</small>
 
-  * [**Winamp**](http://www.winamp.com/)  
+  * [**Winamp**](https://www.winamp.com/)  
   Popular media player for Windows, Android, and OS X that supports extensibility with plug-ins and skins.  
   Copyright (C) 1997-2013 Nullsoft, Inc. All Rights Reserved.  
 
